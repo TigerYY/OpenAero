@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 const benefits = [
   {
     icon: '💰',
-    title: '70%利润分成',
-    description: '获得销售收入的70%作为创作者收益，远高于行业平均水平',
+    title: '50%利润分成',
+    description: '获得销售收入的50%作为创作者收益，远高于行业平均水平',
     highlight: true,
   },
   {

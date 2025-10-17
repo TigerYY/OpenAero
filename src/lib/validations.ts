@@ -20,6 +20,9 @@ export const creatorApplicationSchema = z.object({
   specialties: z.array(z.string()).min(1, '请至少选择一个专业领域').max(5, '最多选择5个专业领域'),
 });
 
+// 创作者申请验证 (别名)
+export const creatorApplySchema = creatorApplicationSchema;
+
 // 解决方案验证
 export const solutionSchema = z.object({
   title: z.string().min(5, '标题至少需要5个字符').max(100, '标题不能超过100个字符'),

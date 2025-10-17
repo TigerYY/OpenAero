@@ -6,10 +6,10 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: {
-    default: 'OpenAero - 社区驱动的开放式无人机解决方案平台',
-    template: '%s | OpenAero',
+    default: '开元空御 - 社区驱动的开放式无人机解决方案平台',
+    template: '%s | 开元空御',
   },
-  description: 'OpenAero 是一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。我们致力于将优秀的无人机创新设计进行专业验证、生产和销售。',
+  description: '开元空御是一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。我们致力于将优秀的无人机创新设计进行专业验证、生产和销售。',
   keywords: [
     '无人机',
     '核心套件',
@@ -18,11 +18,11 @@ export const metadata: Metadata = {
     '创作者',
     '解决方案',
     '认证标准',
-    'OpenAero',
+    '开元空御',
   ],
-  authors: [{ name: 'OpenAero Team' }],
-  creator: 'OpenAero',
-  publisher: 'OpenAero',
+  authors: [{ name: '开元空御团队' }],
+  creator: '开元空御',
+  publisher: '开元空御',
   formatDetection: {
     email: false,
     address: false,
@@ -36,21 +36,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'zh_CN',
     url: 'https://openaero.cn',
-    siteName: 'OpenAero',
-    title: 'OpenAero - 社区驱动的开放式无人机解决方案平台',
+    siteName: '开元空御',
+    title: '开元空御 - 社区驱动的开放式无人机解决方案平台',
     description: '连接全球无人机创作者与专业客户的开放式平台',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'OpenAero - 社区驱动的开放式无人机解决方案平台',
+        alt: '开元空御 - 社区驱动的开放式无人机解决方案平台',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OpenAero - 社区驱动的开放式无人机解决方案平台',
+    title: '开元空御 - 社区驱动的开放式无人机解决方案平台',
     description: '连接全球无人机创作者与专业客户的开放式平台',
     images: ['/og-image.jpg'],
   },

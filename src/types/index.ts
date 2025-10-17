@@ -30,12 +30,13 @@ export interface CreatorProfile {
 export interface Solution {
   id: string;
   title: string;
+  slug: string;
   description: string;
-  category: string;
+  longDescription?: string;
+  categoryId: string;
   price: number;
-  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED';
+  status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'ARCHIVED';
   images: string[];
-  features: string[];
   specs?: Record<string, any>;
   bom?: Record<string, any>;
   creatorId: string;
@@ -96,8 +97,7 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: {
     page: number;
     limit: number;

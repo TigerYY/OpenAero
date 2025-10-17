@@ -23,7 +23,7 @@ export function HeroSection() {
                 解决方案平台
               </h1>
               <p className="text-xl text-secondary-600 leading-relaxed">
-                连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供70%的利润分成。
+                连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供50%的利润分成。
               </p>
             </div>
 
@@ -43,7 +43,7 @@ export function HeroSection() {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                <span>70%利润分成</span>
+                <span>50%利润分成</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-success-500 rounded-full"></div>

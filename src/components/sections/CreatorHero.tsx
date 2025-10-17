@@ -23,7 +23,7 @@ export function CreatorHero() {
                 开启您的商业化之路
               </h1>
               <p className="text-xl text-secondary-600 leading-relaxed">
-                将您的无人机创新设计转化为商业价值，获得70%的利润分成，与全球顶级供应链伙伴合作，让您的创意触达更多用户。
+                将您的无人机创新设计转化为商业价值，获得50%的利润分成，与全球顶级供应链伙伴合作，让您的创意触达更多用户。
               </p>
             </div>
 
@@ -39,7 +39,7 @@ export function CreatorHero() {
             <div className="flex items-center space-x-8 text-sm text-secondary-500">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                <span>70%利润分成</span>
+                <span>50%利润分成</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-success-500 rounded-full"></div>

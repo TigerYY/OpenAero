@@ -13,9 +13,10 @@ const nextConfig = {
   
   // 编译优化
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['@heroicons/react', '@headlessui/react'],
   },
+  // 启用React严格模式
+  reactStrictMode: true,
   
   // 环境变量
   env: {

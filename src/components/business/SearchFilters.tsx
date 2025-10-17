@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { SolutionFilters } from '@/types';
 
 interface SearchFiltersProps {
@@ -18,12 +19,12 @@ const categories = [
   { value: 'delivery', label: '配送运输' },
 ];
 
-const sortOptions = [
-  { value: 'createdAt', label: '最新发布' },
-  { value: 'price', label: '价格' },
-  { value: 'rating', label: '评分' },
-  { value: 'name', label: '名称' },
-];
+// const sortOptions = [
+//   { value: 'createdAt', label: '最新发布' },
+//   { value: 'price', label: '价格' },
+//   { value: 'rating', label: '评分' },
+//   { value: 'name', label: '名称' },
+// ];
 
 export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);

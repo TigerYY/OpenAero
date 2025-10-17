@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/Button';
 import { Solution } from '@/types';
 import { formatCurrency } from '@/lib/utils';
@@ -95,7 +96,7 @@ export function SolutionCard({ solution }: SolutionCardProps) {
         {/* 分类和创作者 */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-primary-600 font-medium">
-            {solution.category}
+            {solution.categoryId}
           </span>
           {solution.creator && (
             <span className="text-sm text-secondary-500">
@@ -116,19 +117,14 @@ export function SolutionCard({ solution }: SolutionCardProps) {
 
         {/* 功能特性 */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {solution.features.slice(0, 3).map((feature, index) => (
+          {solution.specs && Object.entries(solution.specs).slice(0, 3).map(([key, value], index) => (
             <span
               key={index}
               className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-md"
             >
-              {feature}
+              {key}: {value}
             </span>
           ))}
-          {solution.features.length > 3 && (
-            <span className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-md">
-              +{solution.features.length - 3}
-            </span>
-          )}
         </div>
 
         {/* 评分 */}

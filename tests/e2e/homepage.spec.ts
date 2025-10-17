@@ -25,7 +25,7 @@ test.describe('Homepage', () => {
     
     // Check feature indicators
     await expect(page.getByText(/专业认证/)).toBeVisible()
-    await expect(page.getByText(/70%利润分成/)).toBeVisible()
+    await expect(page.getByText(/50%利润分成/)).toBeVisible()
     await expect(page.getByText(/全球供应链/)).toBeVisible()
   })
 

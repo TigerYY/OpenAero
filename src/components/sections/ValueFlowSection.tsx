@@ -24,7 +24,7 @@ const valueSteps = [
   {
     step: '04',
     title: '平台销售分成',
-    description: '通过平台销售，创作者获得70%的利润分成，客户获得认证产品。',
+    description: '通过平台销售，创作者获得50%的利润分成，客户获得认证产品。',
     icon: '💰',
   },
 ];

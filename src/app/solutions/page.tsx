@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SolutionCard } from '@/components/business/SolutionCard';
 import { SearchFilters } from '@/components/business/SearchFilters';
 import { Pagination } from '@/components/ui/Pagination';
-import { Solution, SolutionFilters, PaginatedResponse } from '@/types';
+import { Solution, SolutionFilters } from '@/types';
 
 export default function SolutionsPage() {
   const [solutions, setSolutions] = useState<Solution[]>([]);

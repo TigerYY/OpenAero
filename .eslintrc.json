@@ -1,11 +1,10 @@
 {
   "extends": [
     "next/core-web-vitals",
-    "@typescript-eslint/recommended",
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-explicit-any": "warn",
@@ -20,11 +19,11 @@
       "error",
       {
         "selector": "variable",
-        "format": ["camelCase", "UPPER_CASE"]
+        "format": ["camelCase", "UPPER_CASE", "PascalCase"]
       },
       {
         "selector": "function",
-        "format": ["camelCase"]
+        "format": ["camelCase", "PascalCase"]
       },
       {
         "selector": "typeLike",

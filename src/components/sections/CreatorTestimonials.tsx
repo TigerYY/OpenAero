@@ -7,7 +7,7 @@ const testimonials = [
     name: '王工',
     role: 'FPV验证机创作者',
     avatar: '👨‍💻',
-    content: '通过OpenAero平台，我的FPV验证机设计获得了巨大成功。平台的专业认证体系让用户更信任我的产品，70%的利润分成也让我获得了丰厚的回报。',
+    content: '通过OpenAero平台，我的FPV验证机设计获得了巨大成功。平台的专业认证体系让用户更信任我的产品，50%的利润分成也让我获得了丰厚的回报。',
     revenue: '¥299,900',
     solutions: 3,
     rating: 5,
