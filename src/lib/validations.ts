@@ -9,7 +9,19 @@ export const userSchema = z.object({
 
 export const loginSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),
-  password: z.string().min(1, '请输入密码'),
+  password: z.string().min(6, '密码至少需要6个字符'),
+});
+
+export const registerSchema = z.object({
+  name: z.string().min(2, '姓名至少需要2个字符').max(50, '姓名不能超过50个字符').optional(),
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(8, '密码至少需要8个字符'),
+});
+
+export const userProfileSchema = z.object({
+  name: z.string().min(2, '姓名至少需要2个字符').max(50, '姓名不能超过50个字符').optional(),
+  email: z.string().email('请输入有效的邮箱地址').optional(),
+  avatar: z.string().url('请输入有效的头像地址').optional(),
 });
 
 // 创作者申请验证
@@ -26,16 +38,24 @@ export const creatorApplySchema = creatorApplicationSchema;
 // 解决方案验证
 export const solutionSchema = z.object({
   title: z.string().min(5, '标题至少需要5个字符').max(100, '标题不能超过100个字符'),
+  slug: z.string().min(1, '请提供有效的slug').regex(/^[a-z0-9-]+$/, 'slug只能包含小写字母、数字和连字符'),
   description: z.string().min(50, '描述至少需要50个字符').max(2000, '描述不能超过2000个字符'),
-  category: z.string().min(1, '请选择分类'),
+  longDescription: z.string().min(50, '详细描述至少需要50个字符').max(5000, '详细描述不能超过5000个字符').optional(),
+  images: z.array(z.string().url('请输入有效的图片地址')).min(1, '请至少上传一张图片').max(10, '最多上传10张图片'),
   price: z.number().min(0, '价格不能为负数').max(100000, '价格不能超过100000'),
-  features: z.array(z.string()).min(1, '请至少添加一个功能特性').max(10, '最多添加10个功能特性'),
+  categoryId: z.string().min(1, '请选择分类'),
+  creatorId: z.string().min(1, '请提供创作者ID'),
+  status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'PUBLISHED']).optional(),
   specs: z.record(z.any()).optional(),
   bom: z.record(z.any()).optional(),
+  features: z.array(z.string()).min(1, '请至少添加一个功能特性').max(10, '最多添加10个功能特性'),
+  tagIds: z.array(z.string()).optional(),
 });
 
 // 评价验证
 export const reviewSchema = z.object({
+  solutionId: z.string().min(1, '请提供解决方案ID'),
+  userId: z.string().min(1, '请提供用户ID'),
   rating: z.number().min(1, '评分至少为1星').max(5, '评分最多为5星'),
   comment: z.string().min(10, '评价至少需要10个字符').max(500, '评价不能超过500个字符').optional(),
 });

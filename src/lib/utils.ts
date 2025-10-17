@@ -5,7 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string | number) {
+export function formatCurrency(amount: number, currency = 'CNY'): string {
+  return new Intl.NumberFormat('zh-CN', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+}
+
+export function formatDate(date: Date | string | number): string {
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -13,14 +20,7 @@ export function formatDate(date: Date | string | number) {
   }).format(new Date(date));
 }
 
-export function formatCurrency(amount: number, currency = 'CNY') {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency,
-  }).format(amount);
-}
-
-export function formatNumber(num: number) {
+export function formatNumber(num: number): string {
   return new Intl.NumberFormat('zh-CN').format(num);
 }
 

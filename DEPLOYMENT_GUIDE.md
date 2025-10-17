@@ -1,376 +1,391 @@
-# OpenAero 部署指南
+# 开元空御部署指南
 
-## 🚀 部署选项
+本文档介绍开元空御项目的各种部署方式和配置方法。
 
-### 选项 1: Vercel 部署（推荐）
+## 📋 部署概览
 
-#### 优势
-- 零配置部署
-- 自动 HTTPS
-- 全球 CDN
-- 自动扩展
-- 预览部署
+开元空御支持多种部署方式：
 
-#### 部署步骤
-1. 连接 GitHub 仓库到 Vercel
+- **Docker Compose**: 本地开发和简单部署
+- **Kubernetes**: 生产环境容器编排
+- **Vercel**: 无服务器部署
+- **传统服务器**: 直接部署到服务器
+
+## 🐳 Docker部署
+
+### 开发环境
+
+```bash
+# 启动开发环境
+docker-compose -f docker-compose.dev.yml up -d
+
+# 查看日志
+docker-compose -f docker-compose.dev.yml logs -f
+
+# 停止服务
+docker-compose -f docker-compose.dev.yml down
+```
+
+### 生产环境
+
+```bash
+# 使用部署脚本
+./scripts/deploy.sh production
+
+# 或手动部署
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+```
+
+### 环境变量配置
+
+创建相应的环境文件：
+
+```bash
+# 开发环境
+cp env.example .env.local
+
+# 生产环境
+cp env.example .env.production
+```
+
+## ☸️ Kubernetes部署
+
+### 前提条件
+
+- Kubernetes集群 (1.20+)
+- kubectl配置
+- Helm (可选)
+
+### 部署步骤
+
+```bash
+# 创建命名空间
+kubectl apply -f k8s/namespace.yaml
+
+# 创建密钥
+kubectl create secret generic openaero-secrets \
+  --from-literal=database-url="postgresql://user:pass@host:5432/db" \
+  --from-literal=nextauth-secret="your-secret" \
+  -n openaero
+
+# 创建配置
+kubectl create configmap openaero-config \
+  --from-literal=NODE_ENV=production \
+  -n openaero
+
+# 部署应用
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# 检查部署状态
+kubectl get pods -n openaero
+kubectl get services -n openaero
+kubectl get ingress -n openaero
+```
+
+### 自动扩缩容
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: openaero-hpa
+  namespace: openaero
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: openaero-web
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+## 🚀 Vercel部署
+
+### 自动部署
+
+1. 连接GitHub仓库到Vercel
 2. 配置环境变量
 3. 自动部署
 
+### 手动部署
+
 ```bash
-# 使用 Vercel CLI
+# 安装Vercel CLI
 npm i -g vercel
-vercel
+
+# 登录
+vercel login
+
+# 部署
+vercel --prod
+
+# 配置环境变量
+vercel env add DATABASE_URL
+vercel env add NEXTAUTH_SECRET
 ```
 
-#### 环境变量配置
-在 Vercel Dashboard 添加：
-- `DATABASE_URL`
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL`
-- `NEXT_PUBLIC_SENTRY_DSN`
-- `NEXT_PUBLIC_GA_ID`
+### Vercel配置
 
-### 选项 2: Docker 部署
+创建 `vercel.json`:
 
-#### 构建镜像
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 🖥️ 传统服务器部署
+
+### 系统要求
+
+- Ubuntu 20.04+ / CentOS 8+
+- Node.js 18+
+- PostgreSQL 13+
+- Nginx
+- PM2 (进程管理)
+
+### 部署步骤
+
 ```bash
-# 构建生产镜像
-docker build -t openaero/web:latest .
+# 1. 克隆代码
+git clone https://github.com/TigerYY/OpenAero.git
+cd OpenAero/openaero.web
 
-# 运行容器
-docker run -p 3000:3000 \
-  -e DATABASE_URL=your-db-url \
-  -e NEXTAUTH_SECRET=your-secret \
-  openaero/web:latest
-```
+# 2. 安装依赖
+npm ci --production
 
-#### 使用 Docker Compose
-```bash
-# 启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f web
-
-# 停止服务
-docker-compose down
-```
-
-#### 生产环境配置
-```yaml
-# docker-compose.prod.yml
-version: '3.8'
-services:
-  web:
-    image: openaero/web:${VERSION}
-    restart: always
-    environment:
-      NODE_ENV: production
-    deploy:
-      replicas: 3
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-```
-
-### 选项 3: Kubernetes 部署
-
-#### 前置要求
-- Kubernetes 集群 (1.24+)
-- kubectl 已配置
-- Docker 镜像已推送到容器仓库
-
-#### 部署步骤
-
-1. **创建命名空间**
-```bash
-kubectl create namespace production
-```
-
-2. **创建 Secrets**
-```bash
-kubectl create secret generic openaero-secrets \
-  --from-literal=database-url='your-db-url' \
-  --from-literal=nextauth-secret='your-secret' \
-  -n production
-```
-
-3. **部署应用**
-```bash
-kubectl apply -f k8s/deployment.yml
-```
-
-4. **验证部署**
-```bash
-# 检查 Pod 状态
-kubectl get pods -n production
-
-# 检查服务
-kubectl get svc -n production
-
-# 查看日志
-kubectl logs -f deployment/openaero-web -n production
-```
-
-5. **配置 Ingress（可选）**
-```yaml
-# k8s/ingress.yml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: openaero-ingress
-  namespace: production
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  tls:
-  - hosts:
-    - openaero.cn
-    secretName: openaero-tls
-  rules:
-  - host: openaero.cn
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: openaero-web-service
-            port:
-              number: 80
-```
-
-## 🔧 CI/CD 流程
-
-### GitHub Actions 自动部署
-
-工作流已配置在 `.github/workflows/ci.yml`
-
-#### 触发条件
-- Push 到 `main` 分支
-- Pull Request 到 `main` 分支
-
-#### 流程步骤
-1. 代码检查（Lint + TypeScript）
-2. 运行测试
-3. 构建应用
-4. 部署到 Vercel/Kubernetes
-
-### 手动部署脚本
-
-创建 `scripts/deploy.sh`:
-```bash
-#!/bin/bash
-
-echo "🚀 Starting deployment..."
-
-# 1. 构建
-echo "📦 Building application..."
+# 3. 构建应用
 npm run build
 
-# 2. 运行测试
-echo "🧪 Running tests..."
-npm run test
+# 4. 安装PM2
+npm install -g pm2
 
-# 3. 构建 Docker 镜像
-echo "🐳 Building Docker image..."
-docker build -t openaero/web:${VERSION} .
+# 5. 启动应用
+pm2 start ecosystem.config.js
 
-# 4. 推送镜像
-echo "📤 Pushing Docker image..."
-docker push openaero/web:${VERSION}
+# 6. 配置Nginx
+sudo cp nginx/openaero.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/openaero.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
-# 5. 更新 Kubernetes
-echo "☸️  Updating Kubernetes deployment..."
-kubectl set image deployment/openaero-web \
-  web=openaero/web:${VERSION} \
-  -n production
+### PM2配置
 
-# 6. 等待部署完成
-echo "⏳ Waiting for rollout..."
-kubectl rollout status deployment/openaero-web -n production
+创建 `ecosystem.config.js`:
 
-echo "✅ Deployment completed!"
+```javascript
+module.exports = {
+  apps: [{
+    name: 'openaero-web',
+    script: 'server.js',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    }
+  }]
+}
+```
+
+## 🔧 环境配置
+
+### 必需环境变量
+
+```env
+# 数据库
+DATABASE_URL="postgresql://user:password@host:port/database"
+
+# 认证
+NEXTAUTH_URL="https://openaero.cn"
+NEXTAUTH_SECRET="your-secret-key"
+
+# 监控
+SENTRY_DSN="your-sentry-dsn"
+NEXT_PUBLIC_SENTRY_DSN="your-sentry-dsn"
+
+# 邮件
+SMTP_HOST="smtp.example.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@example.com"
+SMTP_PASS="your-password"
+```
+
+### 可选环境变量
+
+```env
+# 文件存储
+AWS_ACCESS_KEY_ID="your-aws-key"
+AWS_SECRET_ACCESS_KEY="your-aws-secret"
+AWS_S3_BUCKET="openaero-uploads"
+
+# 支付
+STRIPE_PUBLIC_KEY="your-stripe-public-key"
+STRIPE_SECRET_KEY="your-stripe-secret-key"
+
+# 分析
+NEXT_PUBLIC_ANALYTICS_ID="your-analytics-id"
 ```
 
 ## 📊 监控和日志
 
-### 日志收集
-
-#### Docker日志
-```bash
-docker logs -f openaero-web
-```
-
-#### Kubernetes日志
-```bash
-# 实时日志
-kubectl logs -f deployment/openaero-web -n production
-
-# 最近 100 行
-kubectl logs --tail=100 deployment/openaero-web -n production
-```
-
 ### 健康检查
 
-#### 健康检查端点
-```typescript
-// src/app/api/health/route.ts
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
-
-export async function GET() {
-  try {
-    // 检查数据库连接
-    await prisma.$queryRaw`SELECT 1`;
-    
-    return NextResponse.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
-        error: error.message,
-      },
-      { status: 500 }
-    );
-  }
-}
-```
-
-### 性能监控
-
-#### Prometheus 指标
-```yaml
-# k8s/servicemonitor.yml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: openaero-web
-  namespace: production
-spec:
-  selector:
-    matchLabels:
-      app: openaero
-  endpoints:
-  - port: web
-    path: /api/metrics
-    interval: 30s
-```
-
-## 🔒 安全配置
-
-### SSL/TLS证书
-
-#### 使用 Let's Encrypt
 ```bash
-# 安装 cert-manager
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+# 检查应用健康状态
+curl http://localhost:3000/api/health
 
-# 创建 ClusterIssuer
-kubectl apply -f - <<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@openaero.cn
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-EOF
+# 检查Docker容器
+docker-compose ps
+
+# 检查Kubernetes Pod
+kubectl get pods -n openaero
 ```
 
-### 环境变量安全
+### 日志查看
 
-使用 Kubernetes Secrets 或 Vault：
 ```bash
-# 从文件创建 Secret
-kubectl create secret generic openaero-env \
-  --from-env-file=.env.production \
-  -n production
+# Docker日志
+docker-compose logs -f app
+
+# Kubernetes日志
+kubectl logs -f deployment/openaero-web -n openaero
+
+# PM2日志
+pm2 logs openaero-web
 ```
 
-## 🎯 性能优化
+### 监控面板
 
-### CDN 配置
+- **Grafana**: http://localhost:3001 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **应用监控**: http://localhost:3000/admin/monitoring
 
-#### Cloudflare 设置
-1. 添加域名到 Cloudflare
-2. 配置 DNS 记录
-3. 启用缓存规则
-4. 配置 Page Rules
+## 🔄 CI/CD流程
 
-### 缓存策略
+### GitHub Actions
 
-#### Next.js 配置
-```javascript
-// next.config.js
-module.exports = {
-  async headers() {
-    return [
-      {
-        source: '/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
-};
+项目配置了完整的CI/CD流程：
+
+1. **代码质量检查**: ESLint, TypeScript, Prettier
+2. **测试**: 单元测试, E2E测试
+3. **安全扫描**: npm audit, Snyk
+4. **构建**: Docker镜像构建
+5. **部署**: 自动部署到不同环境
+
+### 部署流程
+
+```mermaid
+graph LR
+    A[代码推送] --> B[质量检查]
+    B --> C[测试]
+    C --> D[安全扫描]
+    D --> E[构建镜像]
+    E --> F[部署]
+    F --> G[健康检查]
 ```
 
-## 🔄 回滚策略
+## 🚨 故障排除
 
-### Kubernetes 回滚
-```bash
-# 查看部署历史
-kubectl rollout history deployment/openaero-web -n production
+### 常见问题
 
-# 回滚到上一版本
-kubectl rollout undo deployment/openaero-web -n production
+1. **端口冲突**
+   ```bash
+   # 检查端口占用
+   lsof -i :3000
+   
+   # 使用端口清理脚本
+   npm run clean-ports
+   ```
 
-# 回滚到指定版本
-kubectl rollout undo deployment/openaero-web \
-  --to-revision=2 \
-  -n production
-```
+2. **数据库连接失败**
+   ```bash
+   # 检查数据库状态
+   docker-compose ps db
+   
+   # 查看数据库日志
+   docker-compose logs db
+   ```
 
-### Vercel 回滚
-1. 访问 Vercel Dashboard
-2. 选择部署历史
-3. 点击"Promote to Production"
+3. **内存不足**
+   ```bash
+   # 检查内存使用
+   docker stats
+   
+   # 清理Docker资源
+   docker system prune -a
+   ```
 
-## ✅ 部署清单
+4. **SSL证书问题**
+   ```bash
+   # 检查证书
+   openssl x509 -in cert.pem -text -noout
+   
+   # 重新生成证书
+   ./scripts/generate-ssl.sh
+   ```
 
-- [ ] 环境变量已配置
-- [ ] 数据库已迁移
-- [ ] SSL证书已配置
-- [ ] 监控已启用
-- [ ] 日志收集已配置
-- [ ] 备份策略已实施
-- [ ] CDN已配置
-- [ ] 健康检查正常
-- [ ] 性能测试通过
-- [ ] 安全扫描通过
+### 性能优化
 
-## 📞 支持
+1. **启用Gzip压缩**
+2. **配置CDN**
+3. **优化图片**
+4. **数据库索引**
+5. **缓存策略**
 
-遇到问题？
-- 查看日志：`kubectl logs`
-- 检查状态：`kubectl get pods`
-- 查看事件：`kubectl get events`
-- 联系运维团队：ops@openaero.cn
+## 📚 相关文档
+
+- [Docker官方文档](https://docs.docker.com/)
+- [Kubernetes官方文档](https://kubernetes.io/docs/)
+- [Vercel部署指南](https://vercel.com/docs)
+- [Next.js部署文档](https://nextjs.org/docs/deployment)
+
+## 🤝 支持
+
+如有部署问题，请：
+
+1. 查看日志文件
+2. 检查环境变量
+3. 参考故障排除部分
+4. 联系开发团队

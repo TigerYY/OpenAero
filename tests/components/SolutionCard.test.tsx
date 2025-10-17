@@ -51,7 +51,7 @@ describe('SolutionCard Component', () => {
     
     expect(screen.getByText('Test Solution')).toBeInTheDocument();
     expect(screen.getByText('This is a test solution description')).toBeInTheDocument();
-    expect(screen.getByText('¥2,999')).toBeInTheDocument();
+    expect(screen.getByText('¥2,999.00')).toBeInTheDocument();
   });
 
   it('displays creator information when available', () => {
@@ -63,8 +63,7 @@ describe('SolutionCard Component', () => {
   it('shows rating and review count when available', () => {
     render(<SolutionCard solution={mockSolution} />);
     
-    expect(screen.getByText('4.5')).toBeInTheDocument();
-    expect(screen.getByText('(10)')).toBeInTheDocument();
+    expect(screen.getByText('4.5 (10 评价)')).toBeInTheDocument();
   });
 
   it('displays specs as tags', () => {

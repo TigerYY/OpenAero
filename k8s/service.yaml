@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openaero-web-service
+  namespace: openaero
+  labels:
+    app: openaero-web
+spec:
+  selector:
+    app: openaero-web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: ClusterIP

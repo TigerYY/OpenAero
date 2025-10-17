@@ -18,7 +18,7 @@ export function Logo({ size = 'md', showText = true, className = '' }: LogoProps
   const { width, height, textSize } = sizeMap[size];
 
   return (
-    <Link href="/" className={`flex items-center space-x-3 ${className}`}>
+    <Link href="/" className={`flex items-end space-x-3 ${className}`}>
       <div className="relative flex-shrink-0">
         <Image
           src="/images/openaero-logo-trimmed.png"
@@ -30,7 +30,7 @@ export function Logo({ size = 'md', showText = true, className = '' }: LogoProps
         />
       </div>
       {showText && (
-        <span className={`font-bold text-secondary-900 ${textSize} whitespace-nowrap`}>
+        <span className={`font-bold text-secondary-900 ${textSize} whitespace-nowrap font-sans`} style={{ fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }}>
           开元空御
         </span>
       )}
@@ -48,7 +48,7 @@ export function LogoText({ size = 'md', className = '' }: Omit<LogoProps, 'showT
   const { textSize } = sizeMap[size];
   
   return (
-    <Link href="/" className={`font-bold text-secondary-900 ${textSize} ${className}`}>
+    <Link href="/" className={`font-bold text-secondary-900 ${textSize} font-sans ${className}`} style={{ fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }}>
       开元空御
     </Link>
   );

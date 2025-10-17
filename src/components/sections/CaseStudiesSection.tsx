@@ -62,7 +62,7 @@ export function CaseStudiesSection() {
             >
               <div className="aspect-video bg-gradient-to-br from-success-100 to-success-200 relative">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-6xl">🚁</div>
+                  <span className="text-6xl">🚁</span>
                 </div>
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1 bg-success-100 text-success-800 text-xs font-medium rounded-full">

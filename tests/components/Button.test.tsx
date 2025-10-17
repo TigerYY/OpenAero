@@ -10,7 +10,7 @@ describe('Button Component', () => {
   })
 
   it('renders with different variants', () => {
-    const { rerender } = render(<Button variant="primary">Primary</Button>)
+    const { rerender } = render(<Button variant="default">Default</Button>)
     expect(screen.getByRole('button')).toHaveClass('bg-primary-600', 'text-white')
 
     rerender(<Button variant="secondary">Secondary</Button>)

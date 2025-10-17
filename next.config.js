@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 性能优化
@@ -83,4 +85,27 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Sentry配置
+const sentryWebpackPluginOptions = {
+  // 在构建时上传source maps到Sentry
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  
+  // 静默模式，减少构建输出
+  silent: true,
+  
+  // 上传source maps
+  widenClientFileUpload: true,
+  
+  // 隐藏source maps
+  hideSourceMaps: true,
+  
+  // 禁用客户端source maps上传
+  disableClientWebpackPlugin: false,
+  disableServerWebpackPlugin: false,
+  
+  // 自动上传
+  automaticVercelReleases: true,
+};
+
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);

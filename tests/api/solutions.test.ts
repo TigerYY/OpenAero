@@ -1,6 +1,20 @@
+// Mock Next.js Request and Response
+global.Request = jest.fn().mockImplementation((url, options) => ({
+  url,
+  method: options?.method || 'GET',
+  headers: new Map(),
+  json: jest.fn(),
+  text: jest.fn(),
+})) as any;
+
+global.Response = jest.fn().mockImplementation((body, options) => ({
+  status: options?.status || 200,
+  json: jest.fn().mockReturnValue(body),
+  text: jest.fn().mockReturnValue(JSON.stringify(body)),
+})) as any;
+
 import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/solutions/route'
-import prisma from '@/lib/db'
 
 // Mock Prisma
 jest.mock('@/lib/db', () => ({

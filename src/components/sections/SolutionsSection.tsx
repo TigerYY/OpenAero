@@ -65,7 +65,7 @@ export function SolutionsSection() {
             >
               <div className="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 relative">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-6xl">🚁</div>
+                  <span className="text-6xl">🚁</span>
                 </div>
                 <div className="absolute top-4 right-4">
                   <span

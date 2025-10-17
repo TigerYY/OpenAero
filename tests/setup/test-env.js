@@ -1,0 +1,120 @@
+// Test environment setup
+// This file sets up the test environment for Jest and Playwright
+
+// Mock global objects for Node.js environment
+global.TransformStream = class TransformStream {
+  constructor() {}
+  get readable() { return new ReadableStream(); }
+  get writable() { return new WritableStream(); }
+};
+
+// Mock Request and Response for API tests
+global.Request = class Request {
+  constructor(url, options = {}) {
+    this.url = url;
+    this.method = options.method || 'GET';
+    this.headers = new Map();
+    this.body = options.body;
+  }
+  
+  async json() {
+    return JSON.parse(this.body || '{}');
+  }
+  
+  async text() {
+    return this.body || '';
+  }
+};
+
+global.Response = class Response {
+  constructor(body, options = {}) {
+    this.status = options.status || 200;
+    this.body = body;
+  }
+  
+  async json() {
+    return this.body;
+  }
+  
+  async text() {
+    return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+  }
+};
+
+// Mock fetch
+global.fetch = jest.fn();
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock URL
+global.URL = class URL {
+  constructor(url, base) {
+    this.href = url;
+    this.pathname = new URL(url, base).pathname;
+    this.searchParams = new URLSearchParams(new URL(url, base).search);
+  }
+};
+
+// Mock URLSearchParams
+global.URLSearchParams = class URLSearchParams {
+  constructor(init) {
+    this.params = new Map();
+    if (init) {
+      if (typeof init === 'string') {
+        init.split('&').forEach(pair => {
+          const [key, value] = pair.split('=');
+          if (key) this.params.set(key, value || '');
+        });
+      } else if (Array.isArray(init)) {
+        init.forEach(([key, value]) => this.params.set(key, value));
+      }
+    }
+  }
+  
+  get(name) {
+    return this.params.get(name) || null;
+  }
+  
+  set(name, value) {
+    this.params.set(name, value);
+  }
+  
+  append(name, value) {
+    this.params.set(name, value);
+  }
+  
+  toString() {
+    return Array.from(this.params.entries())
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+  }
+};

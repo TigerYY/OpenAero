@@ -5,6 +5,8 @@ import SolutionsPage from '@/app/solutions/page'
 // Mock the useSearchParams hook
 jest.mock('next/navigation', () => ({
   useSearchParams: jest.fn(),
+  useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }))
 
 // Mock the SolutionCard component
@@ -18,6 +20,20 @@ jest.mock('@/components/business/SolutionCard', () => {
 jest.mock('@/components/business/SearchFilters', () => {
   return function MockSearchFilters() {
     return <div data-testid="search-filters">Search Filters</div>
+  }
+})
+
+// Mock the Pagination component
+jest.mock('@/components/ui/Pagination', () => {
+  return function MockPagination() {
+    return <div data-testid="pagination">Pagination</div>
+  }
+})
+
+// Mock the MainLayout component
+jest.mock('@/components/layout/MainLayout', () => {
+  return function MockMainLayout({ children }: { children: React.ReactNode }) {
+    return <div data-testid="main-layout">{children}</div>
   }
 })
 

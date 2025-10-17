@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openaero-web
+  namespace: openaero
+  labels:
+    app: openaero-web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: openaero-web
+  template:
+    metadata:
+      labels:
+        app: openaero-web
+    spec:
+      containers:
+      - name: openaero-web
+        image: ghcr.io/tigeryy/openaero-web:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: openaero-secrets
+              key: database-url
+        - name: NEXTAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openaero-secrets
+              key: nextauth-secret
+        - name: NEXTAUTH_URL
+          value: "https://openaero.cn"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: app-config
+          mountPath: /app/config
+      volumes:
+      - name: app-config
+        configMap:
+          name: openaero-config
+      imagePullSecrets:
+      - name: ghcr-secret

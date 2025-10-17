@@ -1,3 +1,10 @@
+// Mock global objects for Node.js environment
+global.TransformStream = class TransformStream {
+  constructor() {}
+  get readable() { return new ReadableStream(); }
+  get writable() { return new WritableStream(); }
+};
+
 import { test, expect } from '@playwright/test'
 
 test.describe('Homepage', () => {

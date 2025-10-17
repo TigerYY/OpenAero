@@ -23,11 +23,15 @@ export function SolutionCard({ solution }: SolutionCardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PUBLISHED':
+      case 'APPROVED':
         return 'bg-success-100 text-success-800';
-      case 'PENDING':
+      case 'PENDING_REVIEW':
         return 'bg-warning-100 text-warning-800';
       case 'DRAFT':
+        return 'bg-secondary-100 text-secondary-800';
+      case 'REJECTED':
+        return 'bg-error-100 text-error-800';
+      case 'ARCHIVED':
         return 'bg-secondary-100 text-secondary-800';
       default:
         return 'bg-secondary-100 text-secondary-800';
@@ -36,12 +40,16 @@ export function SolutionCard({ solution }: SolutionCardProps) {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'PUBLISHED':
-        return '已发布';
-      case 'PENDING':
+      case 'APPROVED':
+        return '已认证';
+      case 'PENDING_REVIEW':
         return '审核中';
       case 'DRAFT':
         return '草稿';
+      case 'REJECTED':
+        return '已拒绝';
+      case 'ARCHIVED':
+        return '已归档';
       default:
         return '未知';
     }
@@ -57,11 +65,11 @@ export function SolutionCard({ solution }: SolutionCardProps) {
             alt={solution.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-6xl">🚁</div>
-          </div>
-        )}
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-6xl">🚁</span>
+                  </div>
+                )}
         
         {/* 状态标签 */}
         <div className="absolute top-4 right-4">

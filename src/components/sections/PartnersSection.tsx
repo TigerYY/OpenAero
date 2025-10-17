@@ -8,36 +8,48 @@ const partners = [
     logo: 'DJI',
     description: '全球领先的无人机技术公司',
     category: '技术合作',
+    color: 'bg-gradient-to-br from-red-500 to-red-600',
+    textColor: 'text-white',
   },
   {
     name: '华为云',
     logo: 'HUAWEI',
     description: '云计算和AI技术支持',
     category: '云服务',
+    color: 'bg-gradient-to-br from-red-500 to-red-700',
+    textColor: 'text-white',
   },
   {
     name: '阿里云',
     logo: 'ALIBABA',
     description: '数据存储和计算服务',
     category: '云服务',
+    color: 'bg-gradient-to-br from-orange-400 to-orange-600',
+    textColor: 'text-white',
   },
   {
     name: '中科创达',
     logo: 'THUNDER',
     description: '嵌入式系统解决方案',
     category: '技术合作',
+    color: 'bg-gradient-to-br from-blue-500 to-blue-700',
+    textColor: 'text-white',
   },
   {
     name: '顺丰科技',
     logo: 'SF',
     description: '物流配送解决方案',
     category: '物流合作',
+    color: 'bg-gradient-to-br from-red-600 to-red-800',
+    textColor: 'text-white',
   },
   {
     name: '京东物流',
     logo: 'JD',
     description: '供应链管理服务',
     category: '物流合作',
+    color: 'bg-gradient-to-br from-red-500 to-red-700',
+    textColor: 'text-white',
   },
 ];
 
@@ -64,8 +76,8 @@ export function PartnersSection() {
               viewport={{ once: true }}
               className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-300 text-center"
             >
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-3 text-sm font-bold text-primary-600">
-                {partner.logo}
+              <div className={`w-12 h-12 ${partner.color} rounded-lg flex items-center justify-center mx-auto mb-3 text-xs font-bold ${partner.textColor} shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105`}>
+                <span className="tracking-tight">{partner.logo}</span>
               </div>
               <h3 className="font-semibold text-secondary-900 mb-1">
                 {partner.name}

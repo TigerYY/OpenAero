@@ -44,8 +44,8 @@ export default function SolutionsPage() {
       const result = await response.json();
 
       if (result.success) {
-        setSolutions(result.data.data);
-        setPagination(result.data.pagination);
+        setSolutions(result.data);
+        setPagination(result.pagination);
       }
     } catch (error) {
       console.error('Error fetching solutions:', error);

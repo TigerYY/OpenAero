@@ -11,12 +11,13 @@ interface SearchFiltersProps {
 
 const categories = [
   { value: '', label: '全部分类' },
-  { value: 'fpv', label: 'FPV验证机' },
-  { value: 'security', label: '安防巡检' },
-  { value: 'agriculture', label: '农业植保' },
-  { value: 'logistics', label: '物流配送' },
-  { value: 'mapping', label: '测绘航拍' },
-  { value: 'delivery', label: '配送运输' },
+  { value: 'cat1', label: 'FPV验证机' },
+  { value: 'cat2', label: '安防巡检' },
+  { value: 'cat3', label: '农业植保' },
+  { value: 'cat4', label: '航拍摄影' },
+  { value: 'cat5', label: '物流配送' },
+  { value: 'cat6', label: '测绘航拍' },
+  { value: 'cat7', label: '配送运输' },
 ];
 
 // const sortOptions = [
