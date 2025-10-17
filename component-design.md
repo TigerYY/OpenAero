@@ -1,4 +1,4 @@
-# GLAD-N 网站组件设计方案
+# OpenAero 组件设计方案
 
 ## 1. 组件架构设计
 
@@ -16,8 +16,9 @@
 - **页面组件**：`Page` 后缀，如 `HomePage`, `SolutionDetailPage`
 - **布局组件**：`Layout` 后缀，如 `MainLayout`, `AuthLayout`
 - **区块组件**：`Section` 后缀，如 `HeroSection`, `FeaturesSection`
-- **业务组件**：业务相关命名，如 `ProductCard`, `BOMList`
+- **业务组件**：业务相关命名，如 `ProductCard`, `BOMList`, `CreatorDashboard`
 - **UI组件**：通用命名，如 `Button`, `Modal`, `Table`
+- **表单组件**：`Form` 后缀，如 `ContactForm`, `CreatorApplicationForm`
 
 ## 2. 核心页面组件
 
