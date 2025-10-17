@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      UserRole @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  creatorProfile CreatorProfile?
+  orders         Order[]
+  reviews        Review[]
+  favorites      Favorite[]
+
+  @@map("users")
+}
+
+// 创作者档案
+model CreatorProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  bio         String?
+  website     String?
+  experience  String?
+  specialties String[] // 专业领域
+  status      CreatorStatus @default(PENDING)
+  revenue     Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solutions Solution[]
+
+  @@map("creator_profiles")
+}
+
+// 解决方案模型
+model Solution {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  price       Decimal  @db.Decimal(10, 2)
+  status      SolutionStatus @default(DRAFT)
+  images      String[] // 图片URL数组
+  features    String[] // 功能特性
+  specs       Json?    // 技术规格JSON
+  bom         Json?    // BOM清单JSON
+  creatorId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  orders  OrderSolution[]
+  reviews Review[]
+
+  @@map("solutions")
+}
+
+// 订单模型
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  status    OrderStatus @default(PENDING)
+  total     Decimal     @db.Decimal(10, 2)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // 关联关系
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderSolutions OrderSolution[]
+
+  @@map("orders")
+}
+
+// 订单解决方案关联表
+model OrderSolution {
+  id         String  @id @default(cuid())
+  orderId    String
+  solutionId String
+  quantity   Int     @default(1)
+  price      Decimal @db.Decimal(10, 2)
+
+  // 关联关系
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, solutionId])
+  @@map("order_solutions")
+}
+
+// 评价模型
+model Review {
+  id         String  @id @default(cuid())
+  userId     String
+  solutionId String
+  rating     Int     // 1-5星评分
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 关联关系
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+  @@map("reviews")
+}
+
+// 收藏模型
+model Favorite {
+  id         String @id @default(cuid())
+  userId     String
+  solutionId String
+  createdAt  DateTime @default(now())
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+  @@map("favorites")
+}
+
+// 枚举类型
+enum UserRole {
+  CUSTOMER
+  CREATOR
+  ADMIN
+}
+
+enum CreatorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum SolutionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
