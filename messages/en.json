@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "viewDetails": "View Details",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us",
+    "becomeCreator": "Become a Creator"
+  },
+  "navigation": {
+    "solutions": "Solutions Market",
+    "creators": "Creator Center",
+    "certification": "Certification Standards",
+    "partners": "Ecosystem Partners",
+    "developer": "Developer Center"
+  },
+  "hero": {
+    "badge": "New Ecosystem Platform",
+    "title": "Community-Driven Open Drone Solutions Platform",
+    "subtitle": "Connecting global drone creators with professional customers, we professionally verify, produce and sell excellent drone innovation designs, providing creators with {percentage} profit sharing.",
+    "cta": {
+      "browseSolutions": "Browse Solutions",
+      "becomeCreator": "Become a Creator"
+    },
+    "features": {
+      "professionalCertification": "Professional Certification",
+      "profitSharing": "50% Profit Sharing",
+      "globalSupplyChain": "Global Supply Chain"
+    }
+  },
+  "solutions": {
+    "title": "Certified Solutions",
+    "subtitle": "Professionally certified drone core kits providing complete solutions for different application scenarios",
+    "viewAll": "View All Solutions",
+    "card": {
+      "creator": "Creator",
+      "price": "Price",
+      "status": {
+        "approved": "Certified",
+        "pending": "Under Review",
+        "draft": "Draft",
+        "rejected": "Rejected",
+        "archived": "Archived",
+        "onSale": "On Sale"
+      }
+    },
+    "filters": {
+      "searchPlaceholder": "Search solutions...",
+      "category": "Category",
+      "priceRange": "Price Range",
+      "sortBy": "Sort By",
+      "quickFilters": {
+        "under1000": "Under $150",
+        "1000to5000": "$150 - $750",
+        "over5000": "Over $750"
+      }
+    }
+  },
+  "creators": {
+    "title": "Creator Center",
+    "subtitle": "Transform your drone innovation designs into commercial value",
+    "apply": {
+      "title": "Become an OpenAero Creator",
+      "subtitle": "Join our creator community and transform your drone innovation designs into commercial value",
+      "form": {
+        "bio": "Bio",
+        "website": "Website",
+        "experience": "Professional Experience",
+        "specialties": "Specialties",
+        "submit": "Submit Application",
+        "submitting": "Submitting..."
+      },
+      "success": {
+        "title": "Application Submitted Successfully!",
+        "message": "Thank you for your interest in the OpenAero creator community. We have received your application and will complete the review within {days} business days.",
+        "note": "Review results will be notified via email. In the meantime, you can explore our platform."
+      }
+    }
+  },
+  "footer": {
+    "description": "A community-driven open drone solutions platform connecting global drone creators with professional customers.",
+    "sections": {
+      "solutions": "Solutions",
+      "creators": "Creators",
+      "resources": "Resources"
+    },
+    "copyright": "© {year} OpenAero. All Rights Reserved. | Domain: openaero.cn",
+    "icp": "ICP License: 粤ICP备2020099654号-3",
+    "security": "Security Record"
+  },
+  "meta": {
+    "title": "OpenAero - Community-Driven Open Drone Solutions Platform",
+    "description": "OpenAero is a community-driven open drone solutions platform connecting global drone creators with professional customers. We are committed to professionally verifying, producing and selling excellent drone innovation designs.",
+    "keywords": "drone,core kit,open source,community driven,creator,solutions,certification standards,OpenAero"
+  }
+}

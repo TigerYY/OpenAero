@@ -56,10 +56,10 @@ export default function SolutionsPage() {
 
   useEffect(() => {
     fetchSolutions();
-  }, [filters, pagination.page]);
+  }, [pagination.page, filters]);
 
-  const handleFilterChange = (newFilters: Partial<SolutionFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  const handleFiltersChange = (newFilters: SolutionFilters) => {
+    setFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -69,81 +69,65 @@ export default function SolutionsPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-secondary-50">
-        <div className="container py-8">
-          {/* 页面标题 */}
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
               解决方案市场
             </h1>
-            <p className="text-xl text-secondary-600">
-              发现经过专业认证的无人机核心套件，为您的项目找到完美解决方案
+            <p className="text-lg text-gray-600">
+              发现和购买经过验证的无人机解决方案
             </p>
           </div>
 
-          {/* 搜索和筛选 */}
-          <div className="mb-8">
-            <SearchFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-1">
+              <SearchFilters
+                filters={filters}
+                onFilterChange={handleFiltersChange}
+              />
+            </div>
 
-          {/* 结果统计 */}
-          <div className="mb-6">
-            <p className="text-secondary-600">
-              找到 <span className="font-semibold text-primary-600">{pagination.total}</span> 个解决方案
-            </p>
-          </div>
-
-          {/* 解决方案列表 */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-sm animate-pulse">
-                  <div className="aspect-video bg-secondary-200 rounded-t-xl"></div>
-                  <div className="p-6">
-                    <div className="h-4 bg-secondary-200 rounded mb-2"></div>
-                    <div className="h-4 bg-secondary-200 rounded mb-4 w-3/4"></div>
-                    <div className="h-6 bg-secondary-200 rounded w-1/2"></div>
-                  </div>
+            <div className="lg:col-span-3">
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-gray-200 rounded-lg h-64"></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : solutions.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {solutions.map((solution) => (
-                  <SolutionCard key={solution.id} solution={solution} />
-                ))}
-              </div>
+              ) : solutions.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                    {solutions.map((solution) => (
+                      <SolutionCard key={solution.id} solution={solution} />
+                    ))}
+                  </div>
 
-              {/* 分页 */}
-              {pagination.totalPages > 1 && (
-                <Pagination
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                />
+                  {pagination.totalPages > 1 && (
+                    <div className="flex justify-center">
+                      <Pagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    未找到匹配的解决方案
+                  </h3>
+                  <p className="text-gray-600">
+                    尝试调整搜索条件或浏览所有解决方案
+                  </p>
+                </div>
               )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-secondary-900 mb-2">
-                没有找到解决方案
-              </h3>
-              <p className="text-secondary-600 mb-6">
-                尝试调整搜索条件或浏览其他分类
-              </p>
-              <button
-                onClick={() => setFilters({})}
-                className="btn-primary"
-              >
-                清除筛选条件
-              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </MainLayout>
