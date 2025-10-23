@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 export function Footer() {
+  const t = useTranslations('footer');
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -44,7 +46,7 @@ export function Footer() {
                 <span className="text-xl font-bold">OpenAero</span>
               </div>
               <p className="text-secondary-300 mb-6 max-w-md">
-                社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。
+                {t('description')}
               </p>
               <div className="flex space-x-4">
                 <a
@@ -80,7 +82,7 @@ export function Footer() {
             {/* Solutions */}
             <div>
               <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                解决方案
+                {t('solutions.title')}
               </h3>
               <ul className="space-y-3">
                 {footerLinks.solutions.map((link) => (
@@ -99,7 +101,7 @@ export function Footer() {
             {/* Creators */}
             <div>
               <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                创作者
+                {t('creators.title')}
               </h3>
               <ul className="space-y-3">
                 {footerLinks.creators.map((link) => (

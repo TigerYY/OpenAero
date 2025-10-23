@@ -1,0 +1,263 @@
+{
+  "common": {
+    "welcome": "欢迎",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "edit": "编辑",
+    "delete": "删除",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "refresh": "刷新",
+    "openMenu": "打开主菜单",
+    "closeMenu": "关闭主菜单"
+  },
+  "navigation": {
+    "home": "首页",
+    "solutions": "解决方案",
+    "creators": "创作者",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "login": "登录",
+    "register": "注册",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出登录"
+  },
+  "language": {
+    "switchTo": "切换到",
+    "currentLanguage": "当前语言",
+    "selectLanguage": "选择语言"
+  },
+  "errors": {
+    "translationMissing": "翻译缺失",
+    "languageLoadFailed": "语言加载失败",
+    "invalidLocale": "无效的语言代码",
+    "networkError": "网络错误"
+  },
+  "hero": {
+    "badge": "全新生态平台",
+    "title": "社区驱动的",
+    "titleHighlight": "开放式无人机",
+    "titleSuffix": "解决方案平台",
+    "description": "连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供",
+    "profitSharing": "50%的利润分成",
+    "cta": {
+      "exploreSolutions": "浏览解决方案",
+      "becomeCreator": "成为创作者",
+      "learnMore": "了解更多"
+    },
+    "features": {
+      "certification": "专业认证",
+      "profitSharing": "50%利润分成",
+      "supplyChain": "全球供应链"
+    }
+  },
+  "solutions": {
+    "title": "认证解决方案",
+    "subtitle": "经过专业认证的无人机核心套件，为不同应用场景提供完整解决方案",
+    "creator": "创作者",
+    "viewAll": "查看所有解决方案",
+    "status": {
+      "certified": "已认证",
+      "pending": "审核中"
+    },
+    "categories": {
+      "娱乐": "娱乐",
+      "安防": "安防",
+      "农业": "农业"
+    },
+    "filter": {
+      "all": "全部",
+      "aerialPhotography": "航拍摄影",
+      "mapping": "测绘",
+      "inspection": "巡检",
+      "delivery": "配送",
+      "agriculture": "农业"
+    },
+    "sort": {
+      "newest": "最新",
+      "popular": "最受欢迎",
+      "rating": "评分",
+      "price": "价格"
+    },
+    "card": {
+      "viewDetails": "查看详情",
+      "contactCreator": "联系创作者",
+      "rating": "评分",
+      "reviews": "评价",
+      "price": "价格",
+      "certified": "已认证"
+    }
+  },
+  "creators": {
+    "title": "创作者",
+    "subtitle": "加入我们的创作者社区",
+    "benefits": {
+      "title": "创作者福利",
+      "profitSharing": "50% 利润分成",
+      "qualitySupport": "质量认证支持",
+      "globalReach": "全球市场覆盖",
+      "communitySupport": "社区支持"
+    },
+    "process": {
+      "title": "成为创作者的流程",
+      "step1": "提交申请",
+      "step2": "质量认证",
+      "step3": "上架解决方案",
+      "step4": "获得收益"
+    },
+    "stats": {
+      "activeCreators": "活跃创作者",
+      "totalSolutions": "解决方案总数",
+      "totalRevenue": "创作者总收入",
+      "averageRating": "平均评分"
+    }
+  },
+  "footer": {
+    "company": {
+      "title": "公司",
+      "about": "关于我们",
+      "careers": "招聘",
+      "press": "新闻",
+      "contact": "联系我们"
+    },
+    "solutions": {
+      "title": "解决方案",
+      "aerialPhotography": "航拍摄影",
+      "mapping": "测绘",
+      "inspection": "巡检",
+      "delivery": "配送",
+      "agriculture": "农业"
+    },
+    "support": {
+      "title": "支持",
+      "helpCenter": "帮助中心",
+      "documentation": "文档",
+      "community": "社区",
+      "status": "服务状态"
+    },
+    "legal": {
+      "title": "法律",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "cookies": "Cookie政策",
+      "gdpr": "GDPR"
+    },
+    "social": {
+      "followUs": "关注我们",
+      "newsletter": "订阅新闻"
+    },
+    "copyright": "© 2024 开元空御. 保留所有权利."
+  },
+  "valueFlow": {
+    "title": "价值流转流程",
+    "subtitle": "从创作者提交到客户获得认证产品，我们建立了完整的价值流转体系",
+    "step1": {
+      "title": "创作者提交方案",
+      "description": "无人机创作者提交经过验证的设计方案，包括技术文档、测试报告和BOM清单。"
+    },
+    "step2": {
+      "title": "专业审核认证",
+      "description": "我们的技术团队对方案进行专业审核，确保技术可行性和市场价值。"
+    },
+    "step3": {
+      "title": "供应链生产",
+      "description": "与全球顶级供应链伙伴合作，进行小批量试产和性能验证。"
+    },
+    "step4": {
+      "title": "平台销售分成",
+      "description": "通过平台销售，创作者获得50%的利润分成，客户获得认证产品。"
+    }
+  },
+  "transparency": {
+    "title": "透明化运营",
+    "subtitle": "我们相信透明化运营是建立信任的基础，让每个环节都公开透明",
+    "features": {
+      "certification": {
+        "title": "公开透明的认证流程",
+        "description": "所有认证标准、测试流程和审核结果完全公开，确保公平公正。"
+      },
+      "costBreakdown": {
+        "title": "详细的成本分解",
+        "description": "每个解决方案的成本构成、利润分配都清晰可见，让创作者和客户都放心。"
+      },
+      "progressTracking": {
+        "title": "实时进度跟踪",
+        "description": "从提交到认证，从生产到交付，每个环节的进度都可以实时查看。"
+      },
+      "communityOversight": {
+        "title": "社区监督机制",
+        "description": "建立社区监督机制，让所有参与者都能参与到质量监督中来。"
+      }
+    }
+  },
+  "partners": {
+    "title": "生态伙伴",
+    "subtitle": "与全球顶级技术公司和供应链伙伴深度合作，为创作者和客户提供最优质的服务",
+    "categories": {
+      "tech": "技术合作",
+      "cloud": "云服务",
+      "logistics": "物流合作"
+    },
+    "dji": {
+      "name": "大疆创新",
+      "description": "全球领先的无人机技术公司"
+    },
+    "huawei": {
+      "name": "华为云",
+      "description": "云计算和AI技术支持"
+    },
+    "alibaba": {
+      "name": "阿里云",
+      "description": "数据存储和计算服务"
+    },
+    "thunder": {
+      "name": "中科创达",
+      "description": "嵌入式系统解决方案"
+    },
+    "sf": {
+      "name": "顺丰科技",
+      "description": "物流配送解决方案"
+    },
+    "jd": {
+      "name": "京东物流",
+      "description": "供应链管理服务"
+    }
+  },
+  "caseStudies": {
+    "title": "成功案例",
+    "subtitle": "看看我们的创作者如何通过平台实现商业成功",
+    "successCase": "成功案例",
+    "creator": "创作者",
+    "sales": "销量",
+    "viewDetails": "查看详情",
+    "viewAllCases": "查看所有案例",
+    "case1": {
+      "title": "王工的FPV验证机成功案例",
+      "description": "从个人爱好到商业成功，王工的FPV验证机在平台上获得了巨大成功，月销量超过100套。",
+      "creator": "王工",
+      "tags": ["FPV", "验证机", "成功案例"]
+    },
+    "case2": {
+      "title": "李工的安防巡检套件",
+      "description": "专为安防行业设计的巡检套件，获得了多家安防公司的认可和采购。",
+      "creator": "李工",
+      "tags": ["安防", "巡检", "行业应用"]
+    },
+    "case3": {
+      "title": "张工的农业植保套件",
+      "description": "针对农业植保需求设计的专业套件，帮助农民提高植保效率，降低成本。",
+      "creator": "张工",
+      "tags": ["农业", "植保", "智能农业"]
+    }
+  }
+}

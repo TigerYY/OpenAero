@@ -1,0 +1,17 @@
+{
+  "common": {
+    "buttons": {
+      "submit": "Submit",
+      "cancel": "Cancel"
+    },
+    "labels": {
+      "welcome": "Welcome to OpenAero"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to OpenAero",
+      "submit": "Sign in"
+    }
+  }
+}

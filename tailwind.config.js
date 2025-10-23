@@ -3,8 +3,7 @@ module.exports = {
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  // 启用JIT模式以提高性能
-  mode: 'jit',
+  // JIT模式在Tailwind CSS 3+中默认启用
   theme: {
     extend: {
       colors: {

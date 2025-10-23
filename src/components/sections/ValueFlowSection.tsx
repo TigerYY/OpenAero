@@ -1,44 +1,47 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 const valueSteps = [
   {
     step: '01',
-    title: '创作者提交方案',
-    description: '无人机创作者提交经过验证的设计方案，包括技术文档、测试报告和BOM清单。',
+    titleKey: 'step1.title',
+    descriptionKey: 'step1.description',
     icon: '📝',
   },
   {
     step: '02',
-    title: '专业审核认证',
-    description: '我们的技术团队对方案进行专业审核，确保技术可行性和市场价值。',
+    titleKey: 'step2.title',
+    descriptionKey: 'step2.description',
     icon: '🔍',
   },
   {
     step: '03',
-    title: '供应链生产',
-    description: '与全球顶级供应链伙伴合作，进行小批量试产和性能验证。',
+    titleKey: 'step3.title',
+    descriptionKey: 'step3.description',
     icon: '🏭',
   },
   {
     step: '04',
-    title: '平台销售分成',
-    description: '通过平台销售，创作者获得50%的利润分成，客户获得认证产品。',
+    titleKey: 'step4.title',
+    descriptionKey: 'step4.description',
     icon: '💰',
   },
 ];
 
 export function ValueFlowSection() {
+  const t = useTranslations('valueFlow');
+
   return (
     <section className="py-20 bg-white">
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
-            价值流转流程
+            {t('title')}
           </h2>
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-            从创作者提交到客户获得认证产品，我们建立了完整的价值流转体系
+            {t('subtitle')}
           </p>
         </div>
 
@@ -62,10 +65,10 @@ export function ValueFlowSection() {
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold text-secondary-900 mb-3">
-                  {step.title}
+                  {t(step.titleKey)}
                 </h3>
                 <p className="text-secondary-600 leading-relaxed">
-                  {step.description}
+                  {t(step.descriptionKey)}
                 </p>
               </div>
 

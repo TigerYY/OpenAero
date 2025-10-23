@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+dist/
+build/
+coverage/
+
+# Next.js
+.next/
+out/
+
+# Generated files
+*.min.js
+*.bundle.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+*.log
+
+# Environment
+.env*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+test-results/
+playwright-report/
+.nyc_output/
+
+# Temporary
+tmp/
+temp/

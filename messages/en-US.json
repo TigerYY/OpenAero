@@ -1,0 +1,263 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "openMenu": "Open main menu",
+    "closeMenu": "Close main menu"
+  },
+  "navigation": {
+    "home": "Home",
+    "solutions": "Solutions",
+    "creators": "Creators",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "language": {
+    "switchTo": "Switch to",
+    "currentLanguage": "Current Language",
+    "selectLanguage": "Select Language"
+  },
+  "errors": {
+    "translationMissing": "Translation Missing",
+    "languageLoadFailed": "Language Load Failed",
+    "invalidLocale": "Invalid Locale",
+    "networkError": "Network Error"
+  },
+  "hero": {
+    "badge": "New Ecosystem Platform",
+    "title": "Community-Driven",
+    "titleHighlight": "Open Drone",
+    "titleSuffix": "Solutions Platform",
+    "description": "Connecting global drone creators with professional clients, providing professional verification, production, and sales of excellent drone innovation designs, offering creators",
+    "profitSharing": "50% profit sharing",
+    "cta": {
+      "exploreSolutions": "Browse Solutions",
+      "becomeCreator": "Become Creator",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "certification": "Professional Certification",
+      "profitSharing": "50% Profit Sharing",
+      "supplyChain": "Global Supply Chain"
+    }
+  },
+  "solutions": {
+    "title": "Certified Solutions",
+    "subtitle": "Professionally certified drone core kits providing complete solutions for different application scenarios",
+    "creator": "Creator",
+    "viewAll": "View All Solutions",
+    "status": {
+      "certified": "Certified",
+      "pending": "Under Review"
+    },
+    "categories": {
+      "娱乐": "Entertainment",
+      "安防": "Security",
+      "农业": "Agriculture"
+    },
+    "filter": {
+      "all": "All",
+      "aerialPhotography": "Aerial Photography",
+      "mapping": "Mapping",
+      "inspection": "Inspection",
+      "delivery": "Delivery",
+      "agriculture": "Agriculture"
+    },
+    "sort": {
+      "newest": "Newest",
+      "popular": "Most Popular",
+      "rating": "Rating",
+      "price": "Price"
+    },
+    "card": {
+      "viewDetails": "View Details",
+      "contactCreator": "Contact Creator",
+      "rating": "Rating",
+      "reviews": "Reviews",
+      "price": "Price",
+      "certified": "Certified"
+    }
+  },
+  "creators": {
+    "title": "Creators",
+    "subtitle": "Join our creator community",
+    "benefits": {
+      "title": "Creator Benefits",
+      "profitSharing": "50% Profit Sharing",
+      "qualitySupport": "Quality Certification Support",
+      "globalReach": "Global Market Reach",
+      "communitySupport": "Community Support"
+    },
+    "process": {
+      "title": "Become a Creator Process",
+      "step1": "Submit Application",
+      "step2": "Quality Certification",
+      "step3": "List Solutions",
+      "step4": "Earn Revenue"
+    },
+    "stats": {
+      "activeCreators": "Active Creators",
+      "totalSolutions": "Total Solutions",
+      "totalRevenue": "Creator Total Revenue",
+      "averageRating": "Average Rating"
+    }
+  },
+  "footer": {
+    "company": {
+      "title": "Company",
+      "about": "About Us",
+      "careers": "Careers",
+      "press": "Press",
+      "contact": "Contact Us"
+    },
+    "solutions": {
+      "title": "Solutions",
+      "aerialPhotography": "Aerial Photography",
+      "mapping": "Mapping",
+      "inspection": "Inspection",
+      "delivery": "Delivery",
+      "agriculture": "Agriculture"
+    },
+    "support": {
+      "title": "Support",
+      "helpCenter": "Help Center",
+      "documentation": "Documentation",
+      "community": "Community",
+      "status": "Service Status"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "gdpr": "GDPR"
+    },
+    "social": {
+      "followUs": "Follow Us",
+      "newsletter": "Newsletter"
+    },
+    "copyright": "© 2024 OpenAero. All rights reserved."
+  },
+  "valueFlow": {
+    "title": "Value Flow Process",
+    "subtitle": "From creator submission to customer receiving certified products, we have established a complete value flow system",
+    "step1": {
+      "title": "Creator Submission",
+      "description": "Drone creators submit verified design solutions including technical documentation, test reports, and BOM lists."
+    },
+    "step2": {
+      "title": "Professional Review & Certification",
+      "description": "Our technical team conducts professional review of solutions to ensure technical feasibility and market value."
+    },
+    "step3": {
+      "title": "Supply Chain Production",
+      "description": "Collaborate with global top-tier supply chain partners for small-batch trial production and performance verification."
+    },
+    "step4": {
+      "title": "Platform Sales & Revenue Sharing",
+      "description": "Through platform sales, creators receive 50% profit sharing while customers get certified products."
+    }
+  },
+  "transparency": {
+    "title": "Transparent Operations",
+    "subtitle": "We believe transparent operations are the foundation of trust, making every process open and transparent",
+    "features": {
+      "certification": {
+        "title": "Open & Transparent Certification Process",
+        "description": "All certification standards, testing processes, and review results are completely public, ensuring fairness and justice."
+      },
+      "costBreakdown": {
+        "title": "Detailed Cost Breakdown",
+        "description": "The cost structure and profit distribution of each solution are clearly visible, giving creators and customers peace of mind."
+      },
+      "progressTracking": {
+        "title": "Real-time Progress Tracking",
+        "description": "From submission to certification, from production to delivery, the progress of each stage can be viewed in real-time."
+      },
+      "communityOversight": {
+        "title": "Community Oversight Mechanism",
+        "description": "Establish a community oversight mechanism that allows all participants to participate in quality supervision."
+      }
+    }
+  },
+  "partners": {
+    "title": "Ecosystem Partners",
+    "subtitle": "Deep collaboration with global top-tier technology companies and supply chain partners to provide the highest quality services for creators and customers",
+    "categories": {
+      "tech": "Technology Partnership",
+      "cloud": "Cloud Services",
+      "logistics": "Logistics Partnership"
+    },
+    "dji": {
+      "name": "DJI Innovation",
+      "description": "Global leading drone technology company"
+    },
+    "huawei": {
+      "name": "Huawei Cloud",
+      "description": "Cloud computing and AI technology support"
+    },
+    "alibaba": {
+      "name": "Alibaba Cloud",
+      "description": "Data storage and computing services"
+    },
+    "thunder": {
+      "name": "Thunder Software",
+      "description": "Embedded system solutions"
+    },
+    "sf": {
+      "name": "SF Technology",
+      "description": "Logistics delivery solutions"
+    },
+    "jd": {
+      "name": "JD Logistics",
+      "description": "Supply chain management services"
+    }
+  },
+  "caseStudies": {
+    "title": "Success Cases",
+    "subtitle": "See how our creators achieve business success through the platform",
+    "successCase": "Success Case",
+    "creator": "Creator",
+    "sales": "Sales",
+    "viewDetails": "View Details",
+    "viewAllCases": "View All Cases",
+    "case1": {
+      "title": "Mr. Wang's FPV Verification Kit Success Case",
+      "description": "From personal hobby to business success, Mr. Wang's FPV verification kit achieved great success on the platform with monthly sales exceeding 100 units.",
+      "creator": "Mr. Wang",
+      "tags": ["FPV", "Verification Kit", "Success Case"]
+    },
+    "case2": {
+      "title": "Mr. Li's Security Inspection Kit",
+      "description": "Designed specifically for the security industry, the inspection kit has gained recognition and procurement from multiple security companies.",
+      "creator": "Mr. Li",
+      "tags": ["Security", "Inspection", "Industry Application"]
+    },
+    "case3": {
+      "title": "Mr. Zhang's Agricultural Plant Protection Kit",
+      "description": "Professional kit designed for agricultural plant protection needs, helping farmers improve plant protection efficiency and reduce costs.",
+      "creator": "Mr. Zhang",
+      "tags": ["Agriculture", "Plant Protection", "Smart Agriculture"]
+    }
+  }
+}

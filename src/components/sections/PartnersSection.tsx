@@ -1,75 +1,78 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 const partners = [
   {
-    name: '大疆创新',
+    nameKey: 'partners.dji.name',
     logo: 'DJI',
-    description: '全球领先的无人机技术公司',
-    category: '技术合作',
+    descriptionKey: 'partners.dji.description',
+    categoryKey: 'partners.categories.tech',
     color: 'bg-gradient-to-br from-red-500 to-red-600',
     textColor: 'text-white',
   },
   {
-    name: '华为云',
+    nameKey: 'partners.huawei.name',
     logo: 'HUAWEI',
-    description: '云计算和AI技术支持',
-    category: '云服务',
+    descriptionKey: 'partners.huawei.description',
+    categoryKey: 'partners.categories.cloud',
     color: 'bg-gradient-to-br from-red-500 to-red-700',
     textColor: 'text-white',
   },
   {
-    name: '阿里云',
+    nameKey: 'partners.alibaba.name',
     logo: 'ALIBABA',
-    description: '数据存储和计算服务',
-    category: '云服务',
+    descriptionKey: 'partners.alibaba.description',
+    categoryKey: 'partners.categories.cloud',
     color: 'bg-gradient-to-br from-orange-400 to-orange-600',
     textColor: 'text-white',
   },
   {
-    name: '中科创达',
+    nameKey: 'partners.thunder.name',
     logo: 'THUNDER',
-    description: '嵌入式系统解决方案',
-    category: '技术合作',
+    descriptionKey: 'partners.thunder.description',
+    categoryKey: 'partners.categories.tech',
     color: 'bg-gradient-to-br from-blue-500 to-blue-700',
     textColor: 'text-white',
   },
   {
-    name: '顺丰科技',
+    nameKey: 'partners.sf.name',
     logo: 'SF',
-    description: '物流配送解决方案',
-    category: '物流合作',
+    descriptionKey: 'partners.sf.description',
+    categoryKey: 'partners.categories.logistics',
     color: 'bg-gradient-to-br from-red-600 to-red-800',
     textColor: 'text-white',
   },
   {
-    name: '京东物流',
+    nameKey: 'partners.jd.name',
     logo: 'JD',
-    description: '供应链管理服务',
-    category: '物流合作',
+    descriptionKey: 'partners.jd.description',
+    categoryKey: 'partners.categories.logistics',
     color: 'bg-gradient-to-br from-red-500 to-red-700',
     textColor: 'text-white',
   },
 ];
 
 export function PartnersSection() {
+  const t = useTranslations('partners');
+
   return (
     <section className="py-20 bg-secondary-50">
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
-            生态伙伴
+            {t('title')}
           </h2>
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-            与全球顶级技术公司和供应链伙伴深度合作，为创作者和客户提供最优质的服务
+            {t('subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
           {partners.map((partner, index) => (
             <motion.div
-              key={partner.name}
+              key={partner.nameKey}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -80,13 +83,13 @@ export function PartnersSection() {
                 <span className="tracking-tight">{partner.logo}</span>
               </div>
               <h3 className="font-semibold text-secondary-900 mb-1">
-                {partner.name}
+                {t(partner.nameKey)}
               </h3>
               <p className="text-xs text-secondary-500 mb-2">
-                {partner.description}
+                {t(partner.descriptionKey)}
               </p>
               <span className="inline-block px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-md">
-                {partner.category}
+                {t(partner.categoryKey)}
               </span>
             </motion.div>
           ))}

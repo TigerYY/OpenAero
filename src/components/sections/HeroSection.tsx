@@ -1,10 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/Button';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 export function HeroSection() {
+  const t = useTranslations('hero');
+  
   return (
     <section className="relative bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-800 py-4 lg:py-8 text-white">
       <div className="container">
@@ -25,19 +28,19 @@ export function HeroSection() {
               {/* 特色标签 */}
               <div className="inline-flex items-center px-4 py-2 bg-blue-900/30 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30">
                 <span className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></span>
-                全新生态平台
+                {t('badge')}
               </div>
               
               <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
-                社区驱动的
+                {t('title')}
                 <span className="gradient-text block bg-gradient-to-r from-blue-400 via-blue-300 to-green-400 bg-clip-text text-transparent">
-                  开放式无人机
+                  {t('titleHighlight')}
                 </span>
-                解决方案平台
+                {t('titleSuffix')}
               </h1>
               <p className="text-xl text-gray-300 leading-relaxed max-w-lg">
-                连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供
-                <span className="font-semibold text-blue-400">50%的利润分成</span>。
+                {t('description')}
+                <span className="font-semibold text-blue-400">{t('profitSharing')}</span>。
               </p>
             </div>
 
@@ -45,7 +48,7 @@ export function HeroSection() {
               <Button size="lg" asChild className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg hover:shadow-xl transition-all duration-300">
                 <Link href="/solutions">
                   <span className="flex items-center gap-2">
-                    浏览解决方案
+                    {t('cta.exploreSolutions')}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
@@ -55,7 +58,7 @@ export function HeroSection() {
               <Button variant="outline" size="lg" asChild className="border-2 border-white/30 hover:border-white/50 hover:bg-white/10 transition-all duration-300 text-white bg-transparent">
                 <Link href="/creators/apply">
                   <span className="flex items-center gap-2 text-white">
-                    成为创作者
+                    {t('cta.becomeCreator')}
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -67,15 +70,15 @@ export function HeroSection() {
             <div className="flex flex-wrap items-center gap-6 text-sm relative z-10">
               <div className="flex items-center space-x-2 bg-green-900/30 px-3 py-2 rounded-full border border-green-500/30">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="font-medium text-green-300">专业认证</span>
+                <span className="font-medium text-green-300">{t('features.certification')}</span>
               </div>
               <div className="flex items-center space-x-2 bg-blue-900/30 px-3 py-2 rounded-full border border-blue-500/30">
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="font-medium text-blue-300">50%利润分成</span>
+                <span className="font-medium text-blue-300">{t('features.profitSharing')}</span>
               </div>
               <div className="flex items-center space-x-2 bg-gray-800/50 px-3 py-2 rounded-full border border-gray-600/30">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                <span className="font-medium text-gray-300">全球供应链</span>
+                <span className="font-medium text-gray-300">{t('features.supplyChain')}</span>
               </div>
             </div>
             

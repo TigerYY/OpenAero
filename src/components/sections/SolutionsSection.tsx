@@ -1,7 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 const solutions = [
@@ -41,15 +42,17 @@ const solutions = [
 ];
 
 export function SolutionsSection() {
+  const t = useTranslations('solutions');
+  
   return (
     <section className="py-20 bg-secondary-50">
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
-            认证解决方案
+            {t('title')}
           </h2>
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-            经过专业认证的无人机核心套件，为不同应用场景提供完整解决方案
+            {t('subtitle')}
           </p>
         </div>
 
@@ -75,7 +78,7 @@ export function SolutionsSection() {
                         : 'bg-warning-100 text-warning-800'
                     }`}
                   >
-                    {solution.status}
+                    {t(`status.${solution.status === '已认证' ? 'certified' : 'pending'}`)}
                   </span>
                 </div>
               </div>
@@ -83,10 +86,10 @@ export function SolutionsSection() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-primary-600 font-medium">
-                    {solution.category}
+                    {t(`categories.${solution.category}`)}
                   </span>
                   <span className="text-sm text-secondary-500">
-                    创作者: {solution.creator}
+                    {t('creator')}: {solution.creator}
                   </span>
                 </div>
 
@@ -113,7 +116,7 @@ export function SolutionsSection() {
                     {solution.price}
                   </div>
                   <Button size="sm" asChild>
-                    <Link href={`/solutions/${solution.id}`}>查看详情</Link>
+                    <Link href={`/solutions/${solution.id}`}>{t('card.viewDetails')}</Link>
                   </Button>
                 </div>
               </div>
@@ -123,7 +126,7 @@ export function SolutionsSection() {
 
         <div className="text-center">
           <Button size="lg" asChild>
-            <Link href="/solutions">查看所有解决方案</Link>
+            <Link href="/solutions">{t('viewAll')}</Link>
           </Button>
         </div>
       </div>
