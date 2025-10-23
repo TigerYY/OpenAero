@@ -1,0 +1,33 @@
+{
+  "timeout": 30000,
+  "retry": 3,
+  "retryDelay": 1000,
+  "concurrency": 5,
+  "ignorePatterns": [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "example.com",
+    "placeholder.com",
+    "test.com"
+  ],
+  "excludePatterns": [
+    "node_modules/**",
+    ".git/**",
+    "dist/**",
+    "build/**",
+    "coverage/**"
+  ],
+  "includePatterns": [
+    "**/*.md",
+    "**/*.html"
+  ],
+  "ignoreStatusCodes": [
+    403,
+    429
+  ],
+  "ignoreRedirects": true,
+  "ignoreSSL": false,
+  "followRedirects": true,
+  "maxRedirects": 5
+}
