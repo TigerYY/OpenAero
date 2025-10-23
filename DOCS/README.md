@@ -1,168 +1,199 @@
-# OpenAero Documentation
+# OpenAero 文档中心
 
-**Version**: 1.0.0  
-**Last Updated**: 2025-10-23  
-**Purpose**: Centralized documentation for the OpenAero platform
+**版本**: 1.0.0  
+**最后更新**: 2025-10-23  
+**目的**: OpenAero平台的集中文档管理
 
-## Overview
+## 概述
 
-This directory contains all documentation for the OpenAero platform, including product requirements, technical specifications, user guides, and development resources.
+此目录包含OpenAero平台的所有文档，包括产品需求、技术规范、用户指南和开发资源。采用中文优先的文档管理策略，确保中文团队的高效协作。
 
-## Directory Structure
+## 目录结构
 
 ```
-docs/
-├── prd/                          # Product Requirements Documentation
-│   ├── enhanced-prd.md          # Main enhanced PRD document
-│   ├── status-tracking/         # Feature implementation status
-│   └── reviews/                 # Review history and feedback
-├── templates/                    # Documentation templates
+DOCS/
+├── prd/                          # 产品需求文档
+│   ├── enhanced-prd.md          # 主要增强PRD文档 (中文)
+│   ├── enhanced-prd-en.md       # 英文备份
+│   ├── status-tracking/         # 功能实施状态跟踪
+│   │   ├── README.md            # 状态跟踪概览 (中文)
+│   │   ├── README-en.md         # 英文备份
+│   │   ├── user-auth.md         # 用户认证模块 (中文)
+│   │   ├── user-auth-en.md      # 英文备份
+│   │   ├── i18n.md              # 国际化模块 (中文)
+│   │   ├── i18n-en.md           # 英文备份
+│   │   ├── solutions.md         # 解决方案管理 (中文)
+│   │   ├── solutions-en.md      # 英文备份
+│   │   ├── creator-app.md       # 创作者申请 (中文)
+│   │   ├── creator-app-en.md    # 英文备份
+│   │   ├── admin-dashboard.md   # 管理仪表板 (中文)
+│   │   └── admin-dashboard-en.md # 英文备份
+│   └── reviews/                 # 审查历史和反馈 (空目录)
+├── templates/                    # 文档模板
 │   ├── enhanced-prd-template.md
 │   ├── feature-module-template.md
 │   ├── user-story-template.md
 │   ├── technical-requirement-template.md
-│   ├── review-record-template.md
-│   └── development-task-template.md
-├── scripts/                      # Documentation automation scripts
-│   ├── prd-validator.js
-│   ├── status-updater.js
-│   ├── review-helper.js
-│   ├── link-checker.js
-│   ├── format-checker.js
-│   ├── status-validator.js
-│   ├── status-reporter.js
-│   ├── tech-validator.js
-│   ├── ci-integration.js
-│   ├── milestone-tracker.js
-│   ├── progress-reporter.js
-│   ├── stakeholder-reporter.js
-│   └── doc-tester.js
-├── INDEX.md                      # Documentation index
-├── MAINTENANCE.md               # Maintenance procedures
-├── README.md                    # This file
-└── style-guide.md               # Documentation style guide
+│   └── review-record-template.md
+├── scripts/                      # 文档自动化脚本
+│   ├── prd-validator.js         # PRD验证脚本
+│   ├── status-updater.js        # 状态更新脚本
+│   ├── review-helper.js         # 审查助手脚本
+│   ├── link-checker.js          # 链接检查脚本
+│   ├── format-checker.js        # 格式检查脚本
+│   ├── status-validator.js      # 状态验证脚本
+│   ├── status-reporter.js       # 状态报告脚本
+│   ├── status-validator-zh.js   # 中文状态验证脚本
+│   ├── status-reporter-zh.js    # 中文状态报告脚本
+│   ├── simple-sync.js           # 简化同步脚本
+│   ├── sync-docs.js             # 中英文同步脚本
+│   ├── update-references.js     # 引用更新脚本
+│   ├── status-consistency-checker.js # 状态一致性检查脚本
+│   └── ci-status-updater.js     # CI状态更新脚本
+├── README.md                    # 本文档
+├── style-guide.md               # 文档风格指南
+├── translation-plan.md          # 翻译计划
+├── zh-first-strategy.md         # 中文优先策略
+├── GIT_BACKUP_CHECKLIST.md      # Git备份清单
+└── package.json                 # 文档自动化依赖配置
 ```
 
-## Quick Start
+## 快速开始
 
-### 1. View the Enhanced PRD
-The main product requirements document is located at:
-- [Enhanced PRD](prd/enhanced-prd.md)
+### 1. 查看增强PRD文档
+主要产品需求文档位于：
+- [增强PRD文档](prd/enhanced-prd.md) (中文版)
+- [Enhanced PRD](prd/enhanced-prd-en.md) (英文版)
 
-### 2. Check Implementation Status
-View current feature implementation status:
-- [Status Tracking](prd/status-tracking/)
+### 2. 检查实施状态
+查看当前功能实施状态：
+- [状态跟踪概览](prd/status-tracking/README.md) (中文版)
+- [Status Tracking](prd/status-tracking/README-en.md) (英文版)
 
-### 3. Use Templates
-Create new documentation using our templates:
-- [Templates](templates/)
+### 3. 使用模板
+使用我们的模板创建新文档：
+- [模板库](templates/)
 
-### 4. Run Validation Scripts
-Validate documentation quality:
+### 4. 运行验证脚本
+验证文档质量：
 ```bash
-# Validate PRD document
-node scripts/prd-validator.js
+# 验证PRD文档 (中文版)
+node scripts/status-validator-zh.js
 
-# Check links
+# 生成状态报告 (中文版)
+node scripts/status-reporter-zh.js
+
+# 同步中英文文档
+node scripts/simple-sync.js
+
+# 检查链接
 node scripts/link-checker.js
 
-# Check format
+# 检查格式
 node scripts/format-checker.js
 ```
 
-## Documentation Standards
+## 文档标准
 
-All documentation follows our [Style Guide](style-guide.md) which includes:
-- Consistent formatting and structure
-- Clear status indicators
-- Standardized templates
-- Review and approval processes
+所有文档遵循我们的[风格指南](style-guide.md)，包括：
+- 一致的格式和结构
+- 清晰的状态指示器
+- 标准化模板
+- 审查和批准流程
 
-## Key Documents
+## 关键文档
 
-### Product Requirements
-- **[Enhanced PRD](prd/enhanced-prd.md)** - Main product requirements document
-- **[Feature Status](prd/status-tracking/)** - Current implementation status of all features
+### 产品需求
+- **[增强PRD文档](prd/enhanced-prd.md)** - 主要产品需求文档 (中文)
+- **[Enhanced PRD](prd/enhanced-prd-en.md)** - Main product requirements document (English)
+- **[功能状态跟踪](prd/status-tracking/README.md)** - 所有功能的当前实施状态 (中文)
 
-### Templates
-- **[PRD Template](templates/enhanced-prd-template.md)** - Template for creating new PRD documents
-- **[Feature Module Template](templates/feature-module-template.md)** - Template for feature specifications
-- **[User Story Template](templates/user-story-template.md)** - Template for user stories
-- **[Technical Requirement Template](templates/technical-requirement-template.md)** - Template for technical requirements
+### 模板
+- **[PRD模板](templates/enhanced-prd-template.md)** - 创建新PRD文档的模板
+- **[功能模块模板](templates/feature-module-template.md)** - 功能规范的模板
+- **[用户故事模板](templates/user-story-template.md)** - 用户故事的模板
+- **[技术需求模板](templates/technical-requirement-template.md)** - 技术需求的模板
 
-### Automation
-- **[Validation Scripts](scripts/)** - Automated validation and maintenance tools
-- **[Status Tracking](scripts/status-updater.js)** - Update implementation status
-- **[Review Process](scripts/review-helper.js)** - Manage review workflows
+### 自动化工具
+- **[验证脚本](scripts/)** - 自动化验证和维护工具
+- **[状态跟踪](scripts/status-updater.js)** - 更新实施状态
+- **[审查流程](scripts/review-helper.js)** - 管理审查工作流
+- **[中英文同步](scripts/simple-sync.js)** - 同步中英文文档
 
-## Contributing
+## 贡献指南
 
-### Adding New Documentation
-1. Use appropriate templates from `templates/`
-2. Follow the [Style Guide](style-guide.md)
-3. Run validation scripts before submitting
-4. Submit for review following the review process
+### 添加新文档
+1. 使用 `templates/` 中的适当模板
+2. 遵循[风格指南](style-guide.md)
+3. 提交前运行验证脚本
+4. 按照审查流程提交审查
 
-### Updating Existing Documentation
-1. Make changes following the style guide
-2. Update status indicators if applicable
-3. Run validation scripts
-4. Submit for review
+### 更新现有文档
+1. 按照风格指南进行更改
+2. 如适用，更新状态指示器
+3. 运行验证脚本
+4. 提交审查
 
-### Review Process
-1. **Self-Review**: Check against style guide
-2. **Peer Review**: Another team member reviews
-3. **Technical Review**: Technical accuracy check
-4. **Business Review**: Business alignment check
-5. **Final Approval**: Stakeholder approval
+### 审查流程
+1. **自我审查**: 对照风格指南检查
+2. **同行审查**: 其他团队成员审查
+3. **技术审查**: 技术准确性检查
+4. **业务审查**: 业务一致性检查
+5. **最终批准**: 利益相关者批准
 
-## Maintenance
+### 中英文同步
+- 优先更新中文版文档
+- 使用 `node scripts/simple-sync.js` 同步到英文版
+- 确保关键信息（状态、优先级、版本）保持一致
 
-### Regular Tasks
-- **Weekly**: Update implementation status
-- **Monthly**: Review and update PRD content
-- **Quarterly**: Review and update style guide
-- **As Needed**: Fix broken links and update content
+## 维护
 
-### Automation
-- Link checking runs automatically on commits
-- Format validation runs on all Markdown files
-- Status validation ensures consistency
+### 定期任务
+- **每周**: 更新实施状态
+- **每月**: 审查和更新PRD内容
+- **每季度**: 审查和更新风格指南
+- **按需**: 修复损坏链接和更新内容
 
-## Tools and Dependencies
+### 自动化
+- 提交时自动运行链接检查
+- 对所有Markdown文件运行格式验证
+- 状态验证确保一致性
+- 中英文文档自动同步
 
-### Required Tools
-- Node.js 18+ (for automation scripts)
-- Git (for version control)
-- Markdown editor (VS Code recommended)
+## 工具和依赖
 
-### Optional Tools
-- Markdown linting tools
-- Link checking tools
-- Diagram generation tools
+### 必需工具
+- Node.js 18+ (用于自动化脚本)
+- Git (用于版本控制)
+- Markdown编辑器 (推荐VS Code)
 
-## Support
+### 可选工具
+- Markdown语法检查工具
+- 链接检查工具
+- 图表生成工具
 
-### Getting Help
-- Check the [Style Guide](style-guide.md) for formatting questions
-- Review [Templates](templates/) for structure guidance
-- Run validation scripts to identify issues
+## 支持
 
-### Reporting Issues
-- Use Git issues for documentation bugs
-- Tag issues with `documentation` label
-- Include specific file paths and error messages
+### 获取帮助
+- 查看[风格指南](style-guide.md)了解格式问题
+- 查看[模板库](templates/)了解结构指导
+- 运行验证脚本识别问题
 
-## Version History
+### 报告问题
+- 使用Git issues报告文档错误
+- 使用 `documentation` 标签标记问题
+- 包含具体文件路径和错误消息
 
-- **v1.0.0** (2025-10-23): Initial documentation structure and enhanced PRD system
+## 版本历史
 
-## License
+- **v1.0.0** (2025-10-23): 初始文档结构和增强PRD系统，实现中文优先策略
 
-This documentation is part of the OpenAero project and follows the same licensing terms.
+## 许可证
+
+本文档是OpenAero项目的一部分，遵循相同的许可条款。
 
 ---
 
-**Last Updated**: 2025-10-23  
-**Maintained By**: OpenAero Development Team  
-**Next Review**: 2026-01-23
+**最后更新**: 2025-10-23  
+**维护团队**: OpenAero开发团队  
+**下次审查**: 2026-01-23

@@ -166,7 +166,7 @@ class StatusValidator {
     }
   }
 
-  async validateAll(pattern = 'docs/prd/status-tracking/*.md') {
+  async validateAll(pattern = 'DOCS/prd/status-tracking/*.md') {
     console.log(chalk.blue('🔍 Starting status validation...'));
     
     const files = glob.sync(pattern, { cwd: process.cwd() });
@@ -211,7 +211,7 @@ class StatusValidator {
   async generateStatusReport() {
     console.log(chalk.blue('📊 Generating Status Report...'));
     
-    const files = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
+    const files = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
     const statusCounts = {
       '📋 Planned': 0,
       '🔄 In Progress': 0,
@@ -275,7 +275,7 @@ class StatusValidator {
 // CLI interface
 async function main() {
   const args = process.argv.slice(2);
-  const pattern = args[0] || 'docs/prd/status-tracking/*.md';
+  const pattern = args[0] || 'DOCS/prd/status-tracking/*.md';
   const report = args.includes('--report');
   
   const validator = new StatusValidator();

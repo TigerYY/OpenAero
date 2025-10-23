@@ -46,7 +46,7 @@ class StatusReporter {
   }
 
   async loadFeatureData() {
-    const featureFiles = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
+    const featureFiles = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
     
     for (const file of featureFiles) {
       const content = await fs.readFile(file, 'utf8');
@@ -214,7 +214,7 @@ class StatusReporter {
   }
 
   async generateMarkdownReport() {
-    const reportPath = 'docs/reports/status-report.md';
+    const reportPath = 'DOCS/reports/status-report.md';
     await fs.ensureDir(path.dirname(reportPath));
     
     const report = this.generateMarkdownContent();
@@ -318,13 +318,13 @@ ${this.generateRecommendations()}
   }
 
   async generateJsonReport() {
-    const reportPath = 'docs/reports/status-report.json';
+    const reportPath = 'DOCS/reports/status-report.json';
     await fs.writeJson(reportPath, this.reportData, { spaces: 2 });
     console.log(chalk.green(`📄 JSON report saved to: ${reportPath}`));
   }
 
   async generateHtmlReport() {
-    const reportPath = 'docs/reports/status-report.html';
+    const reportPath = 'DOCS/reports/status-report.html';
     const htmlContent = this.generateHtmlContent();
     await fs.writeFile(reportPath, htmlContent);
     console.log(chalk.green(`📄 HTML report saved to: ${reportPath}`));

@@ -39,7 +39,7 @@ class ReferenceUpdater {
   async updateMarkdownFiles() {
     console.log(chalk.blue('📄 更新Markdown文件...'));
     
-    const mdFiles = glob.sync('docs/**/*.md', { cwd: process.cwd() });
+    const mdFiles = glob.sync('DOCS/**/*.md', { cwd: process.cwd() });
     
     for (const file of mdFiles) {
       await this.updateFile(file);
@@ -49,7 +49,7 @@ class ReferenceUpdater {
   async updateScriptFiles() {
     console.log(chalk.blue('🔧 更新脚本文件...'));
     
-    const scriptFiles = glob.sync('docs/scripts/*.js', { cwd: process.cwd() });
+    const scriptFiles = glob.sync('DOCS/scripts/*.js', { cwd: process.cwd() });
     
     for (const file of scriptFiles) {
       await this.updateFile(file);
@@ -209,7 +209,7 @@ class ReferenceUpdater {
   async validateReferences() {
     console.log(chalk.blue('🔍 验证引用完整性...'));
     
-    const mdFiles = glob.sync('docs/**/*.md', { cwd: process.cwd() });
+    const mdFiles = glob.sync('DOCS/**/*.md', { cwd: process.cwd() });
     let brokenLinks = 0;
     
     for (const file of mdFiles) {

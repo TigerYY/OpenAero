@@ -23,8 +23,8 @@ class StatusConsistencyChecker {
   async checkConsistency() {
     console.log(chalk.blue('🔍 Starting status consistency check...'));
     
-    const featureFiles = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
-    const prdFile = 'docs/prd/enhanced-prd.md';
+    const featureFiles = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
+    const prdFile = 'DOCS/prd/enhanced-prd.md';
     
     // Check feature files against PRD
     await this.checkFeatureAgainstPRD(featureFiles, prdFile);
@@ -172,7 +172,7 @@ class StatusConsistencyChecker {
       id: featureId,
       status: statusMatch ? statusMatch[1] : null,
       dependencies: dependenciesMatch ? dependenciesMatch[1].split(',').map(d => d.trim()) : [],
-      file: `docs/prd/status-tracking/${featureId}.md`
+      file: `DOCS/prd/status-tracking/${featureId}.md`
     };
   }
 
@@ -257,7 +257,7 @@ class StatusConsistencyChecker {
       }
     };
     
-    const reportPath = 'docs/reports/consistency-report.json';
+    const reportPath = 'DOCS/reports/consistency-report.json';
     await fs.ensureDir(path.dirname(reportPath));
     await fs.writeJson(reportPath, report, { spaces: 2 });
     

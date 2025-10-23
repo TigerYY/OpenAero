@@ -39,8 +39,8 @@ class DocSync {
   async syncPRDDocuments() {
     console.log(chalk.blue('📋 同步PRD文档...'));
     
-    const zhFile = 'docs/prd/enhanced-prd.md';
-    const enFile = 'docs/prd/enhanced-prd-en.md';
+    const zhFile = 'DOCS/prd/enhanced-prd.md';
+    const enFile = 'DOCS/prd/enhanced-prd-en.md';
     
     if (await fs.pathExists(zhFile) && await fs.pathExists(enFile)) {
       await this.syncDocumentPair(zhFile, enFile);
@@ -50,7 +50,7 @@ class DocSync {
   async syncFeatureModules() {
     console.log(chalk.blue('🔧 同步功能模块...'));
     
-    const featureFiles = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
+    const featureFiles = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
     
     for (const file of featureFiles) {
       if (!file.includes('-en.md')) {
@@ -65,8 +65,8 @@ class DocSync {
   async syncStatusTracking() {
     console.log(chalk.blue('📊 同步状态跟踪...'));
     
-    const zhFile = 'docs/prd/status-tracking/README.md';
-    const enFile = 'docs/prd/status-tracking/README-en.md';
+    const zhFile = 'DOCS/prd/status-tracking/README.md';
+    const enFile = 'DOCS/prd/status-tracking/README-en.md';
     
     if (await fs.pathExists(zhFile) && await fs.pathExists(enFile)) {
       await this.syncDocumentPair(zhFile, enFile);
@@ -211,7 +211,7 @@ class DocSync {
   async validateSync() {
     console.log(chalk.blue('🔍 验证同步结果...'));
     
-    const featureFiles = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
+    const featureFiles = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
     let inconsistencies = 0;
     
     for (const file of featureFiles) {

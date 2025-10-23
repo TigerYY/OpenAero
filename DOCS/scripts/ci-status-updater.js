@@ -35,7 +35,7 @@ class CIStatusUpdater {
   }
 
   async loadFeatureFiles() {
-    this.featureFiles = glob.sync('docs/prd/status-tracking/*.md', { cwd: process.cwd() });
+    this.featureFiles = glob.sync('DOCS/prd/status-tracking/*.md', { cwd: process.cwd() });
   }
 
   async updateFeatureStatuses() {
@@ -114,7 +114,7 @@ class CIStatusUpdater {
   }
 
   async updatePRDDocument() {
-    const prdFile = 'docs/prd/enhanced-prd.md';
+    const prdFile = 'DOCS/prd/enhanced-prd.md';
     
     if (!await fs.pathExists(prdFile)) {
       console.log(chalk.yellow('⚠️  PRD document not found, skipping update'));
@@ -152,7 +152,7 @@ class CIStatusUpdater {
   }
 
   async generateStatusReport() {
-    const reportPath = 'docs/reports/ci-status-report.json';
+    const reportPath = 'DOCS/reports/ci-status-report.json';
     await fs.ensureDir(path.dirname(reportPath));
     
     const report = {

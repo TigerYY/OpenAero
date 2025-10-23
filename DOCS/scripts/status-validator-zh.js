@@ -308,7 +308,7 @@ class StatusValidatorZH {
 // CLI接口
 async function main() {
   const args = process.argv.slice(2);
-  const pattern = args[0] || 'docs/**/*.md';
+  const pattern = args[0] || 'DOCS/**/*.md';
   
   const validator = new StatusValidatorZH();
   const isValid = await validator.validateAll(pattern);

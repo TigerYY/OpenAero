@@ -185,7 +185,7 @@ class LinkChecker {
     });
   }
 
-  async checkAll(pattern = 'docs/**/*.md') {
+  async checkAll(pattern = 'DOCS/**/*.md') {
     console.log(chalk.blue('🔗 Starting link check...'));
     
     const files = glob.sync(pattern, { cwd: process.cwd() });

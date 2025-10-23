@@ -41,8 +41,8 @@ class SimpleSync {
   async syncPRDDocuments() {
     console.log('📋 同步PRD文档...');
     
-    const zhFile = 'docs/prd/enhanced-prd.md';
-    const enFile = 'docs/prd/enhanced-prd-en.md';
+    const zhFile = 'DOCS/prd/enhanced-prd.md';
+    const enFile = 'DOCS/prd/enhanced-prd-en.md';
     
     if (this.fileExists(zhFile) && this.fileExists(enFile)) {
       await this.syncDocumentPair(zhFile, enFile);
@@ -53,11 +53,11 @@ class SimpleSync {
     console.log('🔧 同步功能模块...');
     
     const featureFiles = [
-      'docs/prd/status-tracking/user-auth.md',
-      'docs/prd/status-tracking/i18n.md',
-      'docs/prd/status-tracking/solutions.md',
-      'docs/prd/status-tracking/creator-app.md',
-      'docs/prd/status-tracking/admin-dashboard.md'
+      'DOCS/prd/status-tracking/user-auth.md',
+      'DOCS/prd/status-tracking/i18n.md',
+      'DOCS/prd/status-tracking/solutions.md',
+      'DOCS/prd/status-tracking/creator-app.md',
+      'DOCS/prd/status-tracking/admin-dashboard.md'
     ];
     
     for (const file of featureFiles) {
@@ -71,8 +71,8 @@ class SimpleSync {
   async syncStatusTracking() {
     console.log('📊 同步状态跟踪...');
     
-    const zhFile = 'docs/prd/status-tracking/README.md';
-    const enFile = 'docs/prd/status-tracking/README-en.md';
+    const zhFile = 'DOCS/prd/status-tracking/README.md';
+    const enFile = 'DOCS/prd/status-tracking/README-en.md';
     
     if (this.fileExists(zhFile) && this.fileExists(enFile)) {
       await this.syncDocumentPair(zhFile, enFile);

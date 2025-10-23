@@ -337,7 +337,7 @@ class FormatChecker {
     }
   }
 
-  async checkAll(pattern = 'docs/**/*.md') {
+  async checkAll(pattern = 'DOCS/**/*.md') {
     console.log(chalk.blue('🔍 Starting format check...'));
     
     const files = glob.sync(pattern, { cwd: process.cwd() });
@@ -411,7 +411,7 @@ class FormatChecker {
     }
   }
 
-  async fixAll(pattern = 'docs/**/*.md') {
+  async fixAll(pattern = 'DOCS/**/*.md') {
     console.log(chalk.blue('🔧 Fixing format for all files...'));
     
     const files = glob.sync(pattern, { cwd: process.cwd() });
@@ -427,7 +427,7 @@ class FormatChecker {
 // CLI interface
 async function main() {
   const args = process.argv.slice(2);
-  const pattern = args[0] || 'docs/**/*.md';
+  const pattern = args[0] || 'DOCS/**/*.md';
   const fix = args.includes('--fix');
   
   const checker = new FormatChecker();
