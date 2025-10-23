@@ -27,6 +27,14 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
   
+  // 国际化路由配置 —— 早期仅启用 zh / en 两种语言，默认 zh
+  i18n: {
+    locales: ['zh', 'en'],
+    defaultLocale: 'zh',
+    // 为了简化，默认不使用 localeDetection（可在未来打开）
+    localeDetection: false,
+  },
+  
   // 安全头
   async headers() {
     return [

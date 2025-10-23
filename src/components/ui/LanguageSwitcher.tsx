@@ -1,24 +1,29 @@
-'use client';
+"use client";
 
+import React from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales, localeConfig, type Locale } from '@/i18n';
 
+/**
+ * LanguageSwitcher (named export)
+ * - Uses next-intl's `useLocale` to determine current locale
+ * - Navigates using next/navigation router to switch locale-prefixed routes
+ * - Keeps logic explicit: `zh` is represented without prefix, `en` with `/en` prefix
+ */
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || '/';
 
   const handleLanguageChange = (newLocale: Locale) => {
-    // 移除当前语言前缀，获取不带语言前缀的路径
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
-    // 构建新的路径
-    const newPath = `/${newLocale}${pathWithoutLocale}`;
+    const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), '') || '/';
+    const newPath = newLocale === 'zh' ? pathWithoutLocale : `/${newLocale}${pathWithoutLocale}`;
     router.push(newPath);
   };
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <select
         value={locale}
         onChange={(e) => handleLanguageChange(e.target.value as Locale)}
@@ -30,20 +35,9 @@ export function LanguageSwitcher() {
           </option>
         ))}
       </select>
-      {/* 自定义下拉箭头 */}
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-secondary-500">
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </div>
     </div>
