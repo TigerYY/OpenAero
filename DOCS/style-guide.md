@@ -219,12 +219,11 @@ Before submitting any document for review, ensure:
 **Category**: Core  
 **Dependencies**: None  
 
-**Description**: Secure user authentication system with multi-factor authentication support.
+**Description**: Secure user authentication system with email/password authentication.
 
 **Acceptance Criteria**:
 - [x] Users can register with email and password
 - [x] Users can log in securely
-- [x] Multi-factor authentication is supported
 - [x] Password reset functionality works
 
 **Technical Requirements**:
