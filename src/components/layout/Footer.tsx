@@ -120,7 +120,7 @@ export function Footer() {
             {/* Resources */}
             <div>
               <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                资源
+                {t('support.title')}
               </h3>
               <ul className="space-y-3">
                 {footerLinks.resources.map((link) => (
@@ -142,15 +142,25 @@ export function Footer() {
         <div className="border-t border-secondary-800 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-secondary-400 text-sm">
-              © {currentYear} OpenAero. All Rights Reserved. | 域名: openaero.cn
+              {t('copyright')}
             </div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <div className="text-secondary-400 text-sm">
-                粤ICP备2020099654号-3
-              </div>
-              <div className="text-secondary-400 text-sm">
-                粤公网安备
-              </div>
+              <a
+                href="https://beian.miit.gov.cn/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary-400 hover:text-white text-sm transition-colors"
+              >
+                {t('icp')}
+              </a>
+              <a
+                href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44010602000001"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary-400 hover:text-white text-sm transition-colors"
+              >
+                {t('publicSecurity')}
+              </a>
             </div>
           </div>
         </div>

@@ -76,13 +76,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html className="h-full">
-      <body className={`${inter.className} h-full bg-white antialiased`}>
-        <div id="root" className="h-full">
-          {children}
-        </div>
-      </body>
-    </html>
-  );
+  return children;
 }

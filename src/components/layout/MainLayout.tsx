@@ -1,14 +1,15 @@
-import { Header } from './Header';
 import { Footer } from './Footer';
+import { ServerHeader } from './ServerHeader';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  locale: string;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export async function MainLayout({ children, locale }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <ServerHeader locale={locale} />
       <main>{children}</main>
       <Footer />
     </div>

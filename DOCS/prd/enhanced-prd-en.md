@@ -49,11 +49,11 @@ OpenAero provides a unique combination of open innovation, quality certification
 **Category**: Core  
 **Dependencies**: None  
 
-**Description**: Secure user authentication system with multi-factor authentication support and comprehensive user profile management.
+**Description**: Secure user authentication system with email/password authentication and comprehensive user profile management.
 
 **Acceptance Criteria**:
 - [x] Users can register with email and password
-- [x] Users can log in securely with MFA support
+- [x] Users can log in securely with credentials
 - [x] Password reset functionality works
 - [x] User profiles can be created and updated
 - [x] Role-based access control is implemented

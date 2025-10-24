@@ -7,21 +7,15 @@ import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MobileMenu } from './MobileMenu';
 
-export function Header() {
+export function ClientHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-
-  // 确保组件在客户端挂载后才渲染
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const navigation = [
     { name: t('navigation.solutions'), href: '/solutions' },
@@ -47,27 +41,8 @@ export function Header() {
     router.push(newPath);
   };
 
-  // 在客户端挂载前显示简单的加载状态
-  if (!isMounted) {
-    return (
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-secondary-200">
-        <div className="container">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center">
-              <Logo size="md" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
-              <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-secondary-200" suppressHydrationWarning>
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-secondary-200">
       <div className="container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -112,18 +87,16 @@ export function Header() {
             <LanguageSwitcher
               currentLocale={locale}
               onLocaleChange={switchLanguage}
-              variant="dropdown"
+              variant="button"
               size="sm"
               showFlags={true}
-              showNativeNames={false}
-              className="w-20"
+              className="mr-2"
             />
             <button
-              type="button"
-              className="text-secondary-600 hover:text-primary-600"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="text-secondary-600 hover:text-primary-600 p-2"
+              aria-label="打开菜单"
             >
-              <span className="sr-only">{t('common.openMenu')}</span>
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -142,7 +115,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}

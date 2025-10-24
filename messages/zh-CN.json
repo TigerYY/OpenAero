@@ -123,6 +123,7 @@
     }
   },
   "footer": {
+    "description": "连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供50%的利润分成。",
     "company": {
       "title": "公司",
       "about": "关于我们",
@@ -137,6 +138,9 @@
       "inspection": "巡检",
       "delivery": "配送",
       "agriculture": "农业"
+    },
+    "creators": {
+      "title": "创作者"
     },
     "support": {
       "title": "支持",
@@ -156,7 +160,9 @@
       "followUs": "关注我们",
       "newsletter": "订阅新闻"
     },
-    "copyright": "© 2024 开元空御. 保留所有权利."
+    "copyright": "© 2024 开元空御. 保留所有权利.",
+    "icp": "粤ICP备2020099654号-3",
+    "publicSecurity": "粤公网安备 44010602000001号"
   },
   "valueFlow": {
     "title": "价值流转流程",

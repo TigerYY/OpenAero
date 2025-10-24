@@ -12,7 +12,7 @@
 ## Overview
 
 ### Description
-Secure user authentication system with multi-factor authentication support and comprehensive user profile management for the OpenAero platform.
+Secure user authentication system with email/password authentication and comprehensive user profile management for the OpenAero platform.
 
 ### Business Value
 Enables secure access to the platform for all users, protects sensitive data, and provides the foundation for role-based access control and user management.
@@ -25,10 +25,9 @@ Users can securely register, log in, and manage their accounts with confidence t
 ### Functional Requirements
 - **FR-001**: Users can register with email and password
 - **FR-002**: Users can log in securely with credentials
-- **FR-003**: Multi-factor authentication is supported
-- **FR-004**: Password reset functionality works
-- **FR-005**: User profiles can be created and updated
-- **FR-006**: Role-based access control is implemented
+- **FR-003**: Password reset functionality works
+- **FR-004**: User profiles can be created and updated
+- **FR-005**: Role-based access control is implemented
 
 ### Non-Functional Requirements
 - **NFR-001**: Authentication response time <500ms
@@ -40,7 +39,7 @@ Users can securely register, log in, and manage their accounts with confidence t
 
 ### Primary Criteria
 - [x] Users can register with email and password
-- [x] Users can log in securely with MFA support
+- [x] Users can log in securely with credentials
 - [x] Password reset functionality works
 - [x] User profiles can be created and updated
 - [x] Role-based access control is implemented
@@ -112,7 +111,6 @@ CREATE TABLE users (
 - [x] Implement user login API
 - [x] Add password hashing with bcrypt
 - [x] Implement JWT token management
-- [x] Add MFA support with TOTP
 - [x] Create user profile management
 - [x] Implement role-based access control
 - [x] Add password reset functionality
@@ -149,7 +147,7 @@ CREATE TABLE users (
 ### Secondary User Stories
 **As a** user, **I want** to reset my password if I forget it, **so that** I can regain access to my account.
 
-**As a** user, **I want** to enable two-factor authentication, **so that** my account is more secure.
+**As a** user, **I want** to enable two-factor authentication in the future, **so that** my account is more secure.
 
 ## Implementation Status
 
@@ -159,7 +157,6 @@ CREATE TABLE users (
 ### Completed Items
 - [x] User registration with email verification
 - [x] Secure login with password validation
-- [x] Multi-factor authentication (TOTP)
 - [x] Password reset functionality
 - [x] User profile management
 - [x] Role-based access control
@@ -177,6 +174,7 @@ CREATE TABLE users (
 - [ ] Monitor authentication metrics
 - [ ] Implement additional OAuth providers if needed
 - [ ] Enhance security features based on user feedback
+- [ ] Consider adding multi-factor authentication in the future
 
 ## Testing
 
@@ -187,7 +185,6 @@ CREATE TABLE users (
 | TC-002 | User login with correct credentials | Successful authentication | ✅ Pass |
 | TC-003 | User login with incorrect password | Authentication failed, rate limiting applied | ✅ Pass |
 | TC-004 | Password reset flow | Reset email sent, password updated | ✅ Pass |
-| TC-005 | MFA setup and verification | TOTP code generation and validation | ✅ Pass |
 
 ### Test Results
 All authentication tests are passing. Security audit completed with no critical issues found.
@@ -234,7 +231,6 @@ All authentication tests are passing. Security audit completed with no critical 
 - **Registration Success Rate**: 95%+ successful registrations
 - **Login Success Rate**: 98%+ successful logins
 - **Password Reset Success**: 90%+ successful resets
-- **MFA Adoption**: 60%+ of users enable MFA
 
 ### Performance Metrics
 - **Authentication Response Time**: <500ms average

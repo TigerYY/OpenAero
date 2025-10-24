@@ -6,9 +6,15 @@ import { SolutionsSection } from '@/components/sections/SolutionsSection';
 import { TransparencySection } from '@/components/sections/TransparencySection';
 import { ValueFlowSection } from '@/components/sections/ValueFlowSection';
 
-export default function HomePage() {
+interface HomePageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default async function HomePage({ params }: HomePageProps) {
   return (
-    <MainLayout>
+    <MainLayout locale={params.locale}>
       <HeroSection />
       <ValueFlowSection />
       <SolutionsSection />

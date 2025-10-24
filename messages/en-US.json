@@ -123,6 +123,7 @@
     }
   },
   "footer": {
+    "description": "Connecting global drone creators with professional clients, providing professional verification, production, and sales of excellent drone innovation designs, offering creators 50% profit sharing.",
     "company": {
       "title": "Company",
       "about": "About Us",
@@ -137,6 +138,9 @@
       "inspection": "Inspection",
       "delivery": "Delivery",
       "agriculture": "Agriculture"
+    },
+    "creators": {
+      "title": "Creators"
     },
     "support": {
       "title": "Support",
@@ -156,7 +160,9 @@
       "followUs": "Follow Us",
       "newsletter": "Newsletter"
     },
-    "copyright": "© 2024 OpenAero. All rights reserved."
+    "copyright": "© 2024 OpenAero. All rights reserved.",
+    "icp": "粤ICP备2020099654号-3",
+    "publicSecurity": "粤公网安备 44010602000001号"
   },
   "valueFlow": {
     "title": "Value Flow Process",
