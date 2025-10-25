@@ -9,6 +9,9 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
   
+  // 输出配置 - 禁用静态生成以避免预渲染错误
+  output: 'standalone',
+  
   // TypeScript配置
   typescript: {
     ignoreBuildErrors: true,
@@ -32,10 +35,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.example.com',
-      },
-      {
-        protocol: 'https',
         hostname: '**.openaero.cn',
       },
       {
@@ -46,38 +45,20 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
 
-  // 重定向配置
-  async redirects() {
-    return [
-      {
-        source: '/home',
-        destination: '/',
-        permanent: true,
-      },
-    ];
-  },
-
-  // 环境变量配置
+  // 环境变量
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
 
-  // 构建配置
+  // 构建ID
   generateBuildId: async () => {
-    return 'build-' + Date.now();
+    return 'openaero-build-' + Date.now();
   },
 
-  // 输出配置
-  output: 'standalone',
-  
-  // 强制所有页面动态渲染
-  trailingSlash: false,
-  skipTrailingSlashRedirect: true,
-  
-  // 压缩配置
+  // 压缩
   compress: true,
-  
-  // 开发配置
+
+  // 开发指示器
   devIndicators: {
     buildActivity: true,
     buildActivityPosition: 'bottom-right',
