@@ -1,22 +1,28 @@
-import { loadMessagesSync, detectLocaleFromReq } from './i18n';
 import { cookies } from 'next/headers';
+import { detectLocale } from './i18n';
 
-export function getLocaleFromServer(): 'zh' | 'en' {
+export function getLocaleFromServer(): 'zh-CN' | 'en-US' {
   try {
     const c = cookies();
     const cookie = c.get('locale')?.value;
-    if (cookie === 'en') return 'en';
+    if (cookie === 'en-US') return 'en-US';
   } catch (e) {
     // ignore
   }
-  return 'zh';
+  return 'zh-CN';
 }
 
-export function getServerMessages(): Record<string, any> {
+export async function getServerMessages(): Promise<Record<string, any>> {
   const locale = getLocaleFromServer();
-  return loadMessagesSync(locale);
+  return await getServerMessagesFor(locale);
 }
 
-export function getServerMessagesFor(locale: 'zh' | 'en') {
-  return loadMessagesSync(locale);
+export async function getServerMessagesFor(locale: 'zh-CN' | 'en-US'): Promise<Record<string, any>> {
+  try {
+    const messages = (await import(`../../messages/${locale}.json`)).default;
+    return messages;
+  } catch (error) {
+    console.error(`Failed to load messages for locale ${locale}:`, error);
+    return {};
+  }
 }

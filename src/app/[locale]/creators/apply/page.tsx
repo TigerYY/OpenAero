@@ -7,7 +7,13 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 import { creatorApplySchema } from '@/lib/validations';
 
-export default function CreatorApplyPage() {
+interface CreatorApplyPageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default function CreatorApplyPage({ params: { locale } }: CreatorApplyPageProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -86,7 +92,7 @@ export default function CreatorApplyPage() {
   };
 
   return (
-    <MainLayout>
+    <MainLayout locale={locale}>
       <div className="min-h-screen bg-secondary-50">
         <div className="container py-16">
           <div className="max-w-3xl mx-auto">
