@@ -93,14 +93,19 @@ clone_code() {
     
     cd $APP_DIR
     
-    # 克隆代码
-    git clone https://github.com/TigerYY/OpenAero.git .
-    
-    # 切换到指定分支
-    git checkout 003-prd-document-enhancement
-    
-    # 拉取最新代码
-    git pull origin 003-prd-document-enhancement
+    # 如果目录已存在，先删除
+    if [ -d ".git" ]; then
+        log "目录已存在，更新代码..."
+        git fetch origin
+        git reset --hard origin/003-prd-document-enhancement
+        git clean -fd
+    else
+        # 克隆代码
+        git clone https://github.com/TigerYY/OpenAero.git .
+        
+        # 切换到指定分支
+        git checkout 003-prd-document-enhancement
+    fi
     
     success "代码克隆完成"
 }
