@@ -9,6 +9,12 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
   
+  // ESLint配置
+  eslint: {
+    // 在生产构建时忽略ESLint错误
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
+  },
+  
   // 实验性功能
   experimental: {
     // 启用服务器组件

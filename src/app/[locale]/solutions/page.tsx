@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { MainLayout } from '@/components/layout/MainLayout';
-import { SolutionCard } from '@/components/business/SolutionCard';
 import { SearchFilters } from '@/components/business/SearchFilters';
+import { SolutionCard } from '@/components/business/SolutionCard';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Pagination } from '@/components/ui/Pagination';
 import { Solution, SolutionFilters } from '@/types';
 
-export default function SolutionsPage() {
+interface SolutionsPageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default function SolutionsPage({ params: { locale } }: SolutionsPageProps) {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -20,8 +26,6 @@ export default function SolutionsPage() {
   const [filters, setFilters] = useState<SolutionFilters>({
     search: '',
     category: '',
-    minPrice: undefined,
-    maxPrice: undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });
@@ -68,7 +72,7 @@ export default function SolutionsPage() {
   };
 
   return (
-    <MainLayout>
+    <MainLayout locale={locale}>
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">

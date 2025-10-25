@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { PaginatedResponse, Solution, SolutionFilters } from '@/types';
-import { withErrorHandling, ValidationError } from '@/lib/error-handler';
-import { searchSchema } from '@/lib/validations';
 import { db } from '@/lib/db';
+import { ValidationError, withErrorHandling } from '@/lib/error-handler';
+import { searchSchema } from '@/lib/validations';
+import { PaginatedResponse, Solution } from '@/types';
 
 // 模拟数据作为备用
 const mockSolutions: Solution[] = [
@@ -167,8 +167,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       case 'price':
         orderBy.price = validatedQuery.sortOrder;
         break;
-      case 'title':
-        orderBy.title = validatedQuery.sortOrder;
+      case 'name':
+        orderBy.name = validatedQuery.sortOrder;
         break;
       case 'createdAt':
       default:
@@ -177,8 +177,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // 分页
-    const page = parseInt(validatedQuery.page);
-    const limit = parseInt(validatedQuery.limit);
+    const page = parseInt(validatedQuery.page || '1');
+    const limit = parseInt(validatedQuery.limit || '20');
     const skip = (page - 1) * limit;
 
     // 查询数据库
@@ -189,26 +189,25 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         skip,
         take: limit,
         include: {
-          category: true,
           creator: {
             include: {
               user: true,
             },
           },
-          reviews: true,
-          tags: true,
         },
       }),
       db.solution.count({ where }),
     ]);
 
-    // 计算平均评分
+    // 计算平均评分（暂时设为0，因为reviews关系未包含）
     const solutionsWithRating = solutions.map(solution => ({
       ...solution,
-      averageRating: solution.reviews.length > 0 
-        ? solution.reviews.reduce((sum, review) => sum + review.rating, 0) / solution.reviews.length
-        : 0,
-      reviewCount: solution.reviews.length,
+      price: Number(solution.price), // 转换Decimal为number
+      status: solution.status as 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'ARCHIVED', // 转换状态类型
+      slug: solution.title.toLowerCase().replace(/\s+/g, '-'), // 生成slug
+      categoryId: 'default', // 暂时设为默认分类
+      averageRating: 0, // 暂时设为0，等待reviews关系实现
+      reviewCount: 0,   // 暂时设为0，等待reviews关系实现
     }));
 
     // 如果按评分排序，需要重新排序

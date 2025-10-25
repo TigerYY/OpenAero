@@ -3,9 +3,15 @@ import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 
-export default function CreatorApplySuccessPage() {
+interface CreatorApplySuccessPageProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default function CreatorApplySuccessPage({ params: { locale } }: CreatorApplySuccessPageProps) {
   return (
-    <MainLayout>
+    <MainLayout locale={locale}>
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-white rounded-xl shadow-sm p-8">

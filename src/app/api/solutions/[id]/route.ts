@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { NotFoundError, ValidationError, withErrorHandling } from '@/lib/error-handler';
 import { ApiResponse, Solution } from '@/types';
-import { withErrorHandling, NotFoundError, ValidationError } from '@/lib/error-handler';
 
 // 模拟数据
 const mockSolutions: Solution[] = [
@@ -60,7 +60,7 @@ const mockSolutions: Solution[] = [
 ];
 
 export const GET = withErrorHandling(async (
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) => {
   const { id } = params;
@@ -82,7 +82,7 @@ export const GET = withErrorHandling(async (
 });
 
 export const PUT = withErrorHandling(async (
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) => {
   const { id } = params;
@@ -102,7 +102,7 @@ export const PUT = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) => {
   const { id } = params;

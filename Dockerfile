@@ -2,7 +2,7 @@
 FROM node:18-alpine AS base
 
 # 安装依赖
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat || apk add --no-cache libc6-compat-dev
 WORKDIR /app
 
 # 复制包管理文件
@@ -26,7 +26,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 安装构建依赖
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat || apk add --no-cache libc6-compat-dev
 
 # 复制包管理文件
 COPY package.json package-lock.json ./
