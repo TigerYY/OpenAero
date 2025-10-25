@@ -7,11 +7,11 @@ REMOTE_DIR="/root/openaero.web"
 LOCAL_DIR="./"
 BRANCH="004-deployment-optimization"
 
-echo "🚀 开始简单部署到 ${REMOTE_USER}@${REMOTE_HOST}"
+echo "🐳 开始 Docker 部署到 ${REMOTE_USER}@${REMOTE_HOST}"
 
 # 1. 创建项目压缩包
 echo "📦 创建项目压缩包..."
-tar -czf openaero-simple.tar.gz \
+tar -czf openaero-docker.tar.gz \
   --exclude='./node_modules' \
   --exclude='./.next' \
   --exclude='./.git' \
@@ -25,15 +25,15 @@ if [ $? -ne 0 ]; then
   echo "❌ 错误: 无法创建项目压缩包."
   exit 1
 fi
-echo "✅ 项目压缩包创建成功: openaero-simple.tar.gz"
+echo "✅ 项目压缩包创建成功: openaero-docker.tar.gz"
 
 # 2. 上传到服务器
 echo "📤 上传到服务器..."
-scp openaero-simple.tar.gz "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
+scp openaero-docker.tar.gz "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
 
 if [ $? -ne 0 ]; then
   echo "❌ 错误: 无法上传压缩包."
-  rm openaero-simple.tar.gz
+  rm openaero-docker.tar.gz
   exit 1
 fi
 echo "✅ 上传成功"
@@ -49,7 +49,7 @@ ssh "${REMOTE_USER}@${REMOTE_HOST}" << 'EOF'
   rm -rf .next node_modules package-lock.json
 
   echo "📦 解压新版本..."
-  tar -xzf /tmp/openaero-simple.tar.gz
+  tar -xzf /tmp/openaero-docker.tar.gz
 
   if [ $? -ne 0 ]; then
     echo "❌ 错误: 无法解压压缩包."
@@ -58,7 +58,7 @@ ssh "${REMOTE_USER}@${REMOTE_HOST}" << 'EOF'
   echo "✅ 解压成功"
 
   echo "🗑️ 清理服务器上的压缩包..."
-  rm /tmp/openaero-simple.tar.gz
+  rm /tmp/openaero-docker.tar.gz
 
   echo "📋 设置环境变量..."
   cat << ENVEQF > .env.production
@@ -70,64 +70,58 @@ NEXT_PUBLIC_SUPPORTED_LOCALES=zh-CN,en-US
 NEXT_PUBLIC_FALLBACK_LOCALE=zh-CN
 ENVEQF
 
-  echo "📦 安装依赖..."
-  npm install --production
+  echo "🐳 构建 Docker 镜像..."
+  docker build -f Dockerfile.production -t openaero:latest .
 
   if [ $? -ne 0 ]; then
-    echo "❌ npm install 失败"
+    echo "❌ Docker 构建失败"
     exit 1
   fi
-  echo "✅ 依赖安装成功"
+  echo "✅ Docker 镜像构建成功"
 
-  echo "🔧 生成 Prisma 客户端..."
-  npx prisma generate
+  echo "🛑 停止现有容器..."
+  docker stop openaero-container || true
+  docker rm openaero-container || true
+
+  echo "🚀 启动新容器..."
+  docker run -d \
+    --name openaero-container \
+    --restart unless-stopped \
+    -p 3000:3000 \
+    --env-file .env.production \
+    openaero:latest
 
   if [ $? -ne 0 ]; then
-    echo "❌ Prisma 生成失败"
+    echo "❌ Docker 容器启动失败"
     exit 1
   fi
-  echo "✅ Prisma 客户端生成成功"
-
-  echo "🔨 构建项目..."
-  npm run build
-
-  if [ $? -ne 0 ]; then
-    echo "❌ 构建失败"
-    exit 1
-  fi
-  echo "✅ 构建成功"
-
-  echo "🛑 停止现有进程..."
-  pkill -f "next start" || true
-  pkill -f "npm start" || true
-
-  echo "🚀 启动应用..."
-  nohup npm start > app.log 2>&1 &
+  echo "✅ 容器启动成功"
 
   echo "⏳ 等待应用启动..."
   sleep 10
 
-  echo "🔍 检查应用状态..."
-  ps aux | grep -E "(next|npm)" | grep -v grep
+  echo "🔍 检查容器状态..."
+  docker ps | grep openaero-container
 
   echo "🌐 测试应用..."
   curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/zh-CN
 
-  echo "✅ 简单部署完成！"
+  echo "✅ Docker 部署完成！"
   echo "🌐 应用地址: https://openaero.cn"
-  echo "📝 查看日志: tail -f /root/openaero.web/app.log"
-  echo "🔄 重启应用: pkill -f 'npm start' && cd /root/openaero.web && nohup npm start > app.log 2>&1 &"
+  echo "📝 查看日志: docker logs openaero-container"
+  echo "🔄 重启应用: docker restart openaero-container"
 EOF
 
 if [ $? -ne 0 ]; then
   echo "❌ 错误: SSH 命令失败."
-  rm openaero-simple.tar.gz
+  rm openaero-docker.tar.gz
   exit 1
 fi
 
 echo "🧹 清理本地文件..."
-rm openaero-simple.tar.gz
+rm openaero-docker.tar.gz
 
-echo "🎉 简单部署完成！"
+echo "🎉 Docker 部署完成！"
 echo "🌐 访问地址: https://openaero.cn"
-echo "📝 查看日志: ssh root@openaero.cn 'tail -f /root/openaero.web/app.log'"
+echo "📝 查看日志: ssh root@openaero.cn 'docker logs openaero-container'"
+echo "🔄 重启应用: ssh root@openaero.cn 'docker restart openaero-container'"
