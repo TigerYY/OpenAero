@@ -159,8 +159,8 @@ build_docker_image() {
     
     cd $APP_DIR
     
-    # 构建镜像
-    docker build -t $DOCKER_IMAGE .
+    # 构建镜像，使用生产环境Dockerfile
+    docker build -f Dockerfile.production -t $DOCKER_IMAGE .
     
     success "Docker镜像构建完成: $DOCKER_IMAGE"
 }
