@@ -12,7 +12,6 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  showFirstLast = true, // eslint-disable-line @typescript-eslint/no-unused-vars
   maxVisiblePages = 5,
 }: PaginationProps) {
   if (totalPages <= 1) return null;

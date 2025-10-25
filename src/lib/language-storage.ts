@@ -1,5 +1,4 @@
-import { Locale } from '@/types/i18n';
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/types/i18n';
+import { Locale, SUPPORTED_LOCALES } from '@/types/i18n';
 
 /**
  * 语言存储服务

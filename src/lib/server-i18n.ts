@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import { detectLocale } from './i18n';
 
 export function getLocaleFromServer(): 'zh-CN' | 'en-US' {
   try {

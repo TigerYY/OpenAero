@@ -8,6 +8,9 @@ import '../globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // 生成动态metadata
 export async function generateMetadata({
   params

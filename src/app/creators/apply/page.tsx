@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 import { creatorApplySchema } from '@/lib/validations';
+
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
 
 export default function CreatorApplyPage() {
   const router = useRouter();
@@ -86,7 +89,7 @@ export default function CreatorApplyPage() {
   };
 
   return (
-    <MainLayout>
+    <MainLayout locale="zh-CN">
       <div className="min-h-screen bg-secondary-50">
         <div className="container py-16">
           <div className="max-w-3xl mx-auto">

@@ -206,6 +206,20 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       status: solution.status as 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'ARCHIVED', // 转换状态类型
       slug: solution.title.toLowerCase().replace(/\s+/g, '-'), // 生成slug
       categoryId: 'default', // 暂时设为默认分类
+      specs: solution.specs as Record<string, any> || {}, // 转换JsonValue为Record
+      bom: solution.bom as Record<string, any> || {}, // 转换JsonValue为Record
+      creator: {
+        ...solution.creator,
+        bio: solution.creator.bio || '', // 转换null为空字符串
+        website: solution.creator.website || '', // 转换null为空字符串
+        experience: solution.creator.experience || '', // 转换null为空字符串
+        revenue: Number(solution.creator.revenue), // 转换Decimal为number
+        user: {
+          ...solution.creator.user,
+          name: solution.creator.user.name || '', // 转换null为空字符串
+          avatar: solution.creator.user.avatar || '', // 转换null为空字符串
+        },
+      },
       averageRating: 0, // 暂时设为0，等待reviews关系实现
       reviewCount: 0,   // 暂时设为0，等待reviews关系实现
     }));
@@ -272,7 +286,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           return (a.price - b.price) * order;
         case 'rating':
           return ((a.averageRating || 0) - (b.averageRating || 0)) * order;
-        case 'title':
+        case 'name':
           return a.title.localeCompare(b.title) * order;
         case 'createdAt':
         default:
@@ -280,8 +294,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
     });
 
-    const page = parseInt(validatedQuery.page);
-    const limit = parseInt(validatedQuery.limit);
+    const page = parseInt(validatedQuery.page || '1');
+    const limit = parseInt(validatedQuery.limit || '20');
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedSolutions = filteredSolutions.slice(startIndex, endIndex);

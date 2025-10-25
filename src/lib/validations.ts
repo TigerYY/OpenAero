@@ -80,7 +80,9 @@ export const paginationSchema = z.object({
 
 // 文件上传验证
 export const fileUploadSchema = z.object({
-  file: z.instanceof(File, { message: '请选择文件' }),
+  file: typeof File !== 'undefined' 
+    ? z.instanceof(File, { message: '请选择文件' })
+    : z.any().refine((val) => val && typeof val === 'object', { message: '请选择文件' }),
   maxSize: z.number().default(5 * 1024 * 1024), // 5MB
   allowedTypes: z.array(z.string()).default(['image/jpeg', 'image/png', 'image/webp']),
 });

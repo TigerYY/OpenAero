@@ -2,6 +2,7 @@
 
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
+import { Locale } from '@/types/i18n';
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -26,8 +27,8 @@ export function ClientLanguageSwitcher({
   const pathname = usePathname();
   const locale = useLocale();
 
-  const switchLanguage = (newLocale: string) => {
-    saveLanguagePreference(newLocale as any);
+  const switchLanguage = (newLocale: Locale) => {
+    saveLanguagePreference(newLocale);
     
     // 使用 usePathname 获取当前路径，避免服务端渲染问题
     const currentPath = pathname;
@@ -45,9 +46,9 @@ export function ClientLanguageSwitcher({
 
   return (
     <LanguageSwitcher
-      currentLocale={currentLocale}
+      currentLocale={currentLocale as Locale}
       onLocaleChange={switchLanguage}
-      variant={variant}
+      variant={variant === 'button' ? 'buttons' : variant}
       size={size}
       showFlags={showFlags}
       showNativeNames={showNativeNames}

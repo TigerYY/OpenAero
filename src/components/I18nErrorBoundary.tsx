@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Component, ReactNode } from 'react';
 import { Locale } from '@/types/i18n';
+import React, { Component, ReactNode } from 'react';
 
 // 错误边界状态接口
 interface I18nErrorBoundaryState {
@@ -59,7 +59,7 @@ export class I18nErrorBoundary extends Component<
     return { hasError: false };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // 记录错误信息
     this.setState({
       error,
@@ -115,7 +115,7 @@ export class I18nErrorBoundary extends Component<
     window.location.reload();
   };
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // 使用自定义错误界面
       if (this.props.fallback) {

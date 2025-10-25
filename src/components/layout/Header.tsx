@@ -4,17 +4,23 @@ import { Button } from '@/components/ui/Button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
+import { Locale } from '@/types/i18n';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { MobileMenu } from './MobileMenu';
 
-export function Header() {
+interface HeaderProps {
+  locale?: string;
+}
+
+export function Header({ locale: propLocale }: HeaderProps = {}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const t = useTranslations();
-  const locale = useLocale();
+  const contextLocale = useLocale();
+  const locale = propLocale || contextLocale;
   const router = useRouter();
   const pathname = usePathname();
 
@@ -30,8 +36,8 @@ export function Header() {
     { name: t('navigation.contact'), href: '/contact' },
   ];
 
-  const switchLanguage = (newLocale: string) => {
-    saveLanguagePreference(newLocale as any);
+  const switchLanguage = (newLocale: Locale) => {
+    saveLanguagePreference(newLocale);
     
     // 使用 usePathname 获取当前路径，避免服务端渲染问题
     const currentPath = pathname;
@@ -91,7 +97,7 @@ export function Header() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSwitcher
-              currentLocale={locale}
+              currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}
               variant="dropdown"
               size="sm"
@@ -110,7 +116,7 @@ export function Header() {
           {/* Mobile menu button and language switcher */}
           <div className="md:hidden flex items-center space-x-2">
             <LanguageSwitcher
-              currentLocale={locale}
+              currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}
               variant="dropdown"
               size="sm"

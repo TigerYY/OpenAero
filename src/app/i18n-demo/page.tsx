@@ -1,8 +1,7 @@
-import React from 'react';
-import { getServerMessages, getServerMessagesFor } from '@/lib/server-i18n';
+import { getServerMessages } from '@/lib/server-i18n';
 
-export default function Page() {
-  const msgs = getServerMessages();
+export default async function Page() {
+  const msgs = await getServerMessages();
   const welcome = msgs?.common?.labels?.welcome || '欢迎';
 
   return (

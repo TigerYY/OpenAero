@@ -3,9 +3,12 @@ import Link from 'next/link';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 export default function CreatorApplySuccessPage() {
   return (
-    <MainLayout>
+    <MainLayout locale="zh-CN">
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-white rounded-xl shadow-sm p-8">

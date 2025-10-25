@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
+import { Locale } from '@/types/i18n';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -24,8 +25,8 @@ export function ClientHeader() {
     { name: t('navigation.contact'), href: '/contact' },
   ];
 
-  const switchLanguage = (newLocale: string) => {
-    saveLanguagePreference(newLocale as any);
+  const switchLanguage = (newLocale: Locale) => {
+    saveLanguagePreference(newLocale);
     
     // 使用 usePathname 获取当前路径，避免服务端渲染问题
     const currentPath = pathname;
@@ -66,7 +67,7 @@ export function ClientHeader() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSwitcher
-              currentLocale={locale}
+              currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}
               variant="dropdown"
               size="sm"
@@ -85,9 +86,9 @@ export function ClientHeader() {
           {/* Mobile menu button and language switcher */}
           <div className="md:hidden flex items-center space-x-2">
             <LanguageSwitcher
-              currentLocale={locale}
+              currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}
-              variant="button"
+              variant="buttons"
               size="sm"
               showFlags={true}
               className="mr-2"

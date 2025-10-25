@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { MainLayout } from '@/components/layout/MainLayout';
-import { SolutionCard } from '@/components/business/SolutionCard';
 import { SearchFilters } from '@/components/business/SearchFilters';
+import { SolutionCard } from '@/components/business/SolutionCard';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Pagination } from '@/components/ui/Pagination';
 import { Solution, SolutionFilters } from '@/types';
+
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
 
 export default function SolutionsPage() {
   const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -20,8 +23,6 @@ export default function SolutionsPage() {
   const [filters, setFilters] = useState<SolutionFilters>({
     search: '',
     category: '',
-    minPrice: undefined,
-    maxPrice: undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });
@@ -68,7 +69,7 @@ export default function SolutionsPage() {
   };
 
   return (
-    <MainLayout>
+    <MainLayout locale="zh-CN">
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">

@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/types/i18n';
 import { getRequestConfig } from 'next-intl/server';
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/types/i18n';
+import { notFound } from 'next/navigation';
 
 // 验证语言代码是否支持
 export function isValidLocale(locale: string): locale is 'zh-CN' | 'en-US' {
@@ -36,7 +36,7 @@ export function detectServerLocale(request: Request): 'zh-CN' | 'en-US' {
       .map(lang => {
         const [locale, qValue] = lang.trim().split(';q=');
         return {
-          locale: locale.split('-')[0], // 只取主要语言部分
+          locale: locale?.split('-')[0] || '', // 只取主要语言部分
           quality: qValue ? parseFloat(qValue) : 1.0
         };
       })
@@ -44,10 +44,10 @@ export function detectServerLocale(request: Request): 'zh-CN' | 'en-US' {
 
     // 查找支持的语言
     for (const { locale } of languages) {
-      if (locale === 'zh' || locale === 'zh-CN') {
+      if (locale && (locale === 'zh' || locale === 'zh-CN')) {
         return 'zh-CN';
       }
-      if (locale === 'en' || locale === 'en-US') {
+      if (locale && (locale === 'en' || locale === 'en-US')) {
         return 'en-US';
       }
     }
@@ -59,7 +59,7 @@ export function detectServerLocale(request: Request): 'zh-CN' | 'en-US' {
 // next-intl 配置
 export default getRequestConfig(async ({ locale }) => {
   // 验证语言代码
-  if (!isValidLocale(locale)) {
+  if (!locale || !isValidLocale(locale)) {
     notFound();
   }
 
@@ -83,6 +83,7 @@ export default getRequestConfig(async ({ locale }) => {
   }
 
   return {
+    locale,
     messages,
     timeZone: 'Asia/Shanghai', // 默认时区
     now: new Date(),
@@ -138,7 +139,7 @@ export function validateTranslationKey(key: string): boolean {
 
 // 获取翻译键的命名空间
 export function getTranslationNamespace(key: string): string {
-  return key.split('.')[0];
+  return key.split('.')[0] || '';
 }
 
 // 获取翻译键的路径

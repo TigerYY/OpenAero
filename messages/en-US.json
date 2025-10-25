@@ -18,7 +18,8 @@
     "sort": "Sort",
     "refresh": "Refresh",
     "openMenu": "Open main menu",
-    "closeMenu": "Close main menu"
+    "closeMenu": "Close main menu",
+    "selectLanguage": "Select Language"
   },
   "navigation": {
     "home": "Home",

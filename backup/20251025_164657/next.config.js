@@ -9,22 +9,17 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
   
-  // TypeScript配置
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  
   // ESLint配置
   eslint: {
-    ignoreDuringBuilds: true,
+    // 在生产构建时忽略ESLint错误
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
   
   // 实验性功能
   experimental: {
     // 启用服务器组件
     serverComponentsExternalPackages: ['@prisma/client', 'bcrypt'],
-    // 暂时禁用instrumentationHook以提高构建速度
-    // instrumentationHook: true,
+    instrumentationHook: true,
   },
 
   // 图片优化
@@ -70,10 +65,6 @@ const nextConfig = {
   // 输出配置
   output: 'standalone',
   
-  // 强制所有页面动态渲染
-  trailingSlash: false,
-  skipTrailingSlashRedirect: true,
-  
   // 压缩配置
   compress: true,
   
@@ -95,6 +86,4 @@ const sentryWebpackPluginOptions = {
   automaticVercelMonitors: true,
 };
 
-// 暂时禁用Sentry配置以提高构建速度
-// module.exports = withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
-module.exports = withNextIntl(nextConfig);
+module.exports = withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);

@@ -1,5 +1,5 @@
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
 import * as Sentry from '@sentry/nextjs';
+import { onCLS, onFCP, onLCP, onTTFB } from 'web-vitals';
 
 // 性能指标类型
 export interface PerformanceMetrics {
@@ -84,11 +84,10 @@ export function initPerformanceMonitoring() {
   if (typeof window === 'undefined') return;
   
   // 监控各种性能指标
-  getCLS(handlePerformanceMetric);
-  getFID(handlePerformanceMetric);
-  getFCP(handlePerformanceMetric);
-  getLCP(handlePerformanceMetric);
-  getTTFB(handlePerformanceMetric);
+  onCLS(handlePerformanceMetric);
+  onFCP(handlePerformanceMetric);
+  onLCP(handlePerformanceMetric);
+  onTTFB(handlePerformanceMetric);
   
   // 监控页面可见性变化
   document.addEventListener('visibilitychange', () => {
@@ -119,13 +118,14 @@ export class ErrorMonitor {
         component: context?.component || 'unknown',
         action: context?.action || 'unknown',
       },
-      extra: context,
+      extra: context || {},
     });
   }
   
   static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
-    Sentry.captureMessage(message, level, {
-      extra: context,
+    Sentry.captureMessage(message, {
+      level,
+      extra: context || {},
     });
   }
   
@@ -142,7 +142,7 @@ export class ErrorMonitor {
       message,
       category,
       level,
-      data,
+      data: data || {},
     });
   }
 }

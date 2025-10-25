@@ -35,7 +35,12 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ category: e.target.value || undefined });
+    const value = e.target.value;
+    if (value) {
+      onFilterChange({ category: value });
+    } else {
+      onFilterChange({ category: undefined });
+    }
   };
 
   const handlePriceChange = (type: 'min' | 'max', value: string) => {

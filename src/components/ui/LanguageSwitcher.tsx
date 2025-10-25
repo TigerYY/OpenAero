@@ -6,14 +6,12 @@ import {
     getLanguageNativeName
 } from '@/lib/i18n-utils';
 import { LanguageSwitcherProps, Locale } from '@/types/i18n';
-import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import React, { useEffect, useRef, useState } from 'react';
 
 export function LanguageSwitcher({
   currentLocale,
   onLocaleChange,
-  variant = 'dropdown',
   size = 'md',
   showFlags = true,
   showNativeNames = true,
@@ -21,8 +19,6 @@ export function LanguageSwitcher({
   className = '',
 }: LanguageSwitcherProps) {
   const t = useTranslations();
-  const locale = useLocale();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -68,7 +64,10 @@ export function LanguageSwitcher({
       case ' ':
         event.preventDefault();
         if (focusedIndex >= 0 && focusedIndex < supportedLocales.length) {
-          handleLanguageChange(supportedLocales[focusedIndex]);
+          const selectedLocale = supportedLocales[focusedIndex];
+          if (selectedLocale) {
+            handleLanguageChange(selectedLocale);
+          }
         }
         break;
       case 'Escape':
@@ -120,7 +119,7 @@ export function LanguageSwitcher({
       >
         {showFlags && (
           <span className="text-lg" role="img" aria-label={`${getLanguageNativeName(locale)} flag`}>
-            {getLanguageFlag(locale)}
+            {getLanguageFlag(locale as Locale)}
           </span>
         )}
         <div className="flex-1">
@@ -159,15 +158,15 @@ export function LanguageSwitcher({
         aria-label={t('common.selectLanguage')}
       >
         <div className="flex items-center space-x-2 min-w-0">
-          {showFlags && (
-            <span className="text-lg flex-shrink-0" role="img" aria-label={`${getLanguageNativeName(currentLocale)} flag`}>
-              {getLanguageFlag(currentLocale)}
-            </span>
-          )}
+        {showFlags && (
+          <span className="text-lg flex-shrink-0" role="img" aria-label={`${getLanguageNativeName(currentLocale as Locale)} flag`}>
+            {getLanguageFlag(currentLocale as Locale)}
+          </span>
+        )}
           <span className="truncate">
             {showNativeNames 
-              ? getLanguageNativeName(currentLocale)
-              : getLanguageDisplayName(currentLocale)
+              ? getLanguageNativeName(currentLocale as Locale)
+              : getLanguageDisplayName(currentLocale as Locale)
             }
           </span>
         </div>
