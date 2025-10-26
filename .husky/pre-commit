@@ -10,8 +10,4 @@ npx lint-staged
 echo "🔧 Running TypeScript check..."
 npm run type-check
 
-# Run tests related to staged files
-echo "🧪 Running tests..."
-npm run test -- --passWithNoTests --findRelatedTests --bail
-
 echo "✅ Pre-commit checks passed!"

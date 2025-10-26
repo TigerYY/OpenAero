@@ -1,26 +1,24 @@
-import { APP_CONFIG } from '@/config/app';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { Inter } from 'next/font/google';
-import { notFound } from 'next/navigation';
-import '../globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+import { APP_CONFIG } from '@/config/app';
+import '../globals.css';
 
 // 强制动态渲染
 export const dynamic = 'force-dynamic';
 
 // 生成动态metadata
 export async function generateMetadata({
-  params
+  params,
 }: {
   params: { locale: string };
 }): Promise<Metadata> {
   const locale = params.locale;
-  
+
   // 验证locale
-  if (!APP_CONFIG.supportedLocales.includes(locale as any)) {
+  if (!APP_CONFIG.supportedLocales.includes(locale as 'zh-CN' | 'en-US')) {
     notFound();
   }
 
@@ -31,7 +29,8 @@ export async function generateMetadata({
         default: 'OpenAero - Community-Driven Open Drone Solutions Platform',
         template: '%s | OpenAero',
       },
-      description: 'OpenAero is a community-driven open drone solutions platform connecting global drone creators with professional clients. We are committed to professional verification, production and sales of excellent drone innovation designs.',
+      description:
+        'OpenAero is a community-driven open drone solutions platform connecting global drone creators with professional clients. We are committed to professional verification, production and sales of excellent drone innovation designs.',
       keywords: [
         'drone',
         'core kit',
@@ -100,7 +99,8 @@ export async function generateMetadata({
       default: '开元空御 - 社区驱动的开放式无人机解决方案平台',
       template: '%s | 开元空御',
     },
-    description: '开元空御是一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。我们致力于将优秀的无人机创新设计进行专业验证、生产和销售。',
+    description:
+      '开元空御是一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。我们致力于将优秀的无人机创新设计进行专业验证、生产和销售。',
     keywords: [
       '无人机',
       '核心套件',
@@ -165,15 +165,15 @@ export async function generateMetadata({
 
 export default async function LocaleLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
   const locale = params.locale;
-  
+
   // 验证locale
-  if (!APP_CONFIG.supportedLocales.includes(locale as any)) {
+  if (!APP_CONFIG.supportedLocales.includes(locale as 'zh-CN' | 'en-US')) {
     notFound();
   }
 

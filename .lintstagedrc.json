@@ -1,19 +1,6 @@
 {
-  "*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write",
-    "git add"
-  ],
-  "*.{json,md,yml,yaml}": [
-    "prettier --write",
-    "git add"
-  ],
-  "*.{css,scss,sass}": [
-    "prettier --write",
-    "git add"
-  ],
-  "package.json": [
-    "npm run security:audit",
-    "git add"
-  ]
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,md,yml,yaml}": ["prettier --write"],
+  "*.{css,scss,sass}": ["prettier --write"],
+  "package.json": ["npm run security:audit"]
 }
