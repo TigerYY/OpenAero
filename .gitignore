@@ -128,3 +128,66 @@ playwright/.cache/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*~
+*.tmp
+
+# macOS specific
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+
+# Deployment secrets
+.deployment-secrets
+deployment-secrets.env
+
+# Backup directories
+backup/
+backups/
+*.backup/
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Docker
+.dockerignore
+
+# Monitoring and logs
+monitoring/logs/
+*.log.*
+
+# SSL certificates (keep structure but ignore actual certs)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+!nginx/ssl/.gitkeep
+
+# Temporary build files
+.swc/
+.turbo/
+
+# Package manager locks (keep only one)
+# yarn.lock
+# pnpm-lock.yaml
+
+# IDE specific
+.cursor/
+.codex/memory/
+.specify/memory/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
