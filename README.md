@@ -1,12 +1,18 @@
 # 开元空御 - 社区驱动的开放式无人机解决方案平台
 
+**版本**: 2.0.0  
+**最后更新**: 2025-01-25  
+**状态**: 🟢 活跃开发  
+**维护者**: OpenAero 开发团队  
+**目的**: 连接全球无人机创作者与专业客户的开放式平台
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/website-openaero.cn-green.svg)](https://openaero.cn)
 [![ICP](https://img.shields.io/badge/ICP-粤ICP备2020099654号--3-red.svg)](https://beian.miit.gov.cn/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/TigerYY/OpenAero/actions)
 [![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen.svg)](https://github.com/TigerYY/OpenAero)
 
-## 🚁 项目简介
+## 概述
 
 开元空御是一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户。我们致力于将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供50%的利润分成，为客户提供经过认证的高性能无人机核心套件。
 
@@ -35,7 +41,8 @@
 - **动画**: Framer Motion
 - **状态管理**: Zustand + TanStack Query
 - **UI组件**: Radix UI + Custom Components
-- **测试**: Jest + Playwright + Testing Library
+- **测试**: Jest + React Testing Library + Enhanced Testing Framework
+- **监控**: Sentry + Web Vitals + Custom Quality Metrics
 
 ### 后端技术栈
 - **运行时**: Node.js 18+ (LTS)
@@ -229,13 +236,15 @@ npm run dev
 - ✅ 网站主页面开发
 - ✅ 响应式设计实现
 - ✅ ICP备案信息配置
+- ✅ 增强测试框架集成
+- ✅ 质量监控系统实现
+- ✅ CI/CD 质量门禁配置
 
 ### 进行中
 - 🚧 Next.js应用开发
 - 🚧 微服务架构实现
 - 🚧 数据库集成
 - 🚧 API接口开发
-- 🚧 监控系统配置
 
 ### 计划中
 - ⏳ 创作者管理系统
@@ -256,6 +265,9 @@ npm run dev
 - **[监控与运维体系](./monitoring-operations.md)** - 监控、日志和运维方案
 - **[部署与发布策略](./deployment-strategy.md)** - 部署流程和发布管理
 - **[规范执行保障方案](./standards-enforcement.md)** - 确保规范正确执行的保障机制
+- **[监控系统文档](./MONITORING.md)** - 质量监控和性能指标系统
+- **[测试框架文档](./TESTING.md)** - 增强测试框架和最佳实践
+- **[贡献指南](./CONTRIBUTING.md)** - 代码贡献和开发流程指南
 
 ### 技术文档
 - **[组件设计方案](./component-design.md)** - UI组件和页面设计
@@ -275,10 +287,13 @@ npm run dev
 5. 创建 Pull Request
 
 ### 开发规范
-请确保遵循项目的[开发规范](./development-workflow.md)：
+请确保遵循项目的开发规范：
+- **[贡献指南](./CONTRIBUTING.md)** - 完整的代码贡献流程
+- **[测试框架](./TESTING.md)** - 测试标准和最佳实践
+- **[监控系统](./MONITORING.md)** - 质量监控和性能指标
 - 代码风格和命名规范
 - 提交信息格式
-- 测试覆盖率要求
+- 测试覆盖率要求 (>80%)
 - 代码审查流程
 
 ## 📄 许可证

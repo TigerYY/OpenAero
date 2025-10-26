@@ -79,6 +79,177 @@ function handlePerformanceMetric(metric: PerformanceMetrics) {
   }
 }
 
+// 质量指标类型
+export type QualityMetricType = 'coverage' | 'performance' | 'security' | 'accessibility' | 'bundle-size';
+
+export interface QualityMetric {
+  type: QualityMetricType;
+  score: number;
+  threshold: number;
+  passed: boolean;
+  timestamp: number;
+  details?: Record<string, any>;
+}
+
+// 质量监控类
+export class QualityMonitor {
+  private static metrics: QualityMetric[] = [];
+
+  static recordQualityMetric(metric: QualityMetric) {
+    this.metrics.push(metric);
+    
+    // 限制内存使用，只保留最近的200条记录
+    if (this.metrics.length > 200) {
+      this.metrics = this.metrics.slice(-200);
+    }
+
+    // 发送到监控服务
+    this.sendToMonitoringService(metric);
+
+    // 如果质量指标未通过阈值，记录警告
+    if (!metric.passed) {
+      Sentry.addBreadcrumb({
+        category: 'quality',
+        message: `Quality metric failed: ${metric.type}`,
+        level: 'warning',
+        data: metric,
+      });
+    }
+  }
+
+  static getQualityMetrics(): QualityMetric[] {
+    return [...this.metrics];
+  }
+
+  static getQualityDashboard() {
+    const recent = this.metrics.filter(
+      m => Date.now() - m.timestamp < 86400000 // 最近24小时
+    );
+
+    const dashboard = {
+      overall: {
+        total: recent.length,
+        passed: recent.filter(m => m.passed).length,
+        failed: recent.filter(m => !m.passed).length,
+        passRate: recent.length > 0 ? (recent.filter(m => m.passed).length / recent.length) * 100 : 0
+      },
+      byType: {} as Record<string, any>
+    };
+
+    // 按类型分组统计
+    const groupedByType = recent.reduce((acc, metric) => {
+      if (!acc[metric.type]) {
+        acc[metric.type] = [];
+      }
+      acc[metric.type]!.push(metric);
+      return acc;
+    }, {} as Record<string, QualityMetric[]>);
+
+    Object.entries(groupedByType).forEach(([type, metrics]) => {
+      const scores = metrics.map(m => m.score);
+      dashboard.byType[type] = {
+        count: metrics.length,
+        passed: metrics.filter(m => m.passed).length,
+        failed: metrics.filter(m => !m.passed).length,
+        passRate: (metrics.filter(m => m.passed).length / metrics.length) * 100,
+        avgScore: scores.reduce((a, b) => a + b, 0) / scores.length,
+        minScore: Math.min(...scores),
+        maxScore: Math.max(...scores),
+        latestScore: metrics.length > 0 ? metrics[metrics.length - 1]!.score : 0
+      };
+    });
+
+    return dashboard;
+  }
+
+  private static async sendToMonitoringService(metric: QualityMetric) {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        await fetch('/api/monitoring/quality', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(metric),
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to send quality metric to service:', error);
+    }
+  }
+
+  // 记录测试覆盖率
+  static recordTestCoverage(coverage: {
+    lines: number;
+    functions: number;
+    branches: number;
+    statements: number;
+  }) {
+    const avgCoverage = (coverage.lines + coverage.functions + coverage.branches + coverage.statements) / 4;
+    
+    this.recordQualityMetric({
+      type: 'coverage',
+      score: avgCoverage,
+      threshold: 85,
+      passed: avgCoverage >= 85,
+      timestamp: Date.now(),
+      details: coverage
+    });
+  }
+
+  // 记录性能分数
+  static recordPerformanceScore(score: number, details?: Record<string, any>) {
+    this.recordQualityMetric({
+      type: 'performance',
+      score,
+      threshold: 90,
+      passed: score >= 90,
+      timestamp: Date.now(),
+      details
+    });
+  }
+
+  // 记录安全审计结果
+  static recordSecurityAudit(vulnerabilities: number, details?: Record<string, any>) {
+    const score = Math.max(0, 100 - vulnerabilities * 10);
+    
+    this.recordQualityMetric({
+      type: 'security',
+      score,
+      threshold: 95,
+      passed: vulnerabilities === 0,
+      timestamp: Date.now(),
+      details: { vulnerabilities, ...details }
+    });
+  }
+
+  // 记录可访问性分数
+  static recordAccessibilityScore(score: number, details?: Record<string, any>) {
+    this.recordQualityMetric({
+      type: 'accessibility',
+      score,
+      threshold: 95,
+      passed: score >= 95,
+      timestamp: Date.now(),
+      details
+    });
+  }
+
+  // 记录包大小
+  static recordBundleSize(sizeKB: number, threshold: number = 500) {
+    const score = Math.max(0, 100 - Math.max(0, sizeKB - threshold) / 10);
+    
+    this.recordQualityMetric({
+      type: 'bundle-size',
+      score,
+      threshold: 90,
+      passed: sizeKB <= threshold,
+      timestamp: Date.now(),
+      details: { sizeKB, thresholdKB: threshold }
+    });
+  }
+}
+
 // 初始化性能监控
 export function initPerformanceMonitoring() {
   if (typeof window === 'undefined') return;

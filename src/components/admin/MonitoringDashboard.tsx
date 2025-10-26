@@ -73,11 +73,21 @@ export function MonitoringDashboard() {
       setError(null);
       
       const response = await fetch('/api/health');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      
+      // 验证数据结构
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format');
+      }
       
       setHealthData(data);
       setLastUpdate(new Date());
     } catch (err) {
+      console.error('Failed to fetch health data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch health data');
     } finally {
       setLoading(false);
@@ -86,12 +96,26 @@ export function MonitoringDashboard() {
 
   // 初始加载和定时刷新
   useEffect(() => {
-    fetchHealthData();
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      if (!isMounted) return;
+      await fetchHealthData();
+    };
+    
+    fetchData();
     
     // 每30秒刷新一次
-    const interval = setInterval(fetchHealthData, 30000);
+    const interval = setInterval(() => {
+      if (isMounted) {
+        fetchData();
+      }
+    }, 30000);
     
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   // 格式化运行时间
@@ -177,21 +201,21 @@ export function MonitoringDashboard() {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">系统状态</h2>
-          <StatusIndicator status={healthData.status} label="整体状态" />
+          <StatusIndicator status={healthData?.status || 'unknown'} label="整体状态" />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{healthData.version}</div>
+            <div className="text-2xl font-bold text-gray-900">{healthData?.version || 'N/A'}</div>
             <div className="text-sm text-gray-600">版本号</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{healthData.environment}</div>
+            <div className="text-2xl font-bold text-gray-900">{healthData?.environment || 'N/A'}</div>
             <div className="text-sm text-gray-600">环境</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">
-              {formatUptime(healthData.uptime)}
+              {healthData?.uptime ? formatUptime(healthData.uptime) : 'N/A'}
             </div>
             <div className="text-sm text-gray-600">运行时间</div>
           </div>
@@ -205,10 +229,10 @@ export function MonitoringDashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">数据库</h3>
           <div className="space-y-3">
             <StatusIndicator 
-              status={healthData.services.database.status} 
+              status={healthData?.services?.database?.status || 'unknown'} 
               label="连接状态" 
             />
-            {healthData.services.database.responseTime && (
+            {healthData?.services?.database?.responseTime && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">响应时间</span>
                 <span className="text-sm font-medium">
@@ -216,9 +240,9 @@ export function MonitoringDashboard() {
                 </span>
               </div>
             )}
-            {healthData.services.database.error && (
+            {healthData?.services?.database?.error && (
               <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                {healthData.services.database.error}
+                错误: {healthData.services.database.error}
               </div>
             )}
           </div>
@@ -229,13 +253,13 @@ export function MonitoringDashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">API服务</h3>
           <div className="space-y-3">
             <StatusIndicator 
-              status={healthData.services.api.status} 
+              status={healthData?.services?.api?.status || 'unknown'} 
               label="服务状态" 
             />
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">响应时间</span>
               <span className="text-sm font-medium">
-                {healthData.services.api.responseTime}ms
+                {healthData?.services?.api?.responseTime || 0}ms
               </span>
             </div>
           </div>
@@ -243,61 +267,57 @@ export function MonitoringDashboard() {
       </div>
 
       {/* 内存使用情况 */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">内存使用</h3>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">使用量</span>
-            <span className="text-sm font-medium">
-              {healthData.memory.used}MB / {healthData.memory.total}MB
-            </span>
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">内存使用</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">使用量</span>
+              <span className="text-sm font-medium">
+                {healthData?.memory?.used || 0}MB / {healthData?.memory?.total || 0}MB
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  (healthData?.memory?.percentage || 0) > 80
+                    ? 'bg-red-500'
+                    : (healthData?.memory?.percentage || 0) > 60
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`}
+                style={{ width: `${healthData?.memory?.percentage || 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">使用率</span>
+              <span className="font-medium">{healthData?.memory?.percentage || 0}%</span>
+            </div>
           </div>
-          
-          {/* 内存使用进度条 */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full transition-all duration-300 ${
-                healthData.memory.percentage > 80 
-                  ? 'bg-red-500' 
-                  : healthData.memory.percentage > 60 
-                  ? 'bg-yellow-500' 
-                  : 'bg-green-500'
-              }`}
-              style={{ width: `${healthData.memory.percentage}%` }}
-            ></div>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs text-gray-500">
-            <span>0%</span>
-            <span className="font-medium">{healthData.memory.percentage}%</span>
-            <span>100%</span>
-          </div>
-        </div>
-      </Card>
+        </Card>
 
       {/* 系统信息 */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">系统信息</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">检查时间:</span>
-            <span className="ml-2 font-medium">
-              {formatTimestamp(healthData.timestamp)}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">最后更新</span>
+            <span className="text-sm font-medium">
+              {healthData?.timestamp ? formatTimestamp(healthData.timestamp) : 'N/A'}
             </span>
           </div>
-          <div>
-            <span className="text-gray-600">运行时间:</span>
-            <span className="ml-2 font-medium">
-              {formatUptime(healthData.uptime)}
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">运行时间</span>
+            <span className="text-sm font-medium">
+              {healthData?.uptime ? formatUptime(healthData.uptime) : 'N/A'}
             </span>
           </div>
-          <div>
-            <span className="text-gray-600">环境:</span>
-            <span className="ml-2 font-medium">{healthData.environment}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">环境</span>
+            <span className="ml-2 font-medium">{healthData?.environment || 'N/A'}</span>
           </div>
-          <div>
-            <span className="text-gray-600">版本:</span>
-            <span className="ml-2 font-medium">{healthData.version}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">版本</span>
+            <span className="ml-2 font-medium">{healthData?.version || 'N/A'}</span>
           </div>
         </div>
       </Card>

@@ -1,0 +1,52 @@
+# Global code owners
+* @project-maintainers
+
+# Frontend components and UI
+/src/components/ @frontend-team @ui-team
+/src/app/ @frontend-team
+/public/ @frontend-team @ui-team
+
+# Backend and API
+/src/app/api/ @backend-team
+/prisma/ @backend-team @database-team
+/src/lib/db.ts @backend-team @database-team
+
+# Configuration and infrastructure
+/.github/ @devops-team @project-maintainers
+/docker* @devops-team
+/k8s/ @devops-team
+/nginx/ @devops-team
+/scripts/ @devops-team @project-maintainers
+
+# Testing
+/tests/ @qa-team @project-maintainers
+/jest.config* @qa-team
+/playwright.config* @qa-team
+
+# Documentation
+/DOCS/ @docs-team @project-maintainers
+/README* @docs-team @project-maintainers
+/PROJECT_STANDARDS.md @project-maintainers
+/DEVELOPMENT.md @project-maintainers
+
+# Security sensitive files
+/.env* @security-team @project-maintainers
+/src/lib/auth* @security-team @backend-team
+/middleware.ts @security-team @backend-team
+
+# Package management
+/package*.json @project-maintainers
+/yarn.lock @project-maintainers
+
+# TypeScript configuration
+/tsconfig*.json @project-maintainers @frontend-team
+
+# Linting and formatting
+/.eslintrc* @project-maintainers
+/.prettier* @project-maintainers
+/.editorconfig @project-maintainers
+
+# Internationalization
+/src/i18n/ @i18n-team @frontend-team
+/messages/ @i18n-team
+/public/messages/ @i18n-team

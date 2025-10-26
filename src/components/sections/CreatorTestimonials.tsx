@@ -48,7 +48,7 @@ export function CreatorTestimonials() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <motion.div
-              key={testimonial.name}
+              key={`testimonial-${testimonial.name}-${index}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -59,7 +59,7 @@ export function CreatorTestimonials() {
               <div className="flex items-center mb-4">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
                   <svg
-                    key={i}
+                    key={`star-${testimonial.name}-${i}`}
                     className="w-5 h-5 text-yellow-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -111,6 +111,7 @@ export function CreatorTestimonials() {
         {/* 底部CTA */}
         <div className="text-center mt-12">
           <motion.div
+            key="creator-testimonials-cta"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}

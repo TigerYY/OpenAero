@@ -17,6 +17,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
         <>
           {/* Backdrop */}
           <motion.div
+            key="mobile-menu-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -26,6 +27,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
 
           {/* Menu */}
           <motion.div
+            key="mobile-menu-panel"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
