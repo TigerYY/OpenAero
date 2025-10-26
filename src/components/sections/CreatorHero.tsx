@@ -11,6 +11,7 @@ export function CreatorHero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* 内容 */}
           <motion.div
+            key="creator-hero-content"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -54,6 +55,7 @@ export function CreatorHero() {
 
           {/* 视觉 */}
           <motion.div
+            key="creator-hero-preview"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -109,6 +111,7 @@ export function CreatorHero() {
 
               {/* 浮动元素 */}
               <motion.div
+                key="creator-hero-float-money"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
                 className="absolute -top-4 -right-4 bg-primary-600 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl"
@@ -116,6 +119,7 @@ export function CreatorHero() {
                 💰
               </motion.div>
               <motion.div
+                key="creator-hero-float-rocket"
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 4, repeat: Infinity }}
                 className="absolute -bottom-4 -left-4 bg-success-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg"

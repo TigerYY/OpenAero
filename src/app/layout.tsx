@@ -73,5 +73,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <html className="h-full">
+      <body className="h-full bg-white antialiased">
+        {children}
+      </body>
+    </html>
+  );
 }

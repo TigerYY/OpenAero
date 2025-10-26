@@ -181,14 +181,8 @@ export default async function LocaleLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale} className="h-full">
-      <body className={`${inter.className} h-full bg-white antialiased`}>
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          <div id="root" className="h-full">
-            {children}
-          </div>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages} locale={locale}>
+      {children}
+    </NextIntlClientProvider>
   );
 }
