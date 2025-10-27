@@ -11,7 +11,6 @@ Sentry.init({
   tracePropagationTargets: [
     'localhost',
     /^https:\/\/openaero\.cn\/api/,
-    /^https:\/\/.*\.vercel\.app\/api/,
   ],
   
   // Capture Replay for 10% of all sessions,

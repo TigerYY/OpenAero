@@ -268,5 +268,60 @@
       "creator": "张工",
       "tags": ["农业", "植保", "智能农业"]
     }
+  },
+  "contact": {
+    "title": "联系我们",
+    "subtitle": "有任何问题或建议？我们很乐意听到您的声音。我们的专业团队将为您提供最优质的服务。",
+    "contactInfo": {
+      "title": "联系方式",
+      "email": {
+        "title": "邮箱",
+        "description": "我们会在24小时内回复您的邮件",
+        "address": "support@openaero.cn"
+      },
+      "phone": {
+        "title": "客服热线",
+        "description": "专业客服团队为您提供实时支持",
+        "number": "400-123-4567"
+      },
+      "workingHours": {
+        "title": "工作时间",
+        "description": "我们的服务时间",
+        "hours": "周一至周五 9:00-18:00",
+        "note": "节假日期间可能会有延迟回复"
+      },
+      "address": {
+        "title": "公司地址",
+        "description": "欢迎预约参观我们的办公室",
+        "location": "深圳市南山区科技园",
+        "note": "具体地址请联系我们获取"
+      }
+    },
+    "quickLinks": {
+      "title": "快速链接",
+      "faq": "常见问题",
+      "documentation": "帮助文档",
+      "becomeCreator": "成为创作者",
+      "aboutUs": "关于我们"
+    },
+    "form": {
+      "title": "发送消息",
+      "description": "填写下面的表单，我们会尽快与您取得联系"
+    },
+    "whyChooseUs": {
+      "title": "为什么选择开元空御？",
+      "certification": {
+        "title": "专业认证",
+        "description": "所有解决方案都经过严格的专业认证，确保质量和可靠性"
+      },
+      "profitSharing": {
+        "title": "50%利润分成",
+        "description": "为创作者提供业界最高的利润分成比例，共享成功"
+      },
+      "supplyChain": {
+        "title": "全球供应链",
+        "description": "与全球顶级供应链伙伴合作，确保产品质量和交付"
+      }
+    }
   }
 }

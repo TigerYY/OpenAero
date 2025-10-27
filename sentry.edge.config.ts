@@ -11,6 +11,5 @@ Sentry.init({
   tracePropagationTargets: [
     'localhost',
     /^https:\/\/openaero\.cn\/api/,
-    /^https:\/\/.*\.vercel\.app\/api/,
   ],
 });
