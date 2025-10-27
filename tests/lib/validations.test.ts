@@ -66,15 +66,16 @@ describe('Validation Schemas', () => {
       const validData = {
         title: 'Test Solution',
         slug: 'test-solution',
-        description: 'This is a test solution description',
-        longDescription: 'This is a longer description for testing purposes',
-        images: ['https://example.com/image.jpg'],
+        description: 'This is a test solution description that is long enough to pass validation requirements',
+        longDescription: 'This is a longer description for testing purposes that meets the minimum character requirement of 50 characters',
+        images: ['https://cdn.example.com/test-image.jpg'],
         price: 2999,
         categoryId: 'category-1',
         creatorId: 'creator-1',
         status: 'DRAFT' as const,
         specs: { weight: '1.2kg' },
         bom: { frame: 'Carbon Fiber' },
+        features: ['GPS Navigation', 'Auto Landing'],
         tagIds: ['tag-1', 'tag-2'],
       };
       
@@ -85,12 +86,13 @@ describe('Validation Schemas', () => {
       const invalidData = {
         title: 'Test Solution',
         slug: 'Invalid Slug!',
-        description: 'This is a test solution description',
-        longDescription: 'This is a longer description for testing purposes',
-        images: ['https://example.com/image.jpg'],
+        description: 'This is a test solution description that is long enough to pass validation requirements',
+        longDescription: 'This is a longer description for testing purposes that meets the minimum character requirement of 50 characters',
+        images: ['https://cdn.example.com/test-image.jpg'],
         price: 2999,
         categoryId: 'category-1',
         creatorId: 'creator-1',
+        features: ['GPS Navigation', 'Auto Landing'],
       };
       
       expect(() => solutionSchema.parse(invalidData)).toThrow();
@@ -100,12 +102,13 @@ describe('Validation Schemas', () => {
       const invalidData = {
         title: 'Test Solution',
         slug: 'test-solution',
-        description: 'This is a test solution description',
-        longDescription: 'This is a longer description for testing purposes',
-        images: ['https://example.com/image.jpg'],
+        description: 'This is a test solution description that is long enough to pass validation requirements',
+        longDescription: 'This is a longer description for testing purposes that meets the minimum character requirement of 50 characters',
+        images: ['https://cdn.example.com/test-image.jpg'],
         price: -100,
         categoryId: 'category-1',
         creatorId: 'creator-1',
+        features: ['GPS Navigation', 'Auto Landing'],
       };
       
       expect(() => solutionSchema.parse(invalidData)).toThrow();

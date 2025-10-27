@@ -15,8 +15,8 @@ global.Response = jest.fn().mockImplementation((body, options) => ({
 
 import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/solutions/route'
+import prisma from '@/lib/db'
 
-// Mock Prisma
 jest.mock('@/lib/db', () => ({
   __esModule: true,
   default: {

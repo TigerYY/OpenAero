@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/Button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
+import { CartButton } from '@/components/shop/CartButton';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
 import { useLocale, useTranslations } from 'next-intl';
@@ -30,10 +31,11 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
   }, []);
 
   const navigation = [
-    { name: t('navigation.solutions'), href: '/solutions' },
-    { name: t('navigation.creators'), href: '/creators' },
-    { name: t('navigation.about'), href: '/about' },
-    { name: t('navigation.contact'), href: '/contact' },
+    { name: t('navigation.solutions'), href: `/${locale}/solutions` },
+    { name: t('navigation.shop'), href: `/${locale}/shop` },
+    { name: t('navigation.creators'), href: `/${locale}/creators` },
+    { name: t('navigation.about'), href: `/${locale}/about` },
+    { name: t('navigation.contact'), href: `/${locale}/contact` },
   ];
 
   const switchLanguage = (newLocale: Locale) => {
@@ -96,6 +98,7 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            <CartButton variant="ghost" size="sm" />
             <LanguageSwitcher
               currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}
@@ -106,15 +109,16 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
               className="mr-2"
             />
             <Button variant="ghost" asChild>
-              <Link href="/contact">{t('navigation.contact')}</Link>
+              <Link href={`/${locale}/contact`}>{t('navigation.contact')}</Link>
             </Button>
             <Button asChild>
-              <Link href="/creators/apply">{t('navigation.creators')}</Link>
+              <Link href={`/${locale}/creators/apply`}>{t('navigation.creators')}</Link>
             </Button>
           </div>
 
           {/* Mobile menu button and language switcher */}
           <div className="md:hidden flex items-center space-x-2">
+            <CartButton variant="ghost" size="sm" />
             <LanguageSwitcher
               currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}

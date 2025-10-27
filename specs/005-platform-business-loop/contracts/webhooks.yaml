@@ -1,0 +1,490 @@
+openapi: 3.0.3
+info:
+  title: OpenAero Webhooks API
+  description: Webhook endpoints for external service integrations
+  version: 1.0.0
+  contact:
+    name: OpenAero Platform
+    email: dev@openaero.com
+
+servers:
+  - url: https://api.openaero.com/v1
+    description: Production server
+  - url: https://staging-api.openaero.com/v1
+    description: Staging server
+
+paths:
+  /webhooks/payment/alipay:
+    post:
+      summary: Alipay payment notification
+      description: Receive payment notifications from Alipay
+      tags:
+        - Webhooks - Payment
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                notify_time:
+                  type: string
+                  example: "2024-01-15 10:25:30"
+                notify_type:
+                  type: string
+                  example: "trade_status_sync"
+                notify_id:
+                  type: string
+                  example: "ac05099524730693a8b330c5ecf72da9786"
+                app_id:
+                  type: string
+                  example: "2021000000000000"
+                charset:
+                  type: string
+                  example: "utf-8"
+                version:
+                  type: string
+                  example: "1.0"
+                sign_type:
+                  type: string
+                  example: "RSA2"
+                sign:
+                  type: string
+                  example: "ERITJKEIJKJHKKKKKKKHJEREEEEEEEEEEE"
+                trade_no:
+                  type: string
+                  example: "2024011522001234567890123456"
+                out_trade_no:
+                  type: string
+                  example: "ORD-2024-001234"
+                trade_status:
+                  type: string
+                  enum: [WAIT_BUYER_PAY, TRADE_SUCCESS, TRADE_FINISHED, TRADE_CLOSED]
+                  example: "TRADE_SUCCESS"
+                total_amount:
+                  type: string
+                  example: "5000.00"
+                receipt_amount:
+                  type: string
+                  example: "5000.00"
+                buyer_id:
+                  type: string
+                  example: "2088000000000000"
+                buyer_logon_id:
+                  type: string
+                  example: "159****5620"
+                seller_id:
+                  type: string
+                  example: "2088000000000000"
+                seller_email:
+                  type: string
+                  example: "merchant@openaero.com"
+                gmt_create:
+                  type: string
+                  example: "2024-01-15 10:20:00"
+                gmt_payment:
+                  type: string
+                  example: "2024-01-15 10:25:30"
+                subject:
+                  type: string
+                  example: "OpenAero解决方案购买"
+                body:
+                  type: string
+                  example: "航空技术解决方案 - 飞行控制系统设计"
+      responses:
+        '200':
+          description: Notification processed successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "success"
+        '400':
+          description: Invalid notification data
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "fail"
+
+  /webhooks/payment/wechat:
+    post:
+      summary: WeChat Pay payment notification
+      description: Receive payment notifications from WeChat Pay
+      tags:
+        - Webhooks - Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: "EV-2018022511223320873"
+                create_time:
+                  type: string
+                  format: date-time
+                  example: "2024-01-15T10:25:30+08:00"
+                resource_type:
+                  type: string
+                  example: "encrypt-resource"
+                event_type:
+                  type: string
+                  example: "TRANSACTION.SUCCESS"
+                summary:
+                  type: string
+                  example: "支付成功"
+                resource:
+                  type: object
+                  properties:
+                    original_type:
+                      type: string
+                      example: "transaction"
+                    algorithm:
+                      type: string
+                      example: "AEAD_AES_256_GCM"
+                    ciphertext:
+                      type: string
+                      example: "sRvt...encrypted_data...tU3A=="
+                    associated_data:
+                      type: string
+                      example: "transaction"
+                    nonce:
+                      type: string
+                      example: "fdasflkja484"
+      responses:
+        '200':
+          description: Notification processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "成功"
+        '400':
+          description: Invalid notification data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "FAIL"
+                  message:
+                    type: string
+                    example: "失败"
+
+  /webhooks/payment/verify:
+    post:
+      summary: Verify payment webhook signature
+      description: Internal endpoint to verify webhook signatures
+      tags:
+        - Webhooks - Internal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - signature
+                - payload
+              properties:
+                provider:
+                  type: string
+                  enum: [alipay, wechat_pay]
+                  example: "alipay"
+                signature:
+                  type: string
+                  example: "ERITJKEIJKJHKKKKKKKHJEREEEEEEEEEEE"
+                payload:
+                  type: string
+                  description: Raw webhook payload
+                timestamp:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Signature verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  valid:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "签名验证成功"
+
+  /webhooks/email/status:
+    post:
+      summary: Email delivery status webhook
+      description: Receive email delivery status notifications
+      tags:
+        - Webhooks - Email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  enum: [delivered, bounced, complained, opened, clicked]
+                  example: "delivered"
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                message_id:
+                  type: string
+                  example: "msg_123456789"
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: "2024-01-15T10:25:30Z"
+                reason:
+                  type: string
+                  example: "Mailbox full"
+                bounce_type:
+                  type: string
+                  enum: [hard, soft]
+                  example: "soft"
+                user_agent:
+                  type: string
+                  example: "Mozilla/5.0..."
+                ip:
+                  type: string
+                  example: "192.168.1.1"
+                link:
+                  type: string
+                  format: uri
+                  example: "https://openaero.com/solutions/123"
+      responses:
+        '200':
+          description: Email status processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "邮件状态已更新"
+
+  /webhooks/file/scan:
+    post:
+      summary: File security scan result
+      description: Receive file security scan results from external service
+      tags:
+        - Webhooks - Security
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - file_id
+                - scan_result
+                - timestamp
+              properties:
+                file_id:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                scan_result:
+                  type: string
+                  enum: [clean, infected, suspicious, error]
+                  example: "clean"
+                threats_found:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "Trojan.Generic.123456"
+                      severity:
+                        type: string
+                        enum: [low, medium, high, critical]
+                        example: "high"
+                      description:
+                        type: string
+                        example: "Potentially malicious executable"
+                scan_engine:
+                  type: string
+                  example: "ClamAV 1.0.0"
+                scan_duration:
+                  type: integer
+                  description: Scan duration in milliseconds
+                  example: 1500
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: "2024-01-15T10:25:30Z"
+                metadata:
+                  type: object
+                  properties:
+                    file_size:
+                      type: integer
+                    file_hash:
+                      type: string
+                    mime_type:
+                      type: string
+      responses:
+        '200':
+          description: Scan result processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "扫描结果已处理"
+                  actions_taken:
+                    type: array
+                    items:
+                      type: string
+                    example: ["文件已标记为安全", "用户已通知"]
+
+  /webhooks/system/health:
+    post:
+      summary: System health check webhook
+      description: Receive system health status from monitoring services
+      tags:
+        - Webhooks - System
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service
+                - status
+                - timestamp
+              properties:
+                service:
+                  type: string
+                  example: "database"
+                status:
+                  type: string
+                  enum: [healthy, degraded, unhealthy]
+                  example: "degraded"
+                message:
+                  type: string
+                  example: "High connection count detected"
+                metrics:
+                  type: object
+                  properties:
+                    cpu_usage:
+                      type: number
+                      example: 85.5
+                    memory_usage:
+                      type: number
+                      example: 78.2
+                    disk_usage:
+                      type: number
+                      example: 65.0
+                    response_time:
+                      type: number
+                      example: 250.5
+                    error_rate:
+                      type: number
+                      example: 0.05
+                timestamp:
+                  type: string
+                  format: date-time
+                  example: "2024-01-15T10:25:30Z"
+                alert_level:
+                  type: string
+                  enum: [info, warning, error, critical]
+                  example: "warning"
+      responses:
+        '200':
+          description: Health status processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "健康状态已更新"
+                  alert_created:
+                    type: boolean
+                    example: true
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    WebhookResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object

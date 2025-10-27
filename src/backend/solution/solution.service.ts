@@ -1,0 +1,444 @@
+import { db } from '@/lib/db';
+import { createSolutionSchema, updateSolutionSchema } from '@/lib/validations';
+import { ValidationError, NotFoundError, UnauthorizedError } from '@/lib/error-handler';
+import { isValidStatusTransition, validateSolutionCompleteness } from '@/lib/solution-status-workflow';
+import { SolutionStatus } from '@/shared/types/solutions';
+import { z } from 'zod';
+
+export interface CreateSolutionData {
+  title: string;
+  description: string;
+  longDescription?: string;
+  price: number;
+  categoryId?: string;
+  specs?: Record<string, any>;
+  bom?: Record<string, any>;
+  features?: string[];
+  images?: string[];
+}
+
+export interface UpdateSolutionData extends Partial<CreateSolutionData> {}
+
+export class SolutionService {
+  /**
+   * 创建新的解决方案
+   */
+  async createSolution(data: CreateSolutionData, creatorId: string) {
+    // 验证输入数据
+    const validatedData = createSolutionSchema.parse(data);
+    
+    // 检查创作者是否存在且已认证
+    const creator = await db.creatorProfile.findUnique({
+      where: { userId: creatorId },
+      include: { user: true }
+    });
+
+    if (!creator) {
+      throw new UnauthorizedError('只有认证的创作者才能创建方案');
+    }
+
+    if (creator.status !== 'APPROVED') {
+      throw new UnauthorizedError('创作者账户尚未通过审核');
+    }
+
+    // 检查标题是否已存在
+    const existingSolution = await db.solution.findFirst({
+      where: { title: validatedData.title }
+    });
+
+    if (existingSolution) {
+      throw new ValidationError('方案标题已存在，请使用不同的标题');
+    }
+
+    // 创建方案
+    const solution = await db.solution.create({
+      data: {
+        title: validatedData.title,
+        description: validatedData.description,
+        category: validatedData.categoryId || 'default',
+        price: validatedData.price,
+        creatorId: creator.id,
+        userId: creatorId,
+        status: 'DRAFT',
+        specs: validatedData.specs || {},
+        bom: validatedData.bom || {},
+        features: validatedData.features || [],
+        images: validatedData.images || [],
+      },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    return solution;
+  }
+
+  /**
+   * 更新解决方案
+   */
+  async updateSolution(solutionId: string, data: UpdateSolutionData, userId: string) {
+    // 验证输入数据
+    const validatedData = updateSolutionSchema.parse(data);
+
+    // 获取方案信息
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    // 检查权限 - 只有方案创作者可以更新
+    if (solution.creator.userId !== userId) {
+      throw new UnauthorizedError('只有方案创作者可以更新方案');
+    }
+
+    // 检查方案状态 - 只有草稿和被拒绝的方案可以更新
+    const allowedStatuses = [SolutionStatus.DRAFT, SolutionStatus.REJECTED];
+    if (!allowedStatuses.includes(solution.status as SolutionStatus)) {
+      throw new ValidationError('只有草稿状态或被拒绝的方案可以更新');
+    }
+
+    // 如果更新了标题，需要检查是否重复
+    let updateData: any = { ...validatedData };
+    if (validatedData.title && validatedData.title !== solution.title) {
+      // 检查新标题是否已存在
+      const existingSolution = await db.solution.findFirst({
+        where: { 
+          title: validatedData.title,
+          id: { not: solutionId }
+        }
+      });
+
+      if (existingSolution) {
+        throw new ValidationError('方案标题已存在，请使用不同的标题');
+      }
+    }
+
+    // 更新方案
+    const updatedSolution = await db.solution.update({
+      where: { id: solutionId },
+      data: {
+        ...updateData,
+        updatedAt: new Date(),
+      },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    return updatedSolution;
+  }
+
+  /**
+   * 删除解决方案
+   */
+  async deleteSolution(solutionId: string, userId: string) {
+    // 获取方案信息
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    // 检查权限 - 只有方案创作者可以删除
+    if (solution.creator.userId !== userId) {
+      throw new UnauthorizedError('只有方案创作者可以删除方案');
+    }
+
+    // 检查方案状态 - 只有草稿和被拒绝的方案可以删除
+    if (!['DRAFT', 'REJECTED'].includes(solution.status)) {
+      throw new ValidationError('只有草稿状态或被拒绝的方案可以删除');
+    }
+
+    // 删除方案
+    await db.solution.delete({
+      where: { id: solutionId }
+    });
+
+    return { success: true, message: '方案已成功删除' };
+  }
+
+  /**
+   * 提交方案审核
+   */
+  async submitForReview(solutionId: string, userId: string) {
+    // 获取方案信息
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    // 检查权限
+    if (solution.creator.userId !== userId) {
+      throw new UnauthorizedError('只有方案创作者可以提交审核');
+    }
+
+    // 验证状态转换
+    const transitionResult = isValidStatusTransition(
+      solution.status as SolutionStatus,
+      SolutionStatus.PENDING_REVIEW,
+      'creator',
+      solution
+    );
+
+    if (!transitionResult.valid) {
+      throw new ValidationError(transitionResult.error || '无法提交审核');
+    }
+
+    // 更新状态为待审核
+    const updatedSolution = await db.solution.update({
+      where: { id: solutionId },
+      data: {
+        status: 'PENDING_REVIEW',
+        submittedAt: new Date(),
+        updatedAt: new Date(),
+      },
+      include: {
+        creator: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    return updatedSolution;
+  }
+
+  /**
+   * 获取创作者的方案列表
+   */
+  async getCreatorSolutions(creatorId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [solutions, total] = await Promise.all([
+      db.solution.findMany({
+        where: {
+          creator: {
+            userId: creatorId
+          }
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          creator: {
+            include: {
+              user: true
+            }
+          }
+        }
+      }),
+      db.solution.count({
+        where: {
+          creator: {
+            userId: creatorId
+          }
+        }
+      })
+    ]);
+
+    return {
+      solutions,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  /**
+   * 验证方案完整性
+   */
+  private validateSolutionCompleteness(solution: any) {
+    const errors: string[] = [];
+
+    if (!solution.title || solution.title.length < 5) {
+      errors.push('方案标题不能少于5个字符');
+    }
+
+    if (!solution.description || solution.description.length < 50) {
+      errors.push('方案描述不能少于50个字符');
+    }
+
+    if (solution.price === null || solution.price === undefined || solution.price < 0) {
+      errors.push('请设置有效的方案价格');
+    }
+
+    if (!solution.images || solution.images.length === 0) {
+      errors.push('请至少上传一张方案图片');
+    }
+
+    if (!solution.specs || Object.keys(solution.specs).length === 0) {
+      errors.push('请填写方案技术规格');
+    }
+
+    if (!solution.bom || Object.keys(solution.bom).length === 0) {
+      errors.push('请填写方案BOM清单');
+    }
+
+    if (errors.length > 0) {
+      throw new ValidationError(`方案信息不完整：${errors.join('，')}`);
+    }
+  }
+
+  /**
+   * 管理员批准方案
+   */
+  async approveSolution(solutionId: string, adminId: string, notes?: string) {
+    // 检查方案是否存在
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: { creator: { include: { user: true } } }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    // 检查方案状态
+    if (solution.status !== 'PENDING_REVIEW') {
+      throw new ValidationError('只能审核待审核状态的方案');
+    }
+
+    // 更新方案状态
+    const updatedSolution = await db.solution.update({
+      where: { id: solutionId },
+      data: {
+        status: 'APPROVED',
+        reviewedAt: new Date(),
+        reviewNotes: notes || '方案已通过审核'
+      },
+      include: {
+        creator: {
+          include: { user: true }
+        }
+      }
+    });
+
+    // 创建审核历史记录
+    await db.solutionReview.create({
+      data: {
+        solutionId,
+        reviewerId: adminId,
+        status: 'COMPLETED',
+        decision: 'APPROVED',
+        comments: notes || '方案已通过审核',
+        reviewedAt: new Date()
+      }
+    });
+
+    return updatedSolution;
+  }
+
+  /**
+   * 管理员拒绝方案
+   */
+  async rejectSolution(solutionId: string, adminId: string, notes: string) {
+    // 检查方案是否存在
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: { creator: { include: { user: true } } }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    // 检查方案状态
+    if (solution.status !== 'PENDING_REVIEW') {
+      throw new ValidationError('只能审核待审核状态的方案');
+    }
+
+    // 更新方案状态
+    const updatedSolution = await db.solution.update({
+      where: { id: solutionId },
+      data: {
+        status: 'REJECTED',
+        reviewedAt: new Date(),
+        reviewNotes: notes
+      },
+      include: {
+        creator: {
+          include: { user: true }
+        }
+      }
+    });
+
+    // 创建审核历史记录
+    await db.solutionReview.create({
+      data: {
+        solutionId,
+        reviewerId: adminId,
+        status: 'COMPLETED',
+        decision: 'REJECTED',
+        comments: notes,
+        reviewedAt: new Date()
+      }
+    });
+
+    return updatedSolution;
+  }
+
+  /**
+   * 获取方案审核历史
+   */
+  async getReviewHistory(solutionId: string) {
+    const reviews = await db.solutionReview.findMany({
+      where: { solutionId },
+      include: {
+        reviewer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return reviews;
+  }
+}
+
+export const solutionService = new SolutionService();
