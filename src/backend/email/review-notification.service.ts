@@ -18,7 +18,57 @@ export class ReviewNotificationService {
   /**
    * 发送审核结果通知邮件给创作者
    */
-  async sendReviewNotification(data: ReviewNotificationData): Promise<boolean> {
+  async sendReviewNotification(
+    userId: string,
+    solutionTitle: string,
+    status: 'approved' | 'rejected' | 'needs_revision',
+    reviewNotes?: string
+  ): Promise<boolean> {
+    try {
+      // 获取用户信息
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, firstName: true, lastName: true }
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const data: ReviewNotificationData = {
+        solutionId: '',
+        solutionTitle,
+        creatorEmail: user.email,
+        creatorName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+        reviewStatus: status === 'approved' ? 'APPROVED' : 'REJECTED',
+        reviewNotes: reviewNotes || '',
+        reviewerName: 'OpenAero 审核团队',
+        reviewedAt: new Date()
+      };
+
+      const template = this.getReviewNotificationTemplate(data);
+      
+      const success = await emailService.sendEmail({
+        to: data.creatorEmail,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+
+      // 记录通知发送日志
+      await this.logNotificationSent(data, success);
+
+      return success;
+    } catch (error) {
+      console.error('发送审核通知失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 发送审核结果通知邮件给创作者 (原有方法)
+   */
+  async sendReviewNotificationWithData(data: ReviewNotificationData): Promise<boolean> {
     try {
       const template = this.getReviewNotificationTemplate(data);
       
@@ -48,7 +98,7 @@ export class ReviewNotificationService {
     let failed = 0;
 
     for (const notification of notifications) {
-      const result = await this.sendReviewNotification(notification);
+      const result = await this.sendReviewNotificationWithData(notification);
       if (result) {
         success++;
       } else {

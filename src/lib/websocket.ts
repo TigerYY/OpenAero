@@ -200,6 +200,16 @@ class WebSocketManager extends EventEmitter {
     });
   }
 
+  public sendToUser(userId: string, message: any): void {
+    this.send({
+      type: 'user_message',
+      data: {
+        targetUserId: userId,
+        ...message
+      }
+    });
+  }
+
   public isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }

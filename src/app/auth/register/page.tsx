@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterRequest } from '../../../shared/types';
+import PasswordStrengthIndicator from '../../../components/PasswordStrengthIndicator';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [passwordValid, setPasswordValid] = useState(false);
+  const [passwordScore, setPasswordScore] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +32,8 @@ export default function RegisterPage() {
     }
 
     // 验证密码强度
-    if (formData.password.length < 8) {
-      setError('密码长度至少为8位');
+    if (!passwordValid || passwordScore < 3) {
+      setError('密码强度不足，请选择更强的密码');
       setLoading(false);
       return;
     }
@@ -72,6 +75,11 @@ export default function RegisterPage() {
         [e.target.name]: e.target.value
       });
     }
+  };
+
+  const handlePasswordValidation = (isValid: boolean, score: number) => {
+    setPasswordValid(isValid);
+    setPasswordScore(score);
   };
 
   return (
@@ -135,10 +143,18 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="请输入密码（至少8位）"
+                placeholder="请输入密码"
                 value={formData.password}
                 onChange={handleChange}
               />
+              {/* 密码强度指示器 */}
+              <div className="mt-2">
+                <PasswordStrengthIndicator
+                  password={formData.password}
+                  onValidationChange={handlePasswordValidation}
+                  showRequirements={true}
+                />
+              </div>
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
@@ -150,11 +166,37 @@ export default function RegisterPage() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${
+                  confirmPassword && formData.password !== confirmPassword
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : confirmPassword && formData.password === confirmPassword
+                    ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+                    : 'border-gray-300'
+                }`}
                 placeholder="请再次输入密码"
                 value={confirmPassword}
                 onChange={handleChange}
               />
+              {/* 密码确认提示 */}
+              {confirmPassword && (
+                <div className="mt-1">
+                  {formData.password === confirmPassword ? (
+                    <div className="flex items-center space-x-1 text-green-600">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm">密码匹配</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1 text-red-600">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm">密码不匹配</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

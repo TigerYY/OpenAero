@@ -19,7 +19,8 @@
     "refresh": "刷新",
     "openMenu": "打开主菜单",
     "closeMenu": "关闭主菜单",
-    "selectLanguage": "选择语言"
+    "selectLanguage": "选择语言",
+    "more": "更多"
   },
   "navigation": {
     "home": "首页",

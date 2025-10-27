@@ -37,6 +37,11 @@ model User {
   solutionReviews   SolutionReview[] // 审核的方案
   carts             Cart[]
   productReviews    ProductReview[]
+  createdVersions   SolutionVersion[] @relation("SolutionVersionCreator") // 创建的版本
+  notifications     Notification[] // 用户通知
+  notificationPreference NotificationPreference? // 通知偏好
+  collaborationSessions CollaborationSession[] // 协作会话
+  collaborationOperations CollaborationOperation[] // 协作操作
 
   @@map("users")
 }
@@ -99,8 +104,39 @@ model Solution {
   files         SolutionFile[]  // 方案文件
   products      Product[]       // 基于此方案的商品
   solutionReviews SolutionReview[] // 方案审核记录
+  versionHistory SolutionVersion[] // 版本历史记录
 
   @@map("solutions")
+}
+
+// 方案版本历史模型
+model SolutionVersion {
+  id          String   @id @default(cuid())
+  solutionId  String
+  version     Int      // 版本号
+  title       String
+  description String
+  category    String
+  price       Decimal  @db.Decimal(10, 2)
+  images      String[] // 图片URL数组
+  features    String[] // 功能特性
+  specs       Json?    // 技术规格JSON
+  bom         Json?    // BOM清单JSON
+  
+  // 版本元数据
+  changeLog   String?  // 版本变更日志
+  isActive    Boolean  @default(false) // 是否为当前活跃版本
+  
+  // 创建信息
+  createdBy   String   // 创建版本的用户ID
+  createdAt   DateTime @default(now())
+  
+  // 关联关系
+  solution    Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  creator     User     @relation("SolutionVersionCreator", fields: [createdBy], references: [id])
+
+  @@unique([solutionId, version]) // 确保同一方案的版本号唯一
+  @@map("solution_versions")
 }
 
 // 方案文件模型
@@ -830,4 +866,111 @@ enum CartStatus {
   ABANDONED    // 已放弃
   CONVERTED    // 已转换为订单
   EXPIRED      // 已过期
+}
+
+// 通知类型枚举
+enum NotificationType {
+  INFO         // 信息
+  SUCCESS      // 成功
+  WARNING      // 警告
+  ERROR        // 错误
+  REVIEW       // 审核
+  SYSTEM       // 系统
+}
+
+// 通知优先级枚举
+enum NotificationPriority {
+  LOW          // 低
+  MEDIUM       // 中
+  HIGH         // 高
+  URGENT       // 紧急
+}
+
+// 通知模型
+model Notification {
+  id             String               @id @default(cuid())
+  type           NotificationType
+  title          String
+  message        String
+  userId         String
+  actionUrl      String?
+  metadata       Json?                @default("{}")
+  priority       NotificationPriority @default(MEDIUM)
+  channels       String[]             // 发送渠道
+  scheduledAt    DateTime?            // 计划发送时间
+  expiresAt      DateTime?            // 过期时间
+  read           Boolean              @default(false)
+  readAt         DateTime?            // 阅读时间
+  delivered      Boolean              @default(true)
+  deliveryStatus Json?                @default("{}")
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// 通知偏好模型
+model NotificationPreference {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  emailEnabled          Boolean  @default(true)
+  pushEnabled           Boolean  @default(true)
+  websocketEnabled      Boolean  @default(true)
+  reviewNotifications   Boolean  @default(true)
+  systemNotifications   Boolean  @default(true)
+  marketingNotifications Boolean @default(false)
+  quietHoursStart       String?  // HH:mm format
+  quietHoursEnd         String?  // HH:mm format
+  timezone              String   @default("Asia/Shanghai")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+// 协作会话模型
+model CollaborationSession {
+  id           String   @id @default(cuid())
+  documentId   String   // 文档ID
+  documentType String   // 文档类型 (solution, proposal, document)
+  userId       String   // 用户ID
+  sessionId    String   @unique // 会话标识符
+  joinedAt     DateTime @default(now())
+  lastActivity DateTime @default(now())
+  leftAt       DateTime? // 离开时间
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("collaboration_sessions")
+}
+
+// 协作操作模型
+model CollaborationOperation {
+  id          String   @id @default(cuid())
+  documentId  String   // 文档ID
+  operationId String   @unique // 操作标识符
+  type        String   // 操作类型 (insert, delete, replace)
+  position    Json     // 操作位置 {line, column}
+  content     String?  // 插入/替换的内容
+  length      Int?     // 删除/替换的长度
+  userId      String   // 操作用户ID
+  version     Int      // 文档版本号
+  timestamp   DateTime // 操作时间戳
+  
+  createdAt   DateTime @default(now())
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("collaboration_operations")
 }

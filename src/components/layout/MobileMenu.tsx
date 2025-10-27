@@ -32,7 +32,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed top-0 right-0 h-full w-80 bg-white z-50 shadow-xl"
+            className="fixed top-0 right-0 h-full w-full max-w-sm bg-white z-50 shadow-xl"
           >
             <div className="flex flex-col h-full">
               {/* Header */}
