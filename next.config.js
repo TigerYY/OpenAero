@@ -73,7 +73,6 @@ const sentryWebpackPluginOptions = {
   widenClientFileUpload: true,
   hideSourceMaps: true,
   disableLogger: true,
-  automaticVercelMonitors: true,
 };
 
 // 暂时禁用Sentry配置以提高构建速度
