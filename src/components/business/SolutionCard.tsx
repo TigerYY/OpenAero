@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Solution } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { SolutionStatus } from '@/shared/types/solutions';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -21,39 +23,7 @@ export function SolutionCard({ solution }: SolutionCardProps) {
     // TODO: 实现收藏功能
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'bg-success-100 text-success-800';
-      case 'PENDING_REVIEW':
-        return 'bg-warning-100 text-warning-800';
-      case 'DRAFT':
-        return 'bg-secondary-100 text-secondary-800';
-      case 'REJECTED':
-        return 'bg-error-100 text-error-800';
-      case 'ARCHIVED':
-        return 'bg-secondary-100 text-secondary-800';
-      default:
-        return 'bg-secondary-100 text-secondary-800';
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return '已认证';
-      case 'PENDING_REVIEW':
-        return '审核中';
-      case 'DRAFT':
-        return '草稿';
-      case 'REJECTED':
-        return '已拒绝';
-      case 'ARCHIVED':
-        return '已归档';
-      default:
-        return '未知';
-    }
-  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
@@ -73,8 +43,8 @@ export function SolutionCard({ solution }: SolutionCardProps) {
         
         {/* 状态标签 */}
         <div className="absolute top-4 right-4">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(solution.status)}`}>
-            {getStatusText(solution.status)}
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(solution.status as SolutionStatus)}`}>
+          {getStatusText(solution.status as SolutionStatus)}
           </span>
         </div>
 

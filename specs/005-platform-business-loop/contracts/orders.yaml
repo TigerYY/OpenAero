@@ -1,0 +1,700 @@
+openapi: 3.0.3
+info:
+  title: OpenAero Orders API
+  description: Order management and payment processing endpoints
+  version: 1.0.0
+  contact:
+    name: OpenAero Platform
+    email: dev@openaero.com
+
+servers:
+  - url: https://api.openaero.com/v1
+    description: Production server
+  - url: https://staging-api.openaero.com/v1
+    description: Staging server
+
+paths:
+  /orders:
+    post:
+      summary: Create new order
+      description: Create a new order for solution purchase
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - solution_id
+                - quantity
+              properties:
+                solution_id:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                quantity:
+                  type: integer
+                  minimum: 1
+                  example: 1
+                customer_info:
+                  type: object
+                  properties:
+                    company_name:
+                      type: string
+                      example: "航空科技有限公司"
+                    contact_person:
+                      type: string
+                      example: "张工程师"
+                    phone:
+                      type: string
+                      example: "+86-138-0013-8000"
+                    address:
+                      type: string
+                      example: "北京市朝阳区航空路123号"
+                    tax_id:
+                      type: string
+                      example: "91110000123456789X"
+                notes:
+                  type: string
+                  example: "需要技术支持服务"
+                preferred_payment_method:
+                  type: string
+                  enum: [alipay, wechat_pay]
+                  example: "alipay"
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "订单创建成功"
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Solution not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get user orders
+      description: Get paginated list of user's orders
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, paid, processing, completed, cancelled, refunded]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/OrderSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+  /orders/{id}:
+    get:
+      summary: Get order details
+      description: Get detailed information about a specific order
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/OrderDetail'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update order
+      description: Update order information (limited fields)
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+              properties:
+                customer_info:
+                  type: object
+                  properties:
+                    company_name:
+                      type: string
+                    contact_person:
+                      type: string
+                    phone:
+                      type: string
+                    address:
+                      type: string
+                    tax_id:
+                      type: string
+                notes:
+                  type: string
+                version:
+                  type: integer
+                  description: Current order version for optimistic locking
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "订单更新成功"
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '409':
+          description: Version conflict (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Cancel order
+      description: Cancel an order (only if not paid)
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+                - version
+              properties:
+                reason:
+                  type: string
+                  example: "客户取消订单"
+                version:
+                  type: integer
+                  description: Current order version for optimistic locking
+      responses:
+        '200':
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "订单已取消"
+
+  /orders/{id}/payment:
+    post:
+      summary: Create payment for order
+      description: Create payment transaction for an order
+      tags:
+        - Orders - Payment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payment_method
+              properties:
+                payment_method:
+                  type: string
+                  enum: [alipay, wechat_pay]
+                  example: "alipay"
+                return_url:
+                  type: string
+                  format: uri
+                  example: "https://openaero.com/orders/payment/success"
+                notify_url:
+                  type: string
+                  format: uri
+                  example: "https://api.openaero.com/v1/webhooks/payment"
+      responses:
+        '201':
+          description: Payment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "支付订单创建成功"
+                  data:
+                    type: object
+                    properties:
+                      payment_id:
+                        type: string
+                        format: uuid
+                      payment_url:
+                        type: string
+                        format: uri
+                        example: "https://openapi.alipay.com/gateway.do?..."
+                      qr_code:
+                        type: string
+                        description: Base64 encoded QR code for mobile payment
+                      expires_at:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T10:30:00Z"
+
+  /orders/{id}/payment/status:
+    get:
+      summary: Get payment status
+      description: Get current payment status for an order
+      tags:
+        - Orders - Payment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      payment_status:
+                        type: string
+                        enum: [pending, processing, completed, failed, cancelled, refunded]
+                        example: "completed"
+                      transaction_id:
+                        type: string
+                        example: "2024011522001234567890123456"
+                      paid_at:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T10:25:30Z"
+                      amount:
+                        type: number
+                        example: 5000.00
+                      payment_method:
+                        type: string
+                        example: "alipay"
+
+  /orders/{id}/invoice:
+    post:
+      summary: Request invoice
+      description: Request invoice for a paid order
+      tags:
+        - Orders - Invoice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - invoice_type
+                - invoice_title
+              properties:
+                invoice_type:
+                  type: string
+                  enum: [personal, company]
+                  example: "company"
+                invoice_title:
+                  type: string
+                  example: "航空科技有限公司"
+                tax_id:
+                  type: string
+                  example: "91110000123456789X"
+                address:
+                  type: string
+                  example: "北京市朝阳区航空路123号"
+                phone:
+                  type: string
+                  example: "+86-010-12345678"
+                bank_name:
+                  type: string
+                  example: "中国银行北京分行"
+                bank_account:
+                  type: string
+                  example: "1234567890123456789"
+                email:
+                  type: string
+                  format: email
+                  example: "finance@aerotech.com"
+      responses:
+        '201':
+          description: Invoice request submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "发票申请已提交"
+                  data:
+                    type: object
+                    properties:
+                      invoice_request_id:
+                        type: string
+                        format: uuid
+                      estimated_delivery:
+                        type: string
+                        example: "3-5个工作日"
+
+    get:
+      summary: Get invoice status
+      description: Get invoice status and download link if available
+      tags:
+        - Orders - Invoice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invoice status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum: [pending, processing, completed, failed]
+                        example: "completed"
+                      invoice_number:
+                        type: string
+                        example: "INV-2024-001234"
+                      download_url:
+                        type: string
+                        format: uri
+                        example: "https://api.openaero.com/v1/orders/123/invoice/download"
+                      created_at:
+                        type: string
+                        format: date-time
+                      expires_at:
+                        type: string
+                        format: date-time
+                        description: Download link expiration time
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_number:
+          type: string
+          example: "ORD-2024-001234"
+        customer_id:
+          type: string
+          format: uuid
+        solution_id:
+          type: string
+          format: uuid
+        solution_title:
+          type: string
+        quantity:
+          type: integer
+        unit_price:
+          type: number
+        total_amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, paid, processing, completed, cancelled, refunded]
+        customer_info:
+          type: object
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    OrderSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_number:
+          type: string
+        solution_title:
+          type: string
+        total_amount:
+          type: number
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        payment_status:
+          type: string
+
+    OrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          properties:
+            solution:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                creator:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    company:
+                      type: string
+            payments:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  transaction_id:
+                    type: string
+                  amount:
+                    type: number
+                  status:
+                    type: string
+                  payment_method:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  paid_at:
+                    type: string
+                    format: date-time
+            revenue_shares:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  recipient_type:
+                    type: string
+                    enum: [creator, platform]
+                  recipient_id:
+                    type: string
+                    format: uuid
+                  amount:
+                    type: number
+                  percentage:
+                    type: number
+                  status:
+                    type: string
+                  processed_at:
+                    type: string
+                    format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object

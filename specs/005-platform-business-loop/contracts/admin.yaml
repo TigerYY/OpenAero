@@ -1,0 +1,762 @@
+openapi: 3.0.3
+info:
+  title: OpenAero Admin API
+  description: Administrative endpoints for solution review and platform management
+  version: 1.0.0
+  contact:
+    name: OpenAero Platform
+    email: dev@openaero.com
+
+servers:
+  - url: https://api.openaero.com/v1
+    description: Production server
+  - url: https://staging-api.openaero.com/v1
+    description: Staging server
+
+paths:
+  /admin/solutions/pending:
+    get:
+      summary: Get pending solutions for review
+      description: Retrieve solutions awaiting admin review
+      tags:
+        - Admin - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [high, medium, low]
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [submitted_at, title, creator]
+            default: submitted_at
+      responses:
+        '200':
+          description: Pending solutions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      solutions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdminSolutionSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+                      stats:
+                        type: object
+                        properties:
+                          total_pending:
+                            type: integer
+                            example: 25
+                          avg_review_time:
+                            type: number
+                            example: 2.5
+                          oldest_pending:
+                            type: string
+                            format: date-time
+
+  /admin/solutions/{id}/review:
+    get:
+      summary: Get solution for review
+      description: Get detailed solution information for admin review
+      tags:
+        - Admin - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Solution retrieved for review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AdminSolutionDetail'
+
+    post:
+      summary: Submit solution review
+      description: Submit review decision for a solution
+      tags:
+        - Admin - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+                - version
+              properties:
+                status:
+                  type: string
+                  enum: [approved, rejected, needs_modification]
+                  example: "approved"
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                comments:
+                  type: string
+                  example: "技术方案完整，文档清晰，建议通过审核"
+                feedback:
+                  type: object
+                  properties:
+                    technical_quality:
+                      type: number
+                      minimum: 1
+                      maximum: 5
+                      example: 4.5
+                    documentation_quality:
+                      type: number
+                      minimum: 1
+                      maximum: 5
+                      example: 4.0
+                    innovation:
+                      type: number
+                      minimum: 1
+                      maximum: 5
+                      example: 3.5
+                    market_potential:
+                      type: number
+                      minimum: 1
+                      maximum: 5
+                      example: 4.0
+                    required_changes:
+                      type: array
+                      items:
+                        type: string
+                      example: ["补充安全测试报告", "完善BOM清单"]
+                    strengths:
+                      type: array
+                      items:
+                        type: string
+                      example: ["技术方案创新", "文档结构清晰", "市场定位准确"]
+                    concerns:
+                      type: array
+                      items:
+                        type: string
+                      example: ["成本控制需要优化", "部分技术细节需要补充"]
+                version:
+                  type: integer
+                  description: Current solution version for optimistic locking
+                  example: 1
+      responses:
+        '200':
+          description: Review submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "审核结果已提交"
+                  data:
+                    type: object
+                    properties:
+                      review_id:
+                        type: string
+                        format: uuid
+                      solution_status:
+                        type: string
+                        example: "approved"
+        '409':
+          description: Version conflict (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/reviews:
+    get:
+      summary: Get review history
+      description: Get paginated list of completed reviews
+      tags:
+        - Admin - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: reviewer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [approved, rejected, needs_modification]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Review history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      reviews:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ReviewSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+  /admin/users:
+    get:
+      summary: Get users list
+      description: Get paginated list of platform users
+      tags:
+        - Admin - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [creator, customer, admin]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, suspended, deleted]
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by email or name
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AdminUserSummary'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+  /admin/users/{id}:
+    get:
+      summary: Get user details
+      description: Get detailed user information for admin
+      tags:
+        - Admin - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/AdminUserDetail'
+
+    put:
+      summary: Update user status
+      description: Update user status (activate, suspend, etc.)
+      tags:
+        - Admin - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+                - version
+              properties:
+                status:
+                  type: string
+                  enum: [active, suspended, deleted]
+                  example: "suspended"
+                reason:
+                  type: string
+                  example: "违反平台使用条款"
+                version:
+                  type: integer
+                  description: Current user version for optimistic locking
+      responses:
+        '200':
+          description: User status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "用户状态更新成功"
+
+  /admin/analytics/dashboard:
+    get:
+      summary: Get admin dashboard analytics
+      description: Get key metrics and statistics for admin dashboard
+      tags:
+        - Admin - Analytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        '200':
+          description: Dashboard analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                            example: 1250
+                          new_this_period:
+                            type: integer
+                            example: 85
+                          by_role:
+                            type: object
+                            properties:
+                              creators:
+                                type: integer
+                                example: 320
+                              customers:
+                                type: integer
+                                example: 890
+                              admins:
+                                type: integer
+                                example: 40
+                      solutions:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                            example: 450
+                          pending_review:
+                            type: integer
+                            example: 25
+                          approved:
+                            type: integer
+                            example: 380
+                          rejected:
+                            type: integer
+                            example: 45
+                      reviews:
+                        type: object
+                        properties:
+                          completed_this_period:
+                            type: integer
+                            example: 120
+                          avg_review_time_hours:
+                            type: number
+                            example: 18.5
+                          approval_rate:
+                            type: number
+                            example: 0.84
+                      revenue:
+                        type: object
+                        properties:
+                          total_this_period:
+                            type: number
+                            example: 125000
+                          platform_share:
+                            type: number
+                            example: 37500
+                          creator_share:
+                            type: number
+                            example: 87500
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AdminSolutionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          type: string
+        creator:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+            company:
+              type: string
+        submitted_at:
+          type: string
+          format: date-time
+        days_pending:
+          type: integer
+        file_count:
+          type: integer
+        priority:
+          type: string
+          enum: [high, medium, low]
+
+    AdminSolutionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        creator_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        metadata:
+          type: object
+        pricing:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+        creator:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+            profile:
+              type: object
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/SolutionFile'
+        previous_reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewSummary'
+
+    ReviewSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        solution_id:
+          type: string
+          format: uuid
+        solution_title:
+          type: string
+        reviewer:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+        status:
+          type: string
+          enum: [approved, rejected, needs_modification]
+        score:
+          type: integer
+        comments:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AdminUserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+        profile:
+          type: object
+          properties:
+            name:
+              type: string
+            company:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+        solution_count:
+          type: integer
+        order_count:
+          type: integer
+
+    AdminUserDetail:
+      allOf:
+        - $ref: '#/components/schemas/AdminUserSummary'
+        - type: object
+          properties:
+            profile:
+              type: object
+            solutions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                  status:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+            orders:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  order_number:
+                    type: string
+                  amount:
+                    type: number
+                  status:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+
+    SolutionFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        original_filename:
+          type: string
+        file_type:
+          type: string
+        file_size:
+          type: integer
+        mime_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object

@@ -1,0 +1,7 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#f8fafc"/>
+  <rect x="0" y="0" width="1280" height="80" fill="#2563eb"/>
+  <text x="640" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">OpenAero - 无人机解决方案平台</text>
+  <text x="640" y="360" font-family="Arial, sans-serif" font-size="48" fill="#1f2937" text-anchor="middle">桌面版首页</text>
+  <text x="640" y="420" font-family="Arial, sans-serif" font-size="20" fill="#6b7280" text-anchor="middle">专业的无人机解决方案创作与交易平台</text>
+</svg>

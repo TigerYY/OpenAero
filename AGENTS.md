@@ -38,3 +38,6 @@ npm run quality:check  # lint + type-check + Jest coverage gate
 ## Security & Configuration Tips
 - Copy secrets from `env.example` into a personal `.env.local`; never commit real credentials.
 - Run `npm run validate:i18n` after editing locale files and `npm run db:generate` whenever `prisma/schema.prisma` changes to keep clients in sync.
+
+## Recent Changes
+- 005-platform-business-loop: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]

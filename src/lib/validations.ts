@@ -52,6 +52,42 @@ export const solutionSchema = z.object({
   tagIds: z.array(z.string()).optional(),
 });
 
+// 创建方案验证 (用于API)
+export const createSolutionSchema = z.object({
+  title: z.string().min(5, '标题至少需要5个字符').max(100, '标题不能超过100个字符'),
+  description: z.string().min(50, '描述至少需要50个字符').max(2000, '描述不能超过2000个字符'),
+  longDescription: z.string().min(50, '详细描述至少需要50个字符').max(5000, '详细描述不能超过5000个字符').optional(),
+  price: z.number().min(0, '价格不能为负数').max(100000, '价格不能超过100000'),
+  categoryId: z.string().min(1, '请选择分类').optional(),
+  specs: z.object({
+    weight: z.string().optional(),
+    dimensions: z.string().optional(),
+    flightTime: z.string().optional(),
+    range: z.string().optional(),
+    payload: z.string().optional(),
+    maxSpeed: z.string().optional(),
+    operatingTemp: z.string().optional(),
+    batteryType: z.string().optional(),
+  }).optional(),
+  bom: z.object({
+    frame: z.string().optional(),
+    motors: z.string().optional(),
+    esc: z.string().optional(),
+    propellers: z.string().optional(),
+    flightController: z.string().optional(),
+    camera: z.string().optional(),
+    gimbal: z.string().optional(),
+    battery: z.string().optional(),
+    transmitter: z.string().optional(),
+    receiver: z.string().optional(),
+  }).optional(),
+  features: z.array(z.string()).min(1, '请至少添加一个功能特性').max(10, '最多添加10个功能特性').optional(),
+  images: z.array(z.string().url('请输入有效的图片地址')).max(10, '最多上传10张图片').optional(),
+});
+
+// 更新方案验证
+export const updateSolutionSchema = createSolutionSchema.partial();
+
 // 评价验证
 export const reviewSchema = z.object({
   solutionId: z.string().min(1, '请提供解决方案ID'),

@@ -6,6 +6,16 @@
 **维护者**: OpenAero 开发团队  
 **目的**: 连接全球无人机创作者与专业客户的开放式平台
 
+## 🚨 开发阶段管理
+
+**重要**: 所有开发工作必须严格遵循既定的开发阶段顺序。
+
+- 📋 **开发阶段锁定文件**: [DEVELOPMENT_PHASES.md](./DEVELOPMENT_PHASES.md)
+- 🛡️ **阶段守护提示**: [.codex/prompts/phase-guard.md](./.codex/prompts/phase-guard.md)
+- 📖 **详细任务清单**: [specs/005-platform-business-loop/tasks.md](./specs/005-platform-business-loop/tasks.md)
+
+任何AI助理在开发前必须先查看这些文件，确保不会打乱开发顺序。
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/website-openaero.cn-green.svg)](https://openaero.cn)
 [![ICP](https://img.shields.io/badge/ICP-粤ICP备2020099654号--3-red.svg)](https://beian.miit.gov.cn/)

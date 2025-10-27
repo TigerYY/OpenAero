@@ -41,5 +41,33 @@
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
     ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ]
+  ],
+  "workbench.startupEditor": "readme",
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "PHASE",
+    "⚠️",
+    "🚨"
+  ],
+  "todo-tree.highlights.customHighlight": {
+    "PHASE": {
+      "icon": "milestone",
+      "type": "line",
+      "foreground": "#ff6b6b",
+      "background": "#ffe066",
+      "fontWeight": "bold"
+    },
+    "⚠️": {
+      "icon": "alert",
+      "type": "line",
+      "foreground": "#ff9500"
+    },
+    "🚨": {
+      "icon": "stop",
+      "type": "line",
+      "foreground": "#ff0000",
+      "fontWeight": "bold"
+    }
+  }
 }

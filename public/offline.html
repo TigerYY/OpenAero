@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线状态 - OpenAero</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .offline-container {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .offline-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .offline-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: white;
+    }
+
+    .offline-message {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .offline-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+    }
+
+    .btn-primary:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: white;
+    }
+
+    .network-status {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-offline {
+      background: #ff6b6b;
+    }
+
+    .status-online {
+      background: #51cf66;
+    }
+
+    @media (max-width: 480px) {
+      .offline-container {
+        padding: 30px 20px;
+      }
+
+      .offline-title {
+        font-size: 24px;
+      }
+
+      .offline-message {
+        font-size: 14px;
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon pulse">
+      📡
+    </div>
+    
+    <h1 class="offline-title">网络连接中断</h1>
+    
+    <p class="offline-message">
+      抱歉，您当前处于离线状态。请检查您的网络连接，然后重试。
+      <br><br>
+      您可以继续浏览已缓存的内容，或等待网络恢复后刷新页面。
+    </p>
+
+    <div class="offline-actions">
+      <button class="btn btn-primary" onclick="window.location.reload()">
+        🔄 重新加载
+      </button>
+      
+      <a href="/" class="btn btn-secondary">
+        🏠 返回首页
+      </a>
+    </div>
+
+    <div class="network-status">
+      <span class="status-indicator" id="statusIndicator"></span>
+      <span id="statusText">检查网络状态中...</span>
+    </div>
+  </div>
+
+  <script>
+    // 检查网络状态
+    function updateNetworkStatus() {
+      const indicator = document.getElementById('statusIndicator');
+      const text = document.getElementById('statusText');
+      
+      if (navigator.onLine) {
+        indicator.className = 'status-indicator status-online';
+        text.textContent = '网络已连接，您可以刷新页面';
+      } else {
+        indicator.className = 'status-indicator status-offline';
+        text.textContent = '网络未连接，请检查网络设置';
+      }
+    }
+
+    // 监听网络状态变化
+    window.addEventListener('online', () => {
+      updateNetworkStatus();
+      // 网络恢复时自动刷新页面
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    });
+
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // 初始化网络状态
+    updateNetworkStatus();
+
+    // 定期检查网络连接
+    setInterval(() => {
+      // 尝试发送一个小的网络请求来检测真实的网络状态
+      fetch('/favicon.ico', { 
+        method: 'HEAD',
+        cache: 'no-cache',
+        mode: 'no-cors'
+      }).then(() => {
+        if (!navigator.onLine) {
+          // 如果能够发送请求但 navigator.onLine 为 false，更新状态
+          window.dispatchEvent(new Event('online'));
+        }
+      }).catch(() => {
+        // 请求失败，确认离线状态
+        if (navigator.onLine) {
+          window.dispatchEvent(new Event('offline'));
+        }
+      });
+    }, 5000);
+
+    // 添加键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+        e.preventDefault();
+        window.location.reload();
+      }
+      if (e.key === 'Escape') {
+        window.location.href = '/';
+      }
+    });
+  </script>
+</body>
+</html>

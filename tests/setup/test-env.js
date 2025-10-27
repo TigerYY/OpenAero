@@ -76,11 +76,19 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // Mock URL
+// Mock URL class with proper validation
 global.URL = class URL {
   constructor(url, base) {
-    this.href = url;
-    this.pathname = new URL(url, base).pathname;
-    this.searchParams = new URLSearchParams(new URL(url, base).search);
+    // Use Node.js built-in URL for proper validation
+    const nodeUrl = new (require('url').URL)(url, base);
+    this.href = nodeUrl.href;
+    this.pathname = nodeUrl.pathname;
+    this.searchParams = new URLSearchParams(nodeUrl.search);
+    this.protocol = nodeUrl.protocol;
+    this.hostname = nodeUrl.hostname;
+    this.port = nodeUrl.port;
+    this.host = nodeUrl.host;
+    this.origin = nodeUrl.origin;
   }
 };
 

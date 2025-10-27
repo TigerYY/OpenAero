@@ -1,0 +1,699 @@
+openapi: 3.0.3
+info:
+  title: OpenAero Solutions API
+  description: Solution creation, management, and file handling endpoints
+  version: 1.0.0
+  contact:
+    name: OpenAero Platform
+    email: dev@openaero.com
+
+servers:
+  - url: https://api.openaero.com/v1
+    description: Production server
+  - url: https://staging-api.openaero.com/v1
+    description: Staging server
+
+paths:
+  /solutions:
+    get:
+      summary: List solutions
+      description: Get paginated list of solutions with filtering
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, rejected, needs_modification]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: creator_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Full-text search in title and description
+      responses:
+        '200':
+          description: Solutions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      solutions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Solution'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      summary: Create new solution
+      description: Create a new solution in draft status
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - category
+              properties:
+                title:
+                  type: string
+                  maxLength: 500
+                  example: "农业植保无人机解决方案"
+                description:
+                  type: string
+                  example: "专为农业植保设计的高效无人机系统，支持精准喷洒和实时监控"
+                category:
+                  type: string
+                  example: "农业无人机"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["植保", "农业", "自动化"]
+                metadata:
+                  type: object
+                  properties:
+                    technical_specs:
+                      type: object
+                      properties:
+                        flight_time:
+                          type: number
+                          example: 30
+                        payload_capacity:
+                          type: number
+                          example: 10
+                        range:
+                          type: number
+                          example: 5000
+                        max_speed:
+                          type: number
+                          example: 15
+                    application_areas:
+                      type: array
+                      items:
+                        type: string
+                      example: ["农田植保", "果园喷洒", "病虫害防治"]
+                    complexity_level:
+                      type: string
+                      enum: [beginner, intermediate, advanced]
+                      example: "intermediate"
+                    estimated_build_time:
+                      type: string
+                      example: "2-3周"
+                    required_tools:
+                      type: array
+                      items:
+                        type: string
+                      example: ["3D打印机", "焊接设备", "编程工具"]
+                pricing:
+                  type: object
+                  properties:
+                    base_price:
+                      type: number
+                      example: 15000
+                    currency:
+                      type: string
+                      default: "CNY"
+                    license_type:
+                      type: string
+                      enum: [personal, commercial, enterprise]
+                      example: "commercial"
+                    revenue_share:
+                      type: number
+                      minimum: 0
+                      maximum: 100
+                      example: 30
+      responses:
+        '201':
+          description: Solution created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "方案创建成功"
+                  data:
+                    $ref: '#/components/schemas/Solution'
+
+  /solutions/{id}:
+    get:
+      summary: Get solution details
+      description: Retrieve detailed information about a specific solution
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Solution retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/SolutionDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update solution
+      description: Update solution information (only for draft or needs_modification status)
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 500
+                description:
+                  type: string
+                category:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                metadata:
+                  type: object
+                pricing:
+                  type: object
+                version:
+                  type: integer
+                  description: Current version for optimistic locking
+      responses:
+        '200':
+          description: Solution updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "方案更新成功"
+                  data:
+                    $ref: '#/components/schemas/Solution'
+        '409':
+          description: Version conflict (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete solution
+      description: Delete solution (only for draft status)
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Solution deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "方案删除成功"
+
+  /solutions/{id}/submit:
+    post:
+      summary: Submit solution for review
+      description: Submit solution for admin review (changes status from draft to pending_review)
+      tags:
+        - Solutions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+              properties:
+                version:
+                  type: integer
+                  description: Current version for optimistic locking
+      responses:
+        '200':
+          description: Solution submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "方案已提交审核"
+                  data:
+                    $ref: '#/components/schemas/Solution'
+
+  /solutions/{id}/files:
+    get:
+      summary: List solution files
+      description: Get all files associated with a solution
+      tags:
+        - Solution Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Files retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SolutionFile'
+
+    post:
+      summary: Upload solution file
+      description: Upload a file to a solution
+      tags:
+        - Solution Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - file_type
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (max 100MB)
+                file_type:
+                  type: string
+                  enum: [technical_doc, bom_list, cad_file, image, video, other]
+                description:
+                  type: string
+                  description: Optional file description
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "文件上传成功"
+                  data:
+                    $ref: '#/components/schemas/SolutionFile'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /solutions/{id}/files/{file_id}:
+    get:
+      summary: Download solution file
+      description: Download a specific solution file
+      tags:
+        - Solution Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete solution file
+      description: Delete a file from a solution
+      tags:
+        - Solution Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "文件删除成功"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Solution:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        creator_id:
+          type: string
+          format: uuid
+          example: "456e7890-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          example: "农业植保无人机解决方案"
+        description:
+          type: string
+          example: "专为农业植保设计的高效无人机系统"
+        category:
+          type: string
+          example: "农业无人机"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["植保", "农业", "自动化"]
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, needs_modification]
+          example: "draft"
+        metadata:
+          type: object
+        pricing:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-26T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-26T10:00:00Z"
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        version:
+          type: integer
+          example: 1
+
+    SolutionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Solution'
+        - type: object
+          properties:
+            creator:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                company:
+                  type: string
+                avatar_url:
+                  type: string
+            files:
+              type: array
+              items:
+                $ref: '#/components/schemas/SolutionFile'
+            reviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+
+    SolutionFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "789e0123-e89b-12d3-a456-426614174000"
+        solution_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        filename:
+          type: string
+          example: "technical_specs_v1.pdf"
+        original_filename:
+          type: string
+          example: "无人机技术规格书.pdf"
+        file_type:
+          type: string
+          enum: [technical_doc, bom_list, cad_file, image, video, other]
+          example: "technical_doc"
+        file_size:
+          type: integer
+          example: 2048576
+        mime_type:
+          type: string
+          example: "application/pdf"
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-26T10:00:00Z"
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        solution_id:
+          type: string
+          format: uuid
+        reviewer_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [in_progress, approved, rejected, needs_modification]
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comments:
+          type: string
+        feedback:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 150
+        pages:
+          type: integer
+          example: 8
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "请求参数验证失败"
+            details:
+              type: array
+              items:
+                type: object
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

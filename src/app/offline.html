@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线状态 - OpenAero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .offline-icon svg {
+            width: 60px;
+            height: 60px;
+            color: white;
+        }
+
+        .offline-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .offline-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .offline-message {
+            font-size: 1.1rem;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .offline-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .network-status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            border-radius: 10px;
+            color: #c53030;
+            font-size: 0.9rem;
+        }
+
+        .network-status.online {
+            background: #c6f6d5;
+            border-color: #9ae6b4;
+            color: #2f855a;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .features h3 {
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .features li::before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        @media (max-width: 640px) {
+            .offline-container {
+                padding: 1rem;
+            }
+
+            .offline-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .offline-title {
+                font-size: 1.5rem;
+            }
+
+            .offline-message {
+                font-size: 1rem;
+            }
+
+            .btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 110 19.5 9.75 9.75 0 010-19.5z"></path>
+            </svg>
+        </div>
+
+        <div class="offline-content">
+            <h1 class="offline-title">您当前处于离线状态</h1>
+            <p class="offline-message">
+                看起来您的网络连接出现了问题。不过别担心，OpenAero 的一些功能仍然可以在离线状态下使用。
+            </p>
+
+            <div class="offline-actions">
+                <button class="btn btn-primary" onclick="checkConnection()">
+                    <span class="loading-spinner" id="loading-spinner" style="display: none;"></span>
+                    <span id="retry-text">重新连接</span>
+                </button>
+                
+                <a href="/" class="btn btn-secondary">
+                    返回首页
+                </a>
+            </div>
+
+            <div class="network-status" id="network-status">
+                <strong>网络状态：</strong> 离线
+            </div>
+
+            <div class="features">
+                <h3>离线可用功能：</h3>
+                <ul>
+                    <li>浏览已缓存的解决方案</li>
+                    <li>查看个人资料信息</li>
+                    <li>访问帮助文档</li>
+                    <li>使用基本搜索功能</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查网络连接状态
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('network-status');
+            if (navigator.onLine) {
+                statusElement.innerHTML = '<strong>网络状态：</strong> 在线';
+                statusElement.className = 'network-status online';
+            } else {
+                statusElement.innerHTML = '<strong>网络状态：</strong> 离线';
+                statusElement.className = 'network-status';
+            }
+        }
+
+        // 检查连接
+        async function checkConnection() {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const retryText = document.getElementById('retry-text');
+            
+            loadingSpinner.style.display = 'inline-block';
+            retryText.textContent = '检查中...';
+
+            try {
+                // 尝试获取一个小的资源来测试连接
+                const response = await fetch('/', { 
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+                
+                if (response.ok) {
+                    // 连接成功，重新加载页面
+                    window.location.reload();
+                } else {
+                    throw new Error('Network response not ok');
+                }
+            } catch (error) {
+                console.log('Still offline:', error);
+                
+                // 显示仍然离线的消息
+                retryText.textContent = '仍然离线';
+                setTimeout(() => {
+                    retryText.textContent = '重新连接';
+                }, 2000);
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // 监听网络状态变化
+        window.addEventListener('online', () => {
+            updateNetworkStatus();
+            // 自动重新加载页面
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        });
+
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // 初始化网络状态
+        updateNetworkStatus();
+
+        // 定期检查网络状态
+        setInterval(() => {
+            if (navigator.onLine) {
+                // 如果浏览器认为在线，尝试实际请求来确认
+                fetch('/', { method: 'HEAD', cache: 'no-cache' })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(() => {
+                        // 仍然离线
+                    });
+            }
+        }, 30000); // 每30秒检查一次
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+                event.preventDefault();
+                checkConnection();
+            }
+        });
+
+        // 添加触摸手势支持（下拉刷新）
+        let startY = 0;
+        let currentY = 0;
+        let pullDistance = 0;
+        const pullThreshold = 100;
+
+        document.addEventListener('touchstart', (event) => {
+            startY = event.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', (event) => {
+            currentY = event.touches[0].clientY;
+            pullDistance = currentY - startY;
+
+            if (pullDistance > 0 && window.scrollY === 0) {
+                event.preventDefault();
+                
+                // 添加视觉反馈
+                if (pullDistance > pullThreshold) {
+                    document.body.style.transform = `translateY(${Math.min(pullDistance * 0.5, 50)}px)`;
+                    document.body.style.opacity = 0.8;
+                }
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (pullDistance > pullThreshold && window.scrollY === 0) {
+                checkConnection();
+            }
+            
+            // 重置样式
+            document.body.style.transform = '';
+            document.body.style.opacity = '';
+            pullDistance = 0;
+        });
+    </script>
+</body>
+</html>
