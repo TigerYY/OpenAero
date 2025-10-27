@@ -321,6 +321,112 @@ export class SolutionService {
   }
 
   /**
+   * 自动分配审核员
+   */
+  async assignReviewer(solutionId: string) {
+    // 获取可用的审核员（管理员）
+    const availableReviewers = await db.user.findMany({
+      where: {
+        role: 'ADMIN',
+        // 可以添加更多条件，如在线状态、工作负载等
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        _count: {
+          select: {
+            solutionReviews: {
+              where: {
+                status: 'IN_PROGRESS'
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (availableReviewers.length === 0) {
+      throw new ValidationError('当前没有可用的审核员');
+    }
+
+    // 选择工作负载最少的审核员
+    const selectedReviewer = availableReviewers.reduce((prev, current) => {
+      return (prev._count.solutionReviews < current._count.solutionReviews) ? prev : current;
+    });
+
+    // 创建审核记录并分配
+    const review = await db.solutionReview.create({
+      data: {
+        solutionId,
+        reviewerId: selectedReviewer.id,
+        status: 'IN_PROGRESS',
+        decision: 'PENDING',
+        reviewStartedAt: new Date()
+      }
+    });
+
+    return {
+      review,
+      reviewer: selectedReviewer
+    };
+  }
+
+  /**
+   * 开始审核流程
+   */
+  async startReview(solutionId: string, reviewerId?: string) {
+    const solution = await db.solution.findUnique({
+      where: { id: solutionId },
+      include: { creator: { include: { user: true } } }
+    });
+
+    if (!solution) {
+      throw new NotFoundError('方案不存在');
+    }
+
+    if (solution.status !== 'PENDING_REVIEW') {
+      throw new ValidationError('只能对待审核状态的方案开始审核');
+    }
+
+    let assignedReviewer;
+    if (reviewerId) {
+      // 手动分配审核员
+      const reviewer = await db.user.findUnique({
+        where: { id: reviewerId, role: 'ADMIN' }
+      });
+      if (!reviewer) {
+        throw new ValidationError('指定的审核员不存在或权限不足');
+      }
+      assignedReviewer = reviewer;
+    } else {
+      // 自动分配审核员
+      const assignment = await this.assignReviewer(solutionId);
+      assignedReviewer = assignment.reviewer;
+    }
+
+    // 更新方案状态为审核中（保持PENDING_REVIEW状态，通过审核记录表示正在审核）
+    const updatedSolution = await db.solution.update({
+      where: { id: solutionId },
+      data: {
+        // 不修改status，保持PENDING_REVIEW
+        updatedAt: new Date()
+      },
+      include: {
+        creator: {
+          include: { user: true }
+        }
+      }
+    });
+
+    return {
+      solution: updatedSolution,
+      reviewer: assignedReviewer
+    };
+  }
+
+  /**
    * 管理员批准方案
    */
   async approveSolution(solutionId: string, adminId: string, notes?: string) {
@@ -339,6 +445,14 @@ export class SolutionService {
       throw new ValidationError('只能审核待审核状态的方案');
     }
 
+    // 检查是否有正在进行的审核
+    const activeReview = await db.solutionReview.findFirst({
+      where: {
+        solutionId,
+        status: 'IN_PROGRESS'
+      }
+    });
+
     // 更新方案状态
     const updatedSolution = await db.solution.update({
       where: { id: solutionId },
@@ -354,17 +468,30 @@ export class SolutionService {
       }
     });
 
-    // 创建审核历史记录
-    await db.solutionReview.create({
-      data: {
-        solutionId,
-        reviewerId: adminId,
-        status: 'COMPLETED',
-        decision: 'APPROVED',
-        comments: notes || '方案已通过审核',
-        reviewedAt: new Date()
-      }
-    });
+    // 更新或创建审核历史记录
+    if (activeReview) {
+      await db.solutionReview.update({
+        where: { id: activeReview.id },
+        data: {
+          status: 'COMPLETED',
+          decision: 'APPROVED',
+          comments: notes || '方案已通过审核',
+          reviewedAt: new Date()
+        }
+      });
+    } else {
+      await db.solutionReview.create({
+        data: {
+          solutionId,
+          reviewerId: adminId,
+          status: 'COMPLETED',
+          decision: 'APPROVED',
+          comments: notes || '方案已通过审核',
+          reviewedAt: new Date(),
+          reviewStartedAt: new Date()
+        }
+      });
+    }
 
     return updatedSolution;
   }
