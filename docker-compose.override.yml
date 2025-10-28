@@ -6,23 +6,27 @@ version: '3.8'
 services:
   app:
     build:
-      target: dev
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/.next
-    ports:
-      - "3000:3000"
-    command: npm run dev
+      - app_next:/app/.next
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://openaero:openaero123@db:5432/openaero
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-here-change-in-production
+      - NEXT_PUBLIC_APP_URL=http://openaero.cn:3000
+    depends_on:
+      - db
+      - redis
 
   db:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=development_password
+      - POSTGRES_PASSWORD=password
 
   redis:
     ports:
@@ -32,3 +36,6 @@ services:
     # 在开发环境中禁用 nginx
     profiles:
       - production
+
+volumes:
+  app_next:

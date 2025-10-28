@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { authenticateToken, logUserAction } from '@/backend/auth/auth.middleware';
+import { logUserAction } from '@/backend/auth/auth.middleware';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
-import { solutionService } from '@/backend/solution/solution.service';
-import { createSolutionSchema } from '@/lib/validations';
 
 // GET /api/solutions - 获取方案列表
 export async function GET(request: NextRequest) {
@@ -127,11 +125,61 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
-    // 验证输入数据
+    // 简单的数据验证
+    const createSolutionSchema = z.object({
+      title: z.string().min(1, '标题不能为空'),
+      description: z.string().min(1, '描述不能为空'),
+      category: z.string().min(1, '分类不能为空'),
+      price: z.number().min(0, '价格不能为负数'),
+      features: z.array(z.string()).optional(),
+      images: z.array(z.string()).optional(),
+      specs: z.any().optional(),
+      bom: z.any().optional()
+    });
+    
     const validatedData = createSolutionSchema.parse(body);
     
+    // 获取创作者档案
+    const creatorProfile = await db.creatorProfile.findUnique({
+      where: { userId: authResult.user.id }
+    });
+
+    if (!creatorProfile) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '创作者档案不存在',
+          data: null
+        } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
     // 创建方案
-    const solution = await solutionService.createSolution(validatedData, authResult.user.id);
+    const solution = await db.solution.create({
+      data: {
+        title: validatedData.title,
+        description: validatedData.description,
+        category: validatedData.category,
+        price: validatedData.price,
+        features: JSON.stringify(validatedData.features || []),
+        images: JSON.stringify(validatedData.images || []),
+        specs: JSON.stringify(validatedData.specs || {}),
+        bom: JSON.stringify(validatedData.bom || []),
+        status: 'DRAFT',
+        creatorId: creatorProfile.id,
+        userId: authResult.user.id
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            avatar: true
+          }
+        }
+      }
+    });
 
     // 记录审计日志
     await logUserAction(
@@ -160,7 +208,9 @@ export async function POST(request: NextRequest) {
         createdAt: solution.createdAt,
         updatedAt: solution.updatedAt,
         creatorId: solution.creatorId,
-        creatorName: solution.creator?.user?.name || 'Unknown',
+        creatorName: solution.user?.firstName && solution.user?.lastName 
+                      ? `${solution.user.firstName} ${solution.user.lastName}` 
+                      : 'Unknown',
         specs: solution.specs || {},
         bom: solution.bom || []
       }

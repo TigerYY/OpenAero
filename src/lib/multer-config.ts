@@ -7,52 +7,51 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { SolutionFileType } from '@prisma/client';
 
-// 文件类型映射
-export const FILE_TYPE_MAP: Record<string, SolutionFileType> = {
+// 文件类型映射 - 使用字符串而不是枚举
+export const FILE_TYPE_MAP: Record<string, string> = {
   // 图片文件
-  'image/jpeg': SolutionFileType.IMAGE,
-  'image/png': SolutionFileType.IMAGE,
-  'image/gif': SolutionFileType.IMAGE,
-  'image/webp': SolutionFileType.IMAGE,
-  'image/svg+xml': SolutionFileType.IMAGE,
+  'image/jpeg': 'IMAGE',
+  'image/png': 'IMAGE',
+  'image/gif': 'IMAGE',
+  'image/webp': 'IMAGE',
+  'image/svg+xml': 'IMAGE',
   
   // 文档文件
-  'application/pdf': SolutionFileType.DOCUMENT,
-  'application/msword': SolutionFileType.DOCUMENT,
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': SolutionFileType.DOCUMENT,
-  'text/plain': SolutionFileType.DOCUMENT,
+  'application/pdf': 'DOCUMENT',
+  'application/msword': 'DOCUMENT',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCUMENT',
+  'text/plain': 'DOCUMENT',
   
   // CAD文件
-  'application/dwg': SolutionFileType.CAD_FILE,
-  'application/dxf': SolutionFileType.CAD_FILE,
-  'model/step': SolutionFileType.CAD_FILE,
-  'model/iges': SolutionFileType.CAD_FILE,
+  'application/dwg': 'CAD_FILE',
+  'application/dxf': 'CAD_FILE',
+  'model/step': 'CAD_FILE',
+  'model/iges': 'CAD_FILE',
   
   // 代码文件
-  'text/javascript': SolutionFileType.CODE,
-  'text/typescript': SolutionFileType.CODE,
-  'text/python': SolutionFileType.CODE,
-  'text/cpp': SolutionFileType.CODE,
-  'text/c': SolutionFileType.CODE,
+  'text/javascript': 'CODE',
+  'text/typescript': 'CODE',
+  'text/python': 'CODE',
+  'text/cpp': 'CODE',
+  'text/c': 'CODE',
   
   // 电路图
-  'application/x-kicad-schematic': SolutionFileType.SCHEMATIC,
-  'application/x-eagle-schematic': SolutionFileType.SCHEMATIC,
+  'application/x-kicad-schematic': 'SCHEMATIC',
+  'application/x-eagle-schematic': 'SCHEMATIC',
   
   // PCB文件
-  'application/x-kicad-pcb': SolutionFileType.PCB,
-  'application/x-eagle-pcb': SolutionFileType.PCB,
+  'application/x-kicad-pcb': 'PCB',
+  'application/x-eagle-pcb': 'PCB',
   
   // 固件文件
-  'application/x-firmware': SolutionFileType.FIRMWARE,
-  'application/octet-stream': SolutionFileType.FIRMWARE,
+  'application/x-firmware': 'FIRMWARE',
+  'application/octet-stream': 'FIRMWARE',
   
   // 视频文件
-  'video/mp4': SolutionFileType.VIDEO,
-  'video/avi': SolutionFileType.VIDEO,
-  'video/mov': SolutionFileType.VIDEO,
+  'video/mp4': 'VIDEO',
+  'video/avi': 'VIDEO',
+  'video/mov': 'VIDEO',
 };
 
 // 上传配置
@@ -147,8 +146,8 @@ export function validateUploadedFile(file: Express.Multer.File) {
 }
 
 // 获取文件类型
-export function getFileType(mimeType: string): SolutionFileType {
-  return FILE_TYPE_MAP[mimeType] || SolutionFileType.OTHER;
+export function getFileType(mimeType: string): string {
+  return FILE_TYPE_MAP[mimeType] || 'OTHER';
 }
 
 // 计算文件校验和

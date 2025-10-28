@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,16 +9,6 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  FileText, 
-  ShoppingCart,
-  Eye,
-  Star,
-  Calendar,
-  ArrowUpRight
-} from 'lucide-react';
 
 interface CreatorStats {
   totalSolutions: number;
@@ -27,59 +17,54 @@ interface CreatorStats {
   pendingSolutions: number;
   totalRevenue: number;
   monthlyRevenue: number;
-  totalOrders: number;
-  monthlyOrders: number;
   totalViews: number;
+  totalDownloads: number;
   averageRating: number;
+  totalReviews: number;
 }
 
 interface RecentSolution {
   id: string;
   title: string;
   status: string;
-  price: number;
   createdAt: string;
-  updatedAt: string;
+  viewCount: number;
+  downloadCount: number;
+  price: number;
 }
 
 interface RecentOrder {
   id: string;
-  orderNumber: string;
-  status: string;
-  totalAmount: number;
+  solutionTitle: string;
+  amount: number;
   createdAt: string;
-  solutions: Array<{
-    id: string;
-    title: string;
-    price: number;
-  }>;
+  status: string;
 }
 
 export default function CreatorDashboardPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<CreatorStats | null>(null);
   const [recentSolutions, setRecentSolutions] = useState<RecentSolution[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (status === 'loading') return;
     
-    if (!isAuthenticated || !user) {
+    if (!session?.user) {
       router.push('/auth/login');
       return;
     }
 
     // 检查用户是否为创作者
-    if (user.role !== 'CREATOR') {
+    if (session.user.role !== 'CREATOR') {
       router.push('/creators/apply');
       return;
     }
 
     fetchDashboardData();
-  }, [user, isAuthenticated, authLoading, router]);
+  }, [session, status, router]);
 
   const fetchDashboardData = async () => {
     try {
@@ -112,7 +97,7 @@ export default function CreatorDashboardPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -123,7 +108,7 @@ export default function CreatorDashboardPage() {
     );
   }
 
-  if (!isAuthenticated || !user || user.role !== 'CREATOR') {
+  if (!session?.user || session.user.role !== 'CREATOR') {
     return null;
   }
 

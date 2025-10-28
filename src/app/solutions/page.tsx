@@ -45,6 +45,8 @@ function SolutionsContent() {
   const [activeFilters, setActiveFilters] = useState<Partial<SearchFilters>>({});
 
   useEffect(() => {
+    if (!searchParams) return;
+    
     // 从 URL 参数初始化搜索状态
     const query = searchParams.get('q') || '';
     const category = searchParams.get('category') || '';
@@ -95,12 +97,35 @@ function SolutionsContent() {
   const fetchSolutions = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams();
+      
+      if (searchParams) {
+        searchParams.forEach((value, key) => {
+          params.append(key, value);
+        });
+      }
       
       const response = await fetch(`/api/solutions?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setSolutions(data.solutions || []);
+        // 转换API数据格式为前端期望的格式
+        const apiSolutions = data.data?.solutions || [];
+        const transformedSolutions = apiSolutions.map((solution: any) => ({
+          id: solution.id,
+          title: solution.title,
+          description: solution.description,
+          author: solution.creatorName,
+          price: solution.price,
+          rating: 4.5, // 默认评分，后续可从API获取
+          downloads: solution.downloadCount || 0,
+          tags: Array.isArray(solution.tags) ? solution.tags : JSON.parse(solution.tags || '[]'),
+          category: solution.category,
+          image: Array.isArray(solution.images) ? solution.images[0] : JSON.parse(solution.images || '[]')[0] || '/images/placeholder.jpg',
+          createdAt: solution.createdAt,
+          difficulty: 'intermediate', // 默认难度，后续可从API获取
+          language: 'javascript' // 默认语言，后续可从API获取
+        }));
+        setSolutions(transformedSolutions);
       }
     } catch (error) {
       console.error('获取解决方案失败:', error);

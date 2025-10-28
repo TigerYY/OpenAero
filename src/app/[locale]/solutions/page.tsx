@@ -44,12 +44,17 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
       params.append('page', pagination.page.toString());
       params.append('limit', pagination.limit.toString());
 
-      const response = await fetch(`/api/solutions?${params}`);
+      const response = await fetch(`/api/solutions?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
-        setSolutions(result.data);
-        setPagination(result.pagination);
+        setSolutions(result.data.solutions);
+        setPagination({
+          page: result.data.page,
+          limit: result.data.limit,
+          total: result.data.total,
+          totalPages: result.data.totalPages,
+        });
       }
     } catch (error) {
       console.error('Error fetching solutions:', error);
