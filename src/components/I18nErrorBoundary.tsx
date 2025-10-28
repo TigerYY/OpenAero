@@ -82,18 +82,15 @@ export class I18nErrorBoundary extends Component<
   private reportError = (error: Error, errorInfo: React.ErrorInfo) => {
     try {
       // 这里可以集成 Sentry 或其他错误监控服务
-      if (typeof window !== 'undefined' && (window as any).Sentry) {
-        (window as any).Sentry.captureException(error, {
-          tags: {
-            component: 'I18nErrorBoundary',
-            locale: this.state.locale,
-          },
-          extra: {
-            errorInfo,
-            timestamp: new Date().toISOString(),
-          },
-        });
-      }
+      // if (typeof window !== 'undefined' && (window as any).Sentry) {
+      //   (window as any).Sentry.captureException(error, {
+      //     contexts: {
+      //       react: {
+      //         componentStack: errorInfo.componentStack,
+      //       },
+      //     },
+      //   });
+      // }
     } catch (reportingError) {
       console.warn('Failed to report i18n error:', reportingError);
     }

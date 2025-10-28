@@ -63,27 +63,43 @@ export async function GET(request: NextRequest) {
     const response: ApiResponse<any> = {
       success: true,
       data: {
-        solutions: solutions.map(solution => ({
-          id: solution.id,
-          title: solution.title,
-          description: solution.description,
-          category: solution.category,
-          status: solution.status,
-          price: solution.price,
-          version: solution.version,
-          tags: solution.features || [],
-          images: solution.images || [],
-          createdAt: solution.createdAt,
-          updatedAt: solution.updatedAt,
-          creatorId: solution.creatorId,
-          creatorName: solution.user?.firstName && solution.user?.lastName 
-                        ? `${solution.user.firstName} ${solution.user.lastName}` 
-                        : 'Unknown',
-          reviewCount: solution._count.reviews,
-          downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
-          specs: solution.specs || {},
-          bom: solution.bom || []
-        })),
+        solutions: solutions.map(solution => {
+          // 安全地解析JSON字符串
+          const parseJsonSafely = (jsonString: any, fallback: any) => {
+            if (!jsonString) return fallback;
+            if (typeof jsonString === 'string') {
+              try {
+                return JSON.parse(jsonString);
+              } catch (e) {
+                console.warn('Failed to parse JSON:', jsonString, e);
+                return fallback;
+              }
+            }
+            return jsonString;
+          };
+
+          return {
+            id: solution.id,
+            title: solution.title,
+            description: solution.description,
+            category: solution.category,
+            status: solution.status,
+            price: solution.price,
+            version: solution.version,
+            tags: parseJsonSafely(solution.features, []),
+            images: parseJsonSafely(solution.images, []),
+            createdAt: solution.createdAt,
+            updatedAt: solution.updatedAt,
+            creatorId: solution.creatorId,
+            creatorName: solution.user?.firstName && solution.user?.lastName 
+                          ? `${solution.user.firstName} ${solution.user.lastName}` 
+                          : 'Unknown',
+            reviewCount: solution._count.reviews,
+            downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
+            specs: parseJsonSafely(solution.specs, {}),
+            bom: parseJsonSafely(solution.bom, [])
+          };
+        }),
         total,
         page,
         limit,

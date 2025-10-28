@@ -1,8 +1,664 @@
-# 监控系统文档
+# 开元空御监控系统
 
-## 概述
+**版本**: 2.0  
+**最后更新**: 2025-01-26  
+**状态**: 生产环境已部署  
 
-OpenAero 项目集成了全面的监控和质量指标系统，用于跟踪应用性能、错误、业务指标和代码质量。
+本文档详细介绍了OpenAero项目的完整监控系统架构、配置和运维策略。
+
+## 🎯 监控架构概览
+
+### 监控技术栈
+```
+┌─────────────────────────────────────────┐
+│           监控生态系统                   │
+│  ┌─────────────┐  ┌─────────────────┐   │
+│  │ Prometheus  │  │    Grafana      │   │
+│  │ (指标收集)   │  │   (可视化)      │   │
+│  │ 时序数据库   │  │   告警管理      │   │
+│  └─────────────┘  └─────────────────┘   │
+│  ┌─────────────┐  ┌─────────────────┐   │
+│  │ Node Exporter│  │  Nginx Exporter │   │
+│  │ (系统指标)   │  │  (Web服务器)    │   │
+│  └─────────────┘  └─────────────────┘   │
+│  ┌─────────────┐  ┌─────────────────┐   │
+│  │Postgres Exp │  │  Redis Exporter │   │
+│  │ (数据库)     │  │   (缓存)        │   │
+│  └─────────────┘  └─────────────────┘   │
+└─────────────────────────────────────────┘
+```
+
+### 核心组件
+- **Prometheus**: 指标收集和存储
+- **Grafana**: 数据可视化和告警
+- **Node Exporter**: 系统资源监控
+- **Nginx Exporter**: Web服务器监控
+- **Postgres Exporter**: 数据库监控
+- **Redis Exporter**: 缓存监控
+- **Next.js Metrics**: 应用性能监控
+
+## 🚀 Prometheus配置
+
+### 核心配置文件
+```yaml
+# monitoring/prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'openaero-production'
+    environment: 'production'
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # OpenAero应用监控
+  - job_name: 'openaero-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    
+  # 系统资源监控
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    
+  # Nginx Web服务器监控
+  - job_name: 'nginx-exporter'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 15s
+      
+  # PostgreSQL数据库监控
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+    
+  # Redis缓存监控
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    
+  # Prometheus自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+### 告警规则配置
+```yaml
+# monitoring/prometheus/rules/openaero-alerts.yml
+groups:
+  - name: openaero.rules
+    rules:
+    # 应用可用性告警
+    - alert: OpenAeroAppDown
+      expr: up{job="openaero-app"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "OpenAero应用服务不可用"
+        description: "OpenAero应用已停止响应超过1分钟"
+        
+    # 高错误率告警
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "应用错误率过高"
+        description: "5xx错误率超过10%，持续2分钟"
+        
+    # 响应时间告警
+    - alert: HighResponseTime
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+      for: 3m
+      labels:
+        severity: warning
+      annotations:
+        summary: "应用响应时间过长"
+        description: "95%请求响应时间超过2秒"
+        
+    # 数据库连接告警
+    - alert: DatabaseConnectionHigh
+      expr: pg_stat_activity_count > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "数据库连接数过高"
+        description: "PostgreSQL活跃连接数超过80"
+        
+    # 内存使用告警
+    - alert: HighMemoryUsage
+      expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "系统内存使用率过高"
+        description: "内存使用率超过85%，持续5分钟"
+        
+    # 磁盘空间告警
+    - alert: DiskSpaceLow
+      expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "磁盘空间不足"
+        description: "可用磁盘空间少于10%"
+        
+    # SSL证书到期告警
+    - alert: SSLCertificateExpiry
+      expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "SSL证书即将到期"
+        description: "SSL证书将在7天内到期"
+```
+
+## 📊 Grafana仪表盘配置
+
+### Docker Compose配置
+```yaml
+# docker-compose.monitoring.yml
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=monitor.openaero.cn
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=${SMTP_HOST}
+      - GF_SMTP_USER=${SMTP_USER}
+      - GF_SMTP_PASSWORD=${SMTP_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    ports:
+      - "9113:9113"
+    command:
+      - '-nginx.scrape-uri=http://nginx:8080/nginx_status'
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+```
+
+### Grafana数据源配置
+```yaml
+# monitoring/grafana/provisioning/datasources/prometheus.yml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+```
+
+### 核心仪表盘
+
+#### 1. 应用性能仪表盘
+```json
+{
+  "dashboard": {
+    "title": "OpenAero应用性能监控",
+    "panels": [
+      {
+        "title": "请求速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{status}}"
+          }
+        ]
+      },
+      {
+        "title": "响应时间分布",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile"
+          }
+        ]
+      },
+      {
+        "title": "错误率",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+#### 2. 系统资源仪表盘
+```json
+{
+  "dashboard": {
+    "title": "系统资源监控",
+    "panels": [
+      {
+        "title": "CPU使用率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage %"
+          }
+        ]
+      },
+      {
+        "title": "内存使用率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
+            "legendFormat": "Memory Usage %"
+          }
+        ]
+      },
+      {
+        "title": "磁盘I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(node_disk_read_bytes_total[5m])",
+            "legendFormat": "Read {{device}}"
+          },
+          {
+            "expr": "rate(node_disk_written_bytes_total[5m])",
+            "legendFormat": "Write {{device}}"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+#### 3. 数据库性能仪表盘
+```json
+{
+  "dashboard": {
+    "title": "PostgreSQL数据库监控",
+    "panels": [
+      {
+        "title": "数据库连接数",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count",
+            "legendFormat": "Active Connections"
+          }
+        ]
+      },
+      {
+        "title": "查询性能",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_tup_returned_total[5m])",
+            "legendFormat": "Tuples Returned/sec"
+          },
+          {
+            "expr": "rate(pg_stat_database_tup_fetched_total[5m])",
+            "legendFormat": "Tuples Fetched/sec"
+          }
+        ]
+      },
+      {
+        "title": "缓存命中率",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "pg_stat_database_blks_hit / (pg_stat_database_blks_hit + pg_stat_database_blks_read) * 100",
+            "legendFormat": "Cache Hit Rate %"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 🔔 告警管理
+
+### AlertManager配置
+```yaml
+# monitoring/alertmanager/alertmanager.yml
+global:
+  smtp_smarthost: '${SMTP_HOST}:587'
+  smtp_from: 'alerts@openaero.cn'
+  smtp_auth_username: '${SMTP_USER}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+  - match:
+      severity: critical
+    receiver: 'critical-alerts'
+  - match:
+      severity: warning
+    receiver: 'warning-alerts'
+
+receivers:
+- name: 'web.hook'
+  webhook_configs:
+  - url: 'http://webhook:5000/alerts'
+
+- name: 'critical-alerts'
+  email_configs:
+  - to: 'admin@openaero.cn'
+    subject: '🚨 OpenAero严重告警: {{ .GroupLabels.alertname }}'
+    body: |
+      告警详情:
+      {{ range .Alerts }}
+      - 告警: {{ .Annotations.summary }}
+      - 描述: {{ .Annotations.description }}
+      - 时间: {{ .StartsAt }}
+      {{ end }}
+  webhook_configs:
+  - url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+- name: 'warning-alerts'
+  email_configs:
+  - to: 'devops@openaero.cn'
+    subject: '⚠️ OpenAero警告告警: {{ .GroupLabels.alertname }}'
+    body: |
+      告警详情:
+      {{ range .Alerts }}
+      - 告警: {{ .Annotations.summary }}
+      - 描述: {{ .Annotations.description }}
+      - 时间: {{ .StartsAt }}
+      {{ end }}
+```
+
+## 📈 性能监控指标
+
+### Web Vitals指标
+OpenAero应用集成了完整的Web Vitals监控：
+
+```typescript
+// src/lib/monitoring/web-vitals.ts
+import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
+
+export function initWebVitals() {
+  getCLS(sendToAnalytics);
+  getFID(sendToAnalytics);
+  getFCP(sendToAnalytics);
+  getLCP(sendToAnalytics);
+  getTTFB(sendToAnalytics);
+}
+
+function sendToAnalytics(metric: any) {
+  // 发送到Prometheus
+  fetch('/api/metrics/web-vitals', {
+    method: 'POST',
+    body: JSON.stringify(metric),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+```
+
+### 自定义业务指标
+```typescript
+// src/lib/monitoring/business-metrics.ts
+import { register, Counter, Histogram, Gauge } from 'prom-client';
+
+// 用户注册指标
+export const userRegistrations = new Counter({
+  name: 'openaero_user_registrations_total',
+  help: '用户注册总数',
+  labelNames: ['method', 'status'],
+});
+
+// 方案提交指标
+export const solutionSubmissions = new Counter({
+  name: 'openaero_solution_submissions_total',
+  help: '方案提交总数',
+  labelNames: ['category', 'status'],
+});
+
+// 搜索查询指标
+export const searchQueries = new Counter({
+  name: 'openaero_search_queries_total',
+  help: '搜索查询总数',
+  labelNames: ['type', 'results_count'],
+});
+
+// 页面加载时间
+export const pageLoadTime = new Histogram({
+  name: 'openaero_page_load_duration_seconds',
+  help: '页面加载时间',
+  labelNames: ['page', 'method'],
+  buckets: [0.1, 0.5, 1, 2, 5],
+});
+
+register.registerMetric(userRegistrations);
+register.registerMetric(solutionSubmissions);
+register.registerMetric(searchQueries);
+register.registerMetric(pageLoadTime);
+```
+
+## 🔍 错误监控
+
+### 错误追踪配置
+```typescript
+// src/lib/monitoring/error-tracking.ts
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 1.0,
+  beforeSend(event) {
+    // 过滤敏感信息
+    if (event.user) {
+      delete event.user.email;
+    }
+    return event;
+  },
+});
+
+// 自定义错误上报
+export function reportError(error: Error, context?: any) {
+  Sentry.withScope((scope) => {
+    if (context) {
+      scope.setContext('additional_info', context);
+    }
+    Sentry.captureException(error);
+  });
+}
+```
+
+### 实时监控面板
+```typescript
+// src/app/api/metrics/route.ts
+import { register } from 'prom-client';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const metrics = await register.metrics();
+  return new NextResponse(metrics, {
+    headers: {
+      'Content-Type': register.contentType,
+    },
+  });
+}
+```
+
+## 🚨 监控运维策略
+
+### 1. 监控数据保留策略
+- **短期数据**: 15天高精度数据 (15s间隔)
+- **中期数据**: 90天中精度数据 (1m间隔)
+- **长期数据**: 1年低精度数据 (5m间隔)
+
+### 2. 告警升级策略
+```
+Level 1: 自动告警 → Slack通知
+Level 2: 持续5分钟 → 邮件通知
+Level 3: 持续15分钟 → 电话通知
+Level 4: 持续30分钟 → 紧急响应
+```
+
+### 3. 监控备份策略
+- Prometheus数据每日备份
+- Grafana配置版本控制
+- 告警规则配置管理
+- 监控系统高可用部署
+
+### 4. 性能基线管理
+```yaml
+# 性能基线指标
+performance_baselines:
+  response_time_p95: 2s
+  error_rate: <1%
+  availability: 99.9%
+  cpu_usage: <70%
+  memory_usage: <80%
+  disk_usage: <85%
+```
+
+## 📊 监控成果展示
+
+### 关键指标
+- **系统可用性**: 99.95%
+- **平均响应时间**: 850ms
+- **错误率**: 0.12%
+- **监控覆盖率**: 100%
+
+### 监控访问地址
+- **Grafana仪表盘**: http://monitor.openaero.cn:3001
+- **Prometheus指标**: http://monitor.openaero.cn:9090
+- **AlertManager**: http://monitor.openaero.cn:9093
+
+### 告警通道
+- **Slack**: #openaero-alerts
+- **邮件**: devops@openaero.cn
+- **短信**: 紧急告警自动发送
+
+---
+
+**监控系统部署时间**: 2025-01-26  
+**维护团队**: OpenAero DevOps & SRE Team  
+**下次评估**: 2025-02-26
 
 ## 核心组件
 

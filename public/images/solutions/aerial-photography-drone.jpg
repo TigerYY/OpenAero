@@ -1,0 +1,98 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景天空 -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E0F6FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#skyGradient)"/>
+  
+  <!-- 云朵 -->
+  <g fill="white" opacity="0.8">
+    <ellipse cx="80" cy="60" rx="25" ry="15"/>
+    <ellipse cx="100" cy="55" rx="30" ry="18"/>
+    <ellipse cx="120" cy="60" rx="20" ry="12"/>
+    
+    <ellipse cx="280" cy="80" rx="20" ry="12"/>
+    <ellipse cx="300" cy="75" rx="25" ry="15"/>
+    <ellipse cx="320" cy="80" rx="18" ry="10"/>
+  </g>
+  
+  <!-- 远山 -->
+  <polygon points="0,180 100,120 200,140 300,100 400,130 400,300 0,300" fill="#8FBC8F" opacity="0.6"/>
+  
+  <!-- 无人机主体 -->
+  <g transform="translate(200,150)">
+    <!-- 主机身 -->
+    <ellipse cx="0" cy="0" rx="25" ry="12" fill="#2c3e50"/>
+    <rect x="-20" y="-8" width="40" height="16" fill="#34495e" rx="8"/>
+    
+    <!-- 螺旋桨臂 -->
+    <line x1="-45" y1="-30" x2="45" y2="30" stroke="#7f8c8d" stroke-width="5"/>
+    <line x1="-45" y1="30" x2="45" y2="-30" stroke="#7f8c8d" stroke-width="5"/>
+    
+    <!-- 螺旋桨 -->
+    <g transform="translate(-45,-30)">
+      <circle cx="0" cy="0" r="15" fill="#3498db" opacity="0.4"/>
+      <line x1="-12" y1="0" x2="12" y2="0" stroke="#2980b9" stroke-width="2"/>
+      <line x1="0" y1="-12" x2="0" y2="12" stroke="#2980b9" stroke-width="2"/>
+    </g>
+    <g transform="translate(45,-30)">
+      <circle cx="0" cy="0" r="15" fill="#3498db" opacity="0.4"/>
+      <line x1="-12" y1="0" x2="12" y2="0" stroke="#2980b9" stroke-width="2"/>
+      <line x1="0" y1="-12" x2="0" y2="12" stroke="#2980b9" stroke-width="2"/>
+    </g>
+    <g transform="translate(-45,30)">
+      <circle cx="0" cy="0" r="15" fill="#3498db" opacity="0.4"/>
+      <line x1="-12" y1="0" x2="12" y2="0" stroke="#2980b9" stroke-width="2"/>
+      <line x1="0" y1="-12" x2="0" y2="12" stroke="#2980b9" stroke-width="2"/>
+    </g>
+    <g transform="translate(45,30)">
+      <circle cx="0" cy="0" r="15" fill="#3498db" opacity="0.4"/>
+      <line x1="-12" y1="0" x2="12" y2="0" stroke="#2980b9" stroke-width="2"/>
+      <line x1="0" y1="-12" x2="0" y2="12" stroke="#2980b9" stroke-width="2"/>
+    </g>
+    
+    <!-- 云台和相机 -->
+    <g transform="translate(0,20)">
+      <!-- 云台 -->
+      <rect x="-8" y="0" width="16" height="12" fill="#95a5a6" rx="2"/>
+      <!-- 相机 -->
+      <rect x="-12" y="8" width="24" height="16" fill="#2c3e50" rx="3"/>
+      <circle cx="0" cy="16" r="8" fill="#34495e"/>
+      <circle cx="0" cy="16" r="6" fill="#2c3e50"/>
+      <circle cx="0" cy="16" r="3" fill="#3498db"/>
+      <!-- 镜头反光 -->
+      <circle cx="-2" cy="14" r="1" fill="white" opacity="0.8"/>
+    </g>
+    
+    <!-- GPS模块 -->
+    <rect x="-6" y="-20" width="12" height="6" fill="#e74c3c" rx="1"/>
+    <circle cx="0" cy="-17" r="1" fill="#c0392b"/>
+    
+    <!-- LED指示灯 -->
+    <circle cx="-15" cy="-5" r="2" fill="#2ecc71"/>
+    <circle cx="15" cy="-5" r="2" fill="#e74c3c"/>
+  </g>
+  
+  <!-- 拍摄框架效果 -->
+  <g stroke="#f39c12" stroke-width="2" fill="none" opacity="0.6">
+    <rect x="50" y="50" width="80" height="60"/>
+    <rect x="270" y="80" width="100" height="75"/>
+    <line x1="50" y1="50" x2="60" y2="60"/>
+    <line x1="130" y1="50" x2="120" y2="60"/>
+    <line x1="50" y1="110" x2="60" y2="100"/>
+    <line x1="130" y1="110" x2="120" y2="100"/>
+  </g>
+  
+  <!-- 4K标识 -->
+  <g transform="translate(320,40)">
+    <rect x="-15" y="-8" width="30" height="16" fill="#e74c3c" rx="3"/>
+    <text x="0" y="2" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="bold">4K</text>
+  </g>
+  
+  <!-- 标题文字 -->
+  <text x="200" y="30" text-anchor="middle" fill="#2c3e50" font-size="18" font-family="Arial, sans-serif" font-weight="bold">航拍无人机解决方案</text>
+  <text x="200" y="50" text-anchor="middle" fill="#7f8c8d" font-size="12" font-family="Arial, sans-serif">专业航拍 · 4K高清 · 智能云台</text>
+</svg>

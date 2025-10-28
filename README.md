@@ -75,8 +75,12 @@
 - **CI/CD**: GitHub Actions + ArgoCD
 - **部署平台**: Vercel (前端) + AWS EKS (后端)
 - **CDN**: Cloudflare
-- **监控**: DataDog + Sentry + PagerDuty
+- **监控**: Prometheus + Grafana + DataDog + Sentry + PagerDuty
 - **安全**: Let's Encrypt + WAF + DDoS Protection
+- **负载均衡**: Nginx + Kubernetes Ingress
+- **数据备份**: 自动化数据库备份 + 文件存储备份
+- **日志管理**: ELK Stack (Elasticsearch + Logstash + Kibana)
+- **告警系统**: AlertManager + PagerDuty + 企业微信/钉钉集成
 
 ## 📁 项目结构
 
@@ -158,7 +162,9 @@ npm run dev
 # 访问 http://localhost:3000
 ```
 
-### 部署到服务器
+### 生产环境部署
+
+#### 快速部署
 ```bash
 # 配置服务器环境
 ./setup-server.sh
@@ -166,6 +172,18 @@ npm run dev
 # 部署网站
 ./deploy.sh
 ```
+
+#### 详细部署指南
+- **[完整部署指南](./DEPLOYMENT_GUIDE.md)** - 生产环境部署的详细流程和配置
+- **[监控系统配置](./MONITORING.md)** - Prometheus + Grafana 监控系统配置
+- **[SSL证书配置](./SSL_CERTIFICATE_GUIDE.md)** - Let's Encrypt SSL证书申请和配置
+- **[部署策略文档](./deployment-strategy.md)** - 零停机部署和发布策略
+
+#### 部署环境
+- **生产环境**: 高可用集群 + 负载均衡 + 自动扩缩容
+- **预发布环境**: 生产环境镜像 + 完整功能测试
+- **测试环境**: 自动化测试 + 性能测试
+- **开发环境**: 本地开发 + 热重载
 
 ## 📋 功能模块
 
@@ -278,6 +296,13 @@ npm run dev
 - **[监控系统文档](./MONITORING.md)** - 质量监控和性能指标系统
 - **[测试框架文档](./TESTING.md)** - 增强测试框架和最佳实践
 - **[贡献指南](./CONTRIBUTING.md)** - 代码贡献和开发流程指南
+
+### 部署运维文档
+- **[完整部署指南](./DEPLOYMENT_GUIDE.md)** - 生产环境部署的详细流程和配置
+- **[监控系统配置](./MONITORING.md)** - Prometheus + Grafana 监控系统架构和配置
+- **[SSL证书配置指南](./SSL_CERTIFICATE_GUIDE.md)** - Let's Encrypt SSL证书申请、配置和自动续期
+- **[部署策略文档](./deployment-strategy.md)** - 零停机部署、蓝绿部署和发布策略
+- **[README部署说明](./README-DEPLOYMENT.md)** - 部署相关的快速参考文档
 
 ### 技术文档
 - **[组件设计方案](./component-design.md)** - UI组件和页面设计

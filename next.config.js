@@ -1,4 +1,4 @@
-const { withSentryConfig } = require('@sentry/nextjs');
+// const { withSentryConfig } = require('@sentry/nextjs');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
@@ -65,16 +65,15 @@ const nextConfig = {
   },
 };
 
-// Sentry配置
-const sentryWebpackPluginOptions = {
-  org: 'openaero',
-  project: 'openaero-web',
-  silent: true,
-  widenClientFileUpload: true,
-  hideSourceMaps: true,
-  disableLogger: true,
-};
+// Sentry配置已禁用
+// const sentryWebpackPluginOptions = {
+//   org: 'openaero',
+//   project: 'openaero-web',
+//   silent: true,
+//   widenClientFileUpload: true,
+//   hideSourceMaps: true,
+//   disableLogger: true,
+// };
 
-// 暂时禁用Sentry配置以提高构建速度
-// module.exports = withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
+// 导出配置（不使用Sentry）
 module.exports = withNextIntl(nextConfig);

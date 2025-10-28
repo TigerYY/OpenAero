@@ -70,46 +70,38 @@ NEXT_PUBLIC_SUPPORTED_LOCALES=zh-CN,en-US
 NEXT_PUBLIC_FALLBACK_LOCALE=zh-CN
 ENVEQF
 
-  echo "🐳 构建 Docker 镜像..."
-  docker build -f Dockerfile.production -t openaero:latest .
-
+  echo "🐳 使用 Docker Compose 部署..."
+  docker compose down || true
+  docker compose build --no-cache
+  
   if [ $? -ne 0 ]; then
-    echo "❌ Docker 构建失败"
+    echo "❌ Docker Compose 构建失败"
     exit 1
   fi
-  echo "✅ Docker 镜像构建成功"
+  echo "✅ Docker Compose 构建成功"
 
-  echo "🛑 停止现有容器..."
-  docker stop openaero-container || true
-  docker rm openaero-container || true
-
-  echo "🚀 启动新容器..."
-  docker run -d \
-    --name openaero-container \
-    --restart unless-stopped \
-    -p 3000:3000 \
-    --env-file .env.production \
-    openaero:latest
+  echo "🚀 启动服务..."
+  docker compose up -d
 
   if [ $? -ne 0 ]; then
-    echo "❌ Docker 容器启动失败"
+    echo "❌ Docker Compose 启动失败"
     exit 1
   fi
-  echo "✅ 容器启动成功"
+  echo "✅ 服务启动成功"
 
-  echo "⏳ 等待应用启动..."
-  sleep 10
+  echo "⏳ 等待服务启动..."
+  sleep 30
 
-  echo "🔍 检查容器状态..."
-  docker ps | grep openaero-container
+  echo "🔍 检查服务状态..."
+  docker compose ps
 
   echo "🌐 测试应用..."
-  curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/zh-CN
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/
 
-  echo "✅ Docker 部署完成！"
+  echo "✅ Docker Compose 部署完成！"
   echo "🌐 应用地址: https://openaero.cn"
-  echo "📝 查看日志: docker logs openaero-container"
-  echo "🔄 重启应用: docker restart openaero-container"
+  echo "📝 查看日志: docker compose logs -f"
+  echo "🔄 重启应用: docker compose restart"
 EOF
 
 if [ $? -ne 0 ]; then
@@ -121,7 +113,7 @@ fi
 echo "🧹 清理本地文件..."
 rm openaero-docker.tar.gz
 
-echo "🎉 Docker 部署完成！"
+echo "🎉 Docker Compose 部署完成！"
 echo "🌐 访问地址: https://openaero.cn"
-echo "📝 查看日志: ssh root@openaero.cn 'docker logs openaero-container'"
-echo "🔄 重启应用: ssh root@openaero.cn 'docker restart openaero-container'"
+echo "📝 查看日志: ssh root@openaero.cn 'docker compose logs -f'"
+echo "🔄 重启应用: ssh root@openaero.cn 'docker compose restart'"
