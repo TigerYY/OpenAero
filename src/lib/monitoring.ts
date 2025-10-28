@@ -84,7 +84,7 @@ export interface QualityMetric {
   threshold: number;
   passed: boolean;
   timestamp: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // 质量监控器
@@ -103,7 +103,8 @@ export class QualityMonitor {
     this.sendToMonitoringService(metric);
 
     // 如果质量指标未通过阈值，记录警告
-    if (!metric.passed) {
+    if (!metric.passed && process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.warn(`Quality metric failed: ${metric.type}`, metric);
     }
   }
@@ -118,12 +119,15 @@ export class QualityMonitor {
       overall: {
         score: 0,
         passed: 0,
-        failed: 0,
+        total: metrics.length,
+        passRate: 0,
       },
       byType: {} as Record<QualityMetricType, {
-        latest: QualityMetric | null;
-        average: number;
-        trend: 'up' | 'down' | 'stable';
+        score: number;
+        passed: number;
+        total: number;
+        passRate: number;
+        latestScore: number;
       }>,
     };
 
@@ -132,11 +136,14 @@ export class QualityMonitor {
     }
 
     // 计算总体指标
-    dashboard.overall.passed = metrics.filter(m => m.passed).length;
-    dashboard.overall.failed = metrics.length - dashboard.overall.passed;
-    dashboard.overall.score = Math.round((dashboard.overall.passed / metrics.length) * 100);
+    const totalScore = metrics.reduce((sum, m) => sum + m.score, 0);
+    const passedCount = metrics.filter(m => m.passed).length;
+    
+    dashboard.overall.score = Math.round(totalScore / metrics.length);
+    dashboard.overall.passed = passedCount;
+    dashboard.overall.passRate = Math.round((passedCount / metrics.length) * 100);
 
-    // 按类型分组
+    // 按类型分组统计
     const typeGroups = metrics.reduce((groups, metric) => {
       if (!groups[metric.type]) {
         groups[metric.type] = [];
@@ -145,49 +152,36 @@ export class QualityMonitor {
       return groups;
     }, {} as Record<QualityMetricType, QualityMetric[]>);
 
-    // 计算每种类型的指标
-     Object.entries(typeGroups).forEach(([type, typeMetrics]) => {
-       const sortedMetrics = typeMetrics.sort((a, b) => b.timestamp - a.timestamp);
-       const latest = sortedMetrics[0] || null;
-       const average = typeMetrics.reduce((sum, m) => sum + m.score, 0) / typeMetrics.length;
+    Object.entries(typeGroups).forEach(([type, typeMetrics]) => {
+      const typeScore = typeMetrics.reduce((sum, m) => sum + m.score, 0);
+      const typePassed = typeMetrics.filter(m => m.passed).length;
+      const latestMetric = typeMetrics[typeMetrics.length - 1];
       
-      // 计算趋势（比较最近5个指标）
-      const recent = sortedMetrics.slice(0, 5);
-      const older = sortedMetrics.slice(5, 10);
-      let trend: 'up' | 'down' | 'stable' = 'stable';
-      
-      if (recent.length >= 3 && older.length >= 3) {
-        const recentAvg = recent.reduce((sum, m) => sum + m.score, 0) / recent.length;
-        const olderAvg = older.reduce((sum, m) => sum + m.score, 0) / older.length;
-        const diff = recentAvg - olderAvg;
-        
-        if (diff > 5) trend = 'up';
-        else if (diff < -5) trend = 'down';
+      if (latestMetric) {
+        dashboard.byType[type as QualityMetricType] = {
+          score: Math.round(typeScore / typeMetrics.length),
+          passed: typePassed,
+          total: typeMetrics.length,
+          passRate: Math.round((typePassed / typeMetrics.length) * 100),
+          latestScore: latestMetric.score,
+        };
       }
-
-      dashboard.byType[type as QualityMetricType] = {
-        latest,
-        average: Math.round(average),
-        trend,
-      };
     });
 
     return dashboard;
   }
 
   private static async sendToMonitoringService(metric: QualityMetric) {
-    try {
-      if (typeof window !== 'undefined') {
-        await fetch('/api/monitoring/quality', {
+    if (process.env.NODE_ENV === 'production' && process.env.MONITORING_ENDPOINT) {
+      try {
+        await fetch(process.env.MONITORING_ENDPOINT, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(metric),
         });
+      } catch (error) {
+        // 静默失败，避免影响主要功能
       }
-    } catch (error) {
-      console.error('Failed to send quality metric to monitoring service:', error);
     }
   }
 
@@ -201,7 +195,7 @@ export class QualityMonitor {
     const averageCoverage = (coverage.lines + coverage.functions + coverage.branches + coverage.statements) / 4;
     this.recordQualityMetric({
       type: 'coverage',
-      score: averageCoverage,
+      score: Math.round(averageCoverage),
       threshold: 80,
       passed: averageCoverage >= 80,
       timestamp: Date.now(),
@@ -209,8 +203,8 @@ export class QualityMonitor {
     });
   }
 
-  // 记录性能分数
-  static recordPerformanceScore(score: number, details?: Record<string, any>) {
+  // 记录性能评分
+  static recordPerformanceScore(score: number, details?: Record<string, unknown>) {
     this.recordQualityMetric({
       type: 'performance',
       score,
@@ -222,7 +216,7 @@ export class QualityMonitor {
   }
 
   // 记录安全审计结果
-  static recordSecurityAudit(vulnerabilities: number, details?: Record<string, any>) {
+  static recordSecurityAudit(vulnerabilities: number, details?: Record<string, unknown>) {
     const score = Math.max(0, 100 - vulnerabilities * 10);
     this.recordQualityMetric({
       type: 'security',
@@ -234,8 +228,8 @@ export class QualityMonitor {
     });
   }
 
-  // 记录可访问性分数
-  static recordAccessibilityScore(score: number, details?: Record<string, any>) {
+  // 记录可访问性评分
+  static recordAccessibilityScore(score: number, details?: Record<string, unknown>) {
     this.recordQualityMetric({
       type: 'accessibility',
       score,
@@ -246,13 +240,13 @@ export class QualityMonitor {
     });
   }
 
-  // 记录包大小
+  // 记录打包大小
   static recordBundleSize(sizeKB: number, threshold: number = 500) {
-    const score = Math.max(0, 100 - Math.max(0, sizeKB - threshold) / 10);
+    const score = Math.max(0, Math.round(100 - (sizeKB / threshold) * 100));
     this.recordQualityMetric({
       type: 'bundle-size',
-      score: Math.round(score),
-      threshold,
+      score,
+      threshold: 80,
       passed: sizeKB <= threshold,
       timestamp: Date.now(),
       details: { sizeKB, threshold },
@@ -299,10 +293,13 @@ export function initPerformanceMonitoring() {
 
 // 错误监控器
 export class ErrorMonitor {
-  static captureError(error: Error, context?: Record<string, any>) {
-    console.error('Error captured:', error, context);
-    
-    // 发送到自定义错误收集服务
+  static captureError(error: Error, context?: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Error captured:', error, context);
+    }
+
+    // 发送错误到监控服务
     if (typeof window !== 'undefined') {
       fetch('/api/errors', {
         method: 'POST',
@@ -317,19 +314,25 @@ export class ErrorMonitor {
           url: window.location.href,
           userAgent: navigator.userAgent,
         }),
-      }).catch(err => {
-        console.error('Failed to send error to monitoring service:', err);
+      }).catch(() => {
+        // 静默失败，避免影响主要功能
       });
     }
   }
 
-  static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
-    const logMethod = level === 'warning' ? 'warn' : level === 'error' ? 'error' : 'log';
-    console[logMethod]('Message captured:', message, context);
+  static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'development') {
+      const logMethod = level === 'warning' ? 'warn' : level === 'error' ? 'error' : 'log';
+      // eslint-disable-next-line no-console
+      console[logMethod]('Message captured:', message, context);
+    }
   }
 
   static setUser(user: { id: string; email?: string; name?: string }) {
-    console.log('User set:', user);
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('User set:', user);
+    }
     // 可以存储到 localStorage 或发送到分析服务
     if (typeof window !== 'undefined') {
       localStorage.setItem('monitoring_user', JSON.stringify(user));
@@ -337,14 +340,20 @@ export class ErrorMonitor {
   }
 
   static clearUser() {
-    console.log('User cleared');
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('User cleared');
+    }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('monitoring_user');
     }
   }
 
-  static addBreadcrumb(message: string, category: string, level: 'info' | 'warning' | 'error' = 'info', data?: Record<string, any>) {
-    console.log('Breadcrumb added:', { message, category, level, data });
+  static addBreadcrumb(message: string, category: string, level: 'info' | 'warning' | 'error' = 'info', data?: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Breadcrumb added:', { message, category, level, data });
+    }
   }
 }
 
@@ -370,13 +379,16 @@ export class APIMonitor {
       const duration = Date.now() - startTime;
       
       // 记录 API 调用指标
-      console.log('API call tracked:', {
-        endpoint,
-        method,
-        duration,
-        success,
-        error: error?.message,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('API call tracked:', {
+          endpoint,
+          method,
+          duration,
+          success,
+          error: error?.message,
+        });
+      }
 
       // 发送到监控服务
       if (typeof window !== 'undefined') {
@@ -393,13 +405,14 @@ export class APIMonitor {
             error: error?.message,
             timestamp: Date.now(),
           }),
-        }).catch(err => {
-          console.error('Failed to send API monitoring data:', err);
+        }).catch(() => {
+          // 静默失败，避免影响主要功能
         });
       }
 
       // 如果 API 调用时间过长，记录警告
-      if (duration > 5000) {
+      if (duration > 5000 && process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
         console.warn(`Slow API call detected: ${endpoint} took ${duration}ms`);
       }
 
@@ -419,7 +432,10 @@ export class APIMonitor {
 // 业务指标监控器
 export class BusinessMetrics {
   static trackSolutionView(solutionId: string, solutionTitle: string) {
-    console.log('Solution view tracked:', { solutionId, solutionTitle });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Solution view tracked:', { solutionId, solutionTitle });
+    }
 
     if (typeof window !== 'undefined') {
       // 发送到 Google Analytics
@@ -445,14 +461,17 @@ export class BusinessMetrics {
           solutionTitle,
           timestamp: Date.now(),
         }),
-      }).catch(error => {
-        console.error('Failed to send business metric:', error);
+      }).catch(() => {
+        // 静默失败，避免影响主要功能
       });
     }
   }
 
   static trackCreatorApplication(creatorId: string, status: 'started' | 'completed' | 'failed') {
-    console.log('Creator application tracked:', { creatorId, status });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Creator application tracked:', { creatorId, status });
+    }
 
     if (typeof window !== 'undefined') {
       // 发送到 Google Analytics
@@ -478,14 +497,17 @@ export class BusinessMetrics {
           status,
           timestamp: Date.now(),
         }),
-      }).catch(error => {
-        console.error('Failed to send business metric:', error);
+      }).catch(() => {
+        // 静默失败，避免影响主要功能
       });
     }
   }
 
-  static trackSearch(query: string, resultsCount: number, filters?: Record<string, any>) {
-    console.log('Search tracked:', { query, resultsCount, filters });
+  static trackSearch(query: string, resultsCount: number, filters?: Record<string, unknown>) {
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Search tracked:', { query, resultsCount, filters });
+    }
 
     if (typeof window !== 'undefined') {
       // 发送到 Google Analytics
@@ -514,8 +536,8 @@ export class BusinessMetrics {
           filters,
           timestamp: Date.now(),
         }),
-      }).catch(error => {
-        console.error('Failed to send business metric:', error);
+      }).catch(() => {
+        // 静默失败，避免影响主要功能
       });
     }
   }
