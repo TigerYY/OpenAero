@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/db';
+import { getStatusText } from '@/lib/solution-status-workflow';
+import { SolutionStatus } from '@/shared/types/solutions';
 
 export async function POST(request: NextRequest) {
   try {
@@ -234,6 +237,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 如果没有匹配的格式，返回错误
+    return NextResponse.json(
+      { success: false, error: '不支持的导出格式' },
+      { status: 400 }
+    );
+
   } catch (error) {
     console.error('数据导出失败:', error);
     return NextResponse.json(
@@ -282,6 +291,3 @@ function getOrderStatusText(status: string): string {
   };
   return statusMap[status] || status;
 }
-
-import { getStatusText } from '@/lib/solution-status-workflow';
-import { SolutionStatus } from '@/shared/types/solutions';

@@ -1,9 +1,10 @@
+import { z } from 'zod';
+
 import { db } from '@/lib/db';
-import { createSolutionSchema, updateSolutionSchema } from '@/lib/validations';
 import { ValidationError, NotFoundError, UnauthorizedError } from '@/lib/error-handler';
 import { isValidStatusTransition, validateSolutionCompleteness } from '@/lib/solution-status-workflow';
+import { createSolutionSchema, updateSolutionSchema } from '@/lib/validations';
 import { SolutionStatus } from '@/shared/types/solutions';
-import { z } from 'zod';
 
 export interface CreateSolutionData {
   title: string;
@@ -112,7 +113,7 @@ export class SolutionService {
     }
 
     // 如果更新了标题，需要检查是否重复
-    let updateData: any = { ...validatedData };
+    const updateData: any = { ...validatedData };
     if (validatedData.title && validatedData.title !== solution.title) {
       // 检查新标题是否已存在
       const existingSolution = await db.solution.findFirst({

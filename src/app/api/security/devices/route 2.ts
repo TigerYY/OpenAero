@@ -1,9 +1,10 @@
 // 设备管理API路由
 
 import { NextRequest, NextResponse } from 'next/server';
-import { deviceManager } from '@/lib/device-manager';
 import { getServerSession } from 'next-auth';
+
 import { authOptions } from '@/lib/auth-config';
+import { deviceManager } from '@/lib/device-manager';
 
 // 获取用户设备列表
 export async function GET(request: NextRequest) {

@@ -26,6 +26,35 @@ export interface CreatorProfile {
   };
 }
 
+// 解决方案规格类型
+export interface SolutionSpec {
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  flightTime?: number;
+  range?: number;
+  camera?: {
+    resolution: string;
+    type: string;
+  };
+  [key: string]: unknown;
+}
+
+// 物料清单类型
+export interface SolutionBom {
+  components: Array<{
+    name: string;
+    quantity: number;
+    price?: number;
+    supplier?: string;
+  }>;
+  totalCost?: number;
+  [key: string]: unknown;
+}
+
 // 解决方案相关类型
 export interface Solution {
   id: string;
@@ -37,8 +66,8 @@ export interface Solution {
   price: number;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'ARCHIVED';
   images: string[];
-  specs?: Record<string, any>;
-  bom?: Record<string, any>;
+  specs?: SolutionSpec;
+  bom?: SolutionBom;
   creatorId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -90,7 +119,7 @@ export interface Review {
 }
 
 // API响应类型
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -120,8 +149,8 @@ export interface SolutionForm {
   category: string;
   price: number;
   features: string[];
-  specs: Record<string, any>;
-  bom: Record<string, any>;
+  specs: SolutionSpec;
+  bom: SolutionBom;
 }
 
 // 搜索相关类型

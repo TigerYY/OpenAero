@@ -1,7 +1,8 @@
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+
 import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { prisma } from '@/lib/db';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,13 +89,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建支付交易记录
+    const externalId = `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const paymentTransaction = await prisma.paymentTransaction.create({
       data: {
         orderId,
         amount,
-        method,
+        paymentMethod: method,
+        paymentProvider: method === PaymentMethod.ALIPAY ? 'alipay' : method === PaymentMethod.WECHAT_PAY ? 'wechat' : 'bank_transfer',
         status: PaymentStatus.PENDING,
-        transactionId: `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        externalId,
         metadata: {
           returnUrl,
           userAgent: request.headers.get('user-agent'),
@@ -104,27 +107,27 @@ export async function POST(request: NextRequest) {
     });
 
     // 根据支付方式生成支付链接或二维码
-    let paymentData: any = {
-      transactionId: paymentTransaction.transactionId,
+    const paymentData: any = {
+      transactionId: paymentTransaction.externalId,
       amount: paymentTransaction.amount,
-      method: paymentTransaction.method,
+      method: paymentTransaction.paymentMethod,
       status: paymentTransaction.status,
     };
 
     switch (method) {
       case PaymentMethod.ALIPAY:
         // 这里应该调用支付宝API生成支付链接
-        paymentData.paymentUrl = `https://openapi.alipay.com/gateway.do?app_id=your_app_id&method=alipay.trade.page.pay&charset=UTF-8&sign_type=RSA2&timestamp=${new Date().toISOString()}&version=1.0&notify_url=your_notify_url&return_url=${returnUrl}&biz_content={"out_trade_no":"${paymentTransaction.transactionId}","product_code":"FAST_INSTANT_TRADE_PAY","total_amount":"${amount}","subject":"OpenAero订单支付"}`;
+        paymentData.paymentUrl = `https://openapi.alipay.com/gateway.do?app_id=your_app_id&method=alipay.trade.page.pay&charset=UTF-8&sign_type=RSA2&timestamp=${new Date().toISOString()}&version=1.0&notify_url=your_notify_url&return_url=${returnUrl}&biz_content={"out_trade_no":"${paymentTransaction.externalId}","product_code":"FAST_INSTANT_TRADE_PAY","total_amount":"${amount}","subject":"OpenAero订单支付"}`;
         break;
       
-      case PaymentMethod.WECHAT:
+      case PaymentMethod.WECHAT_PAY:
         // 这里应该调用微信支付API生成支付二维码
-        paymentData.qrCode = `weixin://wxpay/bizpayurl?pr=${paymentTransaction.transactionId}`;
+        paymentData.qrCode = `weixin://wxpay/bizpayurl?pr=${paymentTransaction.externalId}`;
         break;
       
-      case PaymentMethod.BANK_CARD:
+      case PaymentMethod.BANK_TRANSFER:
         // 银行卡支付通常需要跳转到银行页面
-        paymentData.paymentUrl = `/payment/bank-card/${paymentTransaction.transactionId}`;
+        paymentData.paymentUrl = `/payment/bank-card/${paymentTransaction.externalId}`;
         break;
       
       default:
@@ -181,7 +184,7 @@ export async function GET(request: NextRequest) {
     };
 
     if (status && Object.values(PaymentStatus).includes(status as PaymentStatus)) {
-      where.status = status;
+      where.status = status as PaymentStatus;
     }
 
     if (orderId) {

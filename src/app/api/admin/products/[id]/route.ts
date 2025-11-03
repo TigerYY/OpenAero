@@ -1,9 +1,10 @@
+import { ProductStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
-import { z } from 'zod';
-import { ProductStatus } from '@prisma/client';
 
 // 更新商品的验证模式
 const updateProductSchema = z.object({
@@ -91,7 +92,7 @@ export async function GET(
           select: {
             id: true,
             rating: true,
-            comment: true,
+            content: true,
             createdAt: true,
             user: {
               select: {

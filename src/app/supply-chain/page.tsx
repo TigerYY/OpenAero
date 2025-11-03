@@ -1,9 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { 
   Factory, 
   Package, 
@@ -16,8 +12,14 @@ import {
   Calendar,
   BarChart3
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { formatCurrency, formatDate } from '@/lib/utils';
+
 
 interface DashboardStats {
   factories: {

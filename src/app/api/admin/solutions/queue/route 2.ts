@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { ApiResponse } from '@/types';
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     const validatedParams = queueFilterSchema.parse(queryParams);
 
     // 构建查询条件
-    let whereClause: any = {};
+    const whereClause: any = {};
     
     // 状态筛选
     if (validatedParams.status !== 'all') {

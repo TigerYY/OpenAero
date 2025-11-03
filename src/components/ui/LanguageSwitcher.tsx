@@ -1,13 +1,14 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import React, { useEffect, useRef, useState } from 'react';
+
 import {
     getLanguageDisplayName,
     getLanguageFlag,
     getLanguageNativeName
 } from '@/lib/i18n-utils';
 import { LanguageSwitcherProps, Locale } from '@/types/i18n';
-import { useTranslations } from 'next-intl';
-import React, { useEffect, useRef, useState } from 'react';
 
 export function LanguageSwitcher({
   currentLocale,

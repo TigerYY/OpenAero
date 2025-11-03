@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // 图片优化配置
 interface ImageOptimizationConfig {

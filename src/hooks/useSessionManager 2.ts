@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from './useAuth';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+import { useAuth } from './useAuth';
 
 interface UseSessionManagerReturn {
   showSessionExpiredModal: boolean;

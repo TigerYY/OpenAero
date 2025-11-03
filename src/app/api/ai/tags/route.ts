@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { TagSuggestion } from '@/lib/ai';
 
 export async function POST(request: NextRequest) {

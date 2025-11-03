@@ -2,9 +2,6 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useSecurityMonitor } from '@/hooks/useSecurityMonitor';
-import { Card } from '@/components/layout/AppLayout';
 import { 
   AlertTriangle, 
   Bell, 
@@ -21,7 +18,11 @@ import {
   MapPin,
   Activity
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Card } from '@/components/layout/AppLayout';
+import { useSecurityMonitor } from '@/hooks/useSecurityMonitor';
 
 interface SecurityAlertsProps {
   showHeader?: boolean;

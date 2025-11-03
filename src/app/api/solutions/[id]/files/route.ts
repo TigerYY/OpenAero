@@ -1,9 +1,10 @@
+import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+
 import { authOptions } from '@/lib/auth-config';
-import { SolutionFileType, FileStatus } from '@prisma/client';
+import { db } from '@/lib/db';
 
 interface RouteParams {
   params: {
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         orderBy: { createdAt: 'desc' },
         include: {
           uploader: {
-            select: { id: true, name: true, email: true }
+            select: { id: true, firstName: true, lastName: true, email: true }
           }
         }
       }),

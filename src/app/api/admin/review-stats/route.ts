@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
-import { z } from 'zod';
 
 // 统计查询参数验证
 const statsQuerySchema = z.object({
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     // 计算时间范围
     const now = new Date();
     let startDate: Date;
-    let endDate: Date = new Date(query.endDate || now);
+    const endDate: Date = new Date(query.endDate || now);
 
     if (query.startDate) {
       startDate = new Date(query.startDate);
@@ -191,7 +192,9 @@ export async function GET(request: NextRequest) {
     // 按日期分组趋势数据
     const trendByDate = trendData.reduce((acc, item) => {
       const date = item.createdAt.toISOString().split('T')[0];
-      acc[date] = (acc[date] || 0) + item._count.id;
+      if (date) {
+        acc[date] = (acc[date] || 0) + (item._count?.id || 0);
+      }
       return acc;
     }, {} as Record<string, number>);
 

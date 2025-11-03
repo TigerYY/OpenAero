@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { ApiResponse } from '@/types';

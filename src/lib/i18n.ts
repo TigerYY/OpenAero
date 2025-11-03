@@ -1,6 +1,7 @@
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/types/i18n';
-import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { getRequestConfig } from 'next-intl/server';
+
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/types/i18n';
 
 // 验证语言代码是否支持
 export function isValidLocale(locale: string): locale is 'zh-CN' | 'en-US' {

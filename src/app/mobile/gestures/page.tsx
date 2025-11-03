@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import TouchGestureHandler from '@/components/TouchGestureHandler';
 
 export default function GesturesPage() {

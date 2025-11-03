@@ -1,8 +1,9 @@
 // 会话分析页面
 
 import { Metadata } from 'next';
-import { SessionAnalyticsDashboard } from '@/components/auth/SessionAnalyticsDashboard';
+
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { SessionAnalyticsDashboard } from '@/components/auth/SessionAnalyticsDashboard';
 
 export const metadata: Metadata = {
   title: '会话分析 | OpenAero',

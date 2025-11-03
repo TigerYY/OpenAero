@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { solutionService } from '@/backend/solution/solution.service';
+
 import { logUserAction } from '@/backend/auth/auth.middleware';
 import { reviewNotificationService } from '@/backend/email/review-notification.service';
+import { solutionService } from '@/backend/solution/solution.service';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
 
 // 审核请求验证模式
@@ -79,11 +80,11 @@ export async function POST(
       await reviewNotificationService.sendReviewNotification({
         solutionId: result.id,
         solutionTitle: result.title,
-        creatorEmail: result.creatorEmail,
-        creatorName: result.creatorName,
+        creatorEmail: (result as any)?.creator?.user?.email ?? (result as any)?.user?.email ?? '',
+        creatorName: `${(result as any)?.creator?.user?.firstName ?? ''} ${(result as any)?.creator?.user?.lastName ?? ''}`.trim() || (result as any)?.user?.email || '',
         reviewStatus: validatedData.action === 'approve' ? 'APPROVED' : 'REJECTED',
         reviewNotes: validatedData.notes || '',
-        reviewerName: authResult.user.name || authResult.user.email,
+        reviewerName: authResult.user.email,
         reviewedAt: new Date()
       });
     } catch (notificationError) {

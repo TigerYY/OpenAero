@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+import { logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
 import { AuthService } from '../../../../backend/auth/auth.service';
 import { PasswordResetConfirm } from '../../../../shared/types';
-import { logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
 
 const authService = new AuthService();
 

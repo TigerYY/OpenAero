@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // 模拟通知数据存储（在实际应用中应该使用数据库）
-let notifications = [
+const notifications = [
   {
     id: '1',
     type: 'info',

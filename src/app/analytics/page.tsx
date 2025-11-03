@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
+
 import AnalyticsChart from '@/components/business/AnalyticsChart';
+import { Button } from '@/components/ui/Button';
 
 interface AnalyticsData {
   overview: {

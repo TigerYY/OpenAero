@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
+
 import { performanceMonitor, PerformanceUtils } from '@/lib/performance';
 
 interface PerformanceOptimizationOptions {

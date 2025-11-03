@@ -31,11 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [ ] **标准化优先**: 项目结构遵循Node.js标准，使用相对路径和环境变量配置
-- [ ] **质量门禁**: 测试覆盖率达到90%以上，包含单元测试和集成测试
-- [ ] **国际化支持**: 所有用户界面支持多语言，中文优先策略
-- [ ] **微服务架构**: 服务独立部署、测试、扩展，使用标准化API接口
-- [ ] **可观测性**: 实现完整的监控、日志和链路追踪
+[Gates determined based on constitution file]
 
 ## Project Structure
 

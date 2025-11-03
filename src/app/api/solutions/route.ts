@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+
 import { logUserAction } from '@/backend/auth/auth.middleware';
 import { authenticateRequest } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
 import { ApiResponse } from '@/types';
 
 // GET /api/solutions - 获取方案列表
@@ -178,8 +179,8 @@ export async function POST(request: NextRequest) {
         description: validatedData.description,
         category: validatedData.category,
         price: validatedData.price,
-        features: JSON.stringify(validatedData.features || []),
-        images: JSON.stringify(validatedData.images || []),
+        features: validatedData.features || [],
+        images: validatedData.images || [],
         specs: JSON.stringify(validatedData.specs || {}),
         bom: JSON.stringify(validatedData.bom || []),
         status: 'DRAFT',

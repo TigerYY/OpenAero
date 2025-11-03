@@ -1,8 +1,9 @@
 // 安全警报页面
 
 import { Metadata } from 'next';
-import { SecurityAlerts } from '@/components/security/SecurityAlerts';
+
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { SecurityAlerts } from '@/components/security/SecurityAlerts';
 
 export const metadata: Metadata = {
   title: '安全警报 | OpenAero',

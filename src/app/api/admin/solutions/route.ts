@@ -1,14 +1,16 @@
+import { SolutionStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
-import { z } from 'zod';
 
 // 查询参数验证
 const querySchema = z.object({
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('10'),
-  status: z.enum(['pending', 'approved', 'rejected', 'all']).optional().default('all'),
+  status: z.enum(['DRAFT','PENDING_REVIEW','APPROVED','REJECTED','PUBLISHED','ARCHIVED','all']).optional().default('all'),
   category: z.string().optional(),
   search: z.string().optional(),
   sortBy: z.enum(['createdAt', 'title', 'price', 'status']).optional().default('createdAt'),
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 检查管理员权限
-    if (session.user.role !== 'admin') {
+    if (session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: '权限不足' },
         { status: 403 }
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
     const where: any = {};
     
     if (params.status !== 'all') {
-      where.status = params.status;
+      where.status = params.status as SolutionStatus;
     }
     
     if (params.category) {
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
         skip: offset,
         take: limit,
         include: {
-          creatorProfile: {
+          creator: {
             select: {
               id: true,
               bio: true,
@@ -107,20 +109,20 @@ export async function GET(request: NextRequest) {
               email: true,
             }
           },
-          solutionFiles: {
+          files: {
             select: {
               id: true,
-              fileName: true,
+              filename: true,
               fileType: true,
-              fileUrl: true,
+              url: true,
               createdAt: true,
             }
           },
           solutionReviews: {
             select: {
               id: true,
-              rating: true,
-              comment: true,
+              score: true,
+              comments: true,
               createdAt: true,
               reviewer: {
                 select: {
@@ -157,39 +159,39 @@ export async function GET(request: NextRequest) {
       submittedAt: solution.submittedAt,
       reviewedAt: solution.reviewedAt,
       reviewNotes: solution.reviewNotes,
-      creator: solution.creatorProfile ? {
-        id: solution.creatorProfile.id,
-        name: solution.creatorProfile.user ? `${solution.creatorProfile.user.firstName} ${solution.creatorProfile.user.lastName}` : '',
-        email: solution.creatorProfile.user?.email,
-        bio: solution.creatorProfile.bio,
-        website: solution.creatorProfile.website,
-        experience: solution.creatorProfile.experience,
-        specialties: solution.creatorProfile.specialties,
-        status: solution.creatorProfile.status,
+      creator: (solution as any).creator ? {
+        id: (solution as any).creator.id,
+        name: (solution as any).creator.user ? `${(solution as any).creator.user.firstName ?? ''} ${(solution as any).creator.user.lastName ?? ''}`.trim() : '',
+        email: (solution as any).creator.user?.email,
+        bio: (solution as any).creator.bio,
+        website: (solution as any).creator.website,
+        experience: (solution as any).creator.experience,
+        specialties: (solution as any).creator.specialties,
+        status: (solution as any).creator.status,
       } : null,
-      user: solution.user ? {
-        id: solution.user.id,
-        name: `${solution.user.firstName} ${solution.user.lastName}`,
-        email: solution.user.email,
+      user: (solution as any).user ? {
+        id: (solution as any).user.id,
+        name: `${(solution as any).user.firstName ?? ''} ${(solution as any).user.lastName ?? ''}`.trim(),
+        email: (solution as any).user.email,
       } : null,
-      files: solution.solutionFiles?.map(file => ({
+      files: (solution as any).files?.map((file: any) => ({
         id: file.id,
-        fileName: file.fileName,
+        fileName: file.filename,
         fileType: file.fileType,
-        fileUrl: file.fileUrl,
+        fileUrl: file.url,
         createdAt: file.createdAt,
       })) || [],
-      reviews: solution.solutionReviews?.map(review => ({
+      reviews: (solution as any).solutionReviews?.map((review: any) => ({
         id: review.id,
-        rating: review.rating,
-        comment: review.comment,
+        rating: review.score ?? null,
+        comment: review.comments ?? null,
         createdAt: review.createdAt,
         reviewer: review.reviewer ? {
-          name: `${review.reviewer.firstName} ${review.reviewer.lastName}`,
+          name: `${review.reviewer.firstName ?? ''} ${review.reviewer.lastName ?? ''}`.trim(),
           email: review.reviewer.email,
         } : null,
       })) || [],
-      reviewCount: solution._count?.solutionReviews || 0,
+      reviewCount: (solution as any)._count?.solutionReviews || 0,
     }));
 
     return NextResponse.json({

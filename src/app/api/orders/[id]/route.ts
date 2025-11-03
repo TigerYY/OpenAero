@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrderById, updateOrderStatus, cancelOrder } from '@/lib/order';
+
 import { authenticateToken } from '@/backend/auth/auth.middleware';
+import { getOrderById, updateOrderStatus, cancelOrder } from '@/lib/order';
 
 export const dynamic = 'force-dynamic';
 

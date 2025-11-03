@@ -1,8 +1,9 @@
 // 安全仪表板页面
 
 import { Metadata } from 'next';
-import { SecurityDashboard } from '@/components/security/SecurityDashboard';
+
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 
 export const metadata: Metadata = {
   title: '安全仪表板 | OpenAero',

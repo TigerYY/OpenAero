@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { getWebSocketManager, ChatMessage, UserStatus } from '@/lib/websocket';
 import { 
   MessageCircle, 
   Send, 
@@ -16,6 +14,9 @@ import {
   CheckCheck,
   Clock
 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+
+import { getWebSocketManager, ChatMessage, UserStatus } from '@/lib/websocket';
 
 interface ChatUser {
   id: string;

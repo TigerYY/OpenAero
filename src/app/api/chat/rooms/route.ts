@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { ChatMessage } from '@/lib/websocket';
 
 interface ChatUser {

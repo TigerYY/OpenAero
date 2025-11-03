@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { SolutionStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    let result: any = {};
+    const result: any = {};
 
     if (metric === 'all' || metric === 'users') {
       // 用户相关指标

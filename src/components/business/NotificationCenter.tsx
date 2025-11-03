@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { getWebSocketManager, NotificationData } from '@/lib/websocket';
 import { Bell, X, Check, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+
+import { getWebSocketManager, NotificationData } from '@/lib/websocket';
 
 interface NotificationCenterProps {
   userId?: string;

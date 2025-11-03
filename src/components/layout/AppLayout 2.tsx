@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { AuthProvider } from '@/components/providers/AuthProvider';
 import { toast } from 'sonner';
+
+import { AuthProvider } from '@/components/providers/AuthProvider';
 
 interface AppLayoutProps {
   children: React.ReactNode;

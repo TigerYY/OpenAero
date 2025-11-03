@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/db';
 
 // GET /api/factories/[id] - 获取单个工厂详情

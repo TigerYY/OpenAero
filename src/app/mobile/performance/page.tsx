@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import { MobileLazyLoader } from '@/components/mobile/LazyComponentLoader';
-import MobileOptimizedImage, { MobileImageGallery } from '@/components/mobile/MobileImageOptimizer';
 import MobileBundleAnalyzer from '@/components/mobile/MobileBundleAnalyzer';
+import MobileOptimizedImage, { MobileImageGallery } from '@/components/mobile/MobileImageOptimizer';
 
 // 懒加载的示例组件
 const LazyHeavyComponent = MobileLazyLoader.create(

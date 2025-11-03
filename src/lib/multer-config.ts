@@ -3,10 +3,11 @@
  * 用于处理文件上传的中间件配置
  */
 
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+
+import multer from 'multer';
 
 // 文件类型映射 - 使用字符串而不是枚举
 export const FILE_TYPE_MAP: Record<string, string> = {

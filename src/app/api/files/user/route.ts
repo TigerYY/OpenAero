@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fileService } from '../../../../backend/file/file.service';
+
 import { authenticateToken } from '../../../../backend/auth/auth.middleware';
+import { fileService } from '../../../../backend/file/file.service';
 
 // 获取用户文件列表
 export async function GET(request: NextRequest) {

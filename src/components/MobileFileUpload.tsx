@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, X, File, Image, Video, FileText, Camera, FolderOpen, Plus, Check, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 interface UploadedFile {
   id: string;

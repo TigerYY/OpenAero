@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FileUpload } from '@/components/ui/FileUpload';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { FileUpload } from '@/components/ui/FileUpload';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
 
 interface SolutionFormData {

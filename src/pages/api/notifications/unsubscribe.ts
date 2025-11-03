@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+
+import logger from '@/lib/logger';
 import { authenticateToken } from '../../../backend/auth/auth.middleware';
 
 interface PushSubscription {
@@ -23,12 +25,12 @@ export default async function handler(
 
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(req as any);
+    const authResult = await authenticateToken(req as unknown as NextApiRequest);
     if (authResult) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = (req as any).user;
+    const user = (req as unknown as { user: { userId: string } }).user;
     const { subscription }: UnsubscribeRequestBody = req.body;
 
     // 验证订阅数据
@@ -48,7 +50,7 @@ export default async function handler(
     */
 
     // 临时日志记录（生产环境应使用数据库）
-    console.log('Push subscription removed:', {
+    logger.info('Push subscription removed:', {
       userId: user.userId,
       endpoint: subscription.endpoint,
       removedAt: new Date().toISOString()
@@ -60,7 +62,7 @@ export default async function handler(
     });
 
   } catch (error) {
-    console.error('Unsubscribe API error:', error);
+    logger.error('Unsubscribe API error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }

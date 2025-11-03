@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import CollaborationEditor from '@/components/collaboration/CollaborationEditor';
 import { ArrowLeft, Users, Clock, Save } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
+
+import CollaborationEditor from '@/components/collaboration/CollaborationEditor';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+
 
 interface Solution {
   id: string;

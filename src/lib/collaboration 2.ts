@@ -1,6 +1,7 @@
 // 协作编辑服务
-import { getWebSocketManager } from './websocket';
 import { EventEmitter } from 'events';
+
+import { getWebSocketManager } from './websocket';
 
 export interface CollaborationUser {
   id: string;

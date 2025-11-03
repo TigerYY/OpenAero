@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { RevenueStatus } from '@prisma/client';
+
 import { authenticateToken } from '@/backend/auth/auth.middleware';
+import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
+import { RevenueService } from '@/lib/revenue.service';
 
 export const dynamic = 'force-dynamic';
 
-// 收益状态枚举
-const RevenueStatus = {
-  PENDING: 'PENDING',
-  SETTLED: 'SETTLED', 
-  WITHDRAWN: 'WITHDRAWN',
-  CANCELLED: 'CANCELLED'
-} as const;
-
-// GET /api/revenue - 获取用户收益信息
+/**
+ * GET /api/revenue - 获取创作者收益数据
+ */
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
@@ -23,37 +21,38 @@ export async function GET(request: NextRequest) {
 
     // 获取用户信息
     const user = (request as any).user;
-    const userId = user.userId;
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status');
-    const offset = (page - 1) * limit;
 
-    // 获取用户的创作者资料
+    // 检查用户是否为创作者
     const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId },
+      where: { userId: user.userId },
     });
 
     if (!creatorProfile) {
       return NextResponse.json(
-        { error: '创作者资料不存在' },
-        { status: 404 }
+        { success: false, error: '您不是创作者，无法查看收益数据' },
+        { status: 403 }
       );
     }
+
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const status = searchParams.get('status') as RevenueStatus | null;
+
+    const skip = (page - 1) * limit;
 
     // 构建查询条件
     const where: any = {
       creatorId: creatorProfile.id,
     };
 
-    if (status) {
+    if (status && Object.values(RevenueStatus).includes(status)) {
       where.status = status;
     }
 
-    // 获取收益分成记录
+    // 查询收益分成记录
     const [revenueShares, total] = await Promise.all([
-      (prisma as any).revenueShare.findMany({
+      prisma.revenueShare.findMany({
         where,
         include: {
           order: {
@@ -71,117 +70,213 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
-        skip: offset,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
         take: limit,
       }),
-      (prisma as any).revenueShare.count({ where }),
+      prisma.revenueShare.count({ where }),
     ]);
 
-    // 计算收益统计
-    const stats = await (prisma as any).revenueShare.aggregate({
-      where: { creatorId: creatorProfile.id },
-      _sum: {
-        totalAmount: true,
-        platformFee: true,
-        creatorRevenue: true,
-      },
-      _count: true,
-    });
+    // 获取收益统计
+    const stats = await getRevenueStats(creatorProfile.id);
 
-    // 按状态统计收益
-    const statusStats = await (prisma as any).revenueShare.groupBy({
-      by: ['status'],
-      where: { creatorId: creatorProfile.id },
-      _sum: {
-        creatorRevenue: true,
-      },
-      _count: true,
-    });
+    // 获取创作者收益总额
+    const creatorRevenue = Number(creatorProfile.revenue);
 
     return NextResponse.json({
       success: true,
       data: {
-        revenueShares,
+        revenueShares: revenueShares.map(rs => ({
+          id: rs.id,
+          totalAmount: Number(rs.totalAmount),
+          platformFee: Number(rs.platformFee),
+          creatorRevenue: Number(rs.creatorRevenue),
+          status: rs.status,
+          settledAt: rs.settledAt?.toISOString(),
+          withdrawnAt: rs.withdrawnAt?.toISOString(),
+          withdrawMethod: rs.withdrawMethod,
+          withdrawAccount: rs.withdrawAccount,
+          createdAt: rs.createdAt.toISOString(),
+          order: {
+            id: rs.order.id,
+            orderNumber: rs.order.orderNumber,
+            createdAt: rs.order.createdAt.toISOString(),
+          },
+          solution: {
+            id: rs.solution.id,
+            title: rs.solution.title,
+            price: Number(rs.solution.price),
+          },
+        })),
         pagination: {
           page,
           limit,
           total,
           totalPages: Math.ceil(total / limit),
         },
-        stats: {
-          totalRevenue: stats._sum.creatorRevenue || 0,
-          totalOrders: stats._count,
-          totalPlatformFee: stats._sum.platformFee || 0,
-          statusBreakdown: statusStats.reduce((acc: any, item: any) => {
-            acc[item.status] = {
-              count: item._count,
-              revenue: item._sum.creatorRevenue || 0,
-            };
-            return acc;
-          }, {} as Record<string, { count: number; revenue: number }>),
-        },
+        stats,
         profile: {
-          totalRevenue: creatorProfile.revenue,
+          totalRevenue: creatorRevenue,
         },
       },
     });
+
   } catch (error) {
-    console.error('获取收益信息失败:', error);
+    logger.error('获取收益数据失败', { error });
     return NextResponse.json(
-      { error: '获取收益信息失败' },
+      { success: false, error: '服务器内部错误' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/revenue - 创建收益分成记录（内部使用）
+/**
+ * POST /api/revenue/withdraw - 申请收益提现
+ */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { orderId, solutionId, creatorId, totalAmount } = body;
+    // 验证用户身份
+    const authResult = await authenticateToken(request);
+    if (authResult) {
+      return authResult; // 返回认证错误
+    }
 
-    if (!orderId || !solutionId || !creatorId || !totalAmount) {
+    // 获取用户信息
+    const user = (request as any).user;
+
+    // 检查用户是否为创作者
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: user.userId },
+    });
+
+    if (!creatorProfile) {
       return NextResponse.json(
-        { error: '缺少必要参数' },
+        { success: false, error: '您不是创作者，无法申请提现' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { amount, withdrawMethod, withdrawAccount } = body;
+
+    // 验证输入
+    if (!amount || !withdrawMethod || !withdrawAccount) {
+      return NextResponse.json(
+        { success: false, error: '提现金额、提现方式和提现账户不能为空' },
         { status: 400 }
       );
     }
 
-    // 计算收益分成
-    const platformFeeRate = 0.05; // 平台费率 5%
-    const creatorRevenueRate = 0.95; // 创作者收益率 95%
+    if (amount <= 0) {
+      return NextResponse.json(
+        { success: false, error: '提现金额必须大于0' },
+        { status: 400 }
+      );
+    }
 
-    const platformFee = Number(totalAmount) * platformFeeRate;
-    const creatorRevenue = Number(totalAmount) * creatorRevenueRate;
+    // 处理提现
+    const result = await RevenueService.withdrawRevenue(
+      creatorProfile.id,
+      amount,
+      withdrawMethod,
+      withdrawAccount
+    );
 
-    // 创建收益分成记录
-    const revenueShare = await (prisma as any).revenueShare.create({
-      data: {
-        orderId,
-        solutionId,
-        creatorId,
-        totalAmount: Number(totalAmount),
-        platformFee,
-        creatorRevenue,
-        status: RevenueStatus.PENDING,
-      },
-      include: {
-        order: true,
-        solution: true,
-        creator: true,
-      },
+    logger.info('收益提现申请成功', {
+      creatorId: creatorProfile.id,
+      amount: amount,
+      withdrawMethod: withdrawMethod,
+      withdrawAccount: withdrawAccount,
     });
 
     return NextResponse.json({
       success: true,
-      data: revenueShare,
+      data: {
+        withdrawalId: result,
+        amount: amount,
+        withdrawMethod: withdrawMethod,
+        withdrawAccount: withdrawAccount,
+        processedAt: new Date().toISOString(),
+      },
+      message: '提现申请已提交，将在1-3个工作日内处理',
     });
+
   } catch (error) {
-    console.error('创建收益分成记录失败:', error);
+    logger.error('收益提现申请失败', { error });
     return NextResponse.json(
-      { error: '创建收益分成记录失败' },
-      { status: 500 }
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : '提现申请失败' 
+      },
+      { status: 400 }
     );
+  }
+}
+
+/**
+ * 获取收益统计
+ */
+async function getRevenueStats(creatorId: string) {
+  try {
+    // 获取总收益
+    const totalRevenue = await prisma.revenueShare.aggregate({
+      where: { creatorId },
+      _sum: {
+        creatorRevenue: true,
+      },
+    });
+
+    // 获取总订单数
+    const totalOrders = await prisma.revenueShare.count({
+      where: { creatorId },
+    });
+
+    // 获取平台费用总额
+    const totalPlatformFee = await prisma.revenueShare.aggregate({
+      where: { creatorId },
+      _sum: {
+        platformFee: true,
+      },
+    });
+
+    // 按状态统计
+    const statusBreakdown = await prisma.revenueShare.groupBy({
+      by: ['status'],
+      where: { creatorId },
+      _count: {
+        id: true,
+      },
+      _sum: {
+        creatorRevenue: true,
+      },
+    });
+
+    // 转换为前端需要的格式
+    const statusStats: Record<string, { count: number; revenue: number }> = {};
+    statusBreakdown.forEach(item => {
+      statusStats[item.status] = {
+        count: item._count.id,
+        revenue: Number(item._sum.creatorRevenue || 0),
+      };
+    });
+
+    // 确保所有状态都有默认值
+    Object.values(RevenueStatus).forEach(status => {
+      if (!statusStats[status]) {
+        statusStats[status] = { count: 0, revenue: 0 };
+      }
+    });
+
+    return {
+      totalRevenue: Number(totalRevenue._sum.creatorRevenue || 0),
+      totalOrders,
+      totalPlatformFee: Number(totalPlatformFee._sum.platformFee || 0),
+      statusBreakdown: statusStats,
+    };
+  } catch (error) {
+    logger.error('获取收益统计失败', { creatorId, error });
+    throw error;
   }
 }

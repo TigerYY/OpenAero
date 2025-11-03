@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+
 import { authenticateToken } from '../../../backend/auth/auth.middleware';
 
 interface PushSubscription {

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+
+import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
 import { Button } from '@/components/ui/Button';
 import { FileUpload } from '@/components/ui/FileUpload';
-import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
 
 // 图标组件
 const User = () => (

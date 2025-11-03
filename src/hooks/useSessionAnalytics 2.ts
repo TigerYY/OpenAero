@@ -1,7 +1,9 @@
 // 会话分析Hook
 
 import { useState, useEffect, useCallback } from 'react';
+
 import { sessionMonitor, SessionAnalytics, SessionActivity } from '@/lib/session-monitor';
+
 import { useAuth } from './useAuth';
 
 export interface UseSessionAnalyticsReturn {

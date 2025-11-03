@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // 这里应该导入真实的数据存储，现在使用模拟数据
 // 在实际应用中，这应该是数据库操作
-let notifications = [
+const notifications = [
   {
     id: '1',
     type: 'info',

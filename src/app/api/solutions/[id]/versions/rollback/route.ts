@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+
 import { authOptions } from '@/lib/auth-config';
-import { rollbackToVersion } from '@/lib/solution-version';
 import { prisma } from '@/lib/db';
+import { rollbackToVersion } from '@/lib/solution-version';
 
 // POST /api/solutions/[id]/versions/rollback - 回滚到指定版本
 export async function POST(

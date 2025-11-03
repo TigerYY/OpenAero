@@ -1,7 +1,8 @@
 import { PrismaClient, NotificationType, NotificationPriority } from '@prisma/client';
+
+import { ReviewNotificationService } from '@/backend/email/review-notification.service';
 import { prisma } from '@/lib/db';
 import { getWebSocketManager } from '@/lib/websocket';
-import { ReviewNotificationService } from '@/backend/email/review-notification.service';
 
 export interface NotificationData {
   type: NotificationType;

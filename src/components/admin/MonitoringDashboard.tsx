@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
+
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 
 // 健康检查响应类型
 interface HealthCheckResponse {

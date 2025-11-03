@@ -1,5 +1,5 @@
-import { MainLayout } from '@/components/layout/MainLayout';
 import { MonitoringDashboard } from '@/components/admin/MonitoringDashboard';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 interface MonitoringPageProps {
   params: {

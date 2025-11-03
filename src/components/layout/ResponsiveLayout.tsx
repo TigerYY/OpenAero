@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import PWAInstaller from '@/components/PWAInstaller';
-import MobileNavigation, { MobileBottomNavigation } from './MobileNavigation';
+import React, { useState, useEffect } from 'react';
+
+
 import { MobilePerformanceProvider } from '@/components/MobilePerformanceProvider';
 import PushNotificationManager from '@/components/PushNotificationManager';
+import PWAInstaller from '@/components/PWAInstaller';
+
+import MobileNavigation, { MobileBottomNavigation } from './MobileNavigation';
 
 interface ResponsiveLayoutProps {
   children: React.ReactNode;

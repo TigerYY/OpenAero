@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { RegisterRequest } from '../../../shared/types';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import PasswordStrengthIndicator from '../../../components/PasswordStrengthIndicator';
+import { RegisterRequest } from '../../../shared/types';
 
 export default function RegisterPage() {
   const router = useRouter();

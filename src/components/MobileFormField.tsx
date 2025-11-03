@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff, AlertCircle, Check, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface MobileFormFieldProps {
   label: string;

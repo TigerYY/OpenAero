@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { OrderStatus } from '@prisma/client';
+import { NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -50,11 +51,13 @@ export async function GET() {
     const trendByDay: Record<string, { count: number; revenue: number }> = {};
     orderTrend.forEach((order: { createdAt: Date; total: any }) => {
       const date = order.createdAt.toISOString().split('T')[0];
-      if (!trendByDay[date]) {
-        trendByDay[date] = { count: 0, revenue: 0 };
+      if (date) {
+        if (!trendByDay[date]) {
+          trendByDay[date] = { count: 0, revenue: 0 };
+        }
+        trendByDay[date].count += 1;
+        trendByDay[date].revenue += parseFloat(order.total.toString());
       }
-      trendByDay[date].count += 1;
-      trendByDay[date].revenue += parseFloat(order.total.toString());
     });
 
     // 获取总收入

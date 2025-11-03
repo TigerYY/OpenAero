@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { InputSanitizer } from '../lib/security';
 
 interface PasswordStrengthIndicatorProps {

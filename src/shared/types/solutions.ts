@@ -69,7 +69,7 @@ export interface SolutionFile {
   mimeType: string;
   path: string;
   thumbnailPath?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
 }
 

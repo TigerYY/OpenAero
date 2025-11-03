@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Solution } from '@/types';
-import { formatCurrency } from '@/lib/utils';
 import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { formatCurrency } from '@/lib/utils';
 import { SolutionStatus } from '@/shared/types/solutions';
+import { Solution } from '@/types';
 
 interface SolutionCardProps {
   solution: Solution;

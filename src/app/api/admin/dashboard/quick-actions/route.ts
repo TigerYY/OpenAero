@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+
+import { logUserAction } from '@/backend/auth/auth.middleware';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { logUserAction } from '@/backend/auth/auth.middleware';
 import { ApiResponse } from '@/types';
 
 // 快速操作验证模式

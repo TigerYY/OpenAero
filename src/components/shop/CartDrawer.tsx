@@ -1,10 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useCart } from './CartProvider';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { 
   ShoppingCart, 
   Plus, 
@@ -14,7 +9,15 @@ import {
   ShoppingBag,
   ArrowRight
 } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/lib/utils';
+
+import { useCart } from './CartProvider';
 
 interface CartDrawerProps {
   children?: React.ReactNode;

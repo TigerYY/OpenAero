@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+
 import { PasswordResetRequest } from '../../../shared/types';
 
 export default function ForgotPasswordPage() {

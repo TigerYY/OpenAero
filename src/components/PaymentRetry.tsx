@@ -1,9 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { 
   AlertTriangle, 
   RefreshCw, 
@@ -14,6 +10,11 @@ import {
   Smartphone,
   Building
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 interface PaymentRetryProps {
   payment: {

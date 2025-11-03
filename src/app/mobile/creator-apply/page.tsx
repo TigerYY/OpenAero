@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+
 import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
 
 export default function MobileCreatorApplyPage() {

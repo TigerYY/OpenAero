@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Solution, SolutionStatus, SolutionCategory } from '@/shared/types/solutions';
-import { formatCurrency, formatDate } from '@/lib/utils';
 import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { Solution, SolutionStatus, SolutionCategory } from '@/shared/types/solutions';
 
 interface SolutionStats {
   total: number;

@@ -1,6 +1,7 @@
 // 数据加密 API 端点
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { dataEncryption } from '@/lib/security';
 
 // POST - 加密数据
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result: any = {};
+    const result: any = {};
 
     switch (operation) {
       case 'encrypt':

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { OrderStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     
     // 计算时间范围
     const now = new Date();
-    let startDate = new Date();
+    const startDate = new Date();
     
     switch (period) {
       case '7d':

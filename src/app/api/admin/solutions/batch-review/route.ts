@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { solutionService } from '@/backend/solution/solution.service';
+
 import { logUserAction } from '@/backend/auth/auth.middleware';
 import { reviewNotificationService } from '@/backend/email/review-notification.service';
+import { solutionService } from '@/backend/solution/solution.service';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
 
 // 批量审核请求验证模式

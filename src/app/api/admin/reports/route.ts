@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/db';
 
 interface ReportConfig {
@@ -41,7 +42,7 @@ async function generateUserReport(filters: any) {
 
   return users.map(user => ({
     id: user.id,
-    name: user.name || '未设置',
+    name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || '未设置',
     email: user.email,
     role: user.role,
     ordersCount: user._count.orders,
@@ -66,7 +67,8 @@ async function generateOrderReport(filters: any) {
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
         },
       },
       orderSolutions: true,
@@ -76,7 +78,7 @@ async function generateOrderReport(filters: any) {
   return orders.map(order => ({
     id: order.id,
     userEmail: order.user.email,
-    userName: order.user.name || '未设置',
+    userName: `${order.user.firstName ?? ''} ${order.user.lastName ?? ''}`.trim() || '未设置',
     itemsCount: order.orderSolutions.length,
     total: order.total,
     status: order.status,
@@ -100,7 +102,8 @@ async function generateSolutionReport(filters: any) {
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
         },
       },
       _count: {
@@ -118,7 +121,7 @@ async function generateSolutionReport(filters: any) {
     price: solution.price,
     status: solution.status,
     creatorEmail: solution.user.email,
-    creatorName: solution.user.name || '未设置',
+    creatorName: `${solution.user.firstName ?? ''} ${solution.user.lastName ?? ''}`.trim() || '未设置',
     reviewsCount: solution._count.reviews,
     createdAt: solution.createdAt,
   }));
@@ -139,7 +142,8 @@ async function generateReviewReport(filters: any) {
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
         },
       },
       solution: {
@@ -156,7 +160,7 @@ async function generateReviewReport(filters: any) {
     rating: review.rating,
     comment: review.comment,
     userEmail: review.user.email,
-    userName: review.user.name || '未设置',
+    userName: `${review.user.firstName ?? ''} ${review.user.lastName ?? ''}`.trim() || '未设置',
     solutionId: review.solution.id,
     solutionTitle: review.solution.title,
     createdAt: review.createdAt,
@@ -178,7 +182,8 @@ async function generateRevenueReport(filters: any) {
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -188,7 +193,7 @@ async function generateRevenueReport(filters: any) {
     id: order.id,
     orderId: order.id,
     userEmail: order.user.email,
-    userName: order.user.name || '未设置',
+    userName: `${order.user.firstName ?? ''} ${order.user.lastName ?? ''}`.trim() || '未设置',
     amount: Number(order.total),
     platformFee: Number(order.total) * 0.1, // 假设平台费用为10%
     creatorShare: Number(order.total) * 0.9, // 创作者分成90%

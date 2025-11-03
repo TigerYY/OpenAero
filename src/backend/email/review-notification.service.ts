@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+
 import { emailService } from './email.service';
 
 const prisma = new PrismaClient();

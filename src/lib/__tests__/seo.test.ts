@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
+
 import { 
   SEOManager,
   StructuredDataGenerator,

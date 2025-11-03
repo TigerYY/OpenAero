@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthContext } from '@/components/providers/AuthProvider';
+import React, { useEffect, useState } from 'react';
+
 import { LoadingSpinner } from '@/components/layout/AppLayout';
+import { useAuthContext } from '@/components/providers/AuthProvider';
 import { UserRole } from '@/lib/auth';
 
 interface AuthGuardProps {

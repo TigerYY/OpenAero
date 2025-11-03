@@ -1,8 +1,10 @@
+import { ProductStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
-import { z } from 'zod';
 
 // 创建商品的验证模式
 const createProductSchema = z.object({
@@ -29,7 +31,7 @@ const createProductSchema = z.object({
   images: z.array(z.string().url()).default([]),
   videos: z.array(z.string().url()).default([]),
   documents: z.array(z.string().url()).default([]),
-  status: z.string().default("DRAFT"),
+  status: z.nativeEnum(ProductStatus).default(ProductStatus.DRAFT),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   metaTitle: z.string().optional(),
@@ -52,7 +54,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search') || '';
     const categoryId = searchParams.get('categoryId');
-    const status = searchParams.get('status') as ProductStatus;
+    const statusParam = searchParams.get('status');
+    const status = statusParam && statusParam in ProductStatus ? (statusParam as ProductStatus) : undefined;
     const isActive = searchParams.get('isActive');
     const isFeatured = searchParams.get('isFeatured');
     const sortBy = searchParams.get('sortBy') || 'createdAt';

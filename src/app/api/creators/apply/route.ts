@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { ApiResponse } from '@/types';
 import { withErrorHandling, ConflictError } from '@/lib/error-handler';
 import { creatorApplySchema } from '@/lib/validations';
+import { ApiResponse } from '@/types';
 
 // 模拟数据存储
 const mockCreatorProfiles: any[] = [];

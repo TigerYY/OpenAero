@@ -1,9 +1,11 @@
+import crypto from 'crypto';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/db';
-import { emailService } from '@/backend/email/email.service';
+
 import { logUserAction, getClientIP } from '@/backend/auth/auth.middleware';
-import crypto from 'crypto';
+import { emailService } from '@/backend/email/email.service';
+import { db } from '@/lib/db';
 
 const resendVerificationSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),

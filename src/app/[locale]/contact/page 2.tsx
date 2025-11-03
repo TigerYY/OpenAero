@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
-import ContactForm from '@/components/forms/ContactForm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import React from 'react';
+
+import ContactForm from '@/components/forms/ContactForm';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function ContactPage() {
   const t = useTranslations();

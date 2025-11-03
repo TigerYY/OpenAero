@@ -1,6 +1,7 @@
+import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+
 import { db } from '@/lib/db';
-import { ProductStatus, ReviewDecision } from '@prisma/client';
 
 // 获取单个商品详情（公开接口）
 export async function GET(
@@ -55,7 +56,7 @@ export async function GET(
         },
         reviews: {
           where: {
-            status: ReviewDecision.APPROVED,
+            status: ReviewStatus.COMPLETED,
           },
           select: {
             id: true,
@@ -82,7 +83,7 @@ export async function GET(
           select: {
             reviews: {
               where: {
-                status: ReviewDecision.APPROVED,
+                status: ReviewStatus.COMPLETED,
               },
             },
           },

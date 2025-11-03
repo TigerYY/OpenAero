@@ -1,11 +1,13 @@
+import fs from 'fs/promises';
+import path from 'path';
+
+import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+
 import { authOptions } from '@/lib/auth-config';
-import { SolutionFileType, FileStatus } from '@prisma/client';
-import fs from 'fs/promises';
-import path from 'path';
+import { db } from '@/lib/db';
 
 // 查询参数验证
 const querySchema = z.object({
@@ -49,7 +51,7 @@ export async function GET(request: NextRequest) {
       where.solutionId = query.solutionId;
     } else {
       // 如果没有指定方案ID，只返回用户上传的文件
-      where.uploadedById = session.user.id;
+      where.uploadedBy = session.user.id;
     }
 
     // 文件类型过滤
@@ -76,8 +78,8 @@ export async function GET(request: NextRequest) {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          uploadedBy: {
-            select: { id: true, name: true, email: true }
+          uploader: {
+            select: { id: true, firstName: true, lastName: true, email: true }
           },
           solution: {
             select: { id: true, title: true }
@@ -142,7 +144,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (file.uploadedById !== session.user.id) {
+    if (file.uploadedBy !== session.user.id) {
       return NextResponse.json(
         { error: '无权修改此文件' },
         { status: 403 }
@@ -172,8 +174,8 @@ export async function PUT(request: NextRequest) {
         updatedAt: new Date()
       },
       include: {
-        uploadedBy: {
-          select: { id: true, name: true, email: true }
+        uploader: {
+          select: { id: true, firstName: true, lastName: true, email: true }
         },
         solution: {
           select: { id: true, title: true }
@@ -228,7 +230,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (file.uploadedById !== session.user.id) {
+    if (file.uploadedBy !== session.user.id) {
       return NextResponse.json(
         { error: '无权删除此文件' },
         { status: 403 }
@@ -237,7 +239,7 @@ export async function DELETE(request: NextRequest) {
 
     // 删除物理文件
     try {
-      const filePath = path.join(process.cwd(), 'uploads', file.filePath);
+      const filePath = path.join(process.cwd(), 'uploads', file.path);
       await fs.unlink(filePath);
     } catch (fsError) {
       console.warn('删除物理文件失败:', fsError);

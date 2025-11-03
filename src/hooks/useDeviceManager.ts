@@ -1,7 +1,9 @@
 // 设备管理Hook
 
 import { useState, useEffect, useCallback } from 'react';
+
 import { deviceManager, DeviceInfo, LoginAttempt } from '@/lib/device-manager';
+
 import { useAuth } from './useAuth';
 
 export interface UseDeviceManagerReturn {

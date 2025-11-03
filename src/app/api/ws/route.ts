@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
-import { WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { Socket } from 'net';
+
+import { NextRequest } from 'next/server';
+import { WebSocketServer } from 'ws';
 
 interface ExtendedSocket extends Socket {
   server: any;

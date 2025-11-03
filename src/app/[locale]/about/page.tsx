@@ -123,8 +123,8 @@ export default function AboutPage({ params: { locale } }: AboutPageProps) {
               </p>
               <div className="bg-primary-50 rounded-lg p-8">
                 <p className="text-lg text-secondary-700 italic">
-                  "我们相信技术的力量能够改变世界，而开放的合作能够加速这一进程。
-                  开元空御不仅是一个平台，更是一个连接梦想与现实的桥梁。"
+                  &ldquo;我们相信技术的力量能够改变世界，而开放的合作能够加速这一进程。
+                  开元空御不仅是一个平台，更是一个连接梦想与现实的桥梁。&rdquo;
                 </p>
                 <p className="text-secondary-600 mt-4">
                   — 开元空御创始团队

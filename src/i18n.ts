@@ -1,5 +1,6 @@
-import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { getRequestConfig } from 'next-intl/server';
+
 import { APP_CONFIG } from './config/app';
 
 // 语言文件映射

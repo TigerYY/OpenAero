@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+
 import { createLazyComponent } from '@/lib/performance';
 
 // 懒加载的组件定义（示例组件，实际使用时需要替换为真实的组件路径）

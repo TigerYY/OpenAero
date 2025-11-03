@@ -1,9 +1,11 @@
 // 安全监控 React Hook
 
 import { useState, useEffect, useCallback } from 'react';
-import { securityMonitor, SecurityEvent, SecurityAlert, RiskAssessment } from '@/lib/security-monitor';
-import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+
+import { securityMonitor, SecurityEvent, SecurityAlert, RiskAssessment } from '@/lib/security-monitor';
+
+import { useAuth } from './useAuth';
 
 export interface SecurityStats {
   totalEvents: number;

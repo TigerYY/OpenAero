@@ -1,5 +1,6 @@
+import { Order, OrderStatus, PaymentMethod, PaymentStatus, RevenueStatus, Prisma } from '@prisma/client';
+
 import { prisma } from '@/lib/db';
-import { Order, OrderStatus, PaymentMethod, PaymentStatus, RevenueStatus } from '@prisma/client';
 import { generateOrderNumber } from '@/lib/utils';
 
 export interface CreateOrderData {
@@ -18,8 +19,8 @@ export interface OrderWithDetails extends Order {
   orderSolutions: Array<{
     id: string;
     quantity: number;
-    price: number;
-    subtotal: number;
+    price: Prisma.Decimal;
+    subtotal: Prisma.Decimal;
     solution: {
       id: string;
       title: string;
@@ -29,7 +30,7 @@ export interface OrderWithDetails extends Order {
   paymentTransactions: Array<{
     id: string;
     paymentMethod: PaymentMethod;
-    amount: number;
+    amount: Prisma.Decimal;
     status: PaymentStatus;
     createdAt: Date;
   }>;
@@ -223,8 +224,8 @@ export async function createRevenueShares(orderId: string): Promise<void> {
   // 为每个订单项创建收益分成记录
   const revenueShares = order.orderSolutions.map((item: any) => {
     const totalAmount = Number(item.subtotal);
-    const platformFee = totalAmount * 0.05; // 平台费用 5%
-    const creatorRevenue = totalAmount * 0.95; // 创作者收益 95%
+    const platformFee = totalAmount * 0.5; // 平台费用 50%
+    const creatorRevenue = totalAmount * 0.5; // 创作者收益 50%
 
     return {
       orderId,

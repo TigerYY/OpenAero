@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import EnhancedMobileNavigation from '@/components/layout/EnhancedMobileNavigation';
+
 import EnhancedMobileBottomNavigation from '@/components/layout/EnhancedMobileBottomNavigation';
+import EnhancedMobileNavigation from '@/components/layout/EnhancedMobileNavigation';
 
 export default function NavigationDemoPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

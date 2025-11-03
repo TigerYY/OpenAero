@@ -1,5 +1,11 @@
+import { existsSync } from 'fs';
+import { writeFile, mkdir } from 'fs/promises';
+import path, { join } from 'path';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { 
@@ -8,11 +14,7 @@ import {
   calculateChecksum, 
   getFileType
 } from '@/lib/multer-config';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
-import { z } from 'zod';
-import { join } from 'path';
+
 
 // 格式化文件大小的辅助函数
 function formatFileSize(bytes: number): string {

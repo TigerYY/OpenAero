@@ -3,9 +3,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+
 import { useDeviceManager } from '@/hooks/useDeviceManager';
 import { DeviceInfo } from '@/lib/device-manager';
-import { toast } from 'sonner';
 
 interface DeviceManagementProps {
   className?: string;

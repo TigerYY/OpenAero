@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import JSZip from 'jszip';
-import path from 'path';
 import fs from 'fs/promises';
+import path from 'path';
+
+import JSZip from 'jszip';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/db';
 
 // GET /api/sample-orders/[id]/export - 导出试产订单文件
 export async function GET(

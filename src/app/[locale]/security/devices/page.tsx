@@ -1,8 +1,9 @@
 // 设备管理页面
 
 import { Metadata } from 'next';
-import { DeviceManagement } from '@/components/auth/DeviceManagement';
+
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { DeviceManagement } from '@/components/auth/DeviceManagement';
 
 export const metadata: Metadata = {
   title: '设备管理 | OpenAero',

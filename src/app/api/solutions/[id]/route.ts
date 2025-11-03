@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+
 import { authenticateToken, logUserAction } from '@/backend/auth/auth.middleware';
-import { ApiResponse } from '@/types';
 import { solutionService } from '@/backend/solution/solution.service';
+import { db } from '@/lib/db';
 import { updateSolutionSchema } from '@/lib/validations';
+import { ApiResponse } from '@/types';
 
 interface RouteParams {
   params: {
@@ -24,18 +25,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 avatar: true
               }
             }
           }
         },
         files: true,
-        reviews: {
+        solutionReviews: {
           include: {
             reviewer: {
               select: {
-                name: true
+                firstName: true,
+                lastName: true
               }
             }
           },
@@ -43,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         },
         _count: {
           select: {
-            reviews: true,
+            solutionReviews: true,
             orders: true
           }
         }
@@ -59,36 +62,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(response, { status: 404 });
     }
 
-    // 增加浏览次数
-    await db.solution.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } }
-    });
-
     const response: ApiResponse<any> = {
       success: true,
       data: {
         id: solution.id,
         title: solution.title,
         description: solution.description,
-        longDescription: solution.longDescription,
         category: solution.category,
         status: solution.status,
-        price: solution.price,
+        price: Number(solution.price),
         version: solution.version,
         tags: solution.features || [],
         images: solution.images || [],
         createdAt: solution.createdAt,
         updatedAt: solution.updatedAt,
         creatorId: solution.creatorId,
-        creatorName: solution.creator?.user?.name || 'Unknown',
-        reviewCount: solution._count.reviews,
-        downloadCount: solution._count.orders,
-        viewCount: solution.viewCount,
+        creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
+        reviewCount: (solution as any)._count?.solutionReviews || 0,
+        downloadCount: (solution as any)._count?.orders || 0,
         specs: solution.specs || {},
         bom: solution.bom || [],
         files: solution.files || [],
-        reviews: solution.reviews || []
+        reviews: (solution as any).solutionReviews || []
       }
     };
 
@@ -152,7 +147,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         createdAt: solution.createdAt,
         updatedAt: solution.updatedAt,
         creatorId: solution.creatorId,
-        creatorName: solution.creator?.user?.name || 'Unknown',
+        creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
         specs: solution.specs || {},
         bom: solution.bom || []
       }

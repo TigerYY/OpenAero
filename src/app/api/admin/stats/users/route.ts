@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -98,7 +99,8 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
         emailVerified: true,
@@ -110,7 +112,8 @@ export async function GET(request: NextRequest) {
     const userActivity = await prisma.user.findMany({
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         createdAt: true,
         _count: {
@@ -147,7 +150,7 @@ export async function GET(request: NextRequest) {
         },
         recentUsers: recentUsers.map(user => ({
           id: user.id,
-          name: user.name || '未设置',
+          name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || '未设置',
           email: user.email,
           role: user.role,
           emailVerified: user.emailVerified,
@@ -155,7 +158,7 @@ export async function GET(request: NextRequest) {
         })),
         userActivity: userActivity.map(user => ({
           id: user.id,
-          name: user.name || '未设置',
+          name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || '未设置',
           email: user.email,
           createdAt: user.createdAt,
           solutionsCount: user._count?.solutions || 0,

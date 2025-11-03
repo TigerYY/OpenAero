@@ -2,9 +2,6 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useSecurityDashboard } from '@/hooks/useSecurityMonitor';
-import { Card, LoadingSpinner } from '@/components/layout/AppLayout';
 import { 
   Shield, 
   AlertTriangle, 
@@ -19,7 +16,11 @@ import {
   Info,
   RefreshCw
 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
+
+import { Card, LoadingSpinner } from '@/components/layout/AppLayout';
+import { useSecurityDashboard } from '@/hooks/useSecurityMonitor';
 
 export function SecurityDashboard() {
   const {

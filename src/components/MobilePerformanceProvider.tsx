@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+
 import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 
 interface PerformanceContextType {

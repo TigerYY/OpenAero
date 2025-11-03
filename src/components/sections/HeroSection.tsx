@@ -1,9 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+
+import { Button } from '@/components/ui/Button';
 
 export function HeroSection() {
   const t = useTranslations('hero');

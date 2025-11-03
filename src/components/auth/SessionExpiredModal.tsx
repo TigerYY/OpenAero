@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { AlertTriangle, RefreshCw, LogIn } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface SessionExpiredModalProps {
   isOpen: boolean;

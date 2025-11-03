@@ -1,33 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl';
-import Link from 'next/link';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
 import { 
   Search, 
   ShoppingCart, 
   Star, 
   TrendingUp, 
-  Eye, 
-  Filter,
+  Eye,
   Grid,
   List,
   Heart,
   SlidersHorizontal,
-  ArrowUpDown,
-  ChevronDown,
   RefreshCw,
   Package,
   X
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import logger from '@/lib/logger';
+
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { formatCurrency } from '@/lib/utils';
 
 interface Product {
   id: string;
@@ -120,7 +119,7 @@ export default function ProductsPage() {
       setTotalPages(data.pagination.pages);
       setTotalProducts(data.pagination.total);
     } catch (error) {
-      console.error('获取商品列表失败:', error);
+      logger.error('获取商品列表失败:', error);
       toast.error('获取商品列表失败');
     } finally {
       setLoading(false);
@@ -136,7 +135,7 @@ export default function ProductsPage() {
       const data = await response.json();
       setCategories(data.categories);
     } catch (error) {
-      console.error('获取分类失败:', error);
+      logger.error('获取分类失败:', error);
       toast.error('获取分类失败');
     }
   };

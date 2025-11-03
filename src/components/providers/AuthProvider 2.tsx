@@ -1,9 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useEffect } from 'react';
+
+import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionManager } from '@/hooks/useSessionManager';
-import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import { User, AuthSession } from '@/lib/auth';
 
 interface AuthContextType {

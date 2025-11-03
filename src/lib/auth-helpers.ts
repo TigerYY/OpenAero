@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { ApiResponse } from '@/types';
 

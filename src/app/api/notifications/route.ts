@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { notificationService } from '@/backend/notification/notification.service';
 import { z } from 'zod';
+
+import { notificationService } from '@/backend/notification/notification.service';
+import { authOptions } from '@/lib/auth-config';
 
 // 获取用户通知列表
 export async function GET(request: NextRequest) {

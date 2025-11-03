@@ -1,7 +1,9 @@
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
+
 import { ClientLanguageSwitcher } from './ClientLanguageSwitcher';
 import { ClientMobileMenu } from './ClientMobileMenu';
 

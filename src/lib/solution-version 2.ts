@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/db';
 import { Solution, SolutionVersion } from '@prisma/client';
+
+import { prisma } from '@/lib/db';
 
 export interface CreateVersionData {
   solutionId: string;

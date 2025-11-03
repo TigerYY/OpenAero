@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { PasswordResetConfirm } from '../../../shared/types';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+
 import PasswordStrengthIndicator from '../../../components/PasswordStrengthIndicator';
+import { PasswordResetConfirm } from '../../../shared/types';
 
 function ResetPasswordContent() {
   const router = useRouter();

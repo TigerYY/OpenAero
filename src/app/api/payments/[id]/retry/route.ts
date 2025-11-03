@@ -1,7 +1,8 @@
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+
 import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { prisma } from '@/lib/db';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +112,7 @@ export async function POST(
     });
 
     // 根据支付方式生成支付数据
-    let paymentData: any = {
+    const paymentData: any = {
       paymentId: newPayment.id,
       amount: newPayment.amount,
       method: newPayment.paymentMethod,

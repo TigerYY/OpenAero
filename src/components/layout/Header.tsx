@@ -1,16 +1,19 @@
 'use client';
 
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+
+import { SecurityAlertNotification } from '@/components/security/SecurityAlerts';
+import { CartButton } from '@/components/shop/CartButton';
 import { Button } from '@/components/ui/Button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
-import { CartButton } from '@/components/shop/CartButton';
-import { SecurityAlertNotification } from '@/components/security/SecurityAlerts';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
-import { useLocale, useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+
+
 import { MobileMenu } from './MobileMenu';
 
 interface HeaderProps {

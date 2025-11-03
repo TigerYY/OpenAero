@@ -1,62 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PaymentMethod, PaymentStatus, OrderStatus } from '@prisma/client';
 
-export interface PaymentOrder {
-  id: string;
-  userId: string;
-  solutionId: string;
-  amount: number;
-  currency: string;
-  paymentMethod: 'alipay' | 'wechat';
-  status: 'pending' | 'paid' | 'failed' | 'cancelled';
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt: Date;
-  paymentUrl?: string;
-  transactionId?: string;
-}
+import { authenticateToken } from '@/backend/auth/auth.middleware';
+import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
-// 模拟支付宝支付URL生成
-function generateAlipayUrl(orderId: string, amount: number, subject: string): string {
-  // 在实际应用中，这里会调用支付宝SDK生成支付URL
-  const params = new URLSearchParams({
-    app_id: process.env.ALIPAY_APP_ID || 'demo_app_id',
-    method: 'alipay.trade.page.pay',
-    charset: 'utf-8',
-    sign_type: 'RSA2',
-    timestamp: new Date().toISOString(),
-    version: '1.0',
-    out_trade_no: orderId,
-    total_amount: amount.toString(),
-    subject: subject,
-    product_code: 'FAST_INSTANT_TRADE_PAY'
-  });
-  
-  return `https://openapi.alipay.com/gateway.do?${params.toString()}`;
-}
-
-// 模拟微信支付URL生成
-function generateWechatPayUrl(orderId: string, amount: number, description: string): string {
-  // 在实际应用中，这里会调用微信支付SDK生成支付URL
-  const params = new URLSearchParams({
-    appid: process.env.WECHAT_APP_ID || 'demo_app_id',
-    mch_id: process.env.WECHAT_MCH_ID || 'demo_mch_id',
-    out_trade_no: orderId,
-    total_fee: (amount * 100).toString(), // 微信支付金额以分为单位
-    body: description,
-    trade_type: 'NATIVE',
-    notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/webhook/wechat`
-  });
-  
-  return `weixin://wxpay/bizpayurl?${params.toString()}`;
-}
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // 验证用户身份
+    const authResult = await authenticateToken(request);
+    if (authResult) {
+      return authResult; // 返回认证错误
+    }
+
+    // 获取用户信息
+    const user = (request as any).user;
+
     const body = await request.json();
     const { solutionId, amount, paymentMethod, currency = 'CNY' } = body;
-
-    // TODO: 从认证中获取用户ID
-    const userId = 'user_123';
 
     // 验证输入
     if (!solutionId || !amount || !paymentMethod) {
@@ -66,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!['alipay', 'wechat'].includes(paymentMethod)) {
+    if (!Object.values(PaymentMethod).includes(paymentMethod)) {
       return NextResponse.json(
         { success: false, error: '不支持的支付方式' },
         { status: 400 }
@@ -80,51 +43,172 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 生成订单ID
-    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 验证解决方案是否存在
+    const solution = await prisma.solution.findUnique({
+      where: { id: solutionId },
+      include: {
+        creator: true,
+      },
+    });
 
-    // 创建订单
-    const order: PaymentOrder = {
-      id: orderId,
-      userId,
-      solutionId,
-      amount,
-      currency,
-      paymentMethod,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30分钟后过期
-    };
-
-    // 生成支付URL
-    const solutionTitle = `无人机解决方案 #${solutionId}`;
-    if (paymentMethod === 'alipay') {
-      order.paymentUrl = generateAlipayUrl(orderId, amount, solutionTitle);
-    } else if (paymentMethod === 'wechat') {
-      order.paymentUrl = generateWechatPayUrl(orderId, amount, solutionTitle);
+    if (!solution) {
+      return NextResponse.json(
+        { success: false, error: '解决方案不存在' },
+        { status: 404 }
+      );
     }
 
-    // TODO: 将订单保存到数据库
-    console.log('创建支付订单:', order);
+    if (solution.status !== 'APPROVED' && solution.status !== 'PUBLISHED') {
+      return NextResponse.json(
+        { success: false, error: '解决方案不可购买' },
+        { status: 400 }
+      );
+    }
+
+    // 创建订单
+    const order = await prisma.order.create({
+      data: {
+        userId: user.userId,
+        status: OrderStatus.PENDING,
+        total: amount,
+        orderSolutions: {
+          create: {
+            solutionId: solutionId,
+            quantity: 1,
+            price: amount,
+            subtotal: amount,
+          },
+        },
+      },
+      include: {
+        orderSolutions: {
+          include: {
+            solution: {
+              include: {
+                creator: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 创建支付交易记录
+    const externalId = `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const paymentTransaction = await prisma.paymentTransaction.create({
+      data: {
+        orderId: order.id,
+        amount: amount,
+        paymentMethod: paymentMethod,
+        paymentProvider: paymentMethod === PaymentMethod.ALIPAY ? 'alipay' : 
+                        paymentMethod === PaymentMethod.WECHAT_PAY ? 'wechat' : 
+                        paymentMethod === PaymentMethod.CREDIT_CARD ? 'stripe' : 'bank_transfer',
+        status: PaymentStatus.PENDING,
+        externalId,
+        metadata: {
+          userAgent: request.headers.get('user-agent'),
+          ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+        },
+      },
+    });
+
+    // 创建支付事件记录
+    await prisma.paymentEvent.create({
+      data: {
+        paymentId: paymentTransaction.id,
+        eventType: 'CREATED',
+        eventData: {
+          orderId: order.id,
+          amount: amount,
+          paymentMethod: paymentMethod,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+        userAgent: request.headers.get('user-agent'),
+      },
+    });
+
+    // 生成支付URL
+    let paymentUrl = '';
+    const solutionTitle = `OpenAero - ${solution.title}`;
+    
+    switch (paymentMethod) {
+      case PaymentMethod.ALIPAY:
+        paymentUrl = generateAlipayUrl(paymentTransaction.externalId, amount, solutionTitle);
+        break;
+      case PaymentMethod.WECHAT_PAY:
+        paymentUrl = generateWechatPayUrl(paymentTransaction.externalId, amount, solutionTitle);
+        break;
+      case PaymentMethod.CREDIT_CARD:
+        paymentUrl = `/payment/card/${paymentTransaction.externalId}`;
+        break;
+      case PaymentMethod.BANK_TRANSFER:
+        paymentUrl = `/payment/bank/${paymentTransaction.externalId}`;
+        break;
+      default:
+        paymentUrl = `/payment/redirect/${paymentTransaction.externalId}`;
+    }
+
+    logger.info('支付订单创建成功', {
+      orderId: order.id,
+      paymentId: paymentTransaction.id,
+      userId: user.userId,
+      amount: amount,
+      paymentMethod: paymentMethod,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
         orderId: order.id,
-        paymentUrl: order.paymentUrl,
-        amount: order.amount,
-        currency: order.currency,
-        expiresAt: order.expiresAt,
-        status: order.status
+        paymentId: paymentTransaction.id,
+        paymentUrl: paymentUrl,
+        amount: amount,
+        currency: currency,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30分钟后过期
+        status: paymentTransaction.status
       }
     });
 
   } catch (error) {
-    console.error('创建支付订单失败:', error);
+    logger.error('创建支付订单失败', { error });
     return NextResponse.json(
       { success: false, error: '服务器内部错误' },
       { status: 500 }
     );
   }
+}
+
+// 支付宝支付URL生成
+function generateAlipayUrl(orderId: string, amount: number, subject: string): string {
+  const params = new URLSearchParams({
+    app_id: process.env.ALIPAY_APP_ID || 'demo_app_id',
+    method: 'alipay.trade.page.pay',
+    charset: 'utf-8',
+    sign_type: 'RSA2',
+    timestamp: new Date().toISOString(),
+    version: '1.0',
+    out_trade_no: orderId,
+    total_amount: amount.toString(),
+    subject: subject,
+    product_code: 'FAST_INSTANT_TRADE_PAY',
+    notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/webhook/alipay`,
+    return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/orders/success`
+  });
+  
+  return `https://openapi.alipay.com/gateway.do?${params.toString()}`;
+}
+
+// 微信支付URL生成
+function generateWechatPayUrl(orderId: string, amount: number, description: string): string {
+  const params = new URLSearchParams({
+    appid: process.env.WECHAT_APP_ID || 'demo_app_id',
+    mch_id: process.env.WECHAT_MCH_ID || 'demo_mch_id',
+    out_trade_no: orderId,
+    total_fee: (amount * 100).toString(), // 微信支付金额以分为单位
+    body: description,
+    trade_type: 'NATIVE',
+    notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/webhook/wechat`
+  });
+  
+  return `weixin://wxpay/bizpayurl?${params.toString()}`;
 }

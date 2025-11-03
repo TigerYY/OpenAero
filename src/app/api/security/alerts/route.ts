@@ -1,9 +1,10 @@
 // 安全警报API路由
 
 import { NextRequest, NextResponse } from 'next/server';
-import { securityMonitor } from '@/lib/security-monitor';
 import { getServerSession } from 'next-auth';
+
 import { authOptions } from '@/lib/auth-config';
+import { securityMonitor } from '@/lib/security-monitor';
 
 // 获取安全警报
 export async function GET(request: NextRequest) {

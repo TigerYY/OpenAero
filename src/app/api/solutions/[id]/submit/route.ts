@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+import { logUserAction } from '@/backend/auth/auth.middleware';
 import { solutionService } from '@/backend/solution/solution.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { logUserAction } from '@/backend/auth/auth.middleware';
 import { ApiResponse } from '@/types';
 
 // POST /api/solutions/[id]/submit - 提交方案审核

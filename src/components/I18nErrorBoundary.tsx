@@ -1,7 +1,8 @@
 'use client';
 
-import { Locale } from '@/types/i18n';
 import React, { Component, ReactNode } from 'react';
+
+import { Locale } from '@/types/i18n';
 
 // 错误边界状态接口
 interface I18nErrorBoundaryState {

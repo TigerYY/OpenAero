@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { fileService } from '../../../../backend/file/file.service';
-import { authenticateToken } from '../../../../backend/auth/auth.middleware';
 import fs from 'fs/promises';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+import { authenticateToken } from '../../../../backend/auth/auth.middleware';
+import { fileService } from '../../../../backend/file/file.service';
 
 // 获取文件信息
 export async function GET(

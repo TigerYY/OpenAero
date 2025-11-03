@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { ProductStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { db } from '@/lib/db';
 
 // 获取商品列表（公开接口）
 export async function GET(request: NextRequest) {

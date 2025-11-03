@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { getCollaborationManager, CollaborationUser, CollaborationOperation } from '@/lib/collaboration';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { getCollaborationManager, CollaborationUser, CollaborationOperation } from '@/lib/collaboration';
 
 
 // Simple Avatar component

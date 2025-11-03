@@ -1,6 +1,7 @@
 // 输入验证 API 端点
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { InputSanitizer } from '@/lib/security';
 
 // POST - 验证和清理输入
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const inputStr = String(input);
-    let result: any = {
+    const result: any = {
       original: inputStr,
       sanitized: inputStr,
       isValid: true,

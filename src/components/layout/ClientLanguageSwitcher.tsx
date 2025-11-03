@@ -1,10 +1,11 @@
 'use client';
 
+import { usePathname, useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
+
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
-import { useLocale } from 'next-intl';
-import { usePathname, useRouter } from 'next/navigation';
 
 interface ClientLanguageSwitcherProps {
   currentLocale: string;

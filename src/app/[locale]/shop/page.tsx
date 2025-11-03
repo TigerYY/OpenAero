@@ -1,13 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
 import { 
   Search, 
   ShoppingCart, 
@@ -27,8 +19,17 @@ import {
   Shield,
   RefreshCw
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { formatCurrency } from '@/lib/utils';
 
 interface Product {
   id: string;

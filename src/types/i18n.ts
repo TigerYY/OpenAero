@@ -8,7 +8,7 @@ export const SUPPORTED_LOCALES: Locale[] = ['zh-CN', 'en-US'];
 export const DEFAULT_LOCALE: Locale = 'zh-CN';
 
 // 翻译消息类型
-export type Messages = Record<string, any>;
+export type Messages = Record<string, string | Record<string, string>>;
 
 // 语言配置类型
 export interface LanguageConfig {

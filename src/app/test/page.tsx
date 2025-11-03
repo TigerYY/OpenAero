@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileUpload } from '@/components/ui/FileUpload';
-import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 export default function TestPage() {

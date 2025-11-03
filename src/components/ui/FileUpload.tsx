@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Button } from './Button';
+
 import { 
   uploadFileWithProgress, 
   validateFile, 
@@ -14,6 +14,8 @@ import {
   UploadOptions,
   UploadResult 
 } from '@/lib/file-upload';
+
+import { Button } from './Button';
 
 interface FileUploadProps {
   onUpload?: (results: UploadResult[]) => void;

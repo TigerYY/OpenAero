@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { SolutionStatus } from '@prisma/client';
+import { NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -52,7 +53,9 @@ export async function GET() {
     const trendByDay: Record<string, number> = {};
     creationTrend.forEach((solution: { createdAt: Date }) => {
       const date = solution.createdAt.toISOString().split('T')[0];
-      trendByDay[date] = (trendByDay[date] || 0) + 1;
+      if (date) {
+        trendByDay[date] = (trendByDay[date] || 0) + 1;
+      }
     });
 
     // 获取最受欢迎的方案（按订单数排序）
@@ -61,7 +64,9 @@ export async function GET() {
         id: true,
         title: true,
         _count: {
-          orders: true
+          select: {
+            orders: true
+          }
         }
       },
       orderBy: {
@@ -119,12 +124,12 @@ export async function GET() {
           date,
           count
         })),
-        popularSolutions: popularSolutions.map((solution: { id: string; title: string; _count: { orders?: number } }) => {
-          const orderCount = solution._count?.orders;
+        popularSolutions: popularSolutions.map((solution: any) => {
+          const orderCount = solution._count?.orders || 0;
           return {
             id: solution.id,
             title: solution.title,
-            orderCount: orderCount || 0
+            orderCount
           };
         }),
         recentSolutions: recentSolutions.map((solution: { 

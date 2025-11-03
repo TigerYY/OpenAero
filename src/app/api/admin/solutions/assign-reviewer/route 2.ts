@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { solutionService } from '@/backend/solution/solution.service';
+
 import { logUserAction } from '@/backend/auth/auth.middleware';
+import { solutionService } from '@/backend/solution/solution.service';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
 
 // 分配审核员请求验证模式

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useCart } from './CartProvider';
-import { CartDrawer } from './CartDrawer';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+
+import { CartDrawer } from './CartDrawer';
+import { useCart } from './CartProvider';
 
 interface CartButtonProps {
   variant?: 'default' | 'outline' | 'ghost';

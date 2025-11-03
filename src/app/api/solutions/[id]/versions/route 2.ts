@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+
 import { authOptions } from '@/lib/auth-config';
+import { prisma } from '@/lib/db';
 import { 
   getSolutionVersionHistory, 
   createSolutionVersion, 
   compareVersions,
   rollbackToVersion 
 } from '@/lib/solution-version';
-import { prisma } from '@/lib/db';
 
 // GET /api/solutions/[id]/versions - 获取版本历史
 export async function GET(

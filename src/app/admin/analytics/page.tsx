@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import Progress from '@/components/ui/Progress';
 import { 
   Users, 
   FileText, 
@@ -20,7 +14,15 @@ import {
   PieChart,
   Activity
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import Progress from '@/components/ui/Progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+
 
 interface StatsOverview {
   users: {

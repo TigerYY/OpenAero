@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+
 import { logUserAction } from '@/backend/auth/auth.middleware';
-import { ApiResponse } from '@/types';
 import { fileService } from '@/backend/file/file.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { ApiResponse } from '@/types';
 
 // POST /api/solutions/upload - 上传方案相关文件
 export async function POST(request: NextRequest) {
