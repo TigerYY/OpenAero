@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/Button';
+import { useRouting } from '@/lib/routing';
 
 export function HeroSection() {
   const t = useTranslations('hero');
+  const { route, routes } = useRouting();
   
   return (
     <section className="relative bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-800 py-4 lg:py-8 text-white">
@@ -48,7 +50,7 @@ export function HeroSection() {
 
             <div className="flex flex-col sm:flex-row gap-4 relative z-10">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg hover:shadow-xl transition-all duration-300">
-                <Link href="/solutions">
+                <Link href={route(routes.BUSINESS.SOLUTIONS)}>
                   <span className="flex items-center gap-2">
                     {t('cta.exploreSolutions')}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { logUserAction } from '@/backend/auth/auth.middleware';
 import { fileService } from '@/backend/file/file.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // POST /api/solutions/upload - 上传方案相关文件

@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 
 import { authOptions } from '@/lib/auth-config';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 
 // 库存更新的验证模式
 const updateInventorySchema = z.object({

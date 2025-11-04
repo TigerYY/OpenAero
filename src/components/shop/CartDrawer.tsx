@@ -12,10 +12,10 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/lib/utils';
+import { useRouting } from '@/lib/routing';
 
 import { useCart } from './CartProvider';
 
@@ -27,6 +27,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
   const { state, updateQuantity, removeItem, clearCart } = useCart();
+  const { route, routes } = useRouting();
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -75,7 +76,7 @@ export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
               <h3 className="text-lg font-medium text-gray-900 mb-2">购物车是空的</h3>
               <p className="text-gray-500 mb-6">快去挑选您喜欢的商品吧！</p>
               <Button asChild onClick={onClose}>
-                <Link href="/shop/products">
+                <Link href={route(routes.BUSINESS.SHOP)}>
                   去购物
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
@@ -100,7 +101,7 @@ export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <Link 
-                              href={`/shop/products/${item.slug}`}
+                              href={route(`/shop/products/${item.slug}`)}
                               className="font-medium text-gray-900 hover:text-blue-600 line-clamp-2"
                               onClick={onClose}
                             >
@@ -187,7 +188,7 @@ export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
                       asChild
                       onClick={onClose}
                     >
-                      <Link href="/shop/products">继续购物</Link>
+                      <Link href={route(routes.BUSINESS.SHOP)}>继续购物</Link>
                     </Button>
                     
                     <Button

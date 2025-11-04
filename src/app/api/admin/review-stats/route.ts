@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 
 import { authOptions } from '@/lib/auth-config';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 
 // 统计查询参数验证
 const statsQuerySchema = z.object({

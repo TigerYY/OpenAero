@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
+import { ROUTES } from '@/lib/routing';
 
 import { ClientLanguageSwitcher } from './ClientLanguageSwitcher';
 import { ClientMobileMenu } from './ClientMobileMenu';
@@ -15,10 +16,10 @@ export async function ServerHeader({ locale }: ServerHeaderProps) {
   const t = await getTranslations({ locale });
 
   const navigation = [
-    { name: t('navigation.solutions'), href: `/${locale}/solutions` },
-    { name: t('navigation.creators'), href: `/${locale}/creators` },
+    { name: t('navigation.solutions'), href: `/${locale}${ROUTES.BUSINESS.SOLUTIONS}` },
+    { name: t('navigation.creators'), href: `/${locale}${ROUTES.BUSINESS.CREATORS_APPLY}` },
     { name: t('navigation.about'), href: `/${locale}/about` },
-    { name: t('navigation.contact'), href: `/${locale}/contact` },
+    { name: t('navigation.contact'), href: `/${locale}${ROUTES.BUSINESS.CONTACT}` },
   ];
 
   return (

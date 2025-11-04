@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useRouting } from '@/lib/routing';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -62,6 +63,7 @@ interface OrdersResponse {
 export default function OrdersPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { route, routes } = useRouting();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export default function OrdersPage() {
     if (authLoading) return;
     
     if (!isAuthenticated || !user) {
-      router.push('/auth/login');
+      router.push(route(routes.AUTH.LOGIN));
     }
   }, [isAuthenticated, user, authLoading, router]);
 
@@ -211,7 +213,7 @@ export default function OrdersPage() {
                   <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">暂无订单</h3>
                   <p className="text-gray-500 mb-6">您还没有任何订单记录</p>
-                  <Button onClick={() => router.push('/solutions')}>
+                  <Button onClick={() => router.push(route(routes.BUSINESS.SOLUTIONS))}>
                     浏览解决方案
                   </Button>
                 </div>

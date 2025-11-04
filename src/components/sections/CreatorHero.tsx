@@ -2,10 +2,13 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouting } from '@/lib/routing';
 
 import { Button } from '@/components/ui/Button';
 
 export function CreatorHero() {
+  const { route, routes } = useRouting();
+  
   return (
     <section className="relative bg-gradient-to-br from-primary-50 to-white py-20 lg:py-32">
       <div className="container">
@@ -31,10 +34,10 @@ export function CreatorHero() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" asChild>
-                <Link href="/creators/apply">立即申请</Link>
+                <Link href={route(routes.BUSINESS.CREATORS_APPLY)}>立即申请</Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link href="/creators/guide">查看指南</Link>
+                <Link href={route(routes.CREATORS.GUIDE)}>查看指南</Link>
               </Button>
             </div>
 

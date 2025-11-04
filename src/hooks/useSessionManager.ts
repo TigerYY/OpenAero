@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouting } from '@/lib/routing';
 
 import { useAuth } from './useAuth';
 
@@ -15,6 +16,7 @@ interface UseSessionManagerReturn {
 export function useSessionManager(): UseSessionManagerReturn {
   const { session, refreshToken, logout } = useAuth();
   const router = useRouter();
+  const { route, routes } = useRouting();
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
   const [autoRefreshAttempts, setAutoRefreshAttempts] = useState(0);
   const maxAutoRefreshAttempts = 3;
@@ -84,7 +86,7 @@ export function useSessionManager(): UseSessionManagerReturn {
       localStorage.setItem('redirectAfterLogin', currentPath);
     }
     
-    router.push('/auth/login');
+    router.push(route(routes.AUTH.LOGIN));
   }, [logout, router]);
 
   // 关闭会话模态框

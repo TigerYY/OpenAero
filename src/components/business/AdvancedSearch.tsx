@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouting } from '@/lib/routing';
 
 interface SearchFilters {
   query: string;
@@ -40,6 +41,7 @@ interface AdvancedSearchProps {
 export default function AdvancedSearch({ onSearch, isOpen, onClose }: AdvancedSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { route, routes } = useRouting();
   
   const [filters, setFilters] = useState<SearchFilters>({
     query: '',
@@ -159,7 +161,7 @@ export default function AdvancedSearch({ onSearch, isOpen, onClose }: AdvancedSe
       if (filters.difficulty) params.set('difficulty', filters.difficulty);
       if (filters.language) params.set('language', filters.language);
 
-      router.push(`/solutions?${params.toString()}`);
+      router.push(`${route(routes.BUSINESS.SOLUTIONS)}?${params.toString()}`);
       onSearch(filters);
       onClose();
     } catch (error) {

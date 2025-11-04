@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useRouting } from '@/lib/routing';
 
 import { Button } from '@/components/ui/Button';
 
@@ -41,6 +42,7 @@ const caseStudies = [
 
 export function CaseStudiesSection() {
   const t = useTranslations('caseStudies');
+  const { route, routes } = useRouting();
 
   return (
     <section className="py-20 bg-white">
@@ -108,7 +110,7 @@ export function CaseStudiesSection() {
                     {study.revenue}
                   </div>
                   <Button size="sm" variant="outline" asChild>
-                    <Link href={`/cases/${study.id}`}>{t('viewDetails')}</Link>
+                    <Link href={route(routes.BUSINESS.CASE_DETAIL.replace('[id]', study.id))}>{t('viewDetails')}</Link>
                   </Button>
                 </div>
               </div>
@@ -118,7 +120,7 @@ export function CaseStudiesSection() {
 
         <div className="text-center">
           <Button size="lg" asChild>
-            <Link href="/cases">{t('viewAllCases')}</Link>
+            <Link href={route(routes.BUSINESS.CASES)}>{t('viewAllCases')}</Link>
           </Button>
         </div>
       </div>

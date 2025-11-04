@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import { useRouting } from '@/lib/routing';
 
 import PaymentRetry from '@/components/PaymentRetry';
 import { Badge } from '@/components/ui/Badge';
@@ -113,6 +114,7 @@ interface OrderDetail {
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { route, routes } = useRouting();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +123,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   // 如果用户未登录，重定向到登录页
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push(route(routes.AUTH.LOGIN));
     }
   }, [status, router]);
 
@@ -137,7 +139,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         setOrder(data.data);
       } else if (response.status === 404) {
         setError('订单不存在');
-        setTimeout(() => router.push('/orders'), 2000);
+        setTimeout(() => router.push(route(routes.ORDERS.HOME)), 2000);
       } else {
         setError('获取订单详情失败，请稍后重试');
       }

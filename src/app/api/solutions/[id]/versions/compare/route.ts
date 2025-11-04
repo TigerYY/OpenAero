@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth-config';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { compareVersions } from '@/lib/solution-version';
 
 // GET /api/solutions/[id]/versions/compare?v1=1&v2=2 - 比较两个版本

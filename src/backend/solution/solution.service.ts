@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { ValidationError, NotFoundError, UnauthorizedError } from '@/lib/error-handler';
 import { isValidStatusTransition, validateSolutionCompleteness } from '@/lib/solution-status-workflow';
 import { createSolutionSchema, updateSolutionSchema } from '@/lib/validations';

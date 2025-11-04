@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import PasswordStrengthIndicator from '../../../components/PasswordStrengthIndicator';
-import { RegisterRequest } from '../../../shared/types';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import PasswordStrengthIndicator from '../../../../components/PasswordStrengthIndicator';
+import { RegisterRequest } from '../../../../shared/types';
+import { useRouting } from '@/lib/routing';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const { route, routes } = useRouting();
   const [formData, setFormData] = useState<RegisterRequest>({
     email: '',
     password: '',
@@ -52,7 +55,7 @@ export default function RegisterPage() {
 
       if (response.ok) {
         // 重定向到邮箱验证提示页面
-        router.push('/auth/verify-email-notice');
+        router.push(route(routes.AUTH.VERIFY_EMAIL_NOTICE));
       } else {
         setError(data.error || '注册失败');
       }
@@ -80,7 +83,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -226,5 +229,13 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <AuthLayout>
+      <RegisterContent />
+    </AuthLayout>
   );
 }

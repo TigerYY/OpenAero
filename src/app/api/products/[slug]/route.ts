@@ -1,7 +1,7 @@
 import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 
 // 获取单个商品详情（公开接口）
 export async function GET(

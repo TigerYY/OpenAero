@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import TouchGestureHandler from '@/components/TouchGestureHandler';
+import { useRouting } from '@/lib/routing';
 
 interface EnhancedMobileNavigationProps {
   isOpen: boolean;
@@ -20,7 +22,7 @@ interface NavigationItem {
 }
 
 export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMobileNavigationProps) {
-  const pathname = usePathname();
+  const { route, routes, isActive: isRouteActive } = useRouting();
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -69,10 +71,11 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
     };
   }, [isOpen]);
 
+  // 使用路由常量创建导航项
   const navigationItems: NavigationItem[] = [
     {
       name: '首页',
-      href: '/',
+      href: routes.BUSINESS.HOME,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -81,24 +84,24 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
     },
     {
       name: '解决方案',
-      href: '/solutions',
+      href: routes.BUSINESS.SOLUTIONS,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       ),
       submenu: [
-        { name: '浏览全部', href: '/solutions' },
-        { name: '无人机套件', href: '/solutions?category=drone-kits', badge: 'Hot' },
-        { name: '飞控系统', href: '/solutions?category=flight-control' },
-        { name: '传感器模块', href: '/solutions?category=sensors', badge: 'New' },
-        { name: '通信设备', href: '/solutions?category=communication' },
-        { name: '地面站软件', href: '/solutions?category=ground-station' }
+        { name: '浏览全部', href: routes.BUSINESS.SOLUTIONS },
+        { name: '无人机套件', href: route(routes.BUSINESS.SOLUTIONS, { category: 'drone-kits' }), badge: 'Hot' },
+        { name: '飞控系统', href: route(routes.BUSINESS.SOLUTIONS, { category: 'flight-control' }) },
+        { name: '传感器模块', href: route(routes.BUSINESS.SOLUTIONS, { category: 'sensors' }), badge: 'New' },
+        { name: '通信设备', href: route(routes.BUSINESS.SOLUTIONS, { category: 'communication' }) },
+        { name: '地面站软件', href: route(routes.BUSINESS.SOLUTIONS, { category: 'ground-station' }) }
       ]
     },
     {
       name: '供应链',
-      href: '/supply-chain',
+      href: '/supply-chain', // 注意：supply-chain路由不在ROUTES中定义
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -112,21 +115,21 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
     },
     {
       name: '创作者',
-      href: '/creators',
+      href: '/creators', // 注意：creators路由不在ROUTES中定义
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
         </svg>
       ),
       submenu: [
-        { name: '申请加入', href: '/creators/apply' },
+        { name: '申请加入', href: routes.BUSINESS.CREATORS_APPLY },
         { name: '创作者社区', href: '/creators/community' },
         { name: '资源中心', href: '/creators/resources' }
       ]
     },
     {
       name: '移动端',
-      href: '/mobile',
+      href: '/mobile', // 注意：mobile路由不在ROUTES中定义
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z" />
@@ -145,11 +148,8 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
   }, [activeSubmenu]);
 
   const isActive = useCallback((href: string) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(href);
-  }, [pathname]);
+    return isRouteActive(href);
+  }, [isRouteActive]);
 
   // 搜索过滤
   const filteredItems = navigationItems.filter(item => 
@@ -298,10 +298,10 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
                           {item.submenu.map((subItem) => (
                             <Link
                               key={subItem.href}
-                              href={subItem.href}
+                              href={route(subItem.href)}
                               onClick={onClose}
                               className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-98 ${
-                                pathname === subItem.href
+                                isActive(subItem.href)
                                   ? 'bg-blue-50 text-blue-600 font-medium shadow-sm border-l-2 border-blue-500'
                                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
                               }`}
@@ -323,7 +323,7 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
                     </>
                   ) : (
                     <Link
-                      href={item.href}
+                      href={route(item.href)}
                       onClick={onClose}
                       className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-98 ${
                         isActive(item.href)
@@ -364,7 +364,7 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
           <div className="border-t border-gray-200 p-4 bg-gray-50">
             <div className="space-y-3">
               <Link
-                href="/auth/login"
+                href={route(routes.AUTH.LOGIN)}
                 onClick={onClose}
                 className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 active:scale-98"
               >
@@ -374,7 +374,7 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
                 登录
               </Link>
               <Link
-                href="/auth/register"
+                href={route(routes.AUTH.REGISTER)}
                 onClick={onClose}
                 className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 active:scale-98 shadow-lg"
               >

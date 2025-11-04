@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouting } from '@/lib/routing';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -15,9 +16,10 @@ const sizeMap = {
 
 export function Logo({ size = 'md', showText = true, className = '' }: LogoProps) {
   const { width, height, textSize } = sizeMap[size];
+  const { route, routes } = useRouting();
 
   return (
-    <Link href="/" className={`flex items-end space-x-3 ${className}`}>
+    <Link href={route(routes.BUSINESS.HOME)} className={`flex items-end space-x-3 ${className}`}>
       <div className="relative flex-shrink-0">
         <Image
           src="/images/openaero-logo-trimmed.png"
@@ -47,7 +49,7 @@ export function LogoText({ size = 'md', className = '' }: Omit<LogoProps, 'showT
   const { textSize } = sizeMap[size];
   
   return (
-    <Link href="/" className={`font-bold text-secondary-900 ${textSize} font-sans ${className}`} style={{ fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }}>
+    <Link href={route(routes.BUSINESS.HOME)} className={`font-bold text-secondary-900 ${textSize} font-sans ${className}`} style={{ fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }}>
       开元空御
     </Link>
   );

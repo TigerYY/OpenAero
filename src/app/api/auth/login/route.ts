@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { AuthUtils } from '@/lib/auth-utils';
-import { JWTUtils } from '@/lib/session';
-
-const prisma = new PrismaClient();
+import { AuthUtils, JWTUtils } from '@/lib/auth-utils';
+import { SessionManager } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {

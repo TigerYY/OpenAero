@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { z } from 'zod';
 
 import { authOptions } from '@/lib/auth-config';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 
 interface RouteParams {
   params: {

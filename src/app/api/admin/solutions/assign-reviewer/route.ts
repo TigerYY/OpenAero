@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取可用审核员列表
-    const { db } = await import('@/lib/db');
+    const { db } = await import('@/lib/prisma');
     const reviewers = await db.user.findMany({
       where: {
         role: 'ADMIN'

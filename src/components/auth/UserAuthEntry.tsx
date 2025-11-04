@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { useLocale } from 'next-intl';
 import { useState } from 'react';
+import { useRouting } from '@/lib/routing';
 
 interface UserAuthEntryProps {
   variant?: 'desktop' | 'mobile';
@@ -10,7 +12,9 @@ interface UserAuthEntryProps {
 
 export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProps) {
   const { data: session, status } = useSession();
+  const locale = useLocale();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { route, routes } = useRouting();
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session?.user;
@@ -55,20 +59,20 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
           
           <div className="space-y-1">
             <Link
-              href="/profile"
+              href={route(routes.AUTH.PROFILE)}
               className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
               个人资料
             </Link>
             <Link
-              href="/profile/settings"
+              href={route('/profile/settings')}
               className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
               设置
             </Link>
             {session.user.role === 'CREATOR' && (
               <Link
-                href="/creators/dashboard"
+                href={route('/creators/dashboard')}
                 className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
               >
                 创作者中心
@@ -76,7 +80,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
             )}
             {session.user.role === 'ADMIN' && (
               <Link
-                href="/admin"
+                href={route('/admin')}
                 className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
               >
                 管理后台
@@ -97,13 +101,13 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
     return (
       <div className="space-y-3">
         <Link
-          href="/auth/login"
+          href={route(routes.AUTH.LOGIN)}
           className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 transition-all duration-200"
         >
           登录
         </Link>
         <Link
-          href="/auth/register"
+          href={route(routes.AUTH.REGISTER)}
           className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 shadow-sm"
         >
           注册
@@ -160,14 +164,14 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
             </div>
             
             <Link
-              href="/profile"
+              href={route(routes.AUTH.PROFILE)}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               个人资料
             </Link>
             <Link
-              href="/profile/settings"
+              href={route('/profile/settings')}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
@@ -176,7 +180,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
             
             {session.user.role === 'CREATOR' && (
               <Link
-                href="/creators/dashboard"
+                href={route('/creators/dashboard')}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -186,7 +190,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
             
             {session.user.role === 'ADMIN' && (
               <Link
-                href="/admin"
+                href={route('/admin')}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -220,13 +224,13 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
   return (
     <div className="flex items-center space-x-3">
       <Link
-        href="/auth/login"
+        href={route(routes.AUTH.LOGIN)}
         className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
       >
         登录
       </Link>
       <Link
-        href="/auth/register"
+        href={route(routes.AUTH.REGISTER)}
         className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
       >
         注册

@@ -1,6 +1,6 @@
 import { Order, OrderStatus, PaymentMethod, PaymentStatus, RevenueStatus, Prisma } from '@prisma/client';
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { generateOrderNumber } from '@/lib/utils';
 
 export interface CreateOrderData {

@@ -1,24 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { RoutingUtils } from '@/lib/routing'
 
 // 简化中间件，暂时移除认证检查以避免 openid-client 错误
 // 使用简单的会话检查而不是完整的auth()调用
-
-// 公开路由（不需要认证）
-const publicRoutes = [
-  '/auth/login',
-  '/auth/register',
-  '/auth/verify-email',
-  '/auth/forgot-password',
-  '/auth/reset-password'
-]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 暂时禁用认证检查，避免 openid-client 错误
   // 检查是否为API路由
-  if (pathname.startsWith('/api/')) {
+  if (RoutingUtils.isApiRoute(pathname)) {
     // API认证检查 - 暂时禁用
     // for (const route of apiAuthRoutes) {
     //   if (pathname.startsWith(route)) {
@@ -45,10 +37,8 @@ export async function middleware(request: NextRequest) {
   } else {
     // 页面路由认证检查 - 暂时禁用
     
-    // 检查是否为公开路由
-    const isPublicRoute = publicRoutes.some(route => 
-      pathname.startsWith(route)
-    )
+    // 检查是否为公开路由（支持国际化路径）
+    const isPublicRoute = RoutingUtils.isPublicRoute(pathname)
     
     if (isPublicRoute) {
       return NextResponse.next()

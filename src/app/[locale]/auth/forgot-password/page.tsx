@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { PasswordResetRequest } from '../../../shared/types';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { PasswordResetRequest } from '../../../../shared/types';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const [formData, setFormData] = useState<PasswordResetRequest>({
     email: ''
   });
@@ -50,7 +51,7 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
@@ -89,7 +90,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -144,5 +145,13 @@ export default function ForgotPasswordPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <AuthLayout>
+      <ForgotPasswordContent />
+    </AuthLayout>
   );
 }

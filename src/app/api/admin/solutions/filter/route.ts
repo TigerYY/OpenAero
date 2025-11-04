@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // 筛选参数验证模式

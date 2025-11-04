@@ -8,6 +8,7 @@ import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
 import { formatCurrency } from '@/lib/utils';
 import { SolutionStatus } from '@/shared/types/solutions';
 import { Solution } from '@/types';
+import { useRouting } from '@/lib/routing';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -15,6 +16,7 @@ interface SolutionCardProps {
 
 export function SolutionCard({ solution }: SolutionCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const { route } = useRouting();
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -136,7 +138,7 @@ export function SolutionCard({ solution }: SolutionCardProps) {
             {formatCurrency(solution.price)}
           </div>
           <Button asChild>
-            <Link href={`/solutions/${solution.id}`}>
+            <Link href={route(`/solutions/${solution.id}`)}>
               查看详情
             </Link>
           </Button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/factories/[id] - 获取单个工厂详情
 export async function GET(

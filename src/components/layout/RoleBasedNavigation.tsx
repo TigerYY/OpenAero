@@ -3,6 +3,8 @@
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import { useRouting } from '@/lib/routing';
 
 interface NavigationItem {
   name: string;
@@ -12,54 +14,55 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
-const navigationItems: NavigationItem[] = [
+// 导航项定义 - 使用路由常量而不是硬编码路径
+const createNavigationItems = (routes: any) => [
   // 公开菜单项（所有用户都可以访问）
   {
     name: '首页',
-    href: '/',
+    href: routes.BUSINESS.HOME,
     icon: '🏠'
   },
   {
     name: '解决方案',
-    href: '/solutions',
+    href: routes.BUSINESS.SOLUTIONS,
     icon: '💡'
   },
   {
     name: '产品商店',
-    href: '/shop',
+    href: routes.BUSINESS.SHOP,
     icon: '🛒'
   },
   {
     name: '关于我们',
-    href: '/about',
+    href: routes.BUSINESS.ABOUT,
     icon: '👥'
   },
   
   // 创作者菜单项（仅创作者可以访问）
   {
     name: '创作者中心',
-    href: '/creators',
+    href: routes.CREATORS.HOME,
     icon: '🎨',
     roles: ['CREATOR'],
     children: [
       {
         name: '仪表板',
-        href: '/creators/dashboard',
+        href: routes.CREATORS.DASHBOARD,
         icon: '📊'
       },
       {
         name: '产品管理',
-        href: '/creators/products',
+        href: routes.CREATORS.PRODUCTS,
         icon: '📦'
       },
       {
         name: '订单管理',
-        href: '/creators/orders',
+        href: routes.CREATORS.ORDERS,
         icon: '📋'
       },
       {
         name: '数据分析',
-        href: '/creators/analytics',
+        href: routes.CREATORS.ANALYTICS,
         icon: '📈'
       }
     ]
@@ -68,7 +71,7 @@ const navigationItems: NavigationItem[] = [
   // 创作者申请菜单项（仅普通用户可以访问）
   {
     name: '成为创作者',
-    href: '/creators/apply',
+    href: routes.BUSINESS.CREATORS_APPLY,
     icon: '🚀',
     roles: ['USER'] // 仅普通用户可以看到申请链接
   },
@@ -76,28 +79,28 @@ const navigationItems: NavigationItem[] = [
   // 管理员菜单项（仅管理员可以访问）
   {
     name: '管理后台',
-    href: '/admin',
+    href: routes.ADMIN.DASHBOARD,
     icon: '⚙️',
     roles: ['ADMIN'],
     children: [
       {
         name: '用户管理',
-        href: '/admin/users',
+        href: routes.ADMIN.USERS,
         icon: '👥'
       },
       {
         name: '创作者审核',
-        href: '/admin/creators',
+        href: routes.ADMIN.CREATORS,
         icon: '✅'
       },
       {
         name: '产品审核',
-        href: '/admin/products',
+        href: routes.ADMIN.SOLUTIONS,
         icon: '📦'
       },
       {
         name: '系统设置',
-        href: '/admin/settings',
+        href: routes.ADMIN.SETTINGS,
         icon: '⚙️'
       }
     ]
@@ -105,27 +108,31 @@ const navigationItems: NavigationItem[] = [
 ];
 
 // 用户菜单项（根据登录状态显示不同内容）
-const userMenuItems: NavigationItem[] = [
+const createUserMenuItems = (routes: any) => [
   {
     name: '个人资料',
-    href: '/profile',
+    href: routes.AUTH.PROFILE,
     icon: '👤'
   },
   {
     name: '我的订单',
-    href: '/orders',
+    href: routes.ORDERS.HOME,
     icon: '📋'
   },
   {
     name: '退出登录',
-    href: '/auth/logout',
+    href: routes.AUTH.LOGOUT,
     icon: '🚪'
   }
 ];
 
 export function RoleBasedNavigation() {
   const { data: session, status } = useSession();
-  const pathname = usePathname();
+  const { route, routes, isActive: isRouteActive, isExactActive } = useRouting();
+  
+  // 使用路由常量创建导航项
+  const navigationItems = createNavigationItems(routes);
+  const userMenuItems = createUserMenuItems(routes);
 
   // 检查用户是否有权限访问某个菜单项
   const hasPermission = (item: NavigationItem): boolean => {
@@ -145,14 +152,6 @@ export function RoleBasedNavigation() {
 
   // 过滤导航项，只显示用户有权限访问的
   const filteredNavigation = navigationItems.filter(hasPermission);
-
-  // 检查当前路径是否激活
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(href);
-  };
 
   if (status === 'loading') {
     return (
@@ -179,9 +178,9 @@ export function RoleBasedNavigation() {
             {filteredNavigation.map((item) => (
               <div key={item.href} className="relative group">
                 <Link
-                  href={item.href}
+                  href={route(item.href)}
                   className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive(item.href)
+                    isRouteActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                   }`}
@@ -197,9 +196,9 @@ export function RoleBasedNavigation() {
                       {item.children.map((child) => (
                         <Link
                           key={child.href}
-                          href={child.href}
+                          href={route(child.href)}
                           className={`block px-4 py-2 text-sm transition-colors ${
-                            isActive(child.href)
+                            isRouteActive(child.href)
                               ? 'text-blue-600 bg-blue-50'
                               : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                           }`}
@@ -231,9 +230,9 @@ export function RoleBasedNavigation() {
                     {userMenuItems.map((item) => (
                       <Link
                         key={item.href}
-                        href={item.href}
+                        href={route(item.href)}
                         className={`block px-4 py-2 text-sm transition-colors ${
-                          isActive(item.href)
+                          isRouteActive(item.href)
                             ? 'text-blue-600 bg-blue-50'
                             : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                         }`}
@@ -248,14 +247,14 @@ export function RoleBasedNavigation() {
             ) : (
               <div className="flex space-x-2">
                 <Link
-                  href="/auth/login"
+                  href={route(routes.AUTH.LOGIN)}
                   className="text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   登录
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link
-                  href="/auth/register"
+                  href={route(routes.AUTH.REGISTER)}
                   className="text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   注册
@@ -378,14 +377,14 @@ export function MobileRoleBasedNavigation() {
                   ) : (
                     <div className="flex space-x-4 px-3 py-2">
                       <Link
-                        href="/auth/login"
+                        href={route(routes.AUTH.LOGIN)}
                         className="text-base font-medium text-gray-700 hover:text-blue-600"
                         onClick={() => setIsOpen(false)}
                       >
                         登录
                       </Link>
                       <Link
-                        href="/auth/register"
+                        href={route(routes.AUTH.REGISTER)}
                         className="text-base font-medium text-gray-700 hover:text-blue-600"
                         onClick={() => setIsOpen(false)}
                       >

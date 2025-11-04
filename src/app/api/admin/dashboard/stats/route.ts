@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // GET /api/admin/dashboard/stats - 获取管理员仪表板统计数据

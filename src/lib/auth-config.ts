@@ -5,7 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 
 
 declare module 'next-auth' {

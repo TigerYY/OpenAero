@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { useState } from 'react';
 
-import { LoginRequest } from '../../../shared/types';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { LoginRequest } from '../../../../shared/types';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const locale = useLocale();
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: ''
@@ -52,7 +55,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -61,7 +64,7 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             或{' '}
             <Link
-              href="/auth/register"
+              href={`/${locale}/auth/register`}
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               创建新账户
@@ -113,7 +116,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <Link
-                href="/auth/forgot-password"
+                href={`/${locale}/auth/forgot-password`}
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 忘记密码？
@@ -133,5 +136,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <AuthLayout>
+      <LoginContent />
+    </AuthLayout>
   );
 }

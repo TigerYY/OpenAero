@@ -13,7 +13,7 @@ import { Logo } from '@/components/ui/Logo';
 import UserAuthEntry from '@/components/auth/UserAuthEntry';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
-
+import { useRouting } from '@/lib/routing';
 
 import { MobileMenu } from './MobileMenu';
 
@@ -29,6 +29,7 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
   const locale = propLocale || contextLocale;
   const router = useRouter();
   const pathname = usePathname();
+  const { route, routes } = useRouting();
 
   // 确保组件在客户端挂载后才渲染
   useEffect(() => {
@@ -36,11 +37,11 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
   }, []);
 
   const navigation = [
-    { name: t('navigation.solutions'), href: `/${locale}/solutions` },
-    { name: t('navigation.shop'), href: `/${locale}/shop` },
-    { name: t('navigation.creators'), href: `/${locale}/creators` },
-    { name: t('navigation.about'), href: `/${locale}/about` },
-    { name: t('navigation.contact'), href: `/${locale}/contact` },
+    { name: t('navigation.solutions'), href: route(routes.BUSINESS.SOLUTIONS) },
+    { name: t('navigation.shop'), href: route(routes.BUSINESS.SHOP) },
+    { name: t('navigation.creators'), href: route(routes.BUSINESS.CREATORS_APPLY) },
+    { name: t('navigation.about'), href: route('/about') },
+    { name: t('navigation.contact'), href: route(routes.BUSINESS.CONTACT) },
   ];
 
   const switchLanguage = (newLocale: Locale) => {
@@ -66,20 +67,20 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-secondary-200">
         <div className="container">
           <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
-          <div className="flex items-center">
-            <Logo size="md" />
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="w-16 sm:w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
-            <div className="w-12 sm:w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+            <div className="flex items-center">
+              <Logo size="md" />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 sm:w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-12 sm:w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
-  );
-}
+      </header>
+    );
+  }
 
-return (
+  return (
   <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-secondary-200" suppressHydrationWarning>
     <div className="container">
       <div className="flex items-center justify-between h-20">

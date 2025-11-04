@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { authenticateToken, logUserAction } from '@/backend/auth/auth.middleware';
 import { solutionService } from '@/backend/solution/solution.service';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { updateSolutionSchema } from '@/lib/validations';
 import { ApiResponse } from '@/types';
 

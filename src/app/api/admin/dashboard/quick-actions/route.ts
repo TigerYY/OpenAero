@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { logUserAction } from '@/backend/auth/auth.middleware';
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // 快速操作验证模式

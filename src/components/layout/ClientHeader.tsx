@@ -10,6 +10,7 @@ import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
+import { useRouting } from '@/lib/routing';
 
 import { MobileMenu } from './MobileMenu';
 
@@ -19,12 +20,13 @@ export function ClientHeader() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const { route, routes } = useRouting();
 
   const navigation = [
-    { name: t('navigation.solutions'), href: '/solutions' },
-    { name: t('navigation.creators'), href: '/creators' },
-    { name: t('navigation.about'), href: '/about' },
-    { name: t('navigation.contact'), href: '/contact' },
+    { name: t('navigation.solutions'), href: route(routes.BUSINESS.SOLUTIONS) },
+    { name: t('navigation.creators'), href: route(routes.BUSINESS.CREATORS_APPLY) },
+    { name: t('navigation.about'), href: route('/about') },
+    { name: t('navigation.contact'), href: route(routes.BUSINESS.CONTACT) },
   ];
 
   const switchLanguage = (newLocale: Locale) => {

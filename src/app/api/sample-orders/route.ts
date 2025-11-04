@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/sample-orders - 获取试产订单列表
 export async function GET(request: NextRequest) {

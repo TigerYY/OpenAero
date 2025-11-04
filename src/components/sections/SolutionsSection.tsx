@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { useRouting } from '@/lib/routing';
 
 import { Button } from '@/components/ui/Button';
 
@@ -24,6 +25,7 @@ interface Solution {
 
 export function SolutionsSection() {
   const t = useTranslations('solutions');
+  const { route, routes } = useRouting();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +223,7 @@ export function SolutionsSection() {
                       {formatPrice(solution.price)}
                     </div>
                     <Button size="sm" asChild>
-                      <Link href={`/solutions/${solution.id}`}>{t('card.viewDetails')}</Link>
+                      <Link href={route(routes.BUSINESS.SOLUTION_DETAIL.replace('[id]', solution.id))}>{t('card.viewDetails')}</Link>
                     </Button>
                   </div>
                 </div>
@@ -232,7 +234,7 @@ export function SolutionsSection() {
 
         <div className="text-center">
           <Button size="lg" asChild>
-            <Link href="/solutions">{t('viewAll')}</Link>
+            <Link href={route(routes.BUSINESS.SOLUTIONS)}>{t('viewAll')}</Link>
           </Button>
         </div>
       </div>

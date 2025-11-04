@@ -1,7 +1,7 @@
 import { OrderStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
