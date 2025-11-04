@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { hashPassword, verifyPassword } from '@/backend/auth/auth.service';
-import { authenticateToken, requireRole } from '@/backend/auth/auth.middleware';
 import { NextRequest } from 'next/server';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+import { authenticateToken, requireRole } from '@/backend/auth/auth.middleware';
+import { hashPassword, verifyPassword } from '@/backend/auth/auth.service';
 
 describe('认证服务测试', () => {
   describe('密码哈希和验证', () => {

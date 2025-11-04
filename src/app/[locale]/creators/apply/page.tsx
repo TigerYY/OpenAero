@@ -1,233 +1,202 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/Button';
-import { creatorApplySchema } from '@/lib/validations';
-
-interface CreatorApplyPageProps {
-  params: {
-    locale: string;
-  };
-}
-
-export default function CreatorApplyPage({ params: { locale } }: CreatorApplyPageProps) {
+export default function CreatorApplyPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     bio: '',
     website: '',
     experience: '',
-    specialties: [] as string[],
+    specialties: ''
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const specialties = [
-    'FPV飞行',
-    '航拍摄影',
-    '农业植保',
-    '安防巡检',
-    '物流配送',
-    '测绘航拍',
-    '应急救援',
-    '环境监测',
-  ];
-
-  const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  // 检查用户是否已登录
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      // 未登录用户重定向到登录页面
+      router.push('/auth/login?callbackUrl=/creators/apply');
+      return;
     }
-  };
 
-  const handleSpecialtyToggle = (specialty: string) => {
-    setFormData(prev => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter(s => s !== specialty)
-        : [...prev.specialties, specialty]
-    }));
-  };
+    // 检查用户是否已经是创作者
+    if (session.user.role === 'CREATOR') {
+      router.push('/creators/dashboard');
+      return;
+    }
+  }, [session, status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setErrors({});
+    setLoading(true);
+    setError('');
 
     try {
-      // 验证表单数据
-      const validatedData = creatorApplySchema.parse(formData);
-
-      // 提交申请
       const response = await fetch('/api/creators/apply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(validatedData),
+        body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success) {
-        router.push('/creators/apply/success');
+      if (response.ok) {
+        // 申请提交成功，重定向到申请状态页面
+        router.push('/creators/apply/status');
       } else {
-        setErrors({ submit: result.message || '提交失败，请重试' });
+        setError(data.error || '申请提交失败');
       }
-    } catch (error: any) {
-      if (error.errors) {
-        const fieldErrors: Record<string, string> = {};
-        error.errors.forEach((err: any) => {
-          fieldErrors[err.path[0]] = err.message;
-        });
-        setErrors(fieldErrors);
-      } else {
-        setErrors({ submit: error.message || '提交失败，请重试' });
-      }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">正在加载...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null; // 重定向中
+  }
+
   return (
-    <MainLayout locale={locale}>
-      <div className="min-h-screen bg-secondary-50">
-        <div className="container py-16">
-          <div className="max-w-3xl mx-auto">
-            {/* 页面标题 */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-secondary-900 mb-4">
-                成为开元空御创作者
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-8 sm:p-10">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-extrabold text-gray-900">
+                创作者申请
               </h1>
-              <p className="text-xl text-secondary-600">
-                加入我们的创作者社区，将您的无人机创新设计转化为商业价值
+              <p className="mt-2 text-sm text-gray-600">
+                填写以下信息申请成为OpenAero平台的创作者
               </p>
             </div>
 
-            {/* 申请表单 */}
-            <div className="bg-white rounded-xl shadow-sm p-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* 个人简介 */}
-                <div>
-                  <label className="label block mb-2">
-                    个人简介 <span className="text-error-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder="请简要介绍您的背景、专业领域和创作经验..."
-                    className="input min-h-[120px] resize-none"
-                    rows={5}
-                  />
-                  {errors.bio && (
-                    <p className="text-error-500 text-sm mt-1">{errors.bio}</p>
-                  )}
-                  <p className="text-secondary-500 text-sm mt-1">
-                    {formData.bio.length}/500 字符
-                  </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+                  个人简介 *
+                </label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  rows={4}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="请简要介绍您的背景、经验和专长..."
+                  value={formData.bio}
+                  onChange={handleChange}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  请用200-500字介绍自己
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                  个人网站或作品集
+                </label>
+                <input
+                  id="website"
+                  name="website"
+                  type="url"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://example.com"
+                  value={formData.website}
+                  onChange={handleChange}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  可选，有助于我们了解您的作品
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="experience" className="block text-sm font-medium text-gray-700">
+                  相关经验 *
+                </label>
+                <textarea
+                  id="experience"
+                  name="experience"
+                  rows={3}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="请描述您在相关领域的经验..."
+                  value={formData.experience}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="specialties" className="block text-sm font-medium text-gray-700">
+                  专长领域 *
+                </label>
+                <input
+                  id="specialties"
+                  name="specialties"
+                  type="text"
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="例如：UI/UX设计、前端开发、产品设计等"
+                  value={formData.specialties}
+                  onChange={handleChange}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  请用逗号分隔不同的专长领域
+                </p>
+              </div>
+
+              {error && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{error}</div>
                 </div>
+              )}
 
-                {/* 个人网站 */}
-                <div>
-                  <label className="label block mb-2">个人网站</label>
-                  <input
-                    type="url"
-                    value={formData.website}
-                    onChange={(e) => handleInputChange('website', e.target.value)}
-                    placeholder="https://your-website.com"
-                    className="input"
-                  />
-                  {errors.website && (
-                    <p className="text-error-500 text-sm mt-1">{errors.website}</p>
-                  )}
-                </div>
-
-                {/* 专业经验 */}
-                <div>
-                  <label className="label block mb-2">
-                    专业经验 <span className="text-error-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
-                    placeholder="请详细描述您在无人机领域的工作经验、项目经历和技术专长..."
-                    className="input min-h-[120px] resize-none"
-                    rows={5}
-                  />
-                  {errors.experience && (
-                    <p className="text-error-500 text-sm mt-1">{errors.experience}</p>
-                  )}
-                  <p className="text-secondary-500 text-sm mt-1">
-                    {formData.experience.length}/1000 字符
-                  </p>
-                </div>
-
-                {/* 专业领域 */}
-                <div>
-                  <label className="label block mb-2">
-                    专业领域 <span className="text-error-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {specialties.map((specialty) => (
-                      <button
-                        key={specialty}
-                        type="button"
-                        onClick={() => handleSpecialtyToggle(specialty)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          formData.specialties.includes(specialty)
-                            ? 'bg-primary-100 text-primary-700 border-2 border-primary-300'
-                            : 'bg-secondary-100 text-secondary-700 border-2 border-transparent hover:bg-secondary-200'
-                        }`}
-                      >
-                        {specialty}
-                      </button>
-                    ))}
-                  </div>
-                  {errors.specialties && (
-                    <p className="text-error-500 text-sm mt-1">{errors.specialties}</p>
-                  )}
-                  <p className="text-secondary-500 text-sm mt-1">
-                    已选择 {formData.specialties.length}/5 个专业领域
-                  </p>
-                </div>
-
-                {/* 提交按钮 */}
-                <div className="flex justify-center pt-6">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-8 py-3 text-lg"
-                  >
-                    {isSubmitting ? '提交中...' : '提交申请'}
-                  </Button>
-                </div>
-
-                {errors.submit && (
-                  <div className="text-center">
-                    <p className="text-error-500">{errors.submit}</p>
-                  </div>
-                )}
-              </form>
-            </div>
-
-            {/* 申请须知 */}
-            <div className="mt-12 bg-primary-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-primary-900 mb-4">
-                申请须知
-              </h3>
-              <ul className="space-y-2 text-primary-800">
-                <li>• 我们会在3-5个工作日内审核您的申请</li>
-                <li>• 通过审核后，您将获得创作者权限和专属后台</li>
-                <li>• 创作者可获得50%的利润分成</li>
-                <li>• 我们提供技术支持和市场推广协助</li>
-                <li>• 如有疑问，请联系我们的客服团队</li>
-              </ul>
-            </div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? '提交中...' : '提交申请'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

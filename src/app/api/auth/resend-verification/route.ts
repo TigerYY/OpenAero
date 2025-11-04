@@ -1,35 +1,33 @@
-import crypto from 'crypto';
-
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 
-import { logUserAction, getClientIP } from '@/backend/auth/auth.middleware';
-import { emailService } from '@/backend/email/email.service';
-import { db } from '@/lib/db';
+import { emailService } from '@/lib/email';
 
-const resendVerificationSchema = z.object({
-  email: z.string().email('请输入有效的邮箱地址'),
-});
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email } = resendVerificationSchema.parse(body);
+    const { email } = await request.json();
+
+    if (!email) {
+      return NextResponse.json(
+        { error: '邮箱地址是必需的' },
+        { status: 400 }
+      );
+    }
 
     // 查找用户
-    const user = await db.user.findUnique({
-      where: { email }
+    const user = await prisma.user.findUnique({
+      where: { email },
     });
 
     if (!user) {
-      // 为了安全考虑，不暴露用户是否存在
+      // 出于安全考虑，即使邮箱不存在也返回成功
       return NextResponse.json({
-        success: true,
-        message: '如果该邮箱已注册，验证邮件将发送到您的邮箱'
+        message: '如果该邮箱已注册，验证邮件将重新发送'
       });
     }
 
-    // 检查用户是否已验证
+    // 检查用户是否已经验证
     if (user.emailVerified) {
       return NextResponse.json(
         { error: '该邮箱已经验证过了' },
@@ -37,110 +35,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 检查是否有未过期的验证令牌
-    const existingVerification = await db.emailVerification.findFirst({
-      where: {
-        email,
-        type: 'REGISTRATION',
-        expiresAt: { gt: new Date() },
-        usedAt: null
-      }
+    // 删除旧的验证记录
+    await prisma.emailVerification.deleteMany({
+      where: { userId: user.id },
     });
 
-    let verificationToken: string;
-
-    if (existingVerification) {
-      // 检查最近是否发送过邮件（防止频繁发送）
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      if (existingVerification.createdAt > fiveMinutesAgo) {
-        return NextResponse.json(
-          { error: '验证邮件发送过于频繁，请5分钟后再试' },
-          { status: 429 }
-        );
-      }
-      verificationToken = existingVerification.token;
-    } else {
-      // 创建新的验证令牌
-      verificationToken = crypto.randomBytes(32).toString('hex');
-      
-      // 删除旧的验证令牌
-      await db.emailVerification.deleteMany({
-        where: {
-          email,
-          type: 'REGISTRATION'
-        }
-      });
-
-      // 创建新的验证令牌
-      await db.emailVerification.create({
-        data: {
-          email,
-          token: verificationToken,
-          type: 'REGISTRATION',
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时后过期
-        }
-      });
-    }
+    // 创建新的验证记录
+    const verification = await prisma.emailVerification.create({
+      data: {
+        userId: user.id,
+        token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时过期
+      },
+    });
 
     // 发送验证邮件
-    const userName = user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
-      : user.firstName || user.lastName || undefined;
-    
-    const emailSent = await emailService.sendVerificationEmail(
-      email,
-      verificationToken,
-      userName
-    );
+    try {
+      await emailService.sendVerificationEmail(user.email, verification.token);
+      
+      // 记录审计日志
+      await prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'RESEND_VERIFICATION_EMAIL',
+          details: `重新发送验证邮件到 ${user.email}`,
+          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
+        },
+      });
 
-    if (!emailSent) {
+      return NextResponse.json({
+        message: '验证邮件已重新发送'
+      });
+    } catch (emailError) {
+      console.error('发送验证邮件失败:', emailError);
+      
+      // 记录审计日志
+      await prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'RESEND_VERIFICATION_EMAIL_FAILED',
+          details: `重新发送验证邮件失败: ${emailError}`,
+          ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
+        },
+      });
+
       return NextResponse.json(
-        { error: '邮件发送失败，请稍后重试' },
+        { error: '发送验证邮件失败，请稍后重试' },
         { status: 500 }
       );
     }
-
-    // 记录审计日志
-    await logUserAction(
-      user.id,
-      'RESEND_VERIFICATION_EMAIL',
-      'user',
-      user.id,
-      undefined,
-      { email },
-      getClientIP(request),
-      request.headers.get('user-agent') || 'unknown'
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: '验证邮件已发送，请检查您的邮箱'
-    });
-
-  } catch (error: any) {
-    console.error('重发验证邮件失败:', error);
-
-    // 记录失败日志
-    await logUserAction(
-      'anonymous',
-      'RESEND_VERIFICATION_EMAIL_FAILED',
-      'user',
-      undefined,
-      undefined,
-      { reason: error.message },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-
+  } catch (error) {
+    console.error('重新发送验证邮件错误:', error);
     return NextResponse.json(
-      { error: '重发验证邮件失败，请稍后重试' },
+      { error: '服务器内部错误' },
       { status: 500 }
     );
   }

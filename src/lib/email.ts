@@ -14,7 +14,7 @@ export class EmailService {
 
   constructor() {
     // 创建邮件传输器
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: 'smtp.exmail.qq.com',
       port: 465,
       secure: true, // 使用SSL
@@ -29,10 +29,10 @@ export class EmailService {
   async verifyConnection(): Promise<boolean> {
     try {
       await this.transporter.verify();
-      console.log('邮件服务连接成功');
+      // console.log('邮件服务连接成功');
       return true;
-    } catch (error) {
-      console.error('邮件服务连接失败:', error);
+    } catch (error: unknown) {
+      // console.error('邮件服务连接失败:', error);
       return false;
     }
   }
@@ -52,10 +52,10 @@ export class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('邮件发送成功:', result.messageId);
+      // console.log('邮件发送成功:', result.messageId);
       return true;
-    } catch (error) {
-      console.error('邮件发送失败:', error);
+    } catch (error: unknown) {
+      // console.error('邮件发送失败:', error);
       return false;
     }
   }

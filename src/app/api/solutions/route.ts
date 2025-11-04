@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (status && status !== 'all') {
-      where.status = status;
+      // 使用正确的枚举值
+      where.status = status.toUpperCase() as any;
     }
 
     if (search) {
@@ -34,8 +35,12 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // 获取总数
-    const total = await db.solution.count({ where });
+    // 获取总数 - 使用正确的枚举值
+    const total = await db.solution.count({ 
+      where: {
+        ...where
+      }
+    });
 
     // 获取方案列表
     const solutions = await db.solution.findMany({

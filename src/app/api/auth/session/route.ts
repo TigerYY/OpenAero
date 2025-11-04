@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { JWTUtils } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     // 验证JWT令牌
     let decoded;
     try {
-      decoded = JWTUtils.verifyToken(token);
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     } catch (error) {
       return NextResponse.json(
         { error: '认证令牌无效' },
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
     // 验证JWT令牌
     let decoded;
     try {
-      decoded = JWTUtils.verifyToken(token);
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     } catch (error) {
       return NextResponse.json(
         { error: '认证令牌无效' },
@@ -101,11 +101,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // 生成新的JWT令牌
-    const newToken = JWTUtils.generateToken({
+    const newToken = jwt.sign({
       userId: user.id,
       email: user.email,
       role: user.role
-    }, '7d');
+    }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
 
     return NextResponse.json({
       success: true,
@@ -147,7 +147,7 @@ export async function DELETE(request: NextRequest) {
     // 验证JWT令牌
     let decoded;
     try {
-      decoded = JWTUtils.verifyToken(token);
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     } catch (error) {
       return NextResponse.json(
         { error: '认证令牌无效' },

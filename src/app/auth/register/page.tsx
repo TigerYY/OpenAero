@@ -51,10 +51,6 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 保存令牌到localStorage
-        localStorage.setItem('accessToken', data.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-        
         // 重定向到邮箱验证提示页面
         router.push('/auth/verify-email-notice');
       } else {

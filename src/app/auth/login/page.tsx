@@ -32,10 +32,6 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 保存令牌到localStorage
-        localStorage.setItem('accessToken', data.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-        
         // 重定向到首页或仪表板
         router.push('/dashboard');
       } else {

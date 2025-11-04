@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import logger from '@/lib/logger';
+
 import { authenticateToken } from '../../../backend/auth/auth.middleware';
 
 interface PushSubscription {

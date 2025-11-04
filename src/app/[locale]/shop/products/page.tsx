@@ -19,13 +19,14 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import logger from '@/lib/logger';
+
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import logger from '@/lib/logger';
 import { formatCurrency } from '@/lib/utils';
 
 interface Product {

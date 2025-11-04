@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
+import UserAuthEntry from '@/components/auth/UserAuthEntry';
 import { Button } from '@/components/ui/Button';
 
 interface MobileMenuProps {
@@ -86,16 +87,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
 
               {/* CTA */}
               <div className="p-6 border-t border-secondary-200 space-y-4">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link href="/contact" onClick={onClose}>
-                    联系我们
-                  </Link>
-                </Button>
-                <Button className="w-full" asChild>
-                  <Link href="/creators/apply" onClick={onClose}>
-                    成为创作者
-                  </Link>
-                </Button>
+                <UserAuthEntry variant="mobile" />
               </div>
             </div>
           </motion.div>

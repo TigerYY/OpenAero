@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+
 import { prisma } from '@/lib/prisma';
 
 // 集成测试：认证系统端到端测试

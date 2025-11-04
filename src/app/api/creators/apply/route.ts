@@ -1,45 +1,102 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 
-import { withErrorHandling, ConflictError } from '@/lib/error-handler';
-import { creatorApplySchema } from '@/lib/validations';
-import { ApiResponse } from '@/types';
+const prisma = new PrismaClient();
 
-// 模拟数据存储
-const mockCreatorProfiles: any[] = [];
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { bio, website, experience, specialties } = body;
 
-export const POST = withErrorHandling(async (request: Request) => {
-  const body = await request.json();
-  const validatedData = creatorApplySchema.parse(body);
+    // 验证输入
+    if (!bio || !experience || !specialties) {
+      return NextResponse.json(
+        { error: '个人简介、相关经验和专长领域是必填项' },
+        { status: 400 }
+      );
+    }
 
-  // 这里应该从认证中获取用户ID，暂时使用模拟数据
-  const userId = 'temp-user-id'; // TODO: 从认证中获取
+    // 从认证头中获取用户信息
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: '未提供认证令牌' },
+        { status: 401 }
+      );
+    }
 
-  // 检查用户是否已经是创作者
-  const existingProfile = mockCreatorProfiles.find(profile => profile.userId === userId);
+    const token = authHeader.substring(7);
 
-  if (existingProfile) {
-    throw new ConflictError('您已经是创作者了');
+    // 这里应该验证JWT令牌并获取用户ID
+    // 暂时使用模拟数据
+    const userId = 'temp-user-id'; // TODO: 从JWT令牌中获取实际用户ID
+
+    // 检查用户是否已经是创作者
+    const existingCreator = await prisma.user.findFirst({
+      where: { 
+        id: userId,
+        role: 'CREATOR'
+      }
+    });
+
+    if (existingCreator) {
+      return NextResponse.json(
+        { error: '您已经是创作者了' },
+        { status: 409 }
+      );
+    }
+
+    // 检查是否已经有待审核的申请
+    const existingApplication = await prisma.creatorApplication.findFirst({
+      where: { 
+        userId,
+        status: 'PENDING'
+      }
+    });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: '您已经有一个待审核的创作者申请' },
+        { status: 409 }
+      );
+    }
+
+    // 创建创作者申请
+    const application = await prisma.creatorApplication.create({
+      data: {
+        userId,
+        bio,
+        website: website || null,
+        experience,
+        specialties,
+        status: 'PENDING'
+      }
+    });
+
+    // 创建审计日志
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'CREATOR_APPLICATION_SUBMITTED',
+        resource: 'CreatorApplication',
+        resourceId: application.id,
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown'
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: '创作者申请提交成功，我们将在3个工作日内审核您的申请',
+      applicationId: application.id
+    });
+
+  } catch (error) {
+    console.error('创作者申请错误:', error);
+    return NextResponse.json(
+      { error: '申请提交失败，请稍后重试' },
+      { status: 500 }
+    );
   }
-
-  // 创建创作者档案
-  const creatorProfile = {
-    id: `creator-${Date.now()}`,
-    userId,
-    bio: validatedData.bio,
-    website: validatedData.website || null,
-    experience: validatedData.experience,
-    specialties: validatedData.specialties,
-    status: 'PENDING',
-    revenue: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  mockCreatorProfiles.push(creatorProfile);
-
-  return NextResponse.json({
-    success: true,
-    data: creatorProfile,
-    message: '创作者申请提交成功，我们将在3个工作日内审核您的申请',
-  } as ApiResponse);
-});
+}

@@ -1,92 +1,100 @@
+import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
-import { AuthService } from '../../../../backend/auth/auth.service';
-import { LoginRequest } from '../../../../shared/types';
+import { AuthUtils } from '@/lib/auth-utils';
+import { JWTUtils } from '@/lib/session';
 
-const authService = new AuthService();
+const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
-  let body: LoginRequest | null = null;
-  
   try {
-    body = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
 
-    // 验证必填字段
-    if (!body || !body.email || !body.password) {
+    // 验证输入
+    if (!email || !password) {
       return NextResponse.json(
-        { error: '邮箱和密码为必填项' },
+        { error: '邮箱和密码是必填项' },
         { status: 400 }
       );
     }
 
-    // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      return NextResponse.json(
-        { error: '邮箱格式无效' },
-        { status: 400 }
-      );
-    }
-
-    // 用户登录
-    const result = await authService.login(body);
-
-    // 记录审计日志
-    await logUserAction(
-      result.user.id,
-      'USER_LOGIN',
-      'user',
-      result.user.id,
-      undefined,
-      { loginTime: new Date().toISOString() },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
-
-    // 返回结果（不包含敏感信息）
-    const { user, tokens } = result;
-    const safeUser = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-      role: user.role,
-      createdAt: user.createdAt
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        user: safeUser,
-        tokens
-      },
-      message: '登录成功'
+    // 查找用户
+    const user = await prisma.user.findUnique({
+      where: { email }
     });
 
-  } catch (error: any) {
-    console.error('Login error:', error);
-
-    // 记录失败的登录尝试
-    if (error.message.includes('邮箱或密码错误')) {
-      // 不记录具体的用户ID，因为可能是恶意尝试
-      await logUserAction(
-        'anonymous',
-        'LOGIN_FAILED',
-        'user',
-        undefined,
-        undefined,
-        { email: body?.email, reason: 'invalid_credentials' },
-        getClientIP(request),
-        request.headers.get('user-agent') || undefined
-      );
-
+    if (!user) {
       return NextResponse.json(
-        { error: '邮箱或密码错误' },
+        { error: '邮箱或密码不正确' },
         { status: 401 }
       );
     }
 
+    // 验证密码
+    const isPasswordValid = await AuthUtils.verifyPassword(password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { error: '邮箱或密码不正确' },
+        { status: 401 }
+      );
+    }
+
+    // 生成JWT令牌
+    const token = JWTUtils.generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    }, '7d');
+
+    // 创建用户会话
+    const sessionToken = AuthUtils.generateToken();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7天后过期
+
+    await prisma.userSession.create({
+      data: {
+        userId: user.id,
+        token: sessionToken,
+        expiresAt,
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown'
+      }
+    });
+
+    // 更新用户最后登录时间
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { updatedAt: new Date() }
+    });
+
+    // 创建审计日志
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'USER_LOGIN',
+        resource: 'User',
+        resourceId: user.id,
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown'
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt
+      }
+    });
+
+  } catch (error) {
+    console.error('登录错误:', error);
     return NextResponse.json(
       { error: '登录失败，请稍后重试' },
       { status: 500 }

@@ -1,4 +1,5 @@
-import { authManager } from './auth';
+import { getServerSession } from 'next-auth';
+import { auth } from './auth';
 
 interface ApiRequestOptions extends RequestInit {
   skipAuth?: boolean;
@@ -36,9 +37,10 @@ class ApiClient {
 
     // 添加认证头
     if (!skipAuth) {
-      const session = authManager.getCurrentSession();
-      if (session?.token) {
-        headers['Authorization'] = `Bearer ${session.token}`;
+      // 使用 NextAuth.js 获取会话信息
+      const session = await getServerSession(auth);
+      if (session?.user?.accessToken) {
+        headers['Authorization'] = `Bearer ${session.user.accessToken}`;
       }
     }
 
@@ -145,7 +147,18 @@ class ApiClient {
   // 执行token刷新
   private async performTokenRefresh(): Promise<void> {
     try {
-      await authManager.refreshToken();
+      // 使用 NextAuth.js 的会话刷新机制
+      // 这里可以调用重新认证的API端点
+      const response = await fetch('/api/auth/session', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('会话刷新失败');
+      }
     } catch (error) {
       console.error('执行token刷新失败:', error);
       throw error;
@@ -222,9 +235,10 @@ class ApiClient {
     
     // 添加认证头
     if (!options?.skipAuth) {
-      const session = authManager.getCurrentSession();
-      if (session?.token) {
-        headers['Authorization'] = `Bearer ${session.token}`;
+      // 使用 NextAuth.js 获取会话信息
+      const session = await getServerSession(auth);
+      if (session?.user?.accessToken) {
+        headers['Authorization'] = `Bearer ${session.user.accessToken}`;
       }
     }
 

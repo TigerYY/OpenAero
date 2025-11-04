@@ -10,6 +10,7 @@ import { CartButton } from '@/components/shop/CartButton';
 import { Button } from '@/components/ui/Button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
+import UserAuthEntry from '@/components/auth/UserAuthEntry';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
 
@@ -146,12 +147,7 @@ return (
               showNativeNames={true}
               className="mr-2"
             />
-            <Button variant="ghost" asChild>
-              <Link href={`/${locale}/contact`}>{t('navigation.contact')}</Link>
-            </Button>
-            <Button asChild>
-              <Link href={`/${locale}/creators/apply`}>{t('navigation.creators')}</Link>
-            </Button>
+            <UserAuthEntry variant="desktop" />
           </div>
 
           {/* Tablet CTA - Simplified */}

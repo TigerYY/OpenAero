@@ -2,14 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-
-import { User } from '../../../shared/types';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: ''
   });
   const [loading, setLoading] = useState(true);
@@ -18,17 +19,18 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/auth/login');
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          router.push('/auth/login');
-          return;
-        }
-
         const response = await fetch('/api/auth/profile', {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${session.accessToken}`,
           },
         });
 
@@ -36,13 +38,10 @@ export default function ProfilePage() {
           const userData = await response.json();
           setUser(userData);
           setFormData({
-            name: userData.name || '',
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
             email: userData.email || ''
           });
-        } else if (response.status === 401) {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          router.push('/auth/login');
         } else {
           setError('获取用户信息失败');
         }
@@ -54,7 +53,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [router]);
+  }, [session, status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +62,7 @@ export default function ProfilePage() {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
+      if (!session) {
         router.push('/auth/login');
         return;
       }
@@ -73,7 +71,7 @@ export default function ProfilePage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify(formData),
       });
@@ -83,10 +81,6 @@ export default function ProfilePage() {
       if (response.ok) {
         setUser(data);
         setSuccess('资料更新成功');
-      } else if (response.status === 401) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        router.push('/auth/login');
       } else {
         setError(data.error || '更新失败');
       }
@@ -104,9 +98,8 @@ export default function ProfilePage() {
     });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
     router.push('/auth/login');
   };
 
