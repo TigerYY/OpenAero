@@ -4,14 +4,6 @@ import type { NextRequest } from 'next/server'
 // 简化中间件，暂时移除认证检查以避免 openid-client 错误
 // 使用简单的会话检查而不是完整的auth()调用
 
-// 需要认证的路由
-const authRoutes = [
-  '/profile',
-  '/creators/dashboard',
-  '/creators/apply',
-  '/admin'
-]
-
 // 公开路由（不需要认证）
 const publicRoutes = [
   '/auth/login',
@@ -19,13 +11,6 @@ const publicRoutes = [
   '/auth/verify-email',
   '/auth/forgot-password',
   '/auth/reset-password'
-]
-
-// API路由认证检查
-const apiAuthRoutes = [
-  '/api/profile',
-  '/api/creators',
-  '/api/admin'
 ]
 
 export async function middleware(request: NextRequest) {

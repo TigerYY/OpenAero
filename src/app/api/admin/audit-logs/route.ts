@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       return authResult;
     }
 
-    const user = (request as any).user;
-    if (user.role !== 'ADMIN') {
+    const adminUser = (request as any).user;
+    if (adminUser.role !== 'ADMIN') {
       return NextResponse.json(
         { error: '权限不足，仅管理员可以访问审计日志' },
         { status: 403 }
@@ -162,8 +162,8 @@ export async function POST(request: NextRequest) {
       return authResult;
     }
 
-    const user = (request as any).user;
-    if (user.role !== 'ADMIN') {
+    const adminUser = (request as any).user;
+    if (adminUser.role !== 'ADMIN') {
       return NextResponse.json(
         { error: '权限不足，仅管理员可以导出审计日志' },
         { status: 403 }

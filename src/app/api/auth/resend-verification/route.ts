@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           action: 'RESEND_VERIFICATION_EMAIL_FAILED',
-          details: `重新发送验证邮件失败: ${emailError}`,
+          details: `重新发送验证邮件失败: ${emailError instanceof Error ? emailError.message : String(emailError)}`,
           ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
           userAgent: request.headers.get('user-agent') || 'unknown',
         },
