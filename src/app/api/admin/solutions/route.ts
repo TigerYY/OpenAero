@@ -1,10 +1,11 @@
 import { SolutionStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/prisma';
+
+import { checkAdminAuth } from '@/lib/api-auth-helpers';
 
 // 查询参数验证
 const querySchema = z.object({
@@ -20,7 +21,11 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份和权限
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user) {
       return NextResponse.json(

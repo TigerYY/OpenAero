@@ -6,13 +6,14 @@ import { useLocale } from 'next-intl';
 import { useState } from 'react';
 
 import { AuthLayout } from '@/components/layout/AuthLayout';
-import { LoginRequest } from '../../../../shared/types';
-import { AuthClient } from '@/lib/auth-client';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/shared/types';
 
 function LoginContent() {
   const router = useRouter();
   const locale = useLocale();
-  const [formData, setFormData] = useState<LoginRequest>({
+  const { login, isLoading } = useAuth();
+  const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
@@ -25,38 +26,21 @@ function LoginContent() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // 保存session信息到localStorage
-        if (data.session && data.user) {
-          AuthClient.saveSession(data.session, data.user);
-        }
-        
-        // 根据用户角色重定向到正确页面
-        const userRole = data.user?.role || 'USER';
-        
-        if (userRole === 'ADMIN') {
-          router.push('/admin/dashboard');
-        } else if (userRole === 'CREATOR') {
-          router.push('/creators');
-        } else {
-          // 普通用户跳转到个人资料页面进行测试
-          router.push('/profile');
-        }
+      const session = await login(formData.email, formData.password);
+      
+      // 根据用户角色重定向到正确页面
+      const userRole = session.user.role || UserRole.USER;
+      
+      if (userRole === UserRole.ADMIN) {
+        router.push('/admin/dashboard');
+      } else if (userRole === UserRole.CREATOR) {
+        router.push('/creators');
       } else {
-        setError(data.error || '登录失败');
+        // 普通用户跳转到个人资料页面进行测试
+        router.push('/profile');
       }
-    } catch (error) {
-      setError('网络错误，请稍后重试');
+    } catch (error: any) {
+      setError(error.message || '登录失败');
     } finally {
       setLoading(false);
     }
@@ -142,10 +126,10 @@ function LoginContent() {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '登录中...' : '登录'}
+              {(loading || isLoading) ? '登录中...' : '登录'}
             </button>
           </div>
         </form>

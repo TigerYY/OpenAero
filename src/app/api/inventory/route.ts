@@ -1,10 +1,11 @@
 import { InventoryStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/prisma';
+
+import { checkUserAuth } from '@/lib/api-auth-helpers';
 
 // 库存更新的验证模式
 const updateInventorySchema = z.object({
@@ -26,7 +27,11 @@ const batchUpdateInventorySchema = z.object({
 // 获取库存列表
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
@@ -138,7 +143,11 @@ export async function GET(request: NextRequest) {
 // 更新库存
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
@@ -243,7 +252,11 @@ export async function POST(request: NextRequest) {
 // 批量更新库存
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });

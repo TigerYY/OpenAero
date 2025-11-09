@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Auth配置测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-ok { color: #10b981; }
+        .status-warning { color: #f59e0b; }
+        .status-error { color: #ef4444; }
+        .loading { 
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 Supabase Auth配置测试</h1>
+            <p class="text-gray-600">验证Supabase认证服务的配置和功能状态</p>
+        </div>
+
+        <!-- 配置状态 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">📋 配置状态</h2>
+            <div id="configStatus" class="space-y-2">
+                <div class="loading"></div>
+                <span class="text-gray-600">正在检查配置...</span>
+            </div>
+        </div>
+
+        <!-- 功能测试 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">🧪 功能测试</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">数据库连接</h3>
+                    <div id="dbStatus" class="text-sm">等待测试...</div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">认证服务</h3>
+                    <div id="authStatus" class="text-sm">等待测试...</div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">用户表</h3>
+                    <div id="tableStatus" class="text-sm">等待测试...</div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">功能标志</h3>
+                    <div id="flagsStatus" class="text-sm">等待测试...</div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button onclick="testConfiguration()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                    🔄 重新测试
+                </button>
+                <button onclick="enableSupabaseAuth()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                    ✅ 启用Supabase Auth
+                </button>
+                <button onclick="resetFlags()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                    🔄 重置标志
+                </button>
+            </div>
+        </div>
+
+        <!-- 测试用户注册 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">👤 测试用户注册</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="email" id="testEmail" placeholder="测试邮箱" 
+                       class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="test@example.com">
+                <input type="password" id="testPassword" placeholder="测试密码" 
+                       class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="test123456">
+            </div>
+            <button onclick="testUserRegistration()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition">
+                🧪 测试注册
+            </button>
+            <div id="registrationResult" class="mt-4"></div>
+        </div>
+
+        <!-- 配置建议 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">💡 配置建议</h2>
+            <div id="recommendations" class="space-y-2">
+                <div class="loading"></div>
+                <span class="text-gray-600">正在生成建议...</span>
+            </div>
+        </div>
+
+        <!-- 下一步操作 -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">📋 下一步操作</h2>
+            <div id="nextSteps" class="space-y-2">
+                <div class="loading"></div>
+                <span class="text-gray-600">正在生成操作指南...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentConfig = null;
+
+        // 页面加载时自动测试
+        document.addEventListener('DOMContentLoaded', testConfiguration);
+
+        async function testConfiguration() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/test-supabase-auth');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showError(data.error || 'Failed to test configuration');
+                    return;
+                }
+                
+                currentConfig = data;
+                displayResults(data);
+                
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('configStatus').innerHTML = '<div class="loading"></div><span class="text-gray-600">正在检查配置...</span>';
+            document.getElementById('dbStatus').textContent = '等待测试...';
+            document.getElementById('authStatus').textContent = '等待测试...';
+            document.getElementById('tableStatus').textContent = '等待测试...';
+            document.getElementById('flagsStatus').textContent = '等待测试...';
+            document.getElementById('recommendations').innerHTML = '<div class="loading"></div><span class="text-gray-600">正在生成建议...</span>';
+            document.getElementById('nextSteps').innerHTML = '<div class="loading"></div><span class="text-gray-600">正在生成操作指南...</span>';
+        }
+
+        function displayResults(data) {
+            // 显示配置状态
+            const configItems = [
+                { label: 'Supabase URL', value: data.environment.hasSupabaseUrl ? '✅ 已配置' : '❌ 未配置' },
+                { label: 'Anonymous Key', value: data.environment.hasAnonKey ? '✅ 已配置' : '❌ 未配置' },
+                { label: 'Service Role Key', value: data.environment.hasServiceKey ? '✅ 已配置' : '❌ 未配置' },
+                { label: 'Google OAuth', value: data.environment.hasOAuthGoogle ? '✅ 已配置' : '⚪ 未配置' },
+                { label: 'GitHub OAuth', value: data.environment.hasOAuthGitHub ? '✅ 已配置' : '⚪ 未配置' },
+                { label: 'SMTP服务', value: data.environment.hasSMTP ? '✅ 已配置' : '⚪ 未配置' },
+            ];
+            
+            document.getElementById('configStatus').innerHTML = configItems.map(item => 
+                `<div class="flex justify-between py-1"><span>${item.label}:</span><span>${item.value}</span></div>`
+            ).join('');
+
+            // 显示功能测试结果
+            document.getElementById('dbStatus').innerHTML = data.configuration.database.connected ? 
+                '<span class="status-ok">✅ 连接正常</span>' : '<span class="status-error">❌ 连接失败</span>';
+            
+            document.getElementById('authStatus').innerHTML = data.configuration.auth.serviceAvailable ? 
+                '<span class="status-ok">✅ 服务可用</span>' : '<span class="status-error">❌ 服务不可用</span>';
+            
+            document.getElementById('tableStatus').innerHTML = data.configuration.database.userTableExists ? 
+                '<span class="status-ok">✅ 表已存在</span>' : '<span class="status-warning">⚠️ 表不存在</span>';
+            
+            const flags = data.configuration.featureFlags;
+            const flagsHtml = Object.entries(flags).map(([key, value]) => 
+                `<div>${key}: <span class="${value ? 'status-ok' : 'status-warning'}">${value ? '启用' : '禁用'}</span></div>`
+            ).join('');
+            document.getElementById('flagsStatus').innerHTML = flagsHtml;
+
+            // 显示建议
+            if (data.recommendations.length > 0) {
+                document.getElementById('recommendations').innerHTML = data.recommendations.map(rec => 
+                    `<div class="flex items-start space-x-2"><span class="text-yellow-500">💡</span><span>${rec}</span></div>`
+                ).join('');
+            } else {
+                document.getElementById('recommendations').innerHTML = '<div class="status-ok">✅ 配置看起来很完整！</div>';
+            }
+
+            // 显示下一步操作
+            document.getElementById('nextSteps').innerHTML = data.nextSteps.map(step => 
+                `<div class="flex items-start space-x-2"><span class="text-blue-500">📋</span><span>${step}</span></div>`
+            ).join('');
+        }
+
+        async function enableSupabaseAuth() {
+            if (!confirm('确定要启用Supabase Auth吗？这将切换认证系统。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/test-supabase-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'enable-supabase-auth' })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ Supabase Auth已成功启用！');
+                    testConfiguration(); // 重新测试配置
+                } else {
+                    alert('❌ 启用失败: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ 网络错误: ' + error.message);
+            }
+        }
+
+        async function testUserRegistration() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            const resultDiv = document.getElementById('registrationResult');
+            
+            if (!email || !password) {
+                resultDiv.innerHTML = '<div class="status-error">❌ 请填写邮箱和密码</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"></div><span class="text-gray-600">正在测试注册...</span>';
+
+            try {
+                const response = await fetch('/api/test-supabase-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'test-auth-flow',
+                        email,
+                        password 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="status-ok">✅ 测试用户创建成功！</div>
+                            <div class="text-sm mt-2">
+                                <div>用户ID: ${data.user.id}</div>
+                                <div>邮箱: ${data.user.email}</div>
+                                <div>邮箱已验证: ${data.user.emailConfirmed ? '是' : '否'}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status-error">❌ 注册失败: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status-error">❌ 网络错误: ${error.message}</div>`;
+            }
+        }
+
+        async function resetFlags() {
+            if (!confirm('确定要重置所有功能标志吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/test-supabase-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'reset-flags' })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ 功能标志已重置');
+                    testConfiguration();
+                } else {
+                    alert('❌ 重置失败: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ 网络错误: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('configStatus').innerHTML = `<div class="status-error">❌ ${message}</div>`;
+        }
+    </script>
+</body>
+</html>

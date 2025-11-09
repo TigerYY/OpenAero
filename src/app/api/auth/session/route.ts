@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+import { getCurrentSession, refreshSession } from '@/lib/supabase-auth';
 
 // 获取当前会话信息
 export async function GET(request: NextRequest) {
@@ -18,39 +16,39 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.substring(7);
 
-    // 验证JWT令牌
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    } catch (error) {
+    // 使用 Supabase 验证令牌并获取会话
+    const { data: { session }, error } = await getCurrentSession();
+
+    if (error || !session) {
+      return NextResponse.json(
+        { error: '认证令牌无效或已过期' },
+        { status: 401 }
+      );
+    }
+
+    // 验证令牌匹配
+    if (session.access_token !== token) {
       return NextResponse.json(
         { error: '认证令牌无效' },
         { status: 401 }
       );
     }
 
-    // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: '用户不存在' },
-        { status: 404 }
-      );
-    }
+    const user = session.user;
 
     return NextResponse.json({
       success: true,
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt
+        name: user.user_metadata?.name || 
+             `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
+             user.email?.split('@')[0] || '',
+        firstName: user.user_metadata?.first_name,
+        lastName: user.user_metadata?.last_name,
+        role: user.user_metadata?.role || 'USER',
+        emailVerified: user.email_confirmed_at ? true : false,
+        createdAt: user.created_at
       }
     });
 
@@ -77,47 +75,33 @@ export async function PUT(request: NextRequest) {
 
     const token = authHeader.substring(7);
 
-    // 验证JWT令牌
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    } catch (error) {
+    // 使用 Supabase 刷新会话
+    const { data, error } = await refreshSession();
+
+    if (error || !data.session) {
       return NextResponse.json(
-        { error: '认证令牌无效' },
+        { error: '刷新会话失败，请重新登录' },
         { status: 401 }
       );
     }
 
-    // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: '用户不存在' },
-        { status: 404 }
-      );
-    }
-
-    // 生成新的JWT令牌
-    const newToken = jwt.sign({
-      userId: user.id,
-      email: user.email,
-      role: user.role
-    }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '7d' });
+    const user = data.session.user;
 
     return NextResponse.json({
       success: true,
-      token: newToken,
+      token: data.session.access_token,
+      refreshToken: data.session.refresh_token,
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt
+        name: user.user_metadata?.name || 
+             `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
+             user.email?.split('@')[0] || '',
+        firstName: user.user_metadata?.first_name,
+        lastName: user.user_metadata?.last_name,
+        role: user.user_metadata?.role || 'USER',
+        emailVerified: user.email_confirmed_at ? true : false,
+        createdAt: user.created_at
       }
     });
 
@@ -144,34 +128,25 @@ export async function DELETE(request: NextRequest) {
 
     const token = authHeader.substring(7);
 
-    // 验证JWT令牌
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    } catch (error) {
+    // 获取当前会话进行验证
+    const { data: { session }, error } = await getCurrentSession();
+
+    if (error || !session) {
       return NextResponse.json(
         { error: '认证令牌无效' },
         { status: 401 }
       );
     }
 
-    // 删除用户的所有会话
-    await prisma.userSession.deleteMany({
-      where: { userId: decoded.userId }
-    });
+    // 验证令牌匹配
+    if (session.access_token !== token) {
+      return NextResponse.json(
+        { error: '认证令牌无效' },
+        { status: 401 }
+      );
+    }
 
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: decoded.userId,
-        action: 'USER_LOGOUT',
-        resource: 'User',
-        resourceId: decoded.userId,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
-
+    // Supabase 会话管理由客户端处理，服务端只需要确认令牌有效
     return NextResponse.json({
       success: true,
       message: '登出成功'

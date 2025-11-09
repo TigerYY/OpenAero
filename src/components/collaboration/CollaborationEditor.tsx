@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/Badge';

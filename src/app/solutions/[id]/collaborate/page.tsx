@@ -3,7 +3,7 @@
 import { ArrowLeft, Users, Clock, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 
 import CollaborationEditor from '@/components/collaboration/CollaborationEditor';

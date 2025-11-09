@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { authenticateSupabaseSession } from '@/lib/supabase-auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,23 +14,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 从认证头中获取用户信息
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供认证令牌' },
-        { status: 401 }
-      );
+    // 验证Supabase会话
+    const authResult = await authenticateSupabaseSession(request);
+    if (authResult) {
+      return authResult;
     }
 
-    const token = authHeader.substring(7);
-
-    // 这里应该验证JWT令牌并获取用户ID
-    // 暂时使用模拟数据
-    const userId = 'temp-user-id'; // TODO: 从JWT令牌中获取实际用户ID
+    const user = (request as any).user;
+    const userId = user.userId;
 
     // 检查用户是否已经是创作者
+    const { prisma } = await import('@/lib/prisma');
     const existingCreator = await prisma.user.findFirst({
       where: { 
         id: userId,

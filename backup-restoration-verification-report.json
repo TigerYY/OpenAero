@@ -1,0 +1,105 @@
+{
+  "timestamp": "2025-11-09T18:06:01.016Z",
+  "summary": {
+    "totalChecks": 12,
+    "passedChecks": 5,
+    "failedChecks": 7,
+    "successRate": "41.7%"
+  },
+  "details": [
+    {
+      "check": "Backup File: users-backup.sql",
+      "status": "PASSED",
+      "message": "File readable (1075 bytes, 28 lines)",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.411Z"
+    },
+    {
+      "check": "Backup File: user_profiles-backup.sql",
+      "status": "PASSED",
+      "message": "File readable (882 bytes, 25 lines)",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.412Z"
+    },
+    {
+      "check": "Backup File: user_preferences-backup.sql",
+      "status": "PASSED",
+      "message": "File readable (847 bytes, 23 lines)",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.412Z"
+    },
+    {
+      "check": "Backup File: user_settings-backup.sql",
+      "status": "PASSED",
+      "message": "File readable (900 bytes, 23 lines)",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.412Z"
+    },
+    {
+      "check": "SQL Syntax: users-backup.sql",
+      "status": "FAILED",
+      "message": "Syntax issues detected",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.413Z"
+    },
+    {
+      "check": "SQL Syntax: user_profiles-backup.sql",
+      "status": "FAILED",
+      "message": "Syntax issues detected",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.413Z"
+    },
+    {
+      "check": "SQL Syntax: user_preferences-backup.sql",
+      "status": "FAILED",
+      "message": "Syntax issues detected",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.413Z"
+    },
+    {
+      "check": "SQL Syntax: user_settings-backup.sql",
+      "status": "FAILED",
+      "message": "Syntax issues detected",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:58.413Z"
+    },
+    {
+      "check": "Staging Restoration Test",
+      "status": "FAILED",
+      "message": "No INSERT statements found in backup",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:59.344Z"
+    },
+    {
+      "check": "Backup Data Integrity",
+      "status": "FAILED",
+      "message": "No user data found in backup",
+      "details": null,
+      "timestamp": "2025-11-09T18:05:59.344Z"
+    },
+    {
+      "check": "Restoration Process",
+      "status": "FAILED",
+      "message": "Script validation failed: Command failed: node \"/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/scripts/database-backup.js\" --validate\npg_dump: error: connection to server at \"db.cardynuoazvaytvinxvm.supabase.co\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n",
+      "details": null,
+      "timestamp": "2025-11-09T18:06:01.016Z"
+    },
+    {
+      "check": "Restoration Performance",
+      "status": "PASSED",
+      "message": "Performance test completed (0.00MB file)",
+      "details": {
+        "fileSizeMB": "0.00",
+        "estimatedTimeSeconds": "0.0",
+        "testDurationMs": 0
+      },
+      "timestamp": "2025-11-09T18:06:01.016Z"
+    }
+  ],
+  "recommendations": [
+    "Address failed verification checks before proceeding",
+    "Schedule regular backup restoration drills",
+    "Monitor backup restoration performance in production",
+    "Document emergency restoration procedures"
+  ]
+}

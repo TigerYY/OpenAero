@@ -1,0 +1,32 @@
+{
+  "confirmation": {
+    "subject": "欢迎加入 OpenAero - 请验证您的邮箱",
+    "template": "<h2>欢迎加入 OpenAero！</h2><p>请点击以下链接验证您的邮箱地址：</p><p><a href=\"{{confirmation_url}}\">验证邮箱</a></p><p>如果按钮无法点击，请复制链接：{{confirmation_url}}</p>",
+    "variables": ["confirmation_url", "user_email"]
+  },
+  "recovery": {
+    "subject": "重置您的 OpenAero 密码",
+    "template": "<h2>密码重置请求</h2><p>请点击以下链接重置您的密码：</p><p><a href=\"{{recovery_url}}\">重置密码</a></p><p>如果按钮无法点击，请复制链接：{{recovery_url}}</p><p>此链接将在24小时后失效。</p>",
+    "variables": ["recovery_url", "user_email"]
+  },
+  "email_change": {
+    "subject": "OpenAero - 确认邮箱地址变更",
+    "template": "<h2>邮箱变更确认</h2><p>您请求将邮箱地址更改为：{{new_email}}</p><p>请点击以下链接确认变更：</p><p><a href=\"{{confirmation_url}}\">确认邮箱变更</a></p><p>如果按钮无法点击，请复制链接：{{confirmation_url}}</p>",
+    "variables": ["confirmation_url", "user_email", "new_email", "timestamp"]
+  },
+  "magic_link": {
+    "subject": "OpenAero - 登录链接",
+    "template": "<h2>无密码登录</h2><p>请点击以下链接登录到您的 OpenAero 账户：</p><p><a href=\"{{confirmation_url}}\">登录到 OpenAero</a></p><p>如果按钮无法点击，请复制链接：{{confirmation_url}}</p><p>此链接将在15分钟内失效。</p>",
+    "variables": ["confirmation_url", "user_email"]
+  },
+  "reauthentication": {
+    "subject": "OpenAero - 重新验证您的身份",
+    "template": "<h2>身份重新验证</h2><p>为了保护您的账户安全，请重新验证您的身份：</p><p><a href=\"{{confirmation_url}}\">重新验证身份</a></p><p>如果按钮无法点击，请复制链接：{{confirmation_url}}</p><p>此链接将在10分钟内失效。</p>",
+    "variables": ["confirmation_url", "user_email"]
+  },
+  "invitation": {
+    "subject": "您被邀请加入 OpenAero",
+    "template": "<h2>您收到邀请！</h2><p>{{inviter_name}} 邀请您加入 OpenAero 航空器设计社区！</p><p><a href=\"{{confirmation_url}}\">接受邀请并加入</a></p><p>如果按钮无法点击，请复制链接：{{confirmation_url}}</p>",
+    "variables": ["confirmation_url", "user_email", "inviter_name", "timestamp", "team_name"]
+  }
+}

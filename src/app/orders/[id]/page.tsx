@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect } from 'react';
 import { useRouting } from '@/lib/routing';
 
@@ -112,7 +112,7 @@ interface OrderDetail {
 }
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { route, routes } = useRouting();
   const [order, setOrder] = useState<OrderDetail | null>(null);

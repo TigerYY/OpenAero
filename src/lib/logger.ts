@@ -43,3 +43,4 @@ const productionLogger: Logger = {
 const logger: Logger = process.env.NODE_ENV === 'production' ? productionLogger : developmentLogger;
 
 export default logger;
+export { logger };

@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react';
+import { SupabaseAuthProvider } from '@/components/providers/SupabaseAuthProvider';
 
 interface SessionProviderProps {
   children: React.ReactNode;
@@ -8,8 +8,8 @@ interface SessionProviderProps {
 
 export function SessionProvider({ children }: SessionProviderProps) {
   return (
-    <NextAuthSessionProvider>
+    <SupabaseAuthProvider>
       {children}
-    </NextAuthSessionProvider>
+    </SupabaseAuthProvider>
   );
 }

@@ -6,13 +6,15 @@ import { useState } from 'react';
 
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import PasswordStrengthIndicator from '../../../../components/PasswordStrengthIndicator';
-import { RegisterRequest } from '../../../../shared/types';
+import { useSupabaseAuth } from '@/components/providers/SupabaseAuthProvider';
+import { UserRole } from '@/shared/types';
 import { useRouting } from '@/lib/routing';
 
 function RegisterContent() {
   const router = useRouter();
   const { route, routes } = useRouting();
-  const [formData, setFormData] = useState<RegisterRequest>({
+  const { signUp, loading: supabaseLoading } = useSupabaseAuth();
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: ''
@@ -43,24 +45,26 @@ function RegisterContent() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      // 将姓名分割为firstName和lastName
+      const nameParts = formData.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+      const { error: signUpError } = await signUp(formData.email, formData.password, {
+        firstName,
+        lastName,
+        name: formData.name,
+        role: UserRole.USER,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (signUpError) {
+        setError(signUpError.message || '注册失败');
+      } else {
         // 重定向到邮箱验证提示页面
         router.push(route(routes.AUTH.VERIFY_EMAIL_NOTICE));
-      } else {
-        setError(data.error || '注册失败');
       }
-    } catch (error) {
-      setError('网络错误，请稍后重试');
+    } catch (error: any) {
+      setError(error.message || '注册失败');
     } finally {
       setLoading(false);
     }
@@ -209,10 +213,10 @@ function RegisterContent() {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || supabaseLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '注册中...' : '注册'}
+              {(loading || supabaseLoading) ? '注册中...' : '注册'}
             </button>
           </div>
 

@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { AuthLayout } from '@/components/layout/AuthLayout';
-import { PasswordResetRequest } from '../../../../shared/types';
+import { useSupabaseAuth } from '@/components/providers/SupabaseAuthProvider';
 import { useRouting } from '@/lib/routing';
 
 function ForgotPasswordContent() {
   const { route, routes } = useRouting();
-  const [formData, setFormData] = useState<PasswordResetRequest>({
+  const { resetPassword, loading: supabaseLoading } = useSupabaseAuth();
+  const [formData, setFormData] = useState({
     email: ''
   });
   const [loading, setLoading] = useState(false);
@@ -22,23 +23,15 @@ function ForgotPasswordContent() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const { error: resetError } = await resetPassword(formData.email);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(true);
+      if (resetError) {
+        setError(resetError.message || '发送重置邮件失败');
       } else {
-        setError(data.error || '发送重置邮件失败');
+        setSuccess(true);
       }
-    } catch (error) {
-      setError('网络错误，请稍后重试');
+    } catch (error: any) {
+      setError(error.message || '发送重置邮件失败');
     } finally {
       setLoading(false);
     }
@@ -129,10 +122,10 @@ function ForgotPasswordContent() {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || supabaseLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '发送中...' : '发送重置邮件'}
+              {(loading || supabaseLoading) ? '发送中...' : '发送重置邮件'}
             </button>
           </div>
 

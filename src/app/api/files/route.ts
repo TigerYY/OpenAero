@@ -3,11 +3,12 @@ import path from 'path';
 
 import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/prisma';
+
+import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 
 // 查询参数验证
 const querySchema = z.object({
@@ -21,7 +22,11 @@ const querySchema = z.object({
 // 获取文件列表
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
@@ -114,7 +119,11 @@ export async function GET(request: NextRequest) {
 // 更新文件信息
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
@@ -200,7 +209,11 @@ export async function PUT(request: NextRequest) {
 // 删除文件
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },

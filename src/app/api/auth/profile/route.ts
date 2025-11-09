@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken, logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
-import { AuthService } from '../../../../backend/auth/auth.service';
-
-const authService = new AuthService();
+import { authenticateSupabaseSession, getClientIP } from '@/lib/supabase-auth-middleware';
 
 // 获取用户资料
 export async function GET(request: NextRequest) {
   try {
-    // 验证用户身份
-    const authResult = await authenticateToken(request);
+    // 验证Supabase会话
+    const authResult = await authenticateSupabaseSession(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }
@@ -17,17 +14,25 @@ export async function GET(request: NextRequest) {
     // 获取用户信息
     const user = (request as any).user;
 
-    // 获取用户资料
-    const profile = await authService.getProfile(user.userId);
+    // 从Supabase用户信息和本地数据库获取完整资料
+    const { prisma } = await import('@/lib/prisma');
+    const profile = await prisma.user.findUnique({
+      where: { email: user.email },
+      include: {
+        creatorProfile: true
+      }
+    });
 
     // 返回用户资料（不包含敏感信息）
     const safeProfile = {
-      id: profile.id,
-      email: profile.email,
-      name: profile.name,
-      avatar: profile.avatar,
-      role: profile.role,
-      createdAt: profile.createdAt
+      id: profile?.id || user.userId,
+      email: profile?.email || user.email,
+      firstName: profile?.firstName || user.user?.user_metadata?.first_name || '',
+      lastName: profile?.lastName || user.user?.user_metadata?.last_name || '',
+      name: profile?.name || `${user.user?.user_metadata?.first_name || ''} ${user.user?.user_metadata?.last_name || ''}`.trim(),
+      avatar: profile?.avatar || user.user?.user_metadata?.avatar || '',
+      role: profile?.role || user.role,
+      createdAt: profile?.createdAt || user.user?.created_at
     };
 
     return NextResponse.json({

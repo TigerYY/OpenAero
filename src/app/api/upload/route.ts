@@ -3,10 +3,9 @@ import { writeFile, mkdir } from 'fs/promises';
 import path, { join } from 'path';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
+import { requireUser } from '@/lib/supabase-server-auth';
 import { db } from '@/lib/prisma';
 import { 
   UPLOAD_CONFIG, 
@@ -64,7 +63,14 @@ const ALLOWED_TYPES = [
 export async function POST(request: NextRequest) {
   try {
     // 验证用户身份
-    const session = await getServerSession(authOptions);
+    const authResult = await requireUser(request);
+    if (authResult.error) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+    const session = authResult.session;
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: '未授权访问' },

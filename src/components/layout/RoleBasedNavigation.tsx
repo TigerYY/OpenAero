@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -127,7 +127,7 @@ const createUserMenuItems = (routes: any) => [
 ];
 
 export function RoleBasedNavigation() {
-  const { data: session, status } = useSession();
+  const { user, session, isAuthenticated, isLoading } = useAuth();
   const { route, routes, isActive: isRouteActive, isExactActive } = useRouting();
   
   // 使用路由常量创建导航项
@@ -142,18 +142,18 @@ export function RoleBasedNavigation() {
     }
     
     // 如果用户未登录，则不能访问需要特定角色的菜单项
-    if (!session) {
+    if (!user) {
       return false;
     }
     
     // 检查用户角色是否在允许的角色列表中
-    return item.roles.includes(session.user.role);
+    return item.roles.includes(user.role);
   };
 
   // 过滤导航项，只显示用户有权限访问的
   const filteredNavigation = navigationItems.filter(hasPermission);
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -216,12 +216,12 @@ export function RoleBasedNavigation() {
 
           {/* 右侧用户菜单 */}
           <div className="flex items-center space-x-4">
-            {session ? (
+            {isAuthenticated ? (
               <div className="relative group">
                 <button className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
                   <span className="mr-2">👤</span>
-                  {session.user.name || session.user.email}
-                  <span className="ml-1 text-xs text-gray-500">({session.user.role})</span>
+                  {user?.name || user?.email}
+                  <span className="ml-1 text-xs text-gray-500">({user?.role})</span>
                 </button>
                 
                 {/* 用户下拉菜单 */}
@@ -270,17 +270,17 @@ export function RoleBasedNavigation() {
 
 // 移动端导航组件
 export function MobileRoleBasedNavigation() {
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [isOpen, setIsOpen] = React.useState(false);
 
   // 过滤导航项，只显示用户有权限访问的
   const filteredNavigation = navigationItems.filter((item) => {
     if (!item.roles || item.roles.length === 0) return true;
-    if (!session) return false;
-    return item.roles.includes(session.user.role);
+    if (!user) return false;
+    return item.roles.includes(user.role);
   });
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-200 lg:hidden">
         <div className="px-4 sm:px-6 lg:px-8">
@@ -357,10 +357,10 @@ export function MobileRoleBasedNavigation() {
                 
                 {/* 用户菜单 */}
                 <div className="border-t border-gray-200 pt-4">
-                  {session ? (
+                  {isAuthenticated ? (
                     <>
                       <div className="px-3 py-2 text-sm font-medium text-gray-500">
-                        欢迎，{session.user.name || session.user.email}
+                        欢迎，{user?.name || user?.email}
                       </div>
                       {userMenuItems.map((item) => (
                         <Link

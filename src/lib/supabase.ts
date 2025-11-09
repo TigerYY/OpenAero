@@ -61,8 +61,16 @@ export function getSupabaseServerClient() {
   });
 }
 
+// 导出 createClient 以便其他文件使用
+export { createClient } from '@supabase/supabase-js';
+
 // 导出默认客户端
 export const supabase = getSupabaseClient();
 
 // 导出类型
 export type { Database };
+
+// 导出onAuthStateChange
+export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
+  return supabase.auth.onAuthStateChange(callback);
+};

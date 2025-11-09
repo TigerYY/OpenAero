@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-import { logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
-import { AuthService } from '../../../../backend/auth/auth.service';
-
-const authService = new AuthService();
+// 创建 Supabase 客户端
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
-  let refreshToken: string | null = null;
-  
   try {
     const body = await request.json();
 
@@ -19,58 +19,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    refreshToken = body.refreshToken;
-
-    // 刷新令牌
-    const tokens = await authService.refreshToken(refreshToken!);
-
-    // 获取用户信息（从JWT中解析）
-    const jwt = require('jsonwebtoken');
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-    const decoded = jwt.verify(tokens.accessToken, jwtSecret) as any;
-
-    // 记录审计日志
-    await logUserAction(
-      decoded.userId,
-      'TOKEN_REFRESH',
-      'user',
-      decoded.userId,
-      undefined,
-      { refreshTime: new Date().toISOString() },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        tokens
-      },
-      message: '令牌刷新成功'
+    // 使用 Supabase 刷新令牌
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: body.refreshToken
     });
 
-  } catch (error: any) {
-    console.error('Token refresh error:', error);
-
-    // 记录失败的刷新尝试
-    await logUserAction(
-      'anonymous',
-      'TOKEN_REFRESH_FAILED',
-      'user',
-      undefined,
-      undefined,
-      { reason: 'invalid_refresh_token' },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
-
-    if (error.message.includes('无效的刷新令牌') || error.message.includes('刷新令牌已过期')) {
+    if (error) {
+      console.error('Supabase token refresh error:', error);
       return NextResponse.json(
         { error: '刷新令牌无效或已过期，请重新登录' },
         { status: 401 }
       );
     }
 
+    return NextResponse.json({
+      success: true,
+      data: {
+        session: data.session,
+        user: data.user
+      },
+      message: '令牌刷新成功'
+    });
+
+  } catch (error: any) {
+    console.error('Token refresh error:', error);
     return NextResponse.json(
       { error: '令牌刷新失败，请稍后重试' },
       { status: 500 }

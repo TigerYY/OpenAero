@@ -38,19 +38,47 @@ export class SupabaseAuthManager {
     };
   }): Promise<AuthResponse> {
     try {
+      const emailRedirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email`;
+
       const response = await this.client.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
           ...credentials.options,
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email`,
+          emailRedirectTo,
         },
       });
+
+      // 如果注册成功且用户已创建，发送自定义验证邮件
+      if (response.user && !response.error) {
+        await this.sendCustomVerificationEmail(response.user.email);
+      }
 
       return response;
     } catch (error) {
       console.error('注册失败:', error);
       throw this.handleError(error);
+    }
+  }
+
+  /**
+   * 发送自定义验证邮件
+   */
+  private async sendCustomVerificationEmail(email: string): Promise<void> {
+    try {
+      const { emailService } = await import('./email-service');
+      
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?email=${encodeURIComponent(email)}`;
+      
+      const result = await emailService.sendVerificationEmail(email, verificationUrl);
+      
+      if (result.success) {
+        console.log('验证邮件发送成功:', email);
+      } else {
+        console.error('验证邮件发送失败:', result.error);
+      }
+    } catch (error) {
+      console.error('发送验证邮件时发生错误:', error);
     }
   }
 
@@ -72,24 +100,11 @@ export class SupabaseAuthManager {
   }
 
   /**
-   * 第三方登录
+   * OAuth功能已禁用 - 仅支持邮箱登录
+   * 如需启用OAuth，请参考项目文档配置相关提供商
    */
   async signInWithOAuth(provider: Provider): Promise<void> {
-    try {
-      const { data, error } = await this.client.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-      
-      // OAuth会重定向到提供商
-    } catch (error) {
-      console.error('OAuth登录失败:', error);
-      throw this.handleError(error);
-    }
+    throw new Error('OAuth登录功能已禁用，请使用邮箱登录');
   }
 
   /**
@@ -244,8 +259,9 @@ export const signUp = (credentials: SignUpWithPasswordCredentials<'email'> & {
 export const signIn = (credentials: SignInWithPasswordCredentials<'email'>) => 
   authManager.signIn(credentials);
 
-export const signInWithOAuth = (provider: Provider) => 
-  authManager.signInWithOAuth(provider);
+// OAuth功能已禁用
+// export const signInWithOAuth = (provider: Provider) => 
+//   authManager.signInWithOAuth(provider);
 
 export const signOut = () => authManager.signOut();
 
@@ -275,3 +291,46 @@ export const getUserRole = () => authManager.getUserRole();
 export const isAdmin = () => authManager.isAdmin();
 
 export const isCreator = () => authManager.isCreator();
+
+// 刷新会话令牌
+export const refreshSession = async () => {
+  try {
+    const { data, error } = await authManager.client.auth.refreshSession();
+    return { data, error };
+  } catch (error) {
+    console.error('刷新会话失败:', error);
+    return { data: null, error: authManager.handleError(error) };
+  }
+};
+
+// 重置密码邮件发送
+export const resetPasswordForEmail = async (email: string) => {
+  try {
+    // 先调用Supabase的重置密码功能
+    const supabaseResponse = await authManager.client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    });
+
+    // 然后发送自定义的重置密码邮件
+    if (!supabaseResponse.error) {
+      const { emailService } = await import('./email-service');
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?email=${encodeURIComponent(email)}`;
+      
+      const emailResult = await emailService.sendPasswordResetEmail(email, resetUrl);
+      
+      if (emailResult.success) {
+        console.log('重置密码邮件发送成功:', email);
+      } else {
+        console.error('重置密码邮件发送失败:', emailResult.error);
+      }
+    }
+
+    return supabaseResponse;
+  } catch (error) {
+    console.error('发送重置密码邮件失败:', error);
+    return { error: authManager.handleError(error) };
+  }
+};
+
+// 导出createClient函数别名
+export const createClient = getSupabaseClient;

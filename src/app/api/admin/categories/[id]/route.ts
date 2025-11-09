@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
+import { checkAdminAuth } from '@/lib/api-auth-helpers';
 import { db } from '@/lib/prisma';
 
 interface RouteParams {
@@ -29,7 +28,11 @@ const updateCategorySchema = z.object({
 // 获取单个分类
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
@@ -76,7 +79,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // 更新分类
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
@@ -175,7 +182,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // 删除分类
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });

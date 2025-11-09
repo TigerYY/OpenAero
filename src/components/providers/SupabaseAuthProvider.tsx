@@ -25,7 +25,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
-  signInWithOAuth: (provider: 'google' | 'github') => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updateProfile: (updates: { firstName?: string; lastName?: string; avatar_url?: string }) => Promise<{ error: any }>;
 }
@@ -148,24 +147,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // OAuth登录
-  const signInWithOAuth = async (provider: 'google' | 'github') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      console.error('OAuth登录失败:', error);
-      throw error;
-    }
-  };
+
 
   // 重置密码
   const resetPassword = async (email: string) => {
@@ -208,7 +190,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    signInWithOAuth,
     resetPassword,
     updateProfile,
   };

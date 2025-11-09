@@ -1,10 +1,11 @@
 import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/prisma';
+
+import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 
 interface RouteParams {
   params: {
@@ -22,7 +23,11 @@ const querySchema = z.object({
 // GET /api/solutions/[id]/files - 获取方案的文件列表
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
@@ -119,7 +124,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST /api/solutions/[id]/files - 为方案添加文件关联
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
@@ -213,7 +222,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/solutions/[id]/files - 移除方案的文件关联
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },

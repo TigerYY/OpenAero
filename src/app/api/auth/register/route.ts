@@ -63,9 +63,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 开发环境下自动登录新注册用户
+    if (process.env.NODE_ENV === 'development' && response.user) {
+      try {
+        // 尝试直接登录用户
+        const loginResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+          if (loginData.success) {
+            return NextResponse.json({
+              success: true,
+              message: '注册并登录成功（开发环境自动验证）',
+              user: loginData.user,
+              session: loginData.session
+            });
+          }
+        }
+      } catch (loginError) {
+        console.error('自动登录失败:', loginError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: '注册成功，请检查邮箱完成验证',
+      message: process.env.NODE_ENV === 'development' 
+        ? '注册成功（开发环境）' 
+        : '注册成功，请检查邮箱完成验证',
       user: response.user
     });
 

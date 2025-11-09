@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { authenticateToken, logUserAction } from '@/backend/auth/auth.middleware';
+import { authenticateSupabaseSession, requireSupabaseAdmin, logUserAction } from '@/lib/supabase-auth-middleware';
 
 import { prisma } from '@/lib/prisma';
 
@@ -20,19 +20,19 @@ const getUsersQuerySchema = z.object({
 // GET /api/admin/users - 获取用户列表
 export async function GET(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const authResult = await authenticateToken(request);
+    // 验证Supabase会话
+    const authResult = await authenticateSupabaseSession(request);
     if (authResult) {
       return authResult;
     }
 
-    const user = (request as any).user;
-    if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足，仅管理员可以访问用户列表' },
-        { status: 403 }
-      );
+    // 验证管理员权限
+    const adminResult = await requireSupabaseAdmin()(request as any);
+    if (adminResult) {
+      return adminResult;
     }
+
+    const user = (request as any).user;
 
     // 解析查询参数
     const { searchParams } = new URL(request.url);

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 
-import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+
+import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 import { 
   getSolutionVersionHistory, 
   createSolutionVersion, 
@@ -16,7 +16,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -56,7 +60,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }

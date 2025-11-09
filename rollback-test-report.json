@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-11-09T18:04:32.236Z",
+  "summary": {
+    "total": 7,
+    "passed": 5,
+    "failed": 2,
+    "successRate": "71.4%"
+  },
+  "tests": [
+    {
+      "test": "Backup Files Exist",
+      "status": "PASSED",
+      "message": "All backup files exist and are valid",
+      "details": "Found 4 backup files"
+    },
+    {
+      "test": "Backup Integrity",
+      "status": "FAILED",
+      "message": "Backup file missing expected pattern: /-- Backup created:/i"
+    },
+    {
+      "test": "Create Test Data",
+      "status": "PASSED",
+      "message": "Test data created successfully",
+      "details": "Created test user: test-rollback-1762711467234@openaero.cn"
+    },
+    {
+      "test": "Rollback Script",
+      "status": "PASSED",
+      "message": "Rollback script executed successfully",
+      "details": "Dry run completed without errors"
+    },
+    {
+      "test": "Data Consistency",
+      "status": "PASSED",
+      "message": "Data consistency verified",
+      "details": {
+        "originalCount": 3,
+        "currentCount": 4,
+        "testUserExists": true,
+        "consistency": true
+      }
+    },
+    {
+      "test": "Backup Restoration",
+      "status": "FAILED",
+      "message": "Backup restoration test failed: Command failed: node \"/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/scripts/database-backup.js\" --test-restore\npg_dump: error: connection to server at \"db.cardynuoazvaytvinxvm.supabase.co\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n",
+      "error": {
+        "status": 1,
+        "signal": null,
+        "output": [
+          null,
+          "[2025-11-09T18:04:28.623Z] INFO: Initializing database backup...\n[2025-11-09T18:04:28.644Z] INFO: Backup session initialized: backup_1762711468623_e87ec139\n[2025-11-09T18:04:28.644Z] INFO: Backup directory: backups/migration/backup_1762711468623_e87ec139\n[2025-11-09T18:04:28.644Z] INFO: Creating full database backup...\n[2025-11-09T18:04:28.644Z] INFO: Executing command: PGPASSWORD=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\" pg_dump --host=\"db.cardynuoazvaytvinxvm.supabase.co\" --port=\"5432\" --username=\"postgres\" --dbname=\"postgres\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\"\n[2025-11-09T18:04:30.208Z] ERROR: Command execution failed\n{\n  \"command\": \"PGPASSWORD=\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\\\" pg_dump --host=\\\"db.cardynuoazvaytvinxvm.supabase.co\\\" --port=\\\"5432\\\" --username=\\\"postgres\\\" --dbname=\\\"postgres\\\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\\\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\\\"\",\n  \"error\": \"Command failed: PGPASSWORD=\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\\\" pg_dump --host=\\\"db.cardynuoazvaytvinxvm.supabase.co\\\" --port=\\\"5432\\\" --username=\\\"postgres\\\" --dbname=\\\"postgres\\\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\\\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\\\"\\npg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\",\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n[2025-11-09T18:04:30.208Z] ERROR: Failed to create full backup\n{\n  \"status\": 1,\n  \"signal\": null,\n  \"output\": [\n    null,\n    \"\",\n    \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n  ],\n  \"pid\": 68898,\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n[2025-11-09T18:04:30.209Z] ERROR: Database backup failed\n{\n  \"status\": 1,\n  \"signal\": null,\n  \"output\": [\n    null,\n    \"\",\n    \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n  ],\n  \"pid\": 68898,\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n",
+          "pg_dump: error: connection to server at \"db.cardynuoazvaytvinxvm.supabase.co\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n"
+        ],
+        "pid": 68881,
+        "stdout": "[2025-11-09T18:04:28.623Z] INFO: Initializing database backup...\n[2025-11-09T18:04:28.644Z] INFO: Backup session initialized: backup_1762711468623_e87ec139\n[2025-11-09T18:04:28.644Z] INFO: Backup directory: backups/migration/backup_1762711468623_e87ec139\n[2025-11-09T18:04:28.644Z] INFO: Creating full database backup...\n[2025-11-09T18:04:28.644Z] INFO: Executing command: PGPASSWORD=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\" pg_dump --host=\"db.cardynuoazvaytvinxvm.supabase.co\" --port=\"5432\" --username=\"postgres\" --dbname=\"postgres\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\"\n[2025-11-09T18:04:30.208Z] ERROR: Command execution failed\n{\n  \"command\": \"PGPASSWORD=\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\\\" pg_dump --host=\\\"db.cardynuoazvaytvinxvm.supabase.co\\\" --port=\\\"5432\\\" --username=\\\"postgres\\\" --dbname=\\\"postgres\\\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\\\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\\\"\",\n  \"error\": \"Command failed: PGPASSWORD=\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDU4OTQxNSwiZXhwIjoyMDc2MTY1NDE1fQ.g29Owquq57cTYGh72S500HCN7DYuRxbkH01qdvErDAo\\\" pg_dump --host=\\\"db.cardynuoazvaytvinxvm.supabase.co\\\" --port=\\\"5432\\\" --username=\\\"postgres\\\" --dbname=\\\"postgres\\\" --verbose --no-owner --no-privileges --format=custom --compress=6 --file=\\\"backups/migration/backup_1762711468623_e87ec139/full_backup_1762711468644.sql\\\"\\npg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\",\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n[2025-11-09T18:04:30.208Z] ERROR: Failed to create full backup\n{\n  \"status\": 1,\n  \"signal\": null,\n  \"output\": [\n    null,\n    \"\",\n    \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n  ],\n  \"pid\": 68898,\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n[2025-11-09T18:04:30.209Z] ERROR: Database backup failed\n{\n  \"status\": 1,\n  \"signal\": null,\n  \"output\": [\n    null,\n    \"\",\n    \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n  ],\n  \"pid\": 68898,\n  \"stdout\": \"\",\n  \"stderr\": \"pg_dump: error: connection to server at \\\"db.cardynuoazvaytvinxvm.supabase.co\\\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\\n\\tThis probably means the server terminated abnormally\\n\\tbefore or while processing the request.\\n\"\n}\n",
+        "stderr": "pg_dump: error: connection to server at \"db.cardynuoazvaytvinxvm.supabase.co\" (198.18.0.100), port 5432 failed: server closed the connection unexpectedly\n\tThis probably means the server terminated abnormally\n\tbefore or while processing the request.\n"
+      }
+    },
+    {
+      "test": "No Data Corruption",
+      "status": "PASSED",
+      "message": "No data corruption detected",
+      "details": "Verified 4 users"
+    }
+  ],
+  "recommendations": [
+    "Address failed tests before proceeding with migration",
+    "Document rollback procedures for operations team",
+    "Schedule regular rollback drill tests",
+    "Monitor rollback performance in production"
+  ]
+}

@@ -1,15 +1,17 @@
 // 安全警报API路由
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 
-import { authOptions } from '@/lib/auth-config';
 import { securityMonitor } from '@/lib/security-monitor';
 
 // 获取安全警报
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -43,7 +45,11 @@ export async function GET(request: NextRequest) {
 // 标记警报为已读
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user?.id) {
       return NextResponse.json(

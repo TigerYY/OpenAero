@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
+import { checkAdminAuth } from '@/lib/api-auth-helpers';
 import { db } from '@/lib/prisma';
 
 // 统计查询参数验证

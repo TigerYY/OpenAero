@@ -1,15 +1,17 @@
 // 设备管理API路由
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 
-import { authOptions } from '@/lib/auth-config';
 import { deviceManager } from '@/lib/device-manager';
 
 // 获取用户设备列表
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -37,7 +39,11 @@ export async function GET(request: NextRequest) {
 // 注册新设备
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -81,7 +87,11 @@ export async function POST(request: NextRequest) {
 // 删除设备
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     
     if (!session?.user?.id) {
       return NextResponse.json(

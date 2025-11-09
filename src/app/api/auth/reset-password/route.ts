@@ -1,10 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { resetPasswordForEmail } from '@/lib/supabase-auth';
 import { AuthUtils } from '@/lib/auth-utils';
-import { emailService } from '@/lib/email';
-
-const prisma = new PrismaClient();
 
 // 请求密码重置
 export async function POST(request: NextRequest) {
@@ -20,48 +17,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user) {
-      // 出于安全考虑，即使邮箱不存在也返回成功
-      return NextResponse.json({
-        success: true,
-        message: '如果邮箱存在，重置链接将发送到您的邮箱'
-      });
+    // 验证邮箱格式
+    if (!AuthUtils.validateEmail(email)) {
+      return NextResponse.json(
+        { error: '邮箱格式不正确' },
+        { status: 400 }
+      );
     }
 
-    // 生成密码重置令牌
-    const resetToken = AuthUtils.generatePasswordResetToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1小时后过期
-
-    // 创建密码重置记录
-    await prisma.emailVerification.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        token: resetToken,
-        type: 'PASSWORD_RESET',
-        expiresAt
-      }
+    // 使用Supabase发送密码重置邮件
+    const { error } = await resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
     });
 
-    // 发送密码重置邮件
-    await emailService.sendPasswordResetEmail(user.email, resetToken);
-
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'PASSWORD_RESET_REQUESTED',
-        resource: 'User',
-        resourceId: user.id,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
+    if (error) {
+      console.error('Supabase密码重置错误:', error);
+      return NextResponse.json(
+        { error: error.message || '密码重置请求失败，请稍后重试' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -77,16 +52,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 确认密码重置
+// 确认密码重置（Supabase中通过用户自己的会话更新密码）
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { token, newPassword } = body;
+    const { newPassword } = body;
 
     // 验证输入
-    if (!token || !newPassword) {
+    if (!newPassword) {
       return NextResponse.json(
-        { error: '重置令牌和新密码是必填项' },
+        { error: '新密码是必填项' },
         { status: 400 }
       );
     }
@@ -100,63 +75,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 查找重置记录
-    const resetRecord = await prisma.emailVerification.findFirst({
-      where: {
-        token,
-        type: 'PASSWORD_RESET',
-        usedAt: null,
-        expiresAt: {
-          gt: new Date()
-        }
-      },
-      include: {
-        user: true
-      }
-    });
-
-    if (!resetRecord) {
-      return NextResponse.json(
-        { error: '重置令牌无效或已过期' },
-        { status: 400 }
-      );
-    }
-
-    // 哈希新密码
-    const hashedPassword = await AuthUtils.hashPassword(newPassword);
-
-    // 更新用户密码
-    await prisma.user.update({
-      where: { id: resetRecord.userId || '' },
-      data: {
-        password: hashedPassword,
-        updatedAt: new Date()
-      }
-    });
-
-    // 标记重置记录为已使用
-    await prisma.emailVerification.update({
-      where: { id: resetRecord.id },
-      data: {
-        usedAt: new Date()
-      }
-    });
-
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: resetRecord.userId || undefined,
-        action: 'PASSWORD_RESET_COMPLETED',
-        resource: 'User',
-        resourceId: resetRecord.userId || undefined,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
-
+    // Supabase的密码重置是通过邮件链接中的access_token进行的
+    // 这里我们返回一个指示，说明密码重置应该通过邮件链接完成
+    // 实际的密码更新会在用户点击邮件链接后在前端完成
     return NextResponse.json({
-      success: true,
-      message: '密码重置成功'
+      success: false,
+      message: '密码重置需要通过邮件链接完成。请检查您的邮箱并点击重置链接。'
     });
 
   } catch (error) {

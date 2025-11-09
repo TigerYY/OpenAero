@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/supabase-server-auth';
 
 import { UserRole } from '@/shared/types/auth';
 
@@ -15,58 +15,44 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 /**
- * JWT令牌验证中间件
+ * Supabase令牌验证中间件
+ * 使用新的 Supabase 认证系统
  */
 export async function authenticateToken(request: NextRequest): Promise<NextResponse | null> {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const session = await getServerSession(request);
 
-  if (!token) {
+  if (!session) {
     return NextResponse.json(
-      { error: '访问令牌缺失' },
+      { error: '访问令牌缺失或无效' },
       { status: 401 }
     );
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-    const decoded = jwt.verify(token, jwtSecret) as any;
-
-    // 验证会话是否存在且未过期
-    const session = await prisma.userSession.findFirst({
-      where: {
-        token,
-        userId: decoded.userId,
-        expiresAt: {
-          gt: new Date()
-        }
-      }
+    // 从数据库获取用户角色信息
+    const dbUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, role: true }
     });
 
-    if (!session) {
+    if (!dbUser) {
       return NextResponse.json(
-        { error: '会话已过期或无效' },
+        { error: '用户不存在' },
         { status: 401 }
       );
     }
 
-    // 更新会话最后使用时间
-    await prisma.userSession.update({
-      where: { id: session.id },
-      data: { lastUsedAt: new Date() }
-    });
-
     // 将用户信息添加到请求中
     (request as AuthenticatedRequest).user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role
+      userId: dbUser.id,
+      email: session.user.email,
+      role: dbUser.role as UserRole
     };
 
     return null; // 继续处理请求
   } catch (error) {
     return NextResponse.json(
-      { error: '无效的访问令牌' },
+      { error: '认证验证失败' },
       { status: 401 }
     );
   }
@@ -98,63 +84,33 @@ export function requireRole(allowedRoles: UserRole[]) {
 }
 
 /**
- * 管理员权限验证
- */
-export const requireAdmin = requireRole([UserRole.ADMIN]);
-
-/**
- * 创作者权限验证
- */
-export const requireCreator = requireRole([UserRole.CREATOR, UserRole.ADMIN]);
-
-/**
- * 用户权限验证（任何已登录用户）
- */
-export const requireUser = requireRole([UserRole.CUSTOMER, UserRole.CREATOR, UserRole.ADMIN]);
-
-/**
  * 可选认证中间件（不强制要求登录）
  */
 export async function optionalAuth(request: NextRequest): Promise<NextResponse | null> {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  const session = await getServerSession(request);
 
-  if (!token) {
-    return null; // 没有令牌，继续处理请求
+  if (!session) {
+    return null; // 没有会话，继续处理请求
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-    const decoded = jwt.verify(token, jwtSecret) as any;
-
-    // 验证会话
-    const session = await prisma.userSession.findFirst({
-      where: {
-        token,
-        userId: decoded.userId,
-        expiresAt: {
-          gt: new Date()
-        }
-      }
+    // 从数据库获取用户角色信息
+    const dbUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, role: true }
     });
 
-    if (session) {
-      // 更新会话最后使用时间
-      await prisma.userSession.update({
-        where: { id: session.id },
-        data: { lastUsedAt: new Date() }
-      });
-
+    if (dbUser) {
       // 将用户信息添加到请求中
       (request as AuthenticatedRequest).user = {
-        userId: decoded.userId,
-        email: decoded.email,
-        role: decoded.role
+        userId: dbUser.id,
+        email: session.user.email,
+        role: dbUser.role as UserRole
       };
     }
   } catch (error) {
-    // 令牌无效，但不阻止请求继续
-    console.warn('Invalid token in optional auth:', error);
+    // 认证失败，但不阻止请求继续
+    console.warn('Optional auth failed:', error);
   }
 
   return null; // 继续处理请求
@@ -221,6 +177,5 @@ export function getClientIP(request: NextRequest): string {
     return realIP;
   }
   
-  // 移除可能未定义的 request.ip 访问
   return 'unknown';
 }

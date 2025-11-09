@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
-import { AuthClient } from '@/lib/auth-client';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouting } from '@/lib/routing';
 
 interface UserAuthEntryProps {
@@ -15,35 +15,18 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [user, setUser] = useState<{ name?: string; email?: string; role?: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { route, routes } = useRouting();
-
-  const isAuthenticated = !!user;
 
   // 确保组件在客户端挂载后才渲染
   useEffect(() => {
     setIsMounted(true);
-    checkAuthStatus();
   }, []);
-
-  // 检查认证状态
-  const checkAuthStatus = () => {
-    try {
-      const session = AuthClient.getSession();
-      setUser(session?.user || null);
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // 处理登出
   const handleSignOut = async () => {
     try {
-      AuthClient.clearSession();
-      setUser(null);
+      await logout();
       setIsDropdownOpen(false);
       router.push(route(routes.AUTH.LOGIN));
     } catch (error) {

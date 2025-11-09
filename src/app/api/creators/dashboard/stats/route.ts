@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 
-import { authOptions } from '@/lib/auth-config';
 import { db as prisma } from '@/lib/prisma';
+
+import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: '未授权访问' },

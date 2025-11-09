@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
+import { requireAdmin } from '@/lib/supabase-server-auth';
 import { db } from '@/lib/prisma';
 
 // 创建分类的验证模式
@@ -23,7 +23,14 @@ const createCategorySchema = z.object({
 // 获取分类列表
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await requireAdmin(request);
+    if (authResult.error) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
@@ -117,7 +124,14 @@ export async function GET(request: NextRequest) {
 // 创建分类
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await requireAdmin(request);
+    if (authResult.error) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });

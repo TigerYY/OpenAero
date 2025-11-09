@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthClient } from '@/lib/auth-client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserInfo {
   id: string;
@@ -16,19 +16,10 @@ interface UserInfo {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    const currentUser = AuthClient.getUser();
-    if (!currentUser) {
-      router.push('/auth/login');
-      return;
-    }
-    setUser(currentUser);
-  }, [router]);
-
-  const handleLogout = () => {
-    AuthClient.clearSession();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 
@@ -42,6 +33,13 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -63,7 +61,7 @@ export default function ProfilePage() {
               姓名
             </label>
             <p className="mt-1 text-gray-900">
-              {user.firstName} {user.lastName}
+              {user.name || '未设置姓名'}
             </p>
           </div>
           
@@ -79,7 +77,7 @@ export default function ProfilePage() {
               邮箱验证状态
             </label>
             <p className="mt-1 text-gray-900">
-              {user.emailVerified ? '已验证' : '未验证'}
+              {user.email_confirmed_at ? '已验证' : '未验证'}
             </p>
           </div>
           
@@ -88,7 +86,7 @@ export default function ProfilePage() {
               注册时间
             </label>
             <p className="mt-1 text-gray-900">
-              {new Date(user.createdAt).toLocaleDateString()}
+              {user.created_at ? new Date(user.created_at).toLocaleDateString() : '未知'}
             </p>
           </div>
         </div>

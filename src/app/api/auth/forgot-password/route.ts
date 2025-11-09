@@ -1,69 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logUserAction, getClientIP } from '../../../../backend/auth/auth.middleware';
-import { AuthService } from '../../../../backend/auth/auth.service';
-import { PasswordResetRequest } from '../../../../shared/types';
-
-const authService = new AuthService();
+import { resetPasswordForEmail } from '@/lib/supabase-auth';
+import { AuthUtils } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
-  let body: PasswordResetRequest | null = null;
-  
   try {
-    body = await request.json();
+    const body = await request.json();
+    const { email } = body;
 
-    // 验证必填字段
-    if (!body || !body.email) {
+    // 验证输入
+    if (!email) {
       return NextResponse.json(
-        { error: '邮箱为必填项' },
+        { error: '邮箱是必填项' },
         { status: 400 }
       );
     }
 
     // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
+    if (!AuthUtils.validateEmail(email)) {
       return NextResponse.json(
-        { error: '邮箱格式无效' },
+        { error: '邮箱格式不正确' },
         { status: 400 }
       );
     }
 
-    // 发送密码重置邮件
-    await authService.forgotPassword(body);
+    // 使用Supabase发送密码重置邮件
+    const { error } = await resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
+    });
 
-    // 记录审计日志（不记录具体邮箱以保护隐私）
-    await logUserAction(
-      'anonymous',
-      'PASSWORD_RESET_REQUEST',
-      'user',
-      undefined,
-      undefined,
-      { requestTime: new Date().toISOString() },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
+    if (error) {
+      console.error('Supabase密码重置错误:', error);
+      return NextResponse.json(
+        { error: error.message || '密码重置请求失败，请稍后重试' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: '如果该邮箱已注册，您将收到密码重置邮件'
+      message: '如果邮箱存在，重置链接将发送到您的邮箱'
     });
 
-  } catch (error: any) {
-    console.error('Forgot password error:', error);
-
-    // 记录失败的密码重置请求
-    await logUserAction(
-      'anonymous',
-      'PASSWORD_RESET_REQUEST_FAILED',
-      'user',
-      undefined,
-      undefined,
-      { email: body?.email, reason: 'system_error' },
-      getClientIP(request),
-      request.headers.get('user-agent') || undefined
-    );
-
+  } catch (error) {
+    console.error('密码重置请求错误:', error);
     return NextResponse.json(
       { error: '密码重置请求失败，请稍后重试' },
       { status: 500 }

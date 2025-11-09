@@ -1,0 +1,110 @@
+{
+  "timestamp": "2025-11-09T18:09:07.514Z",
+  "summary": {
+    "totalChecks": 5,
+    "corruptionDetected": 2,
+    "integrityPassed": 3,
+    "corruptionRate": "40.0%"
+  },
+  "details": [
+    {
+      "check": "User Record Integrity",
+      "status": "INTEGRITY",
+      "message": "All user records intact",
+      "details": {
+        "checkedUsers": 3
+      },
+      "timestamp": "2025-11-09T18:09:06.134Z"
+    },
+    {
+      "check": "Data Structure Consistency",
+      "status": "CORRUPTION",
+      "message": "Structure issues found in 3 users",
+      "details": {
+        "issues": 3,
+        "details": [
+          {
+            "userId": "user-1",
+            "email": "demo@openaero.com",
+            "missingFields": [],
+            "extraFields": [
+              "avatar",
+              "email_verified"
+            ],
+            "totalFields": 8
+          },
+          {
+            "userId": "user-2",
+            "email": "admin@openaero.com",
+            "missingFields": [],
+            "extraFields": [
+              "avatar",
+              "email_verified"
+            ],
+            "totalFields": 8
+          },
+          {
+            "userId": "1822ff34-cf80-4b23-836e-ece705759230",
+            "email": "testuser3@gmail.com",
+            "missingFields": [],
+            "extraFields": [
+              "avatar",
+              "email_verified"
+            ],
+            "totalFields": 8
+          }
+        ]
+      },
+      "timestamp": "2025-11-09T18:09:06.455Z"
+    },
+    {
+      "check": "Email Integrity",
+      "status": "INTEGRITY",
+      "message": "Email integrity verified",
+      "details": {
+        "issues": 0,
+        "details": []
+      },
+      "timestamp": "2025-11-09T18:09:06.796Z"
+    },
+    {
+      "check": "Timestamp Consistency",
+      "status": "INTEGRITY",
+      "message": "Timestamp consistency verified",
+      "details": {
+        "issues": 0,
+        "details": []
+      },
+      "timestamp": "2025-11-09T18:09:07.195Z"
+    },
+    {
+      "check": "Backup Consistency",
+      "status": "CORRUPTION",
+      "message": "Inconsistencies detected: 3 missing, 3 extra",
+      "details": {
+        "backupCount": 3,
+        "currentCount": 3,
+        "missingInCurrent": [
+          "admin@openaero.cn",
+          "user@example.com",
+          "member@openaero.cn"
+        ],
+        "extraInCurrent": [
+          "demo@openaero.com",
+          "admin@openaero.com",
+          "testuser3@gmail.com"
+        ]
+      },
+      "timestamp": "2025-11-09T18:09:07.514Z"
+    }
+  ],
+  "recommendations": [
+    "🚨 IMMEDIATE ACTION REQUIRED: Data corruption detected",
+    "Review corruption details and restore from backup if necessary",
+    "Investigate root cause of corruption",
+    "Implement additional data validation measures",
+    "Schedule regular corruption detection scans",
+    "Implement automated corruption alerts",
+    "Document corruption response procedures"
+  ]
+}

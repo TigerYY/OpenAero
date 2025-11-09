@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function CreatorApplyStatusPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [applicationStatus, setApplicationStatus] = useState('loading');
   const [applicationData, setApplicationData] = useState<any>(null);
 

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
 import { z } from 'zod';
 
-import { authOptions } from '@/lib/auth-config';
 import { db } from '@/lib/prisma';
+
+import { checkUserAuth } from '@/lib/api-auth-helpers';
 
 // 验证schemas
 const joinSessionSchema = z.object({
@@ -28,7 +29,11 @@ const leaveSessionSchema = z.object({
 // GET /api/collaboration - 获取协作会话信息
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -97,7 +102,11 @@ export async function GET(request: NextRequest) {
 // POST /api/collaboration - 创建或加入协作会话
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -199,7 +208,11 @@ export async function POST(request: NextRequest) {
 // PUT /api/collaboration - 保存协作操作
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -261,7 +274,11 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/collaboration - 离开协作会话
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
     if (!session?.user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
