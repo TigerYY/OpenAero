@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LoginRequest } from '../../../../shared/types';
+import { AuthClient } from '@/lib/auth-client';
 
 function LoginContent() {
   const router = useRouter();
@@ -35,8 +36,22 @@ function LoginContent() {
       const data = await response.json();
 
       if (response.ok) {
-        // 重定向到首页或仪表板
-        router.push('/dashboard');
+        // 保存session信息到localStorage
+        if (data.session && data.user) {
+          AuthClient.saveSession(data.session, data.user);
+        }
+        
+        // 根据用户角色重定向到正确页面
+        const userRole = data.user?.role || 'USER';
+        
+        if (userRole === 'ADMIN') {
+          router.push('/admin/dashboard');
+        } else if (userRole === 'CREATOR') {
+          router.push('/creators');
+        } else {
+          // 普通用户跳转到个人资料页面进行测试
+          router.push('/profile');
+        }
       } else {
         setError(data.error || '登录失败');
       }

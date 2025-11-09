@@ -7,3 +7,6 @@ export default function RootPage() {
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
+
+// Ensure this is treated as a dynamic route
+export const revalidate = 0;

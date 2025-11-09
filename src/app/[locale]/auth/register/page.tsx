@@ -92,7 +92,7 @@ function RegisterContent() {
           <p className="mt-2 text-center text-sm text-gray-600">
             或{' '}
             <Link
-              href="/auth/login"
+              href={route(routes.AUTH.LOGIN)}
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               登录现有账户
@@ -218,11 +218,11 @@ function RegisterContent() {
 
           <div className="text-xs text-gray-500 text-center">
             注册即表示您同意我们的{' '}
-            <Link href="/terms" className="text-indigo-600 hover:text-indigo-500">
+            <Link href={route('/terms')} className="text-indigo-600 hover:text-indigo-500">
               服务条款
             </Link>{' '}
             和{' '}
-            <Link href="/privacy" className="text-indigo-600 hover:text-indigo-500">
+            <Link href={route('/privacy')} className="text-indigo-600 hover:text-indigo-500">
               隐私政策
             </Link>
           </div>

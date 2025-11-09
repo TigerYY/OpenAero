@@ -5,8 +5,10 @@ import { useState } from 'react';
 
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { PasswordResetRequest } from '../../../../shared/types';
+import { useRouting } from '@/lib/routing';
 
 function ForgotPasswordContent() {
+  const { route, routes } = useRouting();
   const [formData, setFormData] = useState<PasswordResetRequest>({
     email: ''
   });
@@ -77,7 +79,7 @@ function ForgotPasswordContent() {
             </p>
             <div className="mt-6">
               <Link
-                href="/auth/login"
+                href={route(routes.AUTH.LOGIN)}
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 返回登录页面
@@ -136,7 +138,7 @@ function ForgotPasswordContent() {
 
           <div className="text-center">
             <Link
-              href="/auth/login"
+              href={route(routes.AUTH.LOGIN)}
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               返回登录页面

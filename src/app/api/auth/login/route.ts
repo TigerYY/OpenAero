@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { AuthUtils, JWTUtils } from '@/lib/auth-utils';
-import { SessionManager } from '@/lib/session';
-import { prisma } from '@/lib/prisma';
+import { signIn } from '@/lib/supabase-auth';
+import { AuthUtils } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,84 +16,85 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user) {
+    // 验证邮箱格式
+    if (!AuthUtils.validateEmail(email)) {
       return NextResponse.json(
-        { error: '邮箱或密码不正确' },
-        { status: 401 }
+        { error: '邮箱格式不正确' },
+        { status: 400 }
       );
     }
 
-    // 验证密码
-    const isPasswordValid = await AuthUtils.verifyPassword(password, user.password);
-    if (!isPasswordValid) {
+    // 使用Supabase进行登录
+    const response = await signIn({
+      email,
+      password
+    });
+
+    // Supabase返回的结构是 {data: {user, session}, error}
+    const user = response.data?.user;
+    const session = response.data?.session;
+    const error = response.error;
+
+    console.log('Supabase登录响应:', {
+      hasError: !!error,
+      errorMessage: error?.message,
+      hasUser: !!user,
+      hasSession: !!session,
+      userId: user?.id,
+      userEmail: user?.email
+    });
+
+    if (error) {
+      console.error('Supabase登录错误:', error);
+      
+      // 处理特定的错误情况
+      if (error.message.includes('Invalid login credentials')) {
+        return NextResponse.json(
+          { error: '邮箱或密码不正确' },
+          { status: 401 }
+        );
+      }
+
       return NextResponse.json(
-        { error: '邮箱或密码不正确' },
-        { status: 401 }
+        { error: error.message || '登录失败' },
+        { status: 400 }
       );
     }
 
-    // 生成JWT令牌
-    const token = JWTUtils.generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role
-    }, '7d');
-
-    // 创建用户会话
-    const sessionToken = AuthUtils.generateToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7天后过期
-
-    await prisma.userSession.create({
-      data: {
-        userId: user.id,
-        token: sessionToken,
-        expiresAt,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
-
-    // 更新用户最后登录时间
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { updatedAt: new Date() }
-    });
-
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_LOGIN',
-        resource: 'User',
-        resourceId: user.id,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
+    if (!user || !session) {
+      console.error('登录响应不完整:', {
+        user,
+        session,
+        error
+      });
+      return NextResponse.json(
+        { error: '登录失败，请稍后重试' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      token,
+      session,
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt
+        firstName: user.user_metadata?.first_name || '',
+        lastName: user.user_metadata?.last_name || '',
+        role: user.user_metadata?.role || 'USER',
+        emailVerified: user.email_confirmed_at ? true : false,
+        createdAt: user.created_at
       }
     });
 
   } catch (error) {
     console.error('登录错误:', error);
+    console.error('错误堆栈:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: '登录失败，请稍后重试' },
+      { 
+        error: '登录失败，请稍后重试',
+        debug: error instanceof Error ? error.message : '未知错误'
+      },
       { status: 500 }
     );
   }

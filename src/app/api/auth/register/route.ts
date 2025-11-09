@@ -1,10 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { signUp } from '@/lib/supabase-auth';
 import { AuthUtils } from '@/lib/auth-utils';
-import { emailService } from '@/lib/email';
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,66 +33,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 检查邮箱是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
+    // 使用Supabase进行注册
+    const response = await signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: firstName || '',
+          last_name: lastName || '',
+          role: 'USER'
+        }
+      }
     });
 
-    if (existingUser) {
+    if (response.error) {
+      console.error('Supabase注册错误:', response.error);
+      
+      // 处理特定的错误情况
+      if (response.error.message.includes('User already registered')) {
+        return NextResponse.json(
+          { error: '该邮箱已被注册' },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json(
-        { error: '该邮箱已被注册' },
-        { status: 409 }
+        { error: response.error.message || '注册失败' },
+        { status: 400 }
       );
     }
-
-    // 哈希密码
-    const hashedPassword = await AuthUtils.hashPassword(password);
-
-    // 创建用户
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        emailVerified: false
-      }
-    });
-
-    // 生成邮箱验证令牌
-    const verificationToken = AuthUtils.generateEmailToken();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小时后过期
-
-    // 创建邮箱验证记录
-    await prisma.emailVerification.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        token: verificationToken,
-        type: 'REGISTRATION',
-        expiresAt
-      }
-    });
-
-    // 发送验证邮件
-    await emailService.sendVerificationEmail(user.email, verificationToken);
-
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_REGISTERED',
-        resource: 'User',
-        resourceId: user.id,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
 
     return NextResponse.json({
       success: true,
       message: '注册成功，请检查邮箱完成验证',
-      userId: user.id
+      user: response.user
     });
 
   } catch (error) {

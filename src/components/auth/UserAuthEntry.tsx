@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
-import { useLocale } from 'next-intl';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { AuthClient } from '@/lib/auth-client';
 import { useRouting } from '@/lib/routing';
 
 interface UserAuthEntryProps {
@@ -11,27 +12,48 @@ interface UserAuthEntryProps {
 }
 
 export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProps) {
-  const { data: session, status } = useSession();
-  const locale = useLocale();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [user, setUser] = useState<{ name?: string; email?: string; role?: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { route, routes } = useRouting();
 
-  const isLoading = status === 'loading';
-  const isAuthenticated = !!session?.user;
+  const isAuthenticated = !!user;
+
+  // 确保组件在客户端挂载后才渲染
+  useEffect(() => {
+    setIsMounted(true);
+    checkAuthStatus();
+  }, []);
+
+  // 检查认证状态
+  const checkAuthStatus = () => {
+    try {
+      const session = AuthClient.getSession();
+      setUser(session?.user || null);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 处理登出
   const handleSignOut = async () => {
     try {
-      await signOut({ redirect: false });
+      AuthClient.clearSession();
+      setUser(null);
       setIsDropdownOpen(false);
+      router.push(route(routes.AUTH.LOGIN));
     } catch (error) {
-      console.error('登出失败:', error);
+      // 静默处理错误
     }
   };
 
   // 移动端版本
   if (variant === 'mobile') {
-    if (isLoading) {
+    if (!isMounted || isLoading) {
       return (
         <div className="space-y-3">
           <div className="w-full h-10 bg-gray-200 animate-pulse rounded-lg"></div>
@@ -46,14 +68,14 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-medium">
-                {session.user.name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {session.user.name || session.user.email}
+                {user?.name || user?.email}
               </p>
-              <p className="text-xs text-gray-500 capitalize">{session.user.role}</p>
+              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
             </div>
           </div>
           
@@ -70,7 +92,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
             >
               设置
             </Link>
-            {session.user.role === 'CREATOR' && (
+            {user?.role === 'CREATOR' && (
               <Link
                 href={route('/creators/dashboard')}
                 className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -78,7 +100,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
                 创作者中心
               </Link>
             )}
-            {session.user.role === 'ADMIN' && (
+            {user?.role === 'ADMIN' && (
               <Link
                 href={route('/admin')}
                 className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -117,7 +139,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
   }
 
   // 桌面端版本
-  if (isLoading) {
+  if (!isMounted || isLoading) {
     return (
       <div className="flex items-center space-x-4">
         <div className="w-20 h-8 bg-gray-200 animate-pulse rounded-md"></div>
@@ -135,11 +157,11 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
         >
           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-medium">
-              {session.user.name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase()}
+              {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
             </span>
           </div>
           <span className="text-sm font-medium text-gray-700 hidden sm:block">
-            {session.user.name || session.user.email}
+            {user?.name || user?.email}
           </span>
           <svg
             className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -158,9 +180,9 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
             <div className="px-4 py-2 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {session.user.name || session.user.email}
+                {user?.name || user?.email}
               </p>
-              <p className="text-xs text-gray-500 capitalize">{session.user.role}</p>
+              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
             </div>
             
             <Link
@@ -178,7 +200,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
               设置
             </Link>
             
-            {session.user.role === 'CREATOR' && (
+            {user?.role === 'CREATOR' && (
               <Link
                 href={route('/creators/dashboard')}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -188,7 +210,7 @@ export default function UserAuthEntry({ variant = 'desktop' }: UserAuthEntryProp
               </Link>
             )}
             
-            {session.user.role === 'ADMIN' && (
+            {user?.role === 'ADMIN' && (
               <Link
                 href={route('/admin')}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

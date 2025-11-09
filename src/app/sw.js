@@ -1,4 +1,4 @@
-const CACHE_VERSION = '1.0.0';
+const CACHE_VERSION = '1.0.1';
 const STATIC_CACHE_NAME = `openaero-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `openaero-dynamic-v${CACHE_VERSION}`;
 const CACHE_NAME = STATIC_CACHE_NAME; // 保持向后兼容
@@ -112,6 +112,24 @@ self.addEventListener('fetch', (event) => {
 
 // 处理导航请求（页面请求）
 async function handleNavigationRequest(request) {
+  const url = new URL(request.url);
+  
+  // 对于根路径，总是从网络获取
+  if (url.pathname === '/') {
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        // 不缓存根路径的响应，避免重定向缓存问题
+        return networkResponse;
+      }
+      throw new Error('Root path network response not ok');
+    } catch (error) {
+      console.log('Service Worker: Root path failed, redirecting to /zh-CN', error);
+      // 如果根路径失败，直接重定向到中文版本
+      return Response.redirect('/zh-CN', 307);
+    }
+  }
+  
   try {
     // 尝试从网络获取
     const networkResponse = await fetch(request);
@@ -308,7 +326,6 @@ async function doBackgroundSync() {
 
 // 清理过期缓存
 async function cleanupExpiredCache() {
-  const cacheNames = await caches.keys();
   const dynamicCache = await caches.open(DYNAMIC_CACHE_NAME);
   const requests = await dynamicCache.keys();
   
