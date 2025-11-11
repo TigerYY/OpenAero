@@ -5,12 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
-import { SecurityAlertNotification } from '@/components/security/SecurityAlerts';
-import { CartButton } from '@/components/shop/CartButton';
-import { Button } from '@/components/ui/Button';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Logo } from '@/components/ui/Logo';
-import UserAuthEntry from '@/components/auth/UserAuthEntry';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { CartButton } from '@/components/shop/CartButton';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
 import { useRouting } from '@/lib/routing';
@@ -137,7 +134,7 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center space-x-4">
-            <SecurityAlertNotification />
+            {/* <SecurityAlertNotification /> */}
             <CartButton variant="ghost" size="sm" />
             <LanguageSwitcher
               currentLocale={locale as Locale}
@@ -148,12 +145,11 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
               showNativeNames={true}
               className="mr-2"
             />
-            <UserAuthEntry variant="desktop" />
           </div>
 
           {/* Tablet CTA - Simplified */}
           <div className="hidden md:flex lg:hidden items-center space-x-2">
-            <SecurityAlertNotification />
+            {/* <SecurityAlertNotification /> */}
             <CartButton variant="ghost" size="sm" />
             <LanguageSwitcher
               currentLocale={locale as Locale}
@@ -168,7 +164,7 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
 
           {/* Mobile menu button and language switcher */}
           <div className="md:hidden flex items-center space-x-2">
-            <SecurityAlertNotification />
+            {/* <SecurityAlertNotification /> */}
             <CartButton variant="ghost" size="sm" />
             <LanguageSwitcher
               currentLocale={locale as Locale}

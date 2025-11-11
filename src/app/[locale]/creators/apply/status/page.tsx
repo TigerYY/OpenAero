@@ -2,33 +2,16 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function CreatorApplyStatusPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
   const [applicationStatus, setApplicationStatus] = useState('loading');
   const [applicationData, setApplicationData] = useState<any>(null);
 
-  // 检查用户是否已登录
+  // 获取申请状态
   useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!session) {
-      // 未登录用户重定向到登录页面
-      router.push('/auth/login?callbackUrl=/creators/apply/status');
-      return;
-    }
-
-    // 检查用户是否已经是创作者
-    if (session.user.role === 'CREATOR') {
-      router.push('/creators/dashboard');
-      return;
-    }
-
-    // 获取申请状态
     fetchApplicationStatus();
-  }, [session, status, router]);
+  }, []);
 
   const fetchApplicationStatus = async () => {
     try {
@@ -46,7 +29,7 @@ export default function CreatorApplyStatusPage() {
     }
   };
 
-  if (status === 'loading' || applicationStatus === 'loading') {
+  if (applicationStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -55,10 +38,6 @@ export default function CreatorApplyStatusPage() {
         </div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null; // 重定向中
   }
 
   return (

@@ -1,56 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * 用户注册 API
+ * POST /api/auth/register
+ */
 
-import { signUp } from '@/lib/supabase-auth';
-import { AuthUtils } from '@/lib/auth-utils';
+import { NextRequest, NextResponse } from 'next/server';
+import { AuthService } from '@/lib/auth/auth-service';
+import { z } from 'zod';
+
+// 注册请求验证 schema
+const registerSchema = z.object({
+  email: z.string().email('无效的邮箱地址'),
+  password: z
+    .string()
+    .min(8, '密码至少8个字符')
+    .regex(/[A-Z]/, '密码必须包含大写字母')
+    .regex(/[a-z]/, '密码必须包含小写字母')
+    .regex(/[0-9]/, '密码必须包含数字'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  displayName: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // 解析请求体
     const body = await request.json();
-    const { email, password, firstName, lastName } = body;
 
     // 验证输入
-    if (!email || !password) {
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: '邮箱和密码是必填项' },
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    // 验证邮箱格式
-    if (!AuthUtils.validateEmail(email)) {
-      return NextResponse.json(
-        { error: '邮箱格式不正确' },
-        { status: 400 }
-      );
-    }
+    const { email, password, firstName, lastName, displayName } = validationResult.data;
 
-    // 验证密码强度
-    const passwordValidation = AuthUtils.validatePasswordStrength(password);
-    if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { error: passwordValidation.message },
-        { status: 400 }
-      );
-    }
-
-    // 使用Supabase进行注册
-    const response = await signUp({
+    // 注册用户
+    const { user, error } = await AuthService.register({
       email,
       password,
-      options: {
-        data: {
-          first_name: firstName || '',
-          last_name: lastName || '',
-          role: 'USER'
-        }
-      }
+      firstName,
+      lastName,
+      displayName,
     });
 
-    if (response.error) {
-      console.error('Supabase注册错误:', response.error);
-      
-      // 处理特定的错误情况
-      if (response.error.message.includes('User already registered')) {
+    if (error) {
+      // 处理常见错误
+      if (error.message.includes('already registered')) {
         return NextResponse.json(
           { error: '该邮箱已被注册' },
           { status: 409 }
@@ -58,49 +59,32 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: response.error.message || '注册失败' },
+        { error: error.message },
         { status: 400 }
       );
     }
 
-    // 开发环境下自动登录新注册用户
-    if (process.env.NODE_ENV === 'development' && response.user) {
-      try {
-        // 尝试直接登录用户
-        const loginResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (loginResponse.ok) {
-          const loginData = await loginResponse.json();
-          if (loginData.success) {
-            return NextResponse.json({
-              success: true,
-              message: '注册并登录成功（开发环境自动验证）',
-              user: loginData.user,
-              session: loginData.session
-            });
-          }
-        }
-      } catch (loginError) {
-        console.error('自动登录失败:', loginError);
-      }
-    }
+    // 记录审计日志
+    await AuthService.logAudit({
+      user_id: user?.id,
+      action: 'USER_REGISTER',
+      resource: 'auth',
+      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+      user_agent: request.headers.get('user-agent') || 'Unknown',
+      metadata: { email },
+    });
 
     return NextResponse.json({
       success: true,
-      message: process.env.NODE_ENV === 'development' 
-        ? '注册成功（开发环境）' 
-        : '注册成功，请检查邮箱完成验证',
-      user: response.user
+      message: '注册成功！请查收邮箱验证邮件',
+      user: {
+        id: user?.id,
+        email: user?.email,
+      },
     });
-
-  } catch (error) {
-    console.error('注册错误:', error);
+  } catch (error: any) {
+    console.error('Register error:', error);
+    
     return NextResponse.json(
       { error: '注册失败，请稍后重试' },
       { status: 500 }

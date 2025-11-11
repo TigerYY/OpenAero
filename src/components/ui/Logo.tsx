@@ -47,6 +47,7 @@ export function LogoIcon({ size = 'md', className = '' }: Omit<LogoProps, 'showT
 // 仅文字的版本
 export function LogoText({ size = 'md', className = '' }: Omit<LogoProps, 'showText'>) {
   const { textSize } = sizeMap[size];
+  const { route, routes } = useRouting();
   
   return (
     <Link href={route(routes.BUSINESS.HOME)} className={`font-bold text-secondary-900 ${textSize} font-sans ${className}`} style={{ fontFamily: 'PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif' }}>

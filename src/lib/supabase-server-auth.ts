@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-auth';
+import { getSupabaseServerClient } from '@/lib/supabase';
 import { NextRequest } from 'next/server';
 
 /**
@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server';
  */
 export async function getServerSession(request?: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabaseServerClient();
     
     // 从请求头或cookie中获取令牌
     let accessToken = null;

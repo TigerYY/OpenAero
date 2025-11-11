@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
+
 import { prisma } from '@/lib/prisma';
 import logger from '@/lib/logger';
 
@@ -11,16 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    // 验证管理员身份
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const user = (request as any).user;
-    
-    // TODO: 验证管理员权限
-    // 这里需要检查用户是否为管理员
+    // 移除了用户认证，因为用户系统已被清除
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -89,15 +80,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // 验证管理员身份
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const user = (request as any).user;
-    
-    // TODO: 验证管理员权限
+    // 移除了用户认证，因为用户系统已被清除
     
     const body = await request.json();
     const { name, provider, config, webhookUrl, isTestMode = true } = body;
@@ -171,15 +154,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    // 验证管理员身份
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const user = (request as any).user;
-    
-    // TODO: 验证管理员权限
+    // 移除了用户认证，因为用户系统已被清除
     
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

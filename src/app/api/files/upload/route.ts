@@ -6,7 +6,6 @@ import { fileService } from '../../../../backend/file/file.service';
 export async function POST(request: NextRequest) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }

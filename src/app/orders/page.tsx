@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { useAuth } from '@/hooks/useAuth';
+
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 
@@ -61,7 +61,6 @@ interface OrdersResponse {
 }
 
 export default function OrdersPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { route, routes } = useRouting();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -75,14 +74,7 @@ export default function OrdersPage() {
   });
   const [activeTab, setActiveTab] = useState<'all' | OrderStatus>('all');
 
-  // 如果用户未登录，重定向到登录页
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!isAuthenticated || !user) {
-      router.push(route(routes.AUTH.LOGIN));
-    }
-  }, [isAuthenticated, user, authLoading, router]);
+
 
   // 获取订单列表
   const fetchOrders = async (page = 1, status?: OrderStatus | 'all') => {
@@ -121,10 +113,8 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchOrders(pagination.page, activeTab === 'all' ? undefined : activeTab);
-    }
-  }, [isAuthenticated, user, activeTab]);
+    fetchOrders(pagination.page, activeTab === 'all' ? undefined : activeTab);
+  }, [activeTab]);
 
   // 获取状态徽章样式
   const getStatusBadge = (status: OrderStatus) => {
@@ -161,7 +151,7 @@ export default function OrdersPage() {
     fetchOrders(newPage, activeTab === 'all' ? undefined : activeTab);
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -170,10 +160,6 @@ export default function OrdersPage() {
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated || !user) {
-    return null;
   }
 
   return (

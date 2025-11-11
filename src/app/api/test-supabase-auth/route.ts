@@ -132,9 +132,9 @@ export async function POST(request: NextRequest) {
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
-        });
+        // 使用自定义邮件服务进行测试
+        const { resetPasswordForEmail } = await import('@/lib/supabase-auth');
+        const { error } = await resetPasswordForEmail(email);
 
         if (error) {
           return NextResponse.json({ 

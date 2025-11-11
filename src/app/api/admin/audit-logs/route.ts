@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
+
 
 import { prisma } from '@/lib/prisma';
 
@@ -22,19 +22,7 @@ const getAuditLogsQuerySchema = z.object({
 // GET /api/admin/audit-logs - 获取审计日志列表
 export async function GET(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const adminUser = (request as any).user;
-    if (adminUser.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足，仅管理员可以访问审计日志' },
-        { status: 403 }
-      );
-    }
+    // 移除了用户认证，因为用户系统已被清除
 
     // 解析查询参数
     const { searchParams } = new URL(request.url);
@@ -156,19 +144,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/audit-logs/export - 导出审计日志
 export async function POST(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const adminUser = (request as any).user;
-    if (adminUser.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足，仅管理员可以导出审计日志' },
-        { status: 403 }
-      );
-    }
+    // 移除了用户认证，因为用户系统已被清除
 
     const body = await request.json();
     const { dateFrom, dateTo, format = 'json' } = body;

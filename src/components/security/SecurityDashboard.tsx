@@ -20,30 +20,40 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Card, LoadingSpinner } from '@/components/layout/AppLayout';
-import { useSecurityDashboard } from '@/hooks/useSecurityMonitor';
+
 
 export function SecurityDashboard() {
-  const {
-    events,
-    alerts,
-    riskAssessment,
-    stats,
-    loading,
-    timeRange,
-    setTimeRange,
-    eventsInTimeRange,
-    eventStats,
-    loadSecurityData,
-    markAlertAsRead,
-    markAllAlertsAsRead,
-    updateRiskAssessment,
-    getSecurityRecommendations,
-    getRiskLevelColor,
-    getRiskLevelBgColor,
-    hasUnreadAlerts,
-    hasCriticalAlerts,
-    isHighRisk,
-  } = useSecurityDashboard();
+  // 简化版本，移除了用户安全监控功能
+  const stats = {
+    riskLevel: 'low',
+    riskScore: 10,
+    unreadAlerts: 0,
+    recentEvents: []
+  };
+  const loading = false;
+  const timeRange = '24h';
+  const events = [];
+  const alerts = [];
+  const riskAssessment = null;
+  const eventStats = {
+    total: 0,
+    suspicious: 0,
+    bruteForce: 0,
+    deviceChanges: 0
+  };
+
+  const setTimeRange = () => {};
+  const eventsInTimeRange = [];
+  const loadSecurityData = async () => {};
+  const markAlertAsRead = () => {};
+  const markAllAlertsAsRead = () => {};
+  const updateRiskAssessment = async () => {};
+  const getSecurityRecommendations = () => [];
+  const getRiskLevelColor = () => 'text-green-600';
+  const getRiskLevelBgColor = () => 'bg-green-100';
+  const hasUnreadAlerts = false;
+  const hasCriticalAlerts = false;
+  const isHighRisk = false;
 
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);

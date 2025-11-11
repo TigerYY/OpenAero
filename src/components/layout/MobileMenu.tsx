@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-import UserAuthEntry from '@/components/auth/UserAuthEntry';
+
 import { Button } from '@/components/ui/Button';
 
 interface MobileMenuProps {
@@ -85,10 +85,7 @@ export function MobileMenu({ isOpen, onClose, navigation }: MobileMenuProps) {
                 </ul>
               </nav>
 
-              {/* CTA */}
-              <div className="p-6 border-t border-secondary-200 space-y-4">
-                <UserAuthEntry variant="mobile" />
-              </div>
+
             </div>
           </motion.div>
         </>

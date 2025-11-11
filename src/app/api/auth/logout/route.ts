@@ -1,29 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * 用户登出 API
+ * POST /api/auth/logout
+ */
 
-import { signOut } from '@/lib/supabase-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { AuthService, getServerUser } from '@/lib/auth/auth-service';
 
 export async function POST(request: NextRequest) {
   try {
-    // 使用 Supabase 进行登出
-    const { error } = await signOut();
+    // 获取当前用户
+    const user = await getServerUser();
+
+    // 登出
+    const { error } = await AuthService.logout();
 
     if (error) {
-      console.error('Supabase登出错误:', error);
       return NextResponse.json(
-        { error: error.message || '退出登录失败' },
+        { error: error.message },
         { status: 400 }
       );
     }
 
+    // 记录审计日志
+    if (user) {
+      await AuthService.logAudit({
+        user_id: user.id,
+        action: 'USER_LOGOUT',
+        resource: 'auth',
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+        user_agent: request.headers.get('user-agent') || 'Unknown',
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      message: '退出登录成功'
+      message: '登出成功',
     });
-
   } catch (error: any) {
-    console.error('登出错误:', error);
+    console.error('Logout error:', error);
+    
     return NextResponse.json(
-      { error: '退出登录失败，请稍后重试' },
+      { error: '登出失败，请稍后重试' },
       { status: 500 }
     );
   }

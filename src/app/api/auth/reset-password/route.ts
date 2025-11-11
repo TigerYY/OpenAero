@@ -1,90 +1,87 @@
+/**
+ * 重置密码 API
+ * POST /api/auth/reset-password
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+import { AuthService, getServerUser } from '@/lib/auth/auth-service';
+import { z } from 'zod';
 
-import { resetPasswordForEmail } from '@/lib/supabase-auth';
-import { AuthUtils } from '@/lib/auth-utils';
+// 重置密码请求验证 schema
+const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8, '密码至少8个字符')
+    .regex(/[A-Z]/, '密码必须包含大写字母')
+    .regex(/[a-z]/, '密码必须包含小写字母')
+    .regex(/[0-9]/, '密码必须包含数字'),
+});
 
-// 请求密码重置
 export async function POST(request: NextRequest) {
   try {
+    // 获取当前用户（必须通过密码重置链接访问）
+    const user = await getServerUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: '未授权访问' },
+        { status: 401 }
+      );
+    }
+
+    // 解析请求体
     const body = await request.json();
-    const { email } = body;
 
     // 验证输入
-    if (!email) {
+    const validationResult = resetPasswordSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: '邮箱是必填项' },
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    // 验证邮箱格式
-    if (!AuthUtils.validateEmail(email)) {
-      return NextResponse.json(
-        { error: '邮箱格式不正确' },
-        { status: 400 }
-      );
-    }
+    const { password } = validationResult.data;
 
-    // 使用Supabase发送密码重置邮件
-    const { error } = await resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
-    });
+    // 重置密码
+    const { error } = await AuthService.resetPassword(password);
 
     if (error) {
-      console.error('Supabase密码重置错误:', error);
+      await AuthService.logAudit({
+        user_id: user.id,
+        action: 'PASSWORD_RESET_FAILED',
+        resource: 'auth',
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+        user_agent: request.headers.get('user-agent') || 'Unknown',
+        success: false,
+        error_message: error.message,
+      });
+
       return NextResponse.json(
-        { error: error.message || '密码重置请求失败，请稍后重试' },
+        { error: error.message },
         { status: 400 }
       );
     }
+
+    // 记录成功的密码重置
+    await AuthService.logAudit({
+      user_id: user.id,
+      action: 'PASSWORD_RESET',
+      resource: 'auth',
+      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+      user_agent: request.headers.get('user-agent') || 'Unknown',
+    });
 
     return NextResponse.json({
       success: true,
-      message: '如果邮箱存在，重置链接将发送到您的邮箱'
+      message: '密码重置成功，请使用新密码登录',
     });
-
-  } catch (error) {
-    console.error('密码重置请求错误:', error);
-    return NextResponse.json(
-      { error: '密码重置请求失败，请稍后重试' },
-      { status: 500 }
-    );
-  }
-}
-
-// 确认密码重置（Supabase中通过用户自己的会话更新密码）
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { newPassword } = body;
-
-    // 验证输入
-    if (!newPassword) {
-      return NextResponse.json(
-        { error: '新密码是必填项' },
-        { status: 400 }
-      );
-    }
-
-    // 验证密码强度
-    const passwordValidation = AuthUtils.validatePasswordStrength(newPassword);
-    if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { error: passwordValidation.message },
-        { status: 400 }
-      );
-    }
-
-    // Supabase的密码重置是通过邮件链接中的access_token进行的
-    // 这里我们返回一个指示，说明密码重置应该通过邮件链接完成
-    // 实际的密码更新会在用户点击邮件链接后在前端完成
-    return NextResponse.json({
-      success: false,
-      message: '密码重置需要通过邮件链接完成。请检查您的邮箱并点击重置链接。'
-    });
-
-  } catch (error) {
-    console.error('密码重置错误:', error);
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    
     return NextResponse.json(
       { error: '密码重置失败，请稍后重试' },
       { status: 500 }

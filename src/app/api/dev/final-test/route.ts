@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
   try {
     console.log('开始最终集成测试...');
     
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdmin();
     const testResults: any = {};
     
     // 1. 测试认证功能

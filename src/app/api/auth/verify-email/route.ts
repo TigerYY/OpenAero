@@ -1,46 +1,38 @@
+/**
+ * 邮箱验证 API
+ * GET /api/auth/verify-email?token=xxx
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyEmail } from '@/lib/auth/supabase-auth-service';
 
-import { verifyOtp } from '@/lib/supabase-auth';
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, token } = body;
+    const searchParams = request.nextUrl.searchParams;
+    const token = searchParams.get('token');
 
-    // 验证输入
-    if (!email || !token) {
+    if (!token) {
       return NextResponse.json(
-        { error: '邮箱和验证码是必填项' },
+        {
+          success: false,
+          message: '缺少验证令牌',
+        },
         { status: 400 }
       );
     }
 
-    // 使用Supabase验证OTP
-    const response = await verifyOtp({
-      email,
-      token,
-      type: 'signup'
-    });
+    // 验证邮箱
+    const result = await verifyEmail(token);
 
-    if (response.error) {
-      console.error('邮箱验证错误:', response.error);
-      return NextResponse.json(
-        { error: response.error.message || '邮箱验证失败' },
-        { status: 400 }
-      );
-    }
+    // 重定向到登录页面
+    return NextResponse.redirect(
+      new URL('/auth/login?verified=true', request.url)
+    );
+  } catch (error: any) {
+    console.error('邮箱验证失败:', error);
 
-    return NextResponse.json({
-      success: true,
-      message: '邮箱验证成功',
-      user: response.user
-    });
-
-  } catch (error) {
-    console.error('邮箱验证错误:', error);
-    return NextResponse.json(
-      { error: '邮箱验证失败，请稍后重试' },
-      { status: 500 }
+    return NextResponse.redirect(
+      new URL(`/auth/verify-error?message=${encodeURIComponent(error.message)}`, request.url)
     );
   }
 }

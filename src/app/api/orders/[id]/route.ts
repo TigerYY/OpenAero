@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { getOrderById, updateOrderStatus, cancelOrder } from '@/lib/order';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +13,6 @@ export async function GET(
 ) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }
@@ -73,7 +71,6 @@ export async function PUT(
 ) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }
@@ -143,7 +140,6 @@ export async function DELETE(
 ) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }

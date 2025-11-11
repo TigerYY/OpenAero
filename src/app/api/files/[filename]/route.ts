@@ -81,7 +81,6 @@ export async function DELETE(
 ) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }

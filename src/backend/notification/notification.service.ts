@@ -1,6 +1,6 @@
 import { PrismaClient, NotificationType, NotificationPriority } from '@prisma/client';
 
-import { ReviewNotificationService } from '@/backend/email/review-notification.service';
+// import { ReviewNotificationService } from '@/backend/email/review-notification.service';
 import { prisma } from '@/lib/prisma';
 import { getWebSocketManager } from '@/lib/websocket';
 
@@ -32,12 +32,12 @@ export interface NotificationPreferences {
 export class NotificationService {
   private prisma: PrismaClient;
   private webSocketManager: any;
-  private reviewNotificationService: ReviewNotificationService;
+  // private reviewNotificationService: ReviewNotificationService;
 
   constructor() {
     this.prisma = new PrismaClient();
     this.webSocketManager = getWebSocketManager();
-    this.reviewNotificationService = new ReviewNotificationService();
+    // this.reviewNotificationService = new ReviewNotificationService();
   }
 
   // 发送通知
@@ -275,17 +275,18 @@ export class NotificationService {
   // 发送邮件通知
   private async sendEmailNotification(data: NotificationData): Promise<boolean> {
     try {
-      if (data.type === NotificationType.REVIEW && data.metadata?.status) {
-        await this.reviewNotificationService.sendReviewNotification(
-          data.userId,
-          data.metadata.solutionTitle,
-          data.metadata.status,
-          data.metadata.reviewNotes
-        );
-      } else {
-        // 发送通用邮件通知
-        // 这里可以实现通用邮件发送逻辑
-      }
+      // TODO: 实现邮件通知功能
+      // if (data.type === NotificationType.REVIEW && data.metadata?.status) {
+      //   await this.reviewNotificationService.sendReviewNotification(
+      //     data.userId,
+      //     data.metadata.solutionTitle,
+      //     data.metadata.status,
+      //     data.metadata.reviewNotes
+      //   );
+      // } else {
+      //   // 发送通用邮件通知
+      //   // 这里可以实现通用邮件发送逻辑
+      // }
       return true;
     } catch (error) {
       console.error('Failed to send email notification:', error);

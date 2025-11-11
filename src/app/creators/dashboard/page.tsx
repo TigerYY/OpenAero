@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { useAuth } from '@/hooks/useAuth';
+
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 
@@ -59,7 +59,6 @@ interface RecentOrder {
 }
 
 export default function CreatorDashboardPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<CreatorStats | null>(null);
   const [recentSolutions, setRecentSolutions] = useState<RecentSolution[]>([]);
@@ -68,21 +67,8 @@ export default function CreatorDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    
-    if (!isAuthenticated || !user) {
-      router.push('/auth/login');
-      return;
-    }
-
-    // 检查用户是否为创作者
-    if (user.role !== 'CREATOR') {
-      router.push('/creators/apply');
-      return;
-    }
-
     fetchDashboardData();
-  }, [user, isAuthenticated, authLoading, router]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -115,7 +101,7 @@ export default function CreatorDashboardPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -124,10 +110,6 @@ export default function CreatorDashboardPage() {
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated || !user || user.role !== 'CREATOR') {
-    return null;
   }
 
   const getStatusColor = (status: string) => {

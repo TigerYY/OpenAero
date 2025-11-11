@@ -3,19 +3,15 @@
 import React from 'react';
 import { toast } from 'sonner';
 
-import { AuthProvider } from '@/components/providers/AuthProvider';
-
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        {children}
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen bg-gray-50">
+      {children}
+    </div>
   );
 }
 

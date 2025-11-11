@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logUserAction } from '@/backend/auth/auth.middleware';
 import { solutionService } from '@/backend/solution/solution.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
@@ -33,16 +32,7 @@ export async function POST(
     );
 
     // 记录审计日志
-    await logUserAction(
-      authResult.user.id,
-      'SOLUTION_SUBMIT_REVIEW',
-      'solution',
-      solutionId,
-      undefined,
-      { title: result.title, action: 'submit_for_review' },
-      request.headers.get('x-forwarded-for') || 'unknown',
-      request.headers.get('user-agent') || 'unknown'
-    );
+    // TODO: 实现审计日志功能
 
     const response: ApiResponse<typeof result> = {
       success: true,

@@ -1,12 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 
 export default function CreatorApplyPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     bio: '',
     website: '',
@@ -16,22 +14,7 @@ export default function CreatorApplyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 检查用户是否已登录
-  useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!session) {
-      // 未登录用户重定向到登录页面
-      router.push('/auth/login?callbackUrl=/creators/apply');
-      return;
-    }
-
-    // 检查用户是否已经是创作者
-    if (session.user.role === 'CREATOR') {
-      router.push('/creators/dashboard');
-      return;
-    }
-  }, [session, status, router]);
+  // 移除了用户登录检查，因为用户系统已被清除
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,20 +52,7 @@ export default function CreatorApplyPage() {
     });
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载...</p>
-        </div>
-      </div>
-    );
-  }
 
-  if (!session) {
-    return null; // 重定向中
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

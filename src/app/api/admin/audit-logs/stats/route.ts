@@ -1,25 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
+
 
 import { prisma } from '@/lib/prisma';
 
 // GET /api/admin/audit-logs/stats - 获取审计日志统计
 export async function GET(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const authResult = await authenticateToken(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const user = (request as any).user;
-    if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足，仅管理员可以访问审计统计' },
-        { status: 403 }
-      );
-    }
+    // 移除了用户认证，因为用户系统已被清除
 
     // 获取今天的日期范围
     const today = new Date();

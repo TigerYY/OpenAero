@@ -182,8 +182,8 @@ const createUserSchema = z.object({
 // POST /api/admin/users - 创建新用户
 export async function POST(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const authResult = await authenticateToken(request);
+    // 验证Supabase会话
+    const authResult = await authenticateSupabaseSession(request);
     if (authResult) {
       return authResult;
     }

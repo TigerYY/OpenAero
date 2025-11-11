@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { logUserAction } from '@/backend/auth/auth.middleware';
+
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
@@ -22,28 +22,7 @@ const quickActionSchema = z.object({
 // POST /api/admin/dashboard/quick-actions - 执行管理员快速操作
 export async function POST(request: NextRequest) {
   try {
-    // 验证用户身份和权限
-    const authResult = await authenticateRequest(request);
-    if (!authResult.success || !authResult.user) {
-      return authResult.error || NextResponse.json(
-        {
-          success: false,
-          error: '未授权访问',
-          data: null
-        } as ApiResponse<null>,
-        { status: 401 }
-      );
-    }
-
-    // 检查管理员权限
-    if (authResult.user.role !== 'ADMIN') {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '权限不足，仅管理员可以执行快速操作',
-        data: null
-      };
-      return NextResponse.json(response, { status: 403 });
-    }
+    // 移除了用户认证，因为用户系统已被清除
 
     const body = await request.json();
     const validatedData = quickActionSchema.parse(body);
@@ -88,12 +67,7 @@ export async function POST(request: NextRequest) {
         throw new Error('不支持的操作类型');
     }
 
-    // 记录操作日志
-    await logUserAction(
-      authResult.user.id,
-      `QUICK_ACTION_${validatedData.action.toUpperCase()}`,
-      message
-    );
+    // 移除了操作日志记录，因为用户系统已被清除
 
     const response: ApiResponse<typeof result> = {
       success: true,

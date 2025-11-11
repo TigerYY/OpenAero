@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { logUserAction } from '@/backend/auth/auth.middleware';
 import { fileService } from '@/backend/file/file.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
@@ -134,19 +133,7 @@ export async function POST(request: NextRequest) {
         });
 
         // 记录审计日志
-        await logUserAction(
-          user.id,
-          'FILE_UPLOAD',
-          'solution_file',
-          fileRecord.id,
-          undefined,
-          { 
-            filename: fileRecord.filename,
-            fileType,
-            solutionId,
-            fileSize: fileRecord.size
-          }
-        );
+        // TODO: 实现审计日志功能
       } catch (error: any) {
         console.error(`文件上传失败: ${file.name}`, error);
         errors.push({
@@ -233,14 +220,7 @@ export async function DELETE(request: NextRequest) {
     await fileService.deleteFile(file.filename, user.id);
 
     // 记录审计日志
-    await logUserAction(
-      user.id,
-      'FILE_DELETE',
-      'solution_file',
-      fileId,
-      undefined,
-      { filename: file.filename }
-    );
+    // TODO: 实现审计日志功能
 
     const response: ApiResponse<null> = {
       success: true,

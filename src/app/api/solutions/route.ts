@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { logUserAction } from '@/backend/auth/auth.middleware';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
@@ -204,16 +203,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 记录审计日志
-    await logUserAction(
-      authResult.user.id,
-      'create_solution',
-      'solution',
-      solution.id,
-      undefined,
-      JSON.stringify({ title: solution.title, category: solution.category }),
-      request.headers.get('x-forwarded-for') || 'unknown',
-      request.headers.get('user-agent') || 'unknown'
-    );
+    // TODO: 实现审计日志功能
 
     const response: ApiResponse<any> = {
       success: true,

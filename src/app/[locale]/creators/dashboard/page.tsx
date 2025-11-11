@@ -2,11 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
     activeProducts: 0,
@@ -15,26 +13,10 @@ export default function CreatorDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  // 检查用户权限
+  // 获取仪表板数据
   useEffect(() => {
-    if (status === 'loading') return;
-    
-    if (!session) {
-      // 未登录用户重定向到登录页面
-      router.push('/auth/login?callbackUrl=/creators/dashboard');
-      return;
-    }
-
-    // 检查用户是否是创作者
-    if (session.user.role !== 'CREATOR') {
-      // 非创作者用户重定向到申请页面
-      router.push('/creators/apply');
-      return;
-    }
-
-    // 获取仪表板数据
     fetchDashboardData();
-  }, [session, status, router]);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -53,7 +35,7 @@ export default function CreatorDashboardPage() {
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -64,10 +46,6 @@ export default function CreatorDashboardPage() {
     );
   }
 
-  if (!session) {
-    return null; // 重定向中
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,7 +53,7 @@ export default function CreatorDashboardPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">创作者仪表板</h1>
           <p className="mt-2 text-sm text-gray-600">
-            欢迎回来，{session.user.name}！这里是您的创作管理中心。
+            这里是您的创作管理中心。
           </p>
         </div>
 

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+
 import { useState, useEffect } from 'react';
 import { useRouting } from '@/lib/routing';
 
@@ -112,7 +112,6 @@ interface OrderDetail {
 }
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { route, routes } = useRouting();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -120,12 +119,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const [error, setError] = useState<string | null>(null);
   const [retryInfo, setRetryInfo] = useState<any>(null);
 
-  // 如果用户未登录，重定向到登录页
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(route(routes.AUTH.LOGIN));
-    }
-  }, [status, router]);
+
 
   // 获取订单详情
   const fetchOrderDetail = async () => {
@@ -217,10 +211,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   };
 
   useEffect(() => {
-    if (session && params.id) {
+    if (params.id) {
       fetchOrderDetail();
     }
-  }, [session, params.id]);
+  }, [params.id]);
 
   // 当订单有失败的支付时，获取重试信息
   useEffect(() => {
@@ -328,7 +322,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     }
   };
 
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
@@ -356,7 +350,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     );
   }
 
-  if (!session || !order) {
+  if (!order) {
     return null;
   }
 

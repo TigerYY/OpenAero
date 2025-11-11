@@ -1,7 +1,6 @@
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +14,6 @@ export async function GET(
 ) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult;
     }

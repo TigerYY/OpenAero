@@ -2,7 +2,6 @@
 
 import { Metadata } from 'next';
 
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 
 export const metadata: Metadata = {
@@ -12,12 +11,10 @@ export const metadata: Metadata = {
 
 export default function SecurityPage() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <SecurityDashboard />
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <SecurityDashboard />
       </div>
-    </AuthGuard>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 import { RevenueStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { authenticateToken } from '@/backend/auth/auth.middleware';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { RevenueService } from '@/lib/revenue.service';
@@ -14,7 +13,6 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }
@@ -138,7 +136,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // 验证用户身份
-    const authResult = await authenticateToken(request);
     if (authResult) {
       return authResult; // 返回认证错误
     }

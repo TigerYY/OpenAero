@@ -1,100 +1,101 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * 用户登录 API
+ * POST /api/auth/login
+ */
 
-import { signIn } from '@/lib/supabase-auth';
-import { AuthUtils } from '@/lib/auth-utils';
+import { NextRequest, NextResponse } from 'next/server';
+import { AuthService } from '@/lib/auth/auth-service';
+import { z } from 'zod';
+
+// 登录请求验证 schema
+const loginSchema = z.object({
+  email: z.string().email('无效的邮箱地址'),
+  password: z.string().min(1, '密码不能为空'),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // 解析请求体
     const body = await request.json();
-    const { email, password } = body;
 
     // 验证输入
-    if (!email || !password) {
+    const validationResult = loginSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: '邮箱和密码是必填项' },
+        {
+          error: 'Validation failed',
+          details: validationResult.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    // 验证邮箱格式
-    if (!AuthUtils.validateEmail(email)) {
-      return NextResponse.json(
-        { error: '邮箱格式不正确' },
-        { status: 400 }
-      );
-    }
+    const { email, password } = validationResult.data;
 
-    // 使用Supabase进行登录
-    const response = await signIn({
-      email,
-      password
-    });
-
-    // Supabase返回的结构是 {data: {user, session}, error}
-    const user = response.data?.user;
-    const session = response.data?.session;
-    const error = response.error;
-
-    console.log('Supabase登录响应:', {
-      hasError: !!error,
-      errorMessage: error?.message,
-      hasUser: !!user,
-      hasSession: !!session,
-      userId: user?.id,
-      userEmail: user?.email
-    });
+    // 登录
+    const { session, error } = await AuthService.login({ email, password });
 
     if (error) {
-      console.error('Supabase登录错误:', error);
-      
-      // 处理特定的错误情况
+      // 记录失败的登录尝试
+      await AuthService.logAudit({
+        action: 'USER_LOGIN_FAILED',
+        resource: 'auth',
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+        user_agent: request.headers.get('user-agent') || 'Unknown',
+        metadata: { email },
+        success: false,
+        error_message: error.message,
+      });
+
+      // 处理常见错误
       if (error.message.includes('Invalid login credentials')) {
         return NextResponse.json(
-          { error: '邮箱或密码不正确' },
+          { error: '邮箱或密码错误' },
           { status: 401 }
         );
       }
 
+      if (error.message.includes('Email not confirmed')) {
+        return NextResponse.json(
+          { error: '请先验证您的邮箱地址' },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json(
-        { error: error.message || '登录失败' },
+        { error: error.message },
         { status: 400 }
       );
     }
 
-    if (!user || !session) {
-      console.error('登录响应不完整:', {
-        user,
-        session,
-        error
-      });
-      return NextResponse.json(
-        { error: '登录失败，请稍后重试' },
-        { status: 500 }
-      );
-    }
+    // 记录成功的登录
+    await AuthService.logAudit({
+      user_id: session?.user.id,
+      action: 'USER_LOGIN',
+      resource: 'auth',
+      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
+      user_agent: request.headers.get('user-agent') || 'Unknown',
+      metadata: { email },
+    });
 
     return NextResponse.json({
       success: true,
-      session,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.user_metadata?.first_name || '',
-        lastName: user.user_metadata?.last_name || '',
-        role: user.user_metadata?.role || 'USER',
-        emailVerified: user.email_confirmed_at ? true : false,
-        createdAt: user.created_at
-      }
-    });
-
-  } catch (error) {
-    console.error('登录错误:', error);
-    console.error('错误堆栈:', error instanceof Error ? error.stack : 'No stack trace');
-    return NextResponse.json(
-      { 
-        error: '登录失败，请稍后重试',
-        debug: error instanceof Error ? error.message : '未知错误'
+      message: '登录成功',
+      session: {
+        access_token: session?.access_token,
+        refresh_token: session?.refresh_token,
+        expires_at: session?.expires_at,
       },
+      user: {
+        id: session?.user.id,
+        email: session?.user.email,
+      },
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    
+    return NextResponse.json(
+      { error: '登录失败，请稍后重试' },
       { status: 500 }
     );
   }
