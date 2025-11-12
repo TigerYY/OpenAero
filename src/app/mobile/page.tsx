@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
@@ -29,6 +30,7 @@ interface Creator {
 }
 
 export default function MobilePage() {
+  const { route } = useRouting();
   const [featuredSolutions, setFeaturedSolutions] = useState<Solution[]>([]);
   const [topCreators, setTopCreators] = useState<Creator[]>([]);
   const [stats, setStats] = useState({
@@ -198,7 +200,7 @@ export default function MobilePage() {
         <div className="px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">精选解决方案</h2>
-            <Link href="/solutions" className="text-blue-600 text-sm font-medium">
+            <Link href={route('/solutions')} className="text-blue-600 text-sm font-medium">
               查看全部 →
             </Link>
           </div>
@@ -248,7 +250,7 @@ export default function MobilePage() {
         <div className="px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">顶级创作者</h2>
-            <Link href="/creators" className="text-blue-600 text-sm font-medium">
+            <Link href={route('/creators')} className="text-blue-600 text-sm font-medium">
               查看全部 →
             </Link>
           </div>
@@ -289,13 +291,13 @@ export default function MobilePage() {
           </p>
           <div className="space-y-3">
             <Link
-              href="/auth/register"
+              href={route('/auth/register')}
               className="block w-full max-w-xs mx-auto px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
             >
               立即注册
             </Link>
             <Link
-              href="/creators/apply"
+              href={route('/creators/apply')}
               className="block w-full max-w-xs mx-auto px-6 py-3 border-2 border-white text-white font-medium rounded-lg hover:bg-white hover:text-blue-600 transition-colors"
             >
               成为创作者

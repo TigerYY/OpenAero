@@ -100,7 +100,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const deviceId = searchParams.get('deviceId');
 
     if (!deviceId) {

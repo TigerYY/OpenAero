@@ -108,7 +108,7 @@ const mockRooms: ChatRoom[] = [
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId') || 'user1'; // 应该从认证中获取
     const type = searchParams.get('type'); // 'direct' | 'group'
     const page = parseInt(searchParams.get('page') || '1');

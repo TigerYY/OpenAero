@@ -1,0 +1,225 @@
+{
+  "total": 31,
+  "passed": 25,
+  "failed": 5,
+  "warnings": 1,
+  "tests": [
+    {
+      "name": "组件文件存在: src/contexts/AuthContext.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.712Z"
+    },
+    {
+      "name": "组件文件存在: src/hooks/useAuth.ts",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.712Z"
+    },
+    {
+      "name": "组件文件存在: src/components/auth/UserMenu.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "组件文件存在: src/components/auth/ProtectedRoute.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "组件文件存在: src/app/[locale]/(auth)/login/page.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "组件文件存在: src/app/[locale]/(auth)/register/page.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "组件文件存在: src/app/[locale]/(dashboard)/profile/page.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "组件文件存在: src/lib/auth/supabase-client.ts",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "中文翻译文件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "英文翻译文件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "中文认证翻译完整",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:19.713Z"
+    },
+    {
+      "name": "用户注册",
+      "passed": false,
+      "message": "邮件速率限制 - 请等待1小时后重试",
+      "isWarning": true,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "API端点文件: POST /api/auth/register",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "API端点文件: POST /api/auth/login",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "API端点文件: POST /api/auth/logout",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "API端点文件: GET /api/users/me",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "API端点文件: POST /api/auth/forgot-password",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "权限文件存在: src/lib/auth/permissions.ts",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "权限检查函数存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "权限文件存在: src/components/auth/ProtectedRoute.tsx",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "ProtectedRoute 组件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "AdminRoute 组件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "CreatorRoute 组件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库迁移文件存在",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库表定义: user_profiles",
+      "passed": false,
+      "message": "未找到表定义",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库表定义: creator_profiles",
+      "passed": false,
+      "message": "未找到表定义",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库表定义: user_addresses",
+      "passed": false,
+      "message": "未找到表定义",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库表定义: user_sessions",
+      "passed": false,
+      "message": "未找到表定义",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库表定义: audit_logs",
+      "passed": false,
+      "message": "未找到表定义",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "RLS行级安全策略",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    },
+    {
+      "name": "数据库触发器",
+      "passed": true,
+      "message": "",
+      "isWarning": false,
+      "timestamp": "2025-11-12T05:17:21.466Z"
+    }
+  ]
+}

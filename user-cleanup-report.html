@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户清理报告 - 方案B执行完成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+        }
+
+        .info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+
+        .user-list {
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .user-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .user-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-success {
+            background: #38ef7d;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #f5576c;
+            color: white;
+        }
+
+        .actions {
+            background: #f7f9fc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .action-item input[type="checkbox"] {
+            margin-right: 1rem;
+            width: 20px;
+            height: 20px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .remaining-user {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .remaining-user h3 {
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .option-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer {
+            background: #f7f9fc;
+            padding: 1.5rem;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 用户清理报告</h1>
+            <p>方案B - 彻底清理执行完成</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">执行时间: 2025-11-12</p>
+        </div>
+
+        <div class="content">
+            <!-- 清理统计 -->
+            <div class="section">
+                <h2>📊 清理统计</h2>
+                
+                <h3 style="margin-top: 1rem; color: #2d3748;">数据库清理 (PostgreSQL)</h3>
+                <div class="stats-grid">
+                    <div class="stat-card info">
+                        <h3>3</h3>
+                        <p>原始用户数</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>3</h3>
+                        <p>删除用户数</p>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>0</h3>
+                        <p>剩余用户数</p>
+                    </div>
+                </div>
+
+                <div class="user-list">
+                    <h4 style="margin-bottom: 0.75rem; color: #2d3748;">删除的用户:</h4>
+                    <div class="user-item">
+                        <strong>testuser3@gmail.com</strong>
+                        <span class="badge badge-success">已验证</span>
+                    </div>
+                    <div class="user-item">
+                        <strong>demo@openaero.com</strong>
+                        <span class="badge badge-success">已验证</span>
+                    </div>
+                    <div class="user-item">
+                        <strong>admin@openaero.com</strong>
+                        <span class="badge badge-success">已验证</span>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 2rem; color: #2d3748;">Supabase Auth 清理</h3>
+                <div class="stats-grid">
+                    <div class="stat-card info">
+                        <h3>13</h3>
+                        <p>原始用户数</p>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>12</h3>
+                        <p>成功删除</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>1</h3>
+                        <p>剩余用户数</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 清理结果 -->
+            <div class="section">
+                <h2>✅ 清理结果</h2>
+                <div class="user-list">
+                    <div class="user-item">
+                        <strong>✅ 数据库完全清空</strong>
+                        <p style="color: #666; margin-top: 0.25rem;">PostgreSQL users 表已清空</p>
+                    </div>
+                    <div class="user-item">
+                        <strong>✅ Supabase Auth 基本清理</strong>
+                        <p style="color: #666; margin-top: 0.25rem;">12/13 用户已删除</p>
+                    </div>
+                    <div class="user-item">
+                        <strong>✅ 级联删除</strong>
+                        <p style="color: #666; margin-top: 0.25rem;">所有关联数据已自动删除 (bookmarks, files, reviews, solutions)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 剩余用户 -->
+            <div class="section">
+                <h2>⚠️ 剩余用户</h2>
+                <div class="remaining-user">
+                    <h3>yy13922202931@hotmail.com</h3>
+                    <p><strong>Auth ID:</strong> 66f5d563-ccdb-4ff2-9ebc-1350925272ab</p>
+                    <p><strong>邮箱验证:</strong> ✓ 已验证</p>
+                    <p><strong>创建时间:</strong> 2025-10-16</p>
+                    <p><strong>最后登录:</strong> 2025-11-12 (今天)</p>
+                    <p style="margin-top: 0.75rem; color: #2d3436;">
+                        <strong>说明:</strong> 这可能是您的个人账号，正在使用中。该账号不在管理员白名单中。
+                    </p>
+                </div>
+
+                <h3 style="margin-top: 1.5rem; color: #2d3748;">处理选项:</h3>
+                <div class="options">
+                    <div class="option-card">
+                        <h4>选项 1: 保留此账号</h4>
+                        <p>无需操作，该账号可以继续使用</p>
+                    </div>
+                    <div class="option-card">
+                        <h4>选项 2: 删除此账号</h4>
+                        <p>运行删除脚本彻底清除</p>
+                        <div class="code-block" style="font-size: 0.75rem; margin-top: 0.5rem;">
+                            npx ts-node scripts/delete-specific-user.ts yy13922202931@hotmail.com
+                        </div>
+                    </div>
+                    <div class="option-card">
+                        <h4>选项 3: 设为管理员</h4>
+                        <p>将此账号升级为管理员权限</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 推荐后续操作 -->
+            <div class="section">
+                <h2>🎯 推荐后续操作</h2>
+                
+                <h3 style="color: #2d3748; margin-bottom: 1rem;">1. 创建管理员账号</h3>
+                <p>由于所有用户已清空，建议创建一个管理员账号：</p>
+                <div class="code-block">
+                    npx ts-node scripts/create-admin-user.ts
+                </div>
+
+                <h3 style="color: #2d3748; margin: 1.5rem 0 1rem;">2. 验证系统功能</h3>
+                <div class="actions">
+                    <div class="action-item">
+                        <input type="checkbox" id="test1">
+                        <label for="test1">测试用户注册流程</label>
+                    </div>
+                    <div class="action-item">
+                        <input type="checkbox" id="test2">
+                        <label for="test2">测试用户登录流程</label>
+                    </div>
+                    <div class="action-item">
+                        <input type="checkbox" id="test3">
+                        <label for="test3">测试邮箱验证功能</label>
+                    </div>
+                    <div class="action-item">
+                        <input type="checkbox" id="test4">
+                        <label for="test4">测试管理员权限</label>
+                    </div>
+                </div>
+
+                <h3 style="color: #2d3748; margin: 1.5rem 0 1rem;">3. 数据库同步</h3>
+                <p>确保 Prisma schema 与数据库结构同步：</p>
+                <div class="code-block">
+# 从数据库拉取最新结构<br>
+npx prisma db pull<br>
+<br>
+# 生成 Prisma Client<br>
+npx prisma generate
+                </div>
+            </div>
+
+            <!-- 安全提示 -->
+            <div class="section">
+                <h2>🔒 安全提示</h2>
+                <div class="user-list">
+                    <div class="user-item">
+                        ✅ 所有测试数据已清理
+                    </div>
+                    <div class="user-item">
+                        ✅ 数据库已重置
+                    </div>
+                    <div class="user-item">
+                        ⚠️ 建议立即创建管理员账号以便管理系统
+                    </div>
+                    <div class="user-item">
+                        ⚠️ 确认是否保留 yy13922202931@hotmail.com 账号
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>报告生成时间:</strong> 2025-11-12</p>
+            <p><strong>执行状态:</strong> ✅ 成功完成</p>
+            <p><strong>清理方案:</strong> 方案B - 彻底清理</p>
+        </div>
+    </div>
+
+    <script>
+        // 添加交互效果
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.background = '#667eea';
+                this.style.color = 'white';
+                setTimeout(() => {
+                    this.style.background = 'white';
+                    this.style.color = 'inherit';
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     // 移除了用户认证，因为用户系统已被清除
     
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const isActive = searchParams.get('isActive');
@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest) {
   try {
     // 移除了用户认证，因为用户系统已被清除
     
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
     if (!id) {

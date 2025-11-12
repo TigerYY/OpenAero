@@ -1,9 +1,11 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 export default function CreatorApplyStatusPage() {
+  const { route, routes } = useRouting();
   const router = useRouter();
   const [applicationStatus, setApplicationStatus] = useState('loading');
   const [applicationData, setApplicationData] = useState<any>(null);
@@ -155,7 +157,7 @@ export default function CreatorApplyStatusPage() {
 
               <div className="mt-6">
                 <button
-                  onClick={() => router.push('/')}
+                  onClick={() => router.push(route('/'))}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   返回首页

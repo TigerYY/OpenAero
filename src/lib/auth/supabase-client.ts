@@ -5,12 +5,10 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 
 // Supabase 配置
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
@@ -32,8 +30,11 @@ export const supabaseBrowser = createClient(supabaseUrl, supabaseAnonKey, {
 /**
  * 服务器端 Supabase 客户端
  * 用于服务器组件和 API 路由
+ * 注意: 必须在服务器端调用
  */
-export function createSupabaseServer() {
+export async function createSupabaseServer() {
+  // 动态导入 next/headers 避免客户端导入错误
+  const { cookies } = await import('next/headers');
   const cookieStore = cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -65,12 +66,20 @@ export function createSupabaseServer() {
  * 仅在服务器端使用，具有完整权限
  * 警告: 不要在客户端暴露此客户端
  */
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+export function createSupabaseAdmin() {
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  
+  if (!supabaseServiceKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 /**
  * 用户角色类型

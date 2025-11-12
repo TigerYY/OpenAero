@@ -3,7 +3,7 @@
  * 处理用户注册、登录、角色管理等
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseAdmin } from './supabase-client';
 import { prisma } from '@/lib/prisma';
 import { UserRole, UserStatus } from '@prisma/client';
 import {
@@ -12,21 +12,6 @@ import {
   sendWelcomeEmail,
   sendRoleChangeEmail,
 } from '../email/smtp-service';
-
-// 创建 Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase configuration');
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
 
 /**
  * 注册用户数据接口
@@ -44,6 +29,8 @@ export interface RegisterUserData {
  */
 export async function registerUser(data: RegisterUserData) {
   try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
     // 1. 在 Supabase Auth 中创建用户
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
@@ -106,6 +93,8 @@ export async function registerUser(data: RegisterUserData) {
  */
 export async function loginUser(email: string, password: string) {
   try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
     // 1. 使用 Supabase Auth 验证
     const { data: authData, error: authError } = 
       await supabaseAdmin.auth.signInWithPassword({
@@ -176,6 +165,8 @@ export async function loginUser(email: string, password: string) {
  */
 export async function verifyEmail(token: string) {
   try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
     // 1. 使用 token 验证邮箱
     const { data, error } = await supabaseAdmin.auth.verifyOtp({
       token_hash: token,
@@ -216,6 +207,8 @@ export async function verifyEmail(token: string) {
  */
 export async function requestPasswordReset(email: string) {
   try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
     // 1. 检查用户是否存在
     const user = await prisma.user.findUnique({
       where: { email },
@@ -255,6 +248,8 @@ export async function requestPasswordReset(email: string) {
  */
 export async function resetPassword(token: string, newPassword: string) {
   try {
+    const supabaseAdmin = createSupabaseAdmin();
+    
     // 1. 验证 token 并更新密码
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
       token, // 这里应该是从 token 解析出的用户 ID

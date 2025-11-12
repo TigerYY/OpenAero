@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouting } from '@/lib/routing';
 
 export default function ForgotPasswordPage() {
+  const { route, routes } = useRouting();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -51,7 +53,7 @@ export default function ForgotPasswordPage() {
             </p>
             <div className="mt-6">
               <Link
-                href="/login"
+                href={route(routes.AUTH.LOGIN)}
                 className="text-blue-600 hover:text-blue-500 font-medium"
               >
                 返回登录
@@ -110,7 +112,7 @@ export default function ForgotPasswordPage() {
 
           <div className="text-center">
             <Link
-              href="/login"
+              href={route(routes.AUTH.LOGIN)}
               className="text-sm text-blue-600 hover:text-blue-500"
             >
               返回登录

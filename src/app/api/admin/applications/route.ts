@@ -55,7 +55,7 @@ const mockApplications: CreatorApplication[] = [
 // GET - 获取申请列表
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -181,7 +181,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - 删除申请
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const applicationId = searchParams.get('id');
 
     if (!applicationId) {

@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
 
     const user = authResult.user!;
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const fileId = searchParams.get('fileId');
     const solutionId = searchParams.get('solutionId');
 

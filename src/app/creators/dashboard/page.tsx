@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { 
   TrendingUp, 
@@ -67,6 +68,7 @@ export default function CreatorDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+  const { route } = useRouting()
     fetchDashboardData();
   }, []);
 
@@ -197,17 +199,17 @@ export default function CreatorDashboardPage() {
         {/* 快速操作 */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-4">
-            <Link href="/solutions/create">
+            <Link href={route('/solutions/create')}>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 创建新方案
               </Button>
             </Link>
-            <Link href="/solutions/manage">
+            <Link href={route('/solutions/manage')}>
               <Button variant="outline">
                 管理方案
               </Button>
             </Link>
-            <Link href="/creators/revenue">
+            <Link href={route('/creators/revenue')}>
               <Button variant="outline">
                 收益管理
               </Button>
@@ -258,7 +260,7 @@ export default function CreatorDashboardPage() {
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-gray-500 mb-4">还没有创建任何方案</p>
-                    <Link href="/solutions/create">
+                    <Link href={route('/solutions/create')}>
                       <Button>创建第一个方案</Button>
                     </Link>
                   </div>

@@ -1,0 +1,251 @@
+{
+  "timestamp": "2025-11-12T14:13:25.904Z",
+  "totalFiles": 322,
+  "summary": {
+    "critical": 26,
+    "warnings": 0,
+    "info": 4
+  },
+  "issues": [
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/lib/routing.ts",
+      "line": 240,
+      "type": "critical",
+      "category": "Server Component Hook Usage",
+      "message": "服务端组件不能使用 React hooks (useRouting)",
+      "code": "export function useRouting() {"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/page.tsx",
+      "line": 5,
+      "type": "info",
+      "category": "Potential Hardcoded Route",
+      "message": "可能存在硬编码路由（需人工确认）",
+      "code": "redirect('/zh-CN');"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/ui/Logo.tsx",
+      "line": 24,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.HOME)} className={`flex items-end space-x-3 ${className}`}>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/shop/CartDrawer.tsx",
+      "line": 79,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.SHOP)}>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/sections/SolutionsSection.tsx",
+      "line": 226,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.SOLUTION_DETAIL.replace('[id]', solution.id))}>{t('card.viewDetails')}</Link>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/sections/HeroSection.tsx",
+      "line": 53,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.SOLUTIONS)}>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/sections/CreatorHero.tsx",
+      "line": 37,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.CREATORS_APPLY)}>立即申请</Link>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/sections/CaseStudiesSection.tsx",
+      "line": 113,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.BUSINESS.CASE_DETAIL.replace('[id]', study.id))}>{t('viewDetails')}</Link>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/layout/RoleBasedNavigation.tsx",
+      "line": 57,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "href={route(item.href)}"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/layout/Header.tsx",
+      "line": 38,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "{ name: t('navigation.solutions'), href: route(routes.BUSINESS.SOLUTIONS) },"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/layout/EnhancedMobileNavigation.tsx",
+      "line": 95,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "{ name: '无人机套件', href: route(routes.BUSINESS.SOLUTIONS, { category: 'drone-kits' }), badge: 'Hot' },"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/layout/ClientHeader.tsx",
+      "line": 26,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "{ name: t('navigation.solutions'), href: route(routes.BUSINESS.SOLUTIONS) },"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/auth/UserMenu.tsx",
+      "line": 27,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.push(route(routes.AUTH.LOGIN));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/auth/ProtectedRoute.tsx",
+      "line": 32,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "const defaultRedirectTo = redirectTo || route(routes.AUTH.LOGIN);"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/components/business/AdvancedSearch.tsx",
+      "line": 164,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.push(`${route(routes.BUSINESS.SOLUTIONS)}?${params.toString()}`);"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/register/page.tsx",
+      "line": 13,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.replace(route('/zh-CN/register'));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/orders/page.tsx",
+      "line": 202,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Button onClick={() => router.push(route(routes.BUSINESS.SOLUTIONS))}>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/login/page.tsx",
+      "line": 13,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.replace(route('/zh-CN/login'));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/forgot-password/page.tsx",
+      "line": 13,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.replace(route('/zh-CN/forgot-password'));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/creators/page.tsx",
+      "line": 17,
+      "type": "info",
+      "category": "Potential Hardcoded Route",
+      "message": "可能存在硬编码路由（需人工确认）",
+      "code": "href=\"/zh-CN\""
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/solutions/create/page.tsx",
+      "line": 216,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route('/')} className=\"hover:text-blue-600\">首页</Link>"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/orders/[id]/page.tsx",
+      "line": 136,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "setTimeout(() => router.push(route(routes.ORDERS.HOME)), 2000);"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/creators/apply/page.tsx",
+      "line": 259,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.push(route('/creators/status'));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/about/page.tsx",
+      "line": 151,
+      "type": "info",
+      "category": "Potential Hardcoded Route",
+      "message": "可能存在硬编码路由（需人工确认）",
+      "code": "href=\"/contact\""
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/about/page.tsx",
+      "line": 157,
+      "type": "info",
+      "category": "Potential Hardcoded Route",
+      "message": "可能存在硬编码路由（需人工确认）",
+      "code": "href=\"/creators/apply\""
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/solutions/[id]/edit/page.tsx",
+      "line": 195,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "router.push(route('/solutions/manage'));"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/(auth)/register/page.tsx",
+      "line": 80,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "href={route('/login')}"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/(auth)/login/page.tsx",
+      "line": 61,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "<Link href={route(routes.AUTH.REGISTER)} className=\"font-medium text-blue-600 hover:text-blue-500\">"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/(auth)/forgot-password/page.tsx",
+      "line": 56,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "href={route(routes.AUTH.LOGIN)}"
+    },
+    {
+      "file": "/Users/yangyang/Documents/YYCode/OpenAero/openaero.web/src/app/[locale]/creators/apply/status/page.tsx",
+      "line": 160,
+      "type": "critical",
+      "category": "Undefined Variable",
+      "message": "使用了 route() 但未通过 useRouting() 声明",
+      "code": "onClick={() => router.push(route('/'))}"
+    }
+  ]
+}

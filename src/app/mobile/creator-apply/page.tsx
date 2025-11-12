@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import React from 'react';
 
@@ -6,6 +7,7 @@ import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
 
 export default function MobileCreatorApplyPage() {
   const handleApplicationSubmit = async (data: any) => {
+  const { route } = useRouting()
     // 这里可以添加额外的处理逻辑
     console.log('创作者申请提交:', data);
   };
@@ -120,7 +122,7 @@ export default function MobileCreatorApplyPage() {
             申请过程中遇到问题？
           </p>
           <a 
-            href="/mobile/contact" 
+            href={route('/mobile/contact')} 
             className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
           >
             联系我们获取帮助

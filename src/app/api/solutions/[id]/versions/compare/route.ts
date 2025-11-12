@@ -21,7 +21,7 @@ export async function GET(
     }
 
     const solutionId = params.id;
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const v1 = searchParams.get('v1');
     const v2 = searchParams.get('v2');
 

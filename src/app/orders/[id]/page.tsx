@@ -359,7 +359,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       {/* 页面头部 */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
-          <Link href="/orders">
+          <Link href={route('/orders')}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               返回订单列表

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
     const where: any = {};
@@ -221,7 +221,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const fileId = searchParams.get('id');
 
     if (!fileId) {

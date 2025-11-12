@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouting } from '@/lib/routing';
 
 export default function CreatorApplyPage() {
   const router = useRouter();
+  const { route } = useRouting();
   const [formData, setFormData] = useState({
     bio: '',
     website: '',
@@ -34,7 +36,7 @@ export default function CreatorApplyPage() {
 
       if (response.ok) {
         // 申请提交成功，重定向到申请状态页面
-        router.push('/creators/apply/status');
+        router.push(route('/creators/apply/status'));
       } else {
         setError(data.error || '申请提交失败');
       }

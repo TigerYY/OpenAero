@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
@@ -102,6 +103,7 @@ const skillOptions = [
 ];
 
 export default function CreatorApplyPage() {
+  const { route, routes } = useRouting();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -254,7 +256,7 @@ export default function CreatorApplyPage() {
 
       if (result.success) {
         alert('申请提交成功！我们将在3-5个工作日内完成审核。');
-        router.push('/creators/status');
+        router.push(route('/creators/status'));
       } else {
         alert('申请提交失败：' + result.error);
       }

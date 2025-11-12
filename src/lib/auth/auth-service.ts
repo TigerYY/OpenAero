@@ -3,7 +3,7 @@
  * 基于 Supabase Auth 的完整用户认证系统
  */
 
-import { supabaseBrowser, supabaseAdmin, createSupabaseServer, type UserProfile, type ExtendedUser } from './supabase-client';
+import { supabaseBrowser, createSupabaseAdmin, createSupabaseServer, type UserProfile, type ExtendedUser } from './supabase-client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
 
 // ============================================
@@ -150,6 +150,8 @@ export class AuthService {
    */
   static async getExtendedUser(userId: string): Promise<ExtendedUser | null> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
+      
       // 获取 auth.users 信息
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
@@ -200,6 +202,7 @@ export class AuthService {
    */
   static async updateProfile(userId: string, data: Partial<UserProfile>): Promise<{ error: Error | null }> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
       const { error } = await supabaseAdmin
         .from('user_profiles')
         .update(data)
@@ -216,6 +219,7 @@ export class AuthService {
    */
   private static async updateLastLogin(userId: string): Promise<void> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
       await supabaseAdmin
         .from('user_profiles')
         .update({ last_login_at: new Date().toISOString() })
@@ -230,6 +234,7 @@ export class AuthService {
    */
   static async hasPermission(userId: string, permission: string): Promise<boolean> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
       const { data } = await supabaseAdmin
         .from('user_profiles')
         .select('permissions, role')
@@ -254,6 +259,7 @@ export class AuthService {
    */
   static async hasRole(userId: string, roles: string[]): Promise<boolean> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
       const { data } = await supabaseAdmin
         .from('user_profiles')
         .select('role')
@@ -280,6 +286,7 @@ export class AuthService {
         return { error: new Error('Unauthorized: Only admins can update user roles') };
       }
 
+      const supabaseAdmin = createSupabaseAdmin();
       const { error } = await supabaseAdmin
         .from('user_profiles')
         .update({ role })
@@ -321,6 +328,7 @@ export class AuthService {
     error_message?: string;
   }): Promise<void> {
     try {
+      const supabaseAdmin = createSupabaseAdmin();
       await supabaseAdmin.from('audit_logs').insert({
         user_id: data.user_id || null,
         action: data.action,

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 export default function RootPage() {
-  // Redirect to default locale
+  // Redirect to default locale (zh-CN)
   redirect('/zh-CN');
 }
 

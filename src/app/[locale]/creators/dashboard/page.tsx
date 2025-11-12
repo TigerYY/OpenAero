@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useRouting } from '@/lib/routing';
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
+  const { route } = useRouting();
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
     activeProducts: 0,
@@ -95,13 +97,13 @@ export default function CreatorDashboardPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">产品管理</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/creators/products')}
+                  onClick={() => router.push(route('/creators/products'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
                 >
                   查看我的产品
                 </button>
                 <button
-                  onClick={() => router.push('/creators/products/new')}
+                  onClick={() => router.push(route('/creators/products/new'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-md"
                 >
                   创建新产品
@@ -115,13 +117,13 @@ export default function CreatorDashboardPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">订单管理</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/creators/orders')}
+                  onClick={() => router.push(route('/creators/orders'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
                 >
                   查看所有订单
                 </button>
                 <button
-                  onClick={() => router.push('/creators/orders/pending')}
+                  onClick={() => router.push(route('/creators/orders/pending'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-md"
                 >
                   处理待发货订单
@@ -135,13 +137,13 @@ export default function CreatorDashboardPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">数据分析</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/creators/analytics')}
+                  onClick={() => router.push(route('/creators/analytics'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-md"
                 >
                   查看销售分析
                 </button>
                 <button
-                  onClick={() => router.push('/creators/reports')}
+                  onClick={() => router.push(route('/creators/reports'))}
                   className="w-full text-left px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md"
                 >
                   生成收益报告

@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Link from 'next/link';
 
@@ -21,28 +22,29 @@ export default function TestPage() {
       </div>
 
       {/* 导航测试 */}
+  const { route } = useRouting()
       <Card>
         <CardHeader>
           <CardTitle>页面导航测试</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link href="/solutions">
+            <Link href={route('/solutions')}>
               <Button variant="outline" className="w-full">
                 方案列表
               </Button>
             </Link>
-            <Link href="/solutions/create">
+            <Link href={route('/solutions/create')}>
               <Button variant="outline" className="w-full">
                 创建方案
               </Button>
             </Link>
-            <Link href="/solutions/manage">
+            <Link href={route('/solutions/manage')}>
               <Button variant="outline" className="w-full">
                 管理方案
               </Button>
             </Link>
-            <Link href="/solutions/1">
+            <Link href={route('/solutions/1')}>
               <Button variant="outline" className="w-full">
                 方案详情
               </Button>

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     // 获取查询参数
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || '30d';
     
     // 计算时间范围

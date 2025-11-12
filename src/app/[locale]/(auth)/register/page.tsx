@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useRouting } from '@/lib/routing';
 
 export default function RegisterPage() {
   const router = useRouter();
   const t = useTranslations();
+  const { route, routes } = useRouting();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -75,7 +77,7 @@ export default function RegisterPage() {
             </p>
             <div className="mt-6">
               <Link
-                href="/login"
+                href={route('/login')}
                 className="text-blue-600 hover:text-blue-500 font-medium"
               >
                 返回登录
@@ -96,7 +98,7 @@ export default function RegisterPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             已有账户？{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href={route(routes.AUTH.LOGIN)} className="font-medium text-blue-600 hover:text-blue-500">
               立即登录
             </Link>
           </p>
@@ -217,11 +219,11 @@ export default function RegisterPage() {
 
           <div className="text-xs text-center text-gray-500">
             点击注册即表示您同意我们的{' '}
-            <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+            <Link href={route('/terms')} className="text-blue-600 hover:text-blue-500">
               服务条款
             </Link>{' '}
             和{' '}
-            <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+            <Link href={route('/privacy')} className="text-blue-600 hover:text-blue-500">
               隐私政策
             </Link>
           </div>

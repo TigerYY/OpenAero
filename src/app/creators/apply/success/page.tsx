@@ -1,12 +1,14 @@
+'use client';
+
 import Link from 'next/link';
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
-
-// 强制动态渲染
-export const dynamic = 'force-dynamic';
+import { useRouting } from '@/lib/routing';
 
 export default function CreatorApplySuccessPage() {
+  const { route } = useRouting();
+
   return (
     <MainLayout locale="zh-CN">
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
@@ -76,12 +78,12 @@ export default function CreatorApplySuccessPage() {
             {/* 操作按钮 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link href="/solutions">
+                <Link href={route('/solutions')}>
                   浏览解决方案
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/creators">
+                <Link href={route('/creators')}>
                   了解更多
                 </Link>
               </Button>

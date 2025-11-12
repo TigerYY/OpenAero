@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,6 +41,7 @@ const categories = [
 ];
 
 export default function CreateSolutionPage() {
+  const { route, routes } = useRouting();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -211,9 +213,9 @@ export default function CreateSolutionPage() {
       <div className="bg-white border-b">
         <div className="container py-4">
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600">首页</Link>
+            <Link href={route('/')} className="hover:text-blue-600">首页</Link>
             <span>/</span>
-            <Link href="/solutions" className="hover:text-blue-600">方案</Link>
+            <Link href={route('/solutions')} className="hover:text-blue-600">方案</Link>
             <span>/</span>
             <span className="text-gray-900">创建方案</span>
           </nav>

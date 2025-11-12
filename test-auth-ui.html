@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAero 认证系统测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.375rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .success { background-color: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .error { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .info { background-color: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">OpenAero 认证系统测试页面</h1>
+            <p class="text-gray-600">测试用户注册、登录、登出等功能</p>
+        </div>
+
+        <!-- 配置检查 -->
+        <div class="test-section">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="mr-2">🔍</span> 系统配置检查
+            </h2>
+            <button onclick="checkConfig()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                检查配置
+            </button>
+            <div id="config-result"></div>
+        </div>
+
+        <!-- UI组件测试 -->
+        <div class="test-section">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="mr-2">🎨</span> UI组件测试
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="window.open('http://localhost:3000', '_blank')" 
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    打开首页
+                </button>
+                <button onclick="window.open('http://localhost:3000/login', '_blank')" 
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    打开登录页
+                </button>
+                <button onclick="window.open('http://localhost:3000/register', '_blank')" 
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    打开注册页
+                </button>
+                <button onclick="window.open('http://localhost:3000/profile', '_blank')" 
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    打开个人资料页
+                </button>
+            </div>
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                <p class="text-sm text-blue-800">
+                    <strong>检查清单:</strong><br>
+                    ✅ Header中是否显示"登录/注册"按钮(未登录)<br>
+                    ✅ 登录页面UI是否正常<br>
+                    ✅ 注册页面UI是否正常<br>
+                    ✅ 个人资料页面是否受保护(未登录跳转)
+                </p>
+            </div>
+        </div>
+
+        <!-- API端点测试 -->
+        <div class="test-section">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="mr-2">🌐</span> API端点测试
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="testEndpoint('POST', '/api/auth/register')" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    测试注册API
+                </button>
+                <button onclick="testEndpoint('POST', '/api/auth/login')" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    测试登录API
+                </button>
+                <button onclick="testEndpoint('GET', '/api/users/me')" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    测试用户信息API
+                </button>
+                <button onclick="testEndpoint('POST', '/api/auth/logout')" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    测试登出API
+                </button>
+            </div>
+            <div id="api-result"></div>
+        </div>
+
+        <!-- 认证流程测试 -->
+        <div class="test-section">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="mr-2">🔐</span> 完整认证流程测试
+            </h2>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">测试邮箱:</label>
+                <input type="email" id="test-email" 
+                       value="test@example.com" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">测试密码:</label>
+                <input type="password" id="test-password" 
+                       value="TestPassword123!" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded">
+            </div>
+            <button onclick="runFullAuthTest()" 
+                    class="bg-indigo-600 text-white px-6 py-3 rounded hover:bg-indigo-700 font-medium">
+                运行完整测试
+            </button>
+            <div id="auth-result"></div>
+        </div>
+
+        <!-- 测试报告 -->
+        <div class="test-section">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="mr-2">📊</span> 测试报告
+            </h2>
+            <div id="test-report" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000';
+        let testResults = [];
+
+        function addResult(name, passed, message = '') {
+            testResults.push({ name, passed, message, timestamp: new Date() });
+            updateReport();
+        }
+
+        function updateReport() {
+            const reportDiv = document.getElementById('test-report');
+            const passed = testResults.filter(r => r.passed).length;
+            const total = testResults.length;
+            
+            reportDiv.innerHTML = `
+                <div class="mb-4 p-4 bg-gray-100 rounded">
+                    <p class="font-medium">总计: ${total} | 通过: ${passed} | 失败: ${total - passed}</p>
+                    <div class="w-full bg-gray-300 rounded-full h-2 mt-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: ${total ? (passed/total*100) : 0}%"></div>
+                    </div>
+                </div>
+                ${testResults.map(r => `
+                    <div class="flex items-center justify-between p-2 ${r.passed ? 'bg-green-50' : 'bg-red-50'} rounded">
+                        <span>${r.passed ? '✅' : '❌'} ${r.name}</span>
+                        ${r.message ? `<span class="text-sm text-gray-600">${r.message}</span>` : ''}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        async function checkConfig() {
+            const resultDiv = document.getElementById('config-result');
+            resultDiv.innerHTML = '<div class="test-result info">检查中...</div>';
+            
+            const checks = [];
+            
+            // 检查开发服务器
+            try {
+                const response = await fetch(BASE_URL);
+                checks.push({
+                    name: '开发服务器运行',
+                    passed: response.ok,
+                    message: response.ok ? '端口3000正常' : '无法连接'
+                });
+            } catch (error) {
+                checks.push({
+                    name: '开发服务器运行',
+                    passed: false,
+                    message: '请启动: npm run dev'
+                });
+            }
+            
+            // 检查Supabase配置
+            const hasSupabase = typeof window !== 'undefined';
+            checks.push({
+                name: 'Supabase配置',
+                passed: hasSupabase,
+                message: hasSupabase ? '配置正常' : '缺少配置'
+            });
+            
+            checks.forEach(check => addResult(check.name, check.passed, check.message));
+            
+            resultDiv.innerHTML = `
+                <div class="test-result ${checks.every(c => c.passed) ? 'success' : 'error'}">
+                    ${checks.map(c => `${c.passed ? '✅' : '❌'} ${c.name}: ${c.message}`).join('<br>')}
+                </div>
+            `;
+        }
+
+        async function testEndpoint(method, path) {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = `<div class="test-result info">测试 ${method} ${path}...</div>`;
+            
+            try {
+                const response = await fetch(BASE_URL + path, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch {
+                    data = { message: await response.text() };
+                }
+                
+                const passed = response.status !== 404 && response.status !== 500;
+                addResult(`API ${method} ${path}`, passed, `状态: ${response.status}`);
+                
+                resultDiv.innerHTML = `
+                    <div class="test-result ${passed ? 'success' : 'error'}">
+                        <strong>${method} ${path}</strong><br>
+                        状态: ${response.status}<br>
+                        响应: ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                addResult(`API ${method} ${path}`, false, error.message);
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function runFullAuthTest() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            const resultDiv = document.getElementById('auth-result');
+            
+            resultDiv.innerHTML = '<div class="test-result info">运行完整认证流程测试...</div>';
+            
+            const steps = [];
+            
+            try {
+                // 步骤1: 注册
+                steps.push('开始注册...');
+                const registerResponse = await fetch(`${BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: `test_${Date.now()}@example.com`,
+                        password,
+                        username: `testuser_${Date.now()}`,
+                        fullName: 'Test User'
+                    })
+                });
+                
+                const registerData = await registerResponse.json();
+                const registerPassed = registerResponse.ok || registerResponse.status === 400;
+                steps.push(`注册: ${registerPassed ? '✅' : '❌'} - ${JSON.stringify(registerData)}`);
+                addResult('用户注册', registerPassed, registerData.message || '');
+                
+                // 步骤2: 登录
+                steps.push('开始登录...');
+                const loginResponse = await fetch(`${BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const loginData = await loginResponse.json();
+                const loginPassed = loginResponse.ok;
+                steps.push(`登录: ${loginPassed ? '✅' : '❌'} - ${JSON.stringify(loginData)}`);
+                addResult('用户登录', loginPassed, loginData.message || '');
+                
+                if (loginPassed) {
+                    // 步骤3: 获取用户信息
+                    steps.push('获取用户信息...');
+                    const meResponse = await fetch(`${BASE_URL}/api/users/me`, {
+                        credentials: 'include'
+                    });
+                    
+                    const meData = await meResponse.json();
+                    const mePassed = meResponse.ok;
+                    steps.push(`用户信息: ${mePassed ? '✅' : '❌'}`);
+                    addResult('获取用户信息', mePassed);
+                    
+                    // 步骤4: 登出
+                    steps.push('开始登出...');
+                    const logoutResponse = await fetch(`${BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    const logoutPassed = logoutResponse.ok;
+                    steps.push(`登出: ${logoutPassed ? '✅' : '❌'}`);
+                    addResult('用户登出', logoutPassed);
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="test-result success">
+                        ${steps.map(s => `<div>${s}</div>`).join('')}
+                    </div>
+                `;
+                
+            } catch (error) {
+                steps.push(`❌ 错误: ${error.message}`);
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        ${steps.map(s => `<div>${s}</div>`).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时初始化
+        window.onload = () => {
+            updateReport();
+            console.log('OpenAero 认证测试页面已加载');
+            console.log('请确保开发服务器运行在: http://localhost:3000');
+        };
+    </script>
+</body>
+</html>

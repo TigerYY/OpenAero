@@ -68,7 +68,7 @@ const trendingQueries = [
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q')?.toLowerCase() || '';
     const limit = parseInt(searchParams.get('limit') || '10');
     const type = searchParams.get('type') as 'query' | 'category' | 'tag' | 'author' | undefined;

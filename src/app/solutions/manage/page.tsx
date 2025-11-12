@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ interface SortOptions {
 }
 
 export default function ManageSolutionsPage() {
+  const { route } = useRouting();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [stats, setStats] = useState<SolutionStats>({
     total: 0,
@@ -468,9 +470,9 @@ export default function ManageSolutionsPage() {
       <div className="bg-white border-b">
         <div className="container py-4">
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600">首页</Link>
+            <Link href={route('/')} className="hover:text-blue-600">首页</Link>
             <span>/</span>
-            <Link href="/solutions" className="hover:text-blue-600">方案</Link>
+            <Link href={route('/solutions')} className="hover:text-blue-600">方案</Link>
             <span>/</span>
             <span className="text-gray-900">我的方案</span>
           </nav>
@@ -494,7 +496,7 @@ export default function ManageSolutionsPage() {
               </svg>
               筛选
             </Button>
-            <Link href="/solutions/create">
+            <Link href={route('/solutions/create')}>
               <Button>创建新方案</Button>
             </Link>
           </div>
@@ -751,7 +753,7 @@ export default function ManageSolutionsPage() {
                       }
                     </p>
                     <div className="mt-6">
-                      <Link href="/solutions/create">
+                      <Link href={route('/solutions/create')}>
                         <Button>创建方案</Button>
                       </Link>
                     </div>

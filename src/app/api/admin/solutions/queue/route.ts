@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 解析查询参数
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const queryParams = Object.fromEntries(searchParams.entries());
     const validatedParams = queueFilterSchema.parse(queryParams);
 

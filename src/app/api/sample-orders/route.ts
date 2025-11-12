@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 // GET /api/sample-orders - 获取试产订单列表
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');

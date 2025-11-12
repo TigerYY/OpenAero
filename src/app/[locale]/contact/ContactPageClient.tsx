@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function ContactPageClient() {
   const t = useTranslations();
+  const { route } = useRouting();
 
   const handleContactSubmit = async (data: any) => {
     // 这里可以添加额外的处理逻辑
@@ -119,7 +121,7 @@ export default function ContactPageClient() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Link href="/help/faq">
+                  <Link href={route('/help/faq')}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -127,7 +129,7 @@ export default function ContactPageClient() {
                       常见问题
                     </Button>
                   </Link>
-                  <Link href="/help/documentation">
+                  <Link href={route('/help/documentation')}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -135,7 +137,7 @@ export default function ContactPageClient() {
                       帮助文档
                     </Button>
                   </Link>
-                  <Link href="/creators/apply">
+                  <Link href={route('/creators/apply')}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -143,7 +145,7 @@ export default function ContactPageClient() {
                       成为创作者
                     </Button>
                   </Link>
-                  <Link href="/about">
+                  <Link href={route('/about')}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

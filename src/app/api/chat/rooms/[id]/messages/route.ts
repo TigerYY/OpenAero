@@ -128,7 +128,7 @@ export async function GET(
 ) {
   try {
     const roomId = params.id;
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const before = searchParams.get('before'); // 获取指定时间之前的消息

@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 解析查询参数
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const params = querySchema.parse({
       page: searchParams.get('page') || '1',
       limit: searchParams.get('limit') || '10',

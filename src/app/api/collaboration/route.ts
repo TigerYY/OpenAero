@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const documentId = searchParams.get('documentId');
     const documentType = searchParams.get('documentType');
 

@@ -2,34 +2,36 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useRouting } from '@/lib/routing';
 
 export function Footer() {
   const t = useTranslations('footer');
+  const { route } = useRouting();
 
   const footerLinks = {
     solutions: [
-      { name: 'FPV验证机', href: '/solutions/fpv' },
-      { name: '安防巡检套件', href: '/solutions/security' },
-      { name: '农业植保套件', href: '/solutions/agriculture' },
-      { name: '物流配送套件', href: '/solutions/logistics' },
+      { name: 'FPV验证机', href: route('/solutions/fpv') },
+      { name: '安防巡检套件', href: route('/solutions/security') },
+      { name: '农业植保套件', href: route('/solutions/agriculture') },
+      { name: '物流配送套件', href: route('/solutions/logistics') },
     ],
     creators: [
-      { name: '创作者计划', href: '/creators/plan' },
-      { name: '申请流程', href: '/creators/apply' },
-      { name: '收益分成', href: '/creators/revenue' },
-      { name: '技术支持', href: '/creators/support' },
+      { name: '创作者计划', href: route('/creators/plan') },
+      { name: '申请流程', href: route('/creators/apply') },
+      { name: '收益分成', href: route('/creators/revenue') },
+      { name: '技术支持', href: route('/creators/support') },
     ],
     resources: [
-      { name: '技术文档', href: '/developer/docs' },
-      { name: 'API接口', href: '/developer/api' },
-      { name: 'SDK下载', href: '/developer/sdk' },
-      { name: '社区论坛', href: '/developer/community' },
+      { name: '技术文档', href: route('/developer/docs') },
+      { name: 'API接口', href: route('/developer/api') },
+      { name: 'SDK下载', href: route('/developer/sdk') },
+      { name: '社区论坛', href: route('/developer/community') },
     ],
     company: [
-      { name: '关于我们', href: '/about' },
-      { name: '联系我们', href: '/contact' },
-      { name: '隐私政策', href: '/privacy' },
-      { name: '服务条款', href: '/terms' },
+      { name: '关于我们', href: route('/about') },
+      { name: '联系我们', href: route('/contact') },
+      { name: '隐私政策', href: route('/privacy') },
+      { name: '服务条款', href: route('/terms') },
     ],
   };
 

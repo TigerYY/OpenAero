@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { CartButton } from '@/components/shop/CartButton';
+import { UserMenu } from '@/components/auth/UserMenu';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
 import { Locale } from '@/types/i18n';
 import { useRouting } from '@/lib/routing';
@@ -145,6 +146,7 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
               showNativeNames={true}
               className="mr-2"
             />
+            <UserMenu />
           </div>
 
           {/* Tablet CTA - Simplified */}
@@ -160,12 +162,14 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
               showNativeNames={false}
               className="min-w-[3rem] max-w-[5rem] flex-shrink-0"
             />
+            <UserMenu />
           </div>
 
           {/* Mobile menu button and language switcher */}
           <div className="md:hidden flex items-center space-x-2">
             {/* <SecurityAlertNotification /> */}
             <CartButton variant="ghost" size="sm" />
+            <UserMenu />
             <LanguageSwitcher
               currentLocale={locale as Locale}
               onLocaleChange={switchLanguage}

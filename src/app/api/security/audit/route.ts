@@ -7,7 +7,7 @@ import { securityAudit } from '@/lib/security';
 // GET - 获取安全审计报告
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('start');
     const endDate = searchParams.get('end');
     const format = searchParams.get('format') || 'json';

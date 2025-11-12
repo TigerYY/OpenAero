@@ -80,10 +80,10 @@ export function ClientHeader() {
               className="mr-2"
             />
             <Button variant="ghost" asChild>
-              <Link href="/contact">{t('navigation.contact')}</Link>
+              <Link href={route('/contact')}>{t('navigation.contact')}</Link>
             </Button>
             <Button asChild>
-              <Link href="/creators/apply">{t('navigation.creators')}</Link>
+              <Link href={route('/creators/apply')}>{t('navigation.creators')}</Link>
             </Button>
           </div>
 

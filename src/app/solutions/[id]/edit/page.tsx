@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -43,6 +44,7 @@ interface Solution {
 }
 
 export default function EditSolutionPage() {
+  const { route, routes } = useRouting();
   const params = useParams();
   const router = useRouter();
   const solutionId = params?.id as string;
@@ -190,7 +192,7 @@ export default function EditSolutionPage() {
 
       const result = await response.json();
       alert(status === 'draft' ? '方案已保存为草稿' : '方案已提交审核');
-      router.push('/solutions/manage');
+      router.push(route('/solutions/manage'));
     } catch (error) {
       console.error('更新方案失败:', error);
       alert(error instanceof Error ? error.message : '更新方案失败，请重试');
@@ -229,7 +231,7 @@ export default function EditSolutionPage() {
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">方案未找到</h1>
           <p className="text-gray-600 mb-6">请求的方案不存在或您没有权限编辑</p>
-          <Link href="/solutions/manage">
+          <Link href={route('/solutions/manage')}>
             <Button>返回方案管理</Button>
           </Link>
         </div>
@@ -247,7 +249,7 @@ export default function EditSolutionPage() {
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">无法编辑</h1>
           <p className="text-gray-600 mb-6">只有草稿状态或被拒绝的方案可以编辑</p>
-          <Link href="/solutions/manage">
+          <Link href={route('/solutions/manage')}>
             <Button>返回方案管理</Button>
           </Link>
         </div>
@@ -265,7 +267,7 @@ export default function EditSolutionPage() {
               <h1 className="text-3xl font-bold text-gray-900">编辑方案</h1>
               <p className="text-gray-600 mt-2">修改您的无人机解决方案</p>
             </div>
-            <Link href="/solutions/manage">
+            <Link href={route('/solutions/manage')}>
               <Button variant="outline">返回管理</Button>
             </Link>
           </div>

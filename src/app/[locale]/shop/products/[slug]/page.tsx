@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { 
   ShoppingCart, 
@@ -108,6 +109,7 @@ export default function ProductDetailPage() {
   const slug = params?.slug as string;
   const t = useTranslations();
   const locale = useLocale();
+  const { route } = useRouting();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -236,7 +238,7 @@ export default function ProductDetailPage() {
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">商品不存在</h2>
             <p className="text-gray-600 mb-4">您访问的商品可能已下架或不存在</p>
-            <Link href="/shop/products">
+            <Link href={route('/shop/products')}>
               <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
                 <ArrowLeft className="h-4 w-4" />
                 返回商品列表

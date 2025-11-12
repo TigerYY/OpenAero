@@ -1,0 +1,153 @@
+name: 🔍 路由规范检查
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.ts'
+      - 'src/**/*.jsx'
+      - 'src/**/*.js'
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  route-check:
+    name: 检查硬编码路由
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史,用于比较
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 安装依赖
+        run: npm ci
+
+      - name: 🔍 运行路由诊断
+        id: diagnose
+        run: |
+          npx tsx scripts/diagnose-routes.ts
+          
+          # 提取问题数
+          TOTAL_ISSUES=$(cat route-diagnosis-report.json | jq '.summary.totalIssues // 0')
+          TOTAL_FILES=$(cat route-diagnosis-report.json | jq '.summary.affectedFiles // 0')
+          
+          echo "total_issues=$TOTAL_ISSUES" >> $GITHUB_OUTPUT
+          echo "total_files=$TOTAL_FILES" >> $GITHUB_OUTPUT
+          
+          # 输出到日志
+          echo "发现 $TOTAL_ISSUES 个路由问题,影响 $TOTAL_FILES 个文件"
+
+      - name: ✅ 检查结果
+        if: steps.diagnose.outputs.total_issues != '0'
+        run: |
+          echo "::error title=路由检查失败::发现 ${{ steps.diagnose.outputs.total_issues }} 个硬编码路由"
+          
+          # 输出详细报告
+          cat route-diagnosis-report.json | jq -r '
+            "## 路由问题报告\n",
+            "- 总问题数: \(.summary.totalIssues)",
+            "- 影响文件数: \(.summary.affectedFiles)\n",
+            "### 问题分类",
+            (.summary.issuesByType | to_entries[] | "- \(.key): \(.value)个"),
+            "\n### 受影响的文件",
+            (.issues | keys[] | "- `\(.)`")
+          '
+          
+          exit 1
+
+      - name: 📊 上传诊断报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-diagnosis-report
+          path: route-diagnosis-report.json
+          retention-days: 30
+
+      - name: 💬 PR评论 (失败时)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('route-diagnosis-report.json', 'utf8'));
+            
+            const issuesByType = Object.entries(report.summary.issuesByType)
+              .map(([type, count]) => `- ${type}: ${count}个`)
+              .join('\n');
+            
+            const files = Object.keys(report.issues)
+              .slice(0, 10)
+              .map(file => `- \`${file}\``)
+              .join('\n');
+            
+            const moreFiles = Object.keys(report.issues).length > 10 
+              ? `\n... 还有 ${Object.keys(report.issues).length - 10} 个文件`
+              : '';
+            
+            const body = `## ❌ 路由规范检查失败
+            
+            发现 **${report.summary.totalIssues}** 个硬编码路由,影响 **${report.summary.affectedFiles}** 个文件。
+            
+            ### 📊 问题分类
+            ${issuesByType}
+            
+            ### 📄 受影响的文件 (前10个)
+            ${files}${moreFiles}
+            
+            ### 🔧 修复方法
+            
+            **方案1: 自动修复 (推荐)**
+            \`\`\`bash
+            npx tsx scripts/fix-routes-auto.ts
+            npx tsx scripts/diagnose-routes.ts  # 验证修复
+            \`\`\`
+            
+            **方案2: 手动修复**
+            \`\`\`bash
+            cat ROUTE_FIX_GUIDE.md  # 查看修复指南
+            \`\`\`
+            
+            ### 📚 正确示例
+            
+            ❌ 错误:
+            \`\`\`tsx
+            <Link href="/login">登录</Link>
+            router.push("/profile")
+            \`\`\`
+            
+            ✅ 正确:
+            \`\`\`tsx
+            import { useRouting } from '@/lib/routing';
+            
+            const { route, routes } = useRouting();
+            <Link href={route(routes.AUTH.LOGIN)}>登录</Link>
+            router.push(route("/profile"))
+            \`\`\`
+            
+            修复后请重新推送代码,CI会自动重新检查。`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: ✅ 成功消息
+        if: success() && steps.diagnose.outputs.total_issues == '0'
+        run: |
+          echo "::notice title=路由检查通过::✅ 未发现硬编码路由,所有路由规范符合要求"

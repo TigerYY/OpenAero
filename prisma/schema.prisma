@@ -14,24 +14,18 @@ datasource db {
 // 用户认证与权限系统 (基于 Supabase Auth)
 // ============================================
 
-// 用户模型 - 扩展 Supabase Auth 用户数据
-model User {
-  id            String   @id @default(cuid())
-  // Supabase Auth UUID (从 auth.users 同步)
-  supabaseId    String   @unique
-  
-  // 基本信息
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  phone         String?  @unique
-  phoneVerified Boolean  @default(false)
+// 用户资料模型 - 扩展 Supabase Auth 用户数据
+// 注意: auth.users 由 Supabase 管理，此表仅存储额外的用户资料信息
+model UserProfile {
+  id            String   @id @default(uuid())
+  user_id       String   @unique @map("user_id") // 引用 auth.users.id
   
   // 个人资料
-  firstName     String?
-  lastName      String?
-  displayName   String?
-  avatar        String?  // 头像URL
-  bio           String?  // 个人简介
+  first_name    String?  @map("first_name")
+  last_name     String?  @map("last_name")
+  display_name  String?  @map("display_name")
+  avatar        String?
+  bio           String?
   
   // 角色与权限
   role          UserRole @default(USER)
@@ -39,27 +33,23 @@ model User {
   
   // 状态管理
   status        UserStatus @default(ACTIVE)
-  isBlocked     Boolean  @default(false)
-  blockedReason String?
-  blockedAt     DateTime?
-  
-  // 创作者信息（如果是创作者角色）
-  creatorProfile CreatorProfile?
-  
-  // 地址信息
-  addresses     UserAddress[]
+  is_blocked    Boolean  @default(false) @map("is_blocked")
+  blocked_reason String? @map("blocked_reason")
+  blocked_at    DateTime? @map("blocked_at")
   
   // 时间戳
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  lastLoginAt   DateTime?
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+  last_login_at DateTime? @map("last_login_at")
   
-  // 关联关系
+  // 关联关系 (使用 user_id 关联)
+  creatorProfile CreatorProfile?
+  addresses     UserAddress[]
   carts         Cart[]
   notifications Notification[]
   notificationPreferences NotificationPreference[]
 
-  @@map("users")
+  @@map("user_profiles")
 }
 
 // 用户角色枚举
@@ -82,35 +72,35 @@ enum UserStatus {
 
 // 创作者资料模型
 model CreatorProfile {
-  id            String   @id @default(cuid())
-  userId        String   @unique
+  id            String   @id @default(uuid())
+  user_id       String   @unique @map("user_id")
   
   // 创作者信息
-  companyName   String?  // 公司名称
-  businessLicense String? // 营业执照URL
-  idCard        String?  // 身份证URL
-  taxNumber     String?  // 税号
+  company_name  String?  @map("company_name")
+  business_license String? @map("business_license")
+  id_card       String?  @map("id_card")
+  tax_number    String?  @map("tax_number")
   
   // 认证状态
-  verificationStatus VerificationStatus @default(PENDING)
-  verifiedAt    DateTime?
-  rejectionReason String?
+  verification_status VerificationStatus @default(PENDING) @map("verification_status")
+  verified_at   DateTime? @map("verified_at")
+  rejection_reason String? @map("rejection_reason")
   
   // 统计信息
-  totalSolutions Int     @default(0)
-  totalRevenue   Decimal @default(0) @db.Decimal(15, 2)
+  total_solutions Int     @default(0) @map("total_solutions")
+  total_revenue   Decimal @default(0) @db.Decimal(15, 2) @map("total_revenue")
   rating         Decimal? @db.Decimal(3, 2)
   
   // 银行账户信息（用于收益结算）
-  bankName      String?
-  bankAccount   String?
-  bankAccountName String?
+  bank_name     String?  @map("bank_name")
+  bank_account  String?  @map("bank_account")
+  bank_account_name String? @map("bank_account_name")
   
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
   
   // 关联关系
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userProfile   UserProfile @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   
   @@map("creator_profiles")
 }
@@ -125,27 +115,27 @@ enum VerificationStatus {
 
 // 用户地址模型
 model UserAddress {
-  id            String   @id @default(cuid())
-  userId        String
+  id            String   @id @default(uuid())
+  user_id       String   @map("user_id")
   
   // 地址信息
-  name          String   // 收货人姓名
-  phone         String   // 联系电话
-  province      String   // 省份
-  city          String   // 城市
-  district      String   // 区/县
-  address       String   // 详细地址
-  postalCode    String?  // 邮政编码
+  name          String
+  phone         String
+  province      String
+  city          String
+  district      String
+  address       String
+  postal_code   String?  @map("postal_code")
   
   // 地址类型
-  isDefault     Boolean  @default(false)
+  is_default    Boolean  @default(false) @map("is_default")
   type          AddressType @default(SHIPPING)
   
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
   
   // 关联关系
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userProfile   UserProfile @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   
   @@map("user_addresses")
 }
@@ -738,20 +728,20 @@ model ProductInventory {
 
 // 购物车模型
 model Cart {
-  id        String   @id @default(cuid())
-  userId    String   @unique // 用户ID
+  id        String   @id @default(uuid())
+  user_id   String   @unique @map("user_id")
   
   // 购物车状态
   status    CartStatus @default(ACTIVE)
   
   // 会话信息（用于未登录用户）
-  sessionId String?  // 会话ID
+  session_id String?  @map("session_id")
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
 
   // 关联关系
-  user      User?    @relation(fields: [userId], references: [id])
+  userProfile UserProfile? @relation(fields: [user_id], references: [user_id])
   items     CartItem[]
 
   @@map("carts")
@@ -835,48 +825,48 @@ model ProductReview {
 
 // 通知模型
 model Notification {
-  id             String               @id @default(cuid())
+  id             String               @id @default(uuid())
   type           NotificationType
   title          String
   message        String
-  userId         String
-  actionUrl      String?
+  user_id        String               @map("user_id")
+  action_url     String?              @map("action_url")
   metadata       Json?                @default("{}")
   priority       NotificationPriority @default(MEDIUM)
-  channels       String[]             // 发送渠道
-  scheduledAt    DateTime?            // 计划发送时间
-  expiresAt      DateTime?            // 过期时间
+  channels       String[]
+  scheduled_at   DateTime?            @map("scheduled_at")
+  expires_at     DateTime?            @map("expires_at")
   read           Boolean              @default(false)
-  readAt         DateTime?            // 阅读时间
+  read_at        DateTime?            @map("read_at")
   delivered      Boolean              @default(true)
-  deliveryStatus Json?                @default("{}")
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  delivery_status Json?               @default("{}") @map("delivery_status")
+  created_at     DateTime             @default(now()) @map("created_at")
+  updated_at     DateTime             @updatedAt @map("updated_at")
 
   // 关联关系
-  user           User?                @relation(fields: [userId], references: [id])
+  userProfile    UserProfile?         @relation(fields: [user_id], references: [user_id])
 
   @@map("notifications")
 }
 
 // 通知偏好模型
 model NotificationPreference {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  emailEnabled          Boolean  @default(true)
-  pushEnabled           Boolean  @default(true)
-  websocketEnabled      Boolean  @default(true)
-  reviewNotifications   Boolean  @default(true)
-  systemNotifications   Boolean  @default(true)
-  marketingNotifications Boolean @default(false)
-  quietHoursStart       String?  // HH:mm format
-  quietHoursEnd         String?  // HH:mm format
+  id                    String   @id @default(uuid())
+  user_id               String   @unique @map("user_id")
+  email_enabled         Boolean  @default(true) @map("email_enabled")
+  push_enabled          Boolean  @default(true) @map("push_enabled")
+  websocket_enabled     Boolean  @default(true) @map("websocket_enabled")
+  review_notifications  Boolean  @default(true) @map("review_notifications")
+  system_notifications  Boolean  @default(true) @map("system_notifications")
+  marketing_notifications Boolean @default(false) @map("marketing_notifications")
+  quiet_hours_start     String?  @map("quiet_hours_start")
+  quiet_hours_end       String?  @map("quiet_hours_end")
   timezone              String   @default("Asia/Shanghai")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  created_at            DateTime @default(now()) @map("created_at")
+  updated_at            DateTime @updatedAt @map("updated_at")
 
   // 关联关系
-  user                  User?    @relation(fields: [userId], references: [id])
+  userProfile           UserProfile? @relation(fields: [user_id], references: [user_id])
 
   @@map("notification_preferences")
 }

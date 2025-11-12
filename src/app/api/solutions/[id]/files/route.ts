@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id: solutionId } = params;
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
     // 检查方案是否存在
@@ -235,7 +235,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id: solutionId } = params;
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const fileIds = searchParams.get('fileIds')?.split(',') || [];
 
     if (fileIds.length === 0) {

@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取时间范围参数
-    const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '30');
+    const days = parseInt(request.nextUrl.searchParams.get('days') || '30');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

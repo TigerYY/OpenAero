@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useRouting } from '@/lib/routing';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
+  const { route, routes } = useRouting();
+  const { signIn, loading: authLoading } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -24,19 +28,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const { error: signInError } = await signIn(formData.email, formData.password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || '登录失败');
+      if (signInError) {
+        throw signInError;
       }
 
-      // 登录成功，跳转到首页或回调地址
+      // 登录成功，AuthContext 会自动更新状态
       const callbackUrl = searchParams.get('callbackUrl') || '/';
       router.push(callbackUrl);
       router.refresh();
@@ -56,7 +54,7 @@ export default function LoginPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             还没有账户？{' '}
-            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href={route(routes.AUTH.REGISTER)} className="font-medium text-blue-600 hover:text-blue-500">
               立即注册
             </Link>
           </p>
@@ -114,7 +112,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <Link
-                href="/forgot-password"
+                href={route(routes.AUTH.FORGOT_PASSWORD)}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 忘记密码？

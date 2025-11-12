@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -58,6 +59,7 @@ export default function SolutionDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
+  const { route } = useRouting()
     fetchSolution();
     fetchReviews();
   }, [solutionId]);
@@ -156,7 +158,7 @@ export default function SolutionDetailPage() {
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">方案未找到</h1>
           <p className="text-gray-600 mb-6">{error || '请求的方案不存在或已被删除'}</p>
-          <Link href="/solutions">
+          <Link href={route('/solutions')}>
             <Button>返回方案列表</Button>
           </Link>
         </div>
@@ -170,11 +172,11 @@ export default function SolutionDetailPage() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center space-x-2 text-sm">
-            <Link href="/" className="text-gray-500 hover:text-gray-700">
+            <Link href={route('/')} className="text-gray-500 hover:text-gray-700">
               首页
             </Link>
             <span className="text-gray-400">/</span>
-            <Link href="/solutions" className="text-gray-500 hover:text-gray-700">
+            <Link href={route('/solutions')} className="text-gray-500 hover:text-gray-700">
               方案
             </Link>
             <span className="text-gray-400">/</span>

@@ -2,7 +2,17 @@
  * 权限定义和检查
  */
 
-import { UserRole } from '@prisma/client';
+/**
+ * 用户角色枚举
+ */
+export enum UserRole {
+  USER = 'USER',
+  CREATOR = 'CREATOR',
+  REVIEWER = 'REVIEWER',
+  FACTORY_MANAGER = 'FACTORY_MANAGER',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+}
 
 /**
  * 系统权限列表
@@ -119,4 +129,22 @@ export function roleHasPermission(role: UserRole, permission: string): boolean {
 export function mergePermissions(role: UserRole, customPermissions: string[] = []): string[] {
   const rolePermissions = getRolePermissions(role);
   return Array.from(new Set([...rolePermissions, ...customPermissions]));
+}
+
+/**
+ * 检查用户是否有某个角色
+ */
+export function hasRole(userRole: string | string[], requiredRoles: string | string[]): boolean {
+  const userRoles = Array.isArray(userRole) ? userRole : [userRole];
+  const required = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+  
+  return required.some(role => userRoles.includes(role));
+}
+
+/**
+ * 检查用户角色权限
+ */
+export function checkRole(userRole: string, requiredRole: string | string[]): boolean {
+  const required = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+  return required.includes(userRole);
 }

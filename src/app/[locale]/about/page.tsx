@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { MainLayout } from '@/components/layout/MainLayout';
 
 interface AboutPageProps {
@@ -145,18 +147,18 @@ export default function AboutPage({ params: { locale } }: AboutPageProps) {
                 有任何问题或建议？我们很乐意听到您的声音
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
+                <Link
                   href="/contact"
                   className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
                 >
                   联系我们
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/creators/apply"
                   className="bg-transparent border-2 border-white hover:bg-white hover:text-secondary-900 text-white px-8 py-3 rounded-lg font-medium transition-colors"
                 >
                   成为创作者
-                </a>
+                </Link>
               </div>
             </div>
           </div>

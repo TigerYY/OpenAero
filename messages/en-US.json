@@ -19,7 +19,16 @@
     "refresh": "Refresh",
     "openMenu": "Open main menu",
     "closeMenu": "Close main menu",
-    "selectLanguage": "Select Language"
+    "selectLanguage": "Select Language",
+    "more": "More"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "forgotPassword": "Forgot Password",
+    "resetPassword": "Reset Password",
+    "verifyEmail": "Verify Email"
   },
   "navigation": {
     "home": "Home",
@@ -28,11 +37,12 @@
     "creators": "Creators",
     "about": "About",
     "contact": "Contact",
-    "login": "Login",
-    "register": "Register",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Logout"
+    "orders": "My Orders",
+    "creatorDashboard": "Creator Dashboard",
+    "mySolutions": "My Solutions",
+    "adminDashboard": "Admin Dashboard"
   },
   "language": {
     "switchTo": "Switch to",
@@ -266,6 +276,61 @@
       "description": "Professional kit designed for agricultural plant protection needs, helping farmers improve plant protection efficiency and reduce costs.",
       "creator": "Mr. Zhang",
       "tags": ["Agriculture", "Plant Protection", "Smart Agriculture"]
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Have any questions or suggestions? We would love to hear from you. Our professional team will provide you with the highest quality service.",
+    "contactInfo": {
+      "title": "Contact Information",
+      "email": {
+        "title": "Email",
+        "description": "We will reply to your email within 24 hours",
+        "address": "support@openaero.cn"
+      },
+      "phone": {
+        "title": "Customer Service Hotline",
+        "description": "Professional customer service team provides real-time support",
+        "number": "400-123-4567"
+      },
+      "workingHours": {
+        "title": "Working Hours",
+        "description": "Our service hours",
+        "hours": "Monday to Friday 9:00-18:00",
+        "note": "There may be delayed responses during holidays"
+      },
+      "address": {
+        "title": "Company Address",
+        "description": "Welcome to schedule a visit to our office",
+        "location": "Science and Technology Park, Nanshan District, Shenzhen",
+        "note": "Please contact us for specific address"
+      }
+    },
+    "quickLinks": {
+      "title": "Quick Links",
+      "faq": "FAQ",
+      "documentation": "Help Documentation",
+      "becomeCreator": "Become a Creator",
+      "aboutUs": "About Us"
+    },
+    "form": {
+      "title": "Send Message",
+      "description": "Fill out the form below and we will get in touch with you as soon as possible"
+    },
+    "whyChooseUs": {
+      "title": "Why Choose OpenAero?",
+      "certification": {
+        "title": "Professional Certification",
+        "description": "All solutions undergo strict professional certification to ensure quality and reliability"
+      },
+      "profitSharing": {
+        "title": "50% Profit Sharing",
+        "description": "Providing creators with the industry's highest profit-sharing ratio to share success together"
+      },
+      "supplyChain": {
+        "title": "Global Supply Chain",
+        "description": "Partner with world-class supply chain partners to ensure product quality and delivery"
+      }
     }
   }
 }

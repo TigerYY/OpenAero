@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // 移除了用户认证，因为用户系统已被清除
 
     // 解析查询参数
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const queryParams = Object.fromEntries(searchParams.entries());
     const validatedQuery = getAuditLogsQuerySchema.parse(queryParams);
 

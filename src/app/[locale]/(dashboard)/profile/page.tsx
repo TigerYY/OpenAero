@@ -1,263 +1,355 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useRouting } from '@/lib/routing';
 
-interface User {
-  id: string;
-  email: string;
-  displayName: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  phone: string | null;
-  avatar: string | null;
-  bio: string | null;
-  role: string;
-  status: string;
-  emailVerified: boolean;
-  createdAt: string;
+/**
+ * 用户资料页面
+ */
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfileContent />
+    </ProtectedRoute>
+  );
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
+  const { route } = useRouting();
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
+    fullName: '',
+    username: '',
     bio: '',
+    phoneNumber: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // 加载用户信息
   useEffect(() => {
-    loadUserProfile();
-  }, []);
-
-  const loadUserProfile = async () => {
-    try {
-      const response = await fetch('/api/users/me');
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/login');
-          return;
-        }
-        throw new Error(data.message || '加载失败');
-      }
-
-      setUser(data.data);
+    if (profile) {
       setFormData({
-        firstName: data.data.firstName || '',
-        lastName: data.data.lastName || '',
-        phone: data.data.phone || '',
-        bio: data.data.bio || '',
+        fullName: profile.fullName || '',
+        username: profile.username || '',
+        bio: profile.bio || '',
+        phoneNumber: profile.phoneNumber || '',
       });
-    } catch (err: any) {
-      setError(err.message || '加载用户信息失败');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setSaving(true);
+    setLoading(true);
+    setMessage(null);
 
     try {
       const response = await fetch('/api/users/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || '更新失败');
+      if (data.success) {
+        setMessage({ type: 'success', text: '资料更新成功!' });
+        setIsEditing(false);
+        await refreshProfile();
+      } else {
+        setMessage({ type: 'error', text: data.error || '更新失败' });
       }
-
-      setSuccess('个人信息更新成功！');
-      setUser({ ...user!, ...data.data });
-    } catch (err: any) {
-      setError(err.message || '更新失败，请稍后重试');
+    } catch (error) {
+      setMessage({ type: 'error', text: '更新失败,请重试' });
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
-      router.refresh();
-    } catch (err) {
-      console.error('登出失败:', err);
-    }
-  };
-
-  if (loading) {
+  if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">加载中...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">加载中...</p>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const roleNames: Record<string, string> = {
-    USER: '普通用户',
-    CREATOR: '创作者',
-    REVIEWER: '审核员',
-    FACTORY_MANAGER: '工厂管理员',
-    ADMIN: '管理员',
-    SUPER_ADMIN: '超级管理员',
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow rounded-lg">
-          {/* 头部 */}
-          <div className="px-6 py-8 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-                  {user.displayName?.[0] || user.email[0].toUpperCase()}
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {user.displayName || user.email}
-                  </h1>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <div className="mt-2 flex items-center space-x-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {roleNames[user.role] || user.role}
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 页面标题 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">个人资料</h1>
+          <p className="mt-2 text-gray-600">管理您的个人信息和账号设置</p>
+        </div>
+
+        {/* 提示消息 */}
+        {message && (
+          <div
+            className={`mb-6 p-4 rounded-lg ${
+              message.type === 'success'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {/* 用户卡片 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {/* 封面图 */}
+          <div className="h-32 bg-gradient-to-r from-primary-400 to-primary-600"></div>
+
+          {/* 用户信息 */}
+          <div className="px-6 pb-6">
+            {/* 头像 */}
+            <div className="-mt-16 mb-4">
+              <div className="inline-block relative">
+                {profile.avatar ? (
+                  <img
+                    src={profile.avatar}
+                    alt={profile.fullName}
+                    className="h-32 w-32 rounded-full border-4 border-white object-cover"
+                  />
+                ) : (
+                  <div className="h-32 w-32 rounded-full border-4 border-white bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                    <span className="text-5xl font-bold text-white">
+                      {profile.fullName?.[0] || user?.email?.[0] || 'U'}
                     </span>
-                    {user.emailVerified && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        已验证
-                      </span>
+                  </div>
+                )}
+                <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* 用户基本信息 */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">{profile.fullName}</h2>
+              <p className="text-gray-600">@{profile.username}</p>
+              <div className="mt-2 flex items-center space-x-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
+                  {profile.role === 'ADMIN' && '管理员'}
+                  {profile.role === 'CREATOR' && '创作者'}
+                  {profile.role === 'USER' && '普通用户'}
+                  {profile.role === 'SUPER_ADMIN' && '超级管理员'}
+                </span>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  profile.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {profile.status === 'ACTIVE' && '活跃'}
+                  {profile.status === 'INACTIVE' && '未激活'}
+                  {profile.status === 'SUSPENDED' && '已暂停'}
+                </span>
+              </div>
+            </div>
+
+            {/* 编辑/查看表单 */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* 基本信息部分 */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center justify-between">
+                  基本信息
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      编辑
+                    </button>
+                  )}
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 完整姓名 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      完整姓名
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.fullName}</p>
+                    )}
+                  </div>
+
+                  {/* 用户名 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      用户名
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">@{profile.username}</p>
+                    )}
+                  </div>
+
+                  {/* 邮箱 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      邮箱地址
+                    </label>
+                    <p className="text-gray-900 flex items-center">
+                      {user?.email}
+                      {profile.emailVerified && (
+                        <svg className="ml-2 w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* 电话号码 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      电话号码
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.phoneNumber || '未设置'}</p>
                     )}
                   </div>
                 </div>
+
+                {/* 个人简介 */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    个人简介
+                  </label>
+                  {isEditing ? (
+                    <textarea
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="介绍一下自己..."
+                    />
+                  ) : (
+                    <p className="text-gray-900">{profile.bio || '暂无简介'}</p>
+                  )}
+                </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                登出
-              </button>
-            </div>
+
+              {/* 账号信息 */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">账号信息</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">账号ID:</span>
+                    <span className="text-gray-900 font-mono">{profile.userId.substring(0, 16)}...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">创建时间:</span>
+                    <span className="text-gray-900">{new Date(profile.createdAt).toLocaleDateString('zh-CN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">最后更新:</span>
+                    <span className="text-gray-900">{new Date(profile.updatedAt).toLocaleDateString('zh-CN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              {isEditing && (
+                <div className="flex justify-end space-x-4 pt-6 border-t">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setFormData({
+                        fullName: profile.fullName || '',
+                        username: profile.username || '',
+                        bio: profile.bio || '',
+                        phoneNumber: profile.phoneNumber || '',
+                      });
+                    }}
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? '保存中...' : '保存更改'}
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+
+        {/* 其他设置卡片 */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 安全设置 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">安全设置</h3>
+            <button
+              onClick={() => router.push(route('/settings/security'))}
+              className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">修改密码</p>
+                  <p className="text-sm text-gray-600">更新您的登录密码</p>
+                </div>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </button>
           </div>
 
-          {/* 表单 */}
-          <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
-            {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-800">{error}</div>
+          {/* 通知设置 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">通知设置</h3>
+            <button
+              onClick={() => router.push(route('/settings/notifications'))}
+              className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">通知偏好</p>
+                  <p className="text-sm text-gray-600">管理邮件和推送通知</p>
+                </div>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-            )}
-
-            {success && (
-              <div className="rounded-md bg-green-50 p-4">
-                <div className="text-sm text-green-800">{success}</div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  名字
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  姓氏
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                手机号码
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                个人简介
-              </label>
-              <textarea
-                id="bio"
-                rows={4}
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="介绍一下自己..."
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? '保存中...' : '保存更改'}
-              </button>
-            </div>
-          </form>
-
-          {/* 账户信息 */}
-          <div className="px-6 py-6 border-t border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">账户信息</h3>
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">注册时间</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString('zh-CN')}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">账户状态</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {user.status === 'ACTIVE' ? '正常' : user.status}
-                </dd>
-              </div>
-            </dl>
+            </button>
           </div>
         </div>
       </div>

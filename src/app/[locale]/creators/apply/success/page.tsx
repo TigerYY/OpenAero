@@ -1,15 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
+import { useRouting } from '@/lib/routing';
+import { useParams } from 'next/navigation';
 
-interface CreatorApplySuccessPageProps {
-  params: {
-    locale: string;
-  };
-}
+export default function CreatorApplySuccessPage() {
+  const params = useParams();
+  const locale = params.locale as string;
+  const { route } = useRouting();
 
-export default function CreatorApplySuccessPage({ params: { locale } }: CreatorApplySuccessPageProps) {
   return (
     <MainLayout locale={locale}>
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
@@ -79,12 +81,12 @@ export default function CreatorApplySuccessPage({ params: { locale } }: CreatorA
             {/* 操作按钮 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link href="/solutions">
+                <Link href={route('/solutions')}>
                   浏览解决方案
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/creators">
+                <Link href={route('/creators')}>
                   了解更多
                 </Link>
               </Button>

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 
 import './globals.css';
 import { CartProvider } from '@/components/shop/CartProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,13 +20,15 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <CartProvider>
-          <div className="min-h-screen bg-gray-50">
-            <main>
-              {children}
-            </main>
-          </div>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="min-h-screen bg-gray-50">
+              <main>
+                {children}
+              </main>
+            </div>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

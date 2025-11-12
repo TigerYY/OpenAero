@@ -60,7 +60,7 @@ export function HeroSection() {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="border-2 border-white/30 hover:border-white/50 hover:bg-white/10 transition-all duration-300 text-white bg-transparent">
-                <Link href="/creators/apply">
+                <Link href={route('/creators/apply')}>
                   <span className="flex items-center gap-2 text-white">
                     {t('cta.becomeCreator')}
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

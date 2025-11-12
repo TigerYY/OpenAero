@@ -82,7 +82,6 @@ export function RoleBasedNavigation() {
 // 移动端导航组件
 export function MobileRoleBasedNavigation() {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { route, routes } = useRouting();
   
   const navigationItems = createNavigationItems(routes);
 

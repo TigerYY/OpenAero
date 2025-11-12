@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { ArrowLeft, Users, Clock, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -27,6 +28,7 @@ interface Solution {
 export default function SolutionCollaboratePage() {
   const params = useParams();
   const { data: session } = useSession();
+  const { route } = useRouting()
   const [solution, setSolution] = useState<Solution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +129,7 @@ export default function SolutionCollaboratePage() {
             <div className="text-red-600 mb-4">
               {error || '方案不存在'}
             </div>
-            <Link href="/solutions">
+            <Link href={route('/solutions')}>
               <Button variant="outline">
                 返回方案列表
               </Button>

@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { 
   Search, 
@@ -66,6 +67,7 @@ interface ProductCategory {
 export default function ShopPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const { route } = useRouting();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -375,7 +377,7 @@ export default function ShopPage() {
             )}
 
             <div className="text-center mt-8">
-              <Link href="/shop/products">
+              <Link href={route('/shop/products')}>
                 <Button className="flex items-center gap-2">
                   查看更多商品
                   <ArrowRight className="h-4 w-4" />

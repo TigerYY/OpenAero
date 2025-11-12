@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import { 
   Factory, 
@@ -64,6 +65,7 @@ export default function SupplyChainDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+  const { route } = useRouting()
     fetchDashboardStats();
   }, []);
 
@@ -165,13 +167,13 @@ export default function SupplyChainDashboard() {
           <p className="text-gray-600 mt-1">工厂管理和试产订单概览</p>
         </div>
         <div className="flex gap-3">
-          <Link href="/supply-chain/factories">
+          <Link href={route('/supply-chain/factories')}>
             <Button variant="outline">
               <Factory className="w-4 h-4 mr-2" />
               工厂管理
             </Button>
           </Link>
-          <Link href="/supply-chain/sample-orders">
+          <Link href={route('/supply-chain/sample-orders')}>
             <Button>
               <Package className="w-4 h-4 mr-2" />
               试产订单
@@ -296,7 +298,7 @@ export default function SupplyChainDashboard() {
             </div>
             {stats.recentOrders.length > 0 && (
               <div className="mt-4 text-center">
-                <Link href="/supply-chain/sample-orders">
+                <Link href={route('/supply-chain/sample-orders')}>
                   <Button variant="outline" size="sm">
                     查看全部订单
                   </Button>

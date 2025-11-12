@@ -1,4 +1,5 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
 import React from 'react';
 
@@ -6,6 +7,7 @@ import ContactForm from '@/components/forms/ContactForm';
 
 export default function MobileContactPage() {
   const handleContactSubmit = async (data: any) => {
+  const { route } = useRouting()
     // 这里可以添加额外的处理逻辑
     console.log('联系表单提交:', data);
   };
@@ -72,7 +74,7 @@ export default function MobileContactPage() {
             在联系我们之前，您也可以查看
           </p>
           <a 
-            href="/help/faq" 
+            href={route('/help/faq')} 
             className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
           >
             常见问题解答

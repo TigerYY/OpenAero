@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export const dynamic = 'force-dynamic';
 
 export default function CreatorsPage() {
@@ -8,15 +10,15 @@ export default function CreatorsPage() {
           创作者中心
         </h1>
         <p className="text-gray-600 mb-6">
-          创作者功能正在开发中，敬请期待！
+          创作者功能正在开发中,敬请期待!
         </p>
         <div className="text-center">
-          <a 
-            href="/"
+          <Link 
+            href="/zh-CN"
             className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             返回首页
-          </a>
+          </Link>
         </div>
       </div>
     </div>

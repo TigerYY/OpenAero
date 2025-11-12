@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const user = (request as any).user;
 
     // 解析查询参数
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const queryParams = Object.fromEntries(searchParams.entries());
     const validatedQuery = getUsersQuerySchema.parse(queryParams);
 

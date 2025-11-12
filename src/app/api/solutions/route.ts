@@ -8,7 +8,7 @@ import { ApiResponse } from '@/types';
 // GET /api/solutions - 获取方案列表
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
     const status = searchParams.get('status');
     const search = searchParams.get('search');

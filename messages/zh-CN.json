@@ -22,6 +22,14 @@
     "selectLanguage": "选择语言",
     "more": "更多"
   },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "forgotPassword": "忘记密码",
+    "resetPassword": "重置密码",
+    "verifyEmail": "验证邮箱"
+  },
   "navigation": {
     "home": "首页",
     "solutions": "解决方案",
@@ -29,11 +37,12 @@
     "creators": "创作者",
     "about": "关于我们",
     "contact": "联系我们",
-    "login": "登录",
-    "register": "注册",
     "profile": "个人资料",
     "settings": "设置",
-    "logout": "退出登录"
+    "orders": "我的订单",
+    "creatorDashboard": "创作者仪表板",
+    "mySolutions": "我的方案",
+    "adminDashboard": "管理员仪表板"
   },
   "language": {
     "switchTo": "切换到",

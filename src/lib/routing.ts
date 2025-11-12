@@ -10,17 +10,17 @@ const APP_CONFIG = {
 
 // 路由定义
 const ROUTES = {
-  // 认证路由
+  // 认证路由（注意：实际文件在 [locale]/(auth) 目录下，路由组不影响URL）
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    VERIFY_EMAIL: '/auth/verify-email',
-    VERIFY_EMAIL_NOTICE: '/auth/verify-email-notice',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-    PROFILE: '/auth/profile',
-    SESSIONS: '/auth/profile/sessions',
-    LOGOUT: '/auth/logout',
+    LOGIN: '/login',
+    REGISTER: '/register',
+    VERIFY_EMAIL: '/verify-email',
+    VERIFY_EMAIL_NOTICE: '/verify-email-notice',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
+    PROFILE: '/profile',
+    SESSIONS: '/profile/sessions',
+    LOGOUT: '/logout',
   },
   
   // 业务路由

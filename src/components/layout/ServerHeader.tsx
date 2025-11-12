@@ -48,10 +48,10 @@ export async function ServerHeader({ locale }: ServerHeaderProps) {
           <div className="hidden md:flex items-center space-x-4">
             <ClientLanguageSwitcher currentLocale={locale} />
             <Button variant="ghost" asChild>
-              <Link href="/contact">{t('navigation.contact')}</Link>
+              <Link href={`/${locale}${ROUTES.BUSINESS.CONTACT}`}>{t('navigation.contact')}</Link>
             </Button>
             <Button asChild>
-              <Link href="/creators/apply">{t('navigation.creators')}</Link>
+              <Link href={`/${locale}${ROUTES.BUSINESS.CREATORS_APPLY}`}>{t('navigation.creators')}</Link>
             </Button>
           </div>
 
