@@ -1,0 +1,24 @@
+security: 删除包含旧密码的敏感文件
+
+🔒 安全修复：
+- 删除 8 个包含真实数据库密码的文档文件
+- 数据库密码已在 Supabase 中成功轮换
+- 新密码已更新到本地 .env.local
+- 数据库连接测试通过
+
+删除的文件：
+- DATABASE_QUICK_REFERENCE.md (包含完整连接信息)
+- DATABASE_CONNECTION_FIXED.md
+- DATABASE_CONNECTION_FIX_GUIDE.md
+- DATABASE_FIX_SUMMARY.md
+- RESET_DATABASE_PASSWORD.md
+- GET_CORRECT_PASSWORD.md
+- FINAL_PASSWORD_RESET_STEPS.md
+- SUPABASE_DIRECT_CONNECTION_STRING.md
+
+新增工具：
+- scripts/test-db-connection.js (数据库连接测试工具)
+
+响应 GitGuardian 安全警报
+旧密码: 4gPPhKf90F6ayAka (已失效)
+新密码: 已安全存储在 .env.local (未提交到 Git)

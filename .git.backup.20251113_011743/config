@@ -1,0 +1,26 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+	hooksPath = .husky
+[branch "005-platform-business-loop"]
+	vscode-merge-base = origin/005-platform-business-loop
+[branch "backup-before-tailwind-fix"]
+	vscode-merge-base = origin/005-platform-business-loop
+[http]
+	postBuffer = 524288000
+	lowSpeedLimit = 0
+	lowSpeedTime = 999999
+[remote "origin"]
+	url = https://github.com/TigerYY/OpenAero.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "backup/postgres-switch-20251031_042118"]
+	remote = origin
+	merge = refs/heads/backup/postgres-switch-20251031_042118
+[branch "006-user-auth-system"]
+	vscode-merge-base = origin/backup/postgres-switch-20251031_042118
+	remote = origin
+	merge = refs/heads/006-user-auth-system
