@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouting } from '@/lib/routing';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ForgotPasswordPage() {
   const { route, routes } = useRouting();
+  const { sendPasswordResetEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -17,16 +19,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+      const { error: resetError } = await sendPasswordResetEmail(email);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || '请求失败');
+      if (resetError) {
+        throw resetError;
       }
 
       setSuccess(true);

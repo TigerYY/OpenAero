@@ -37,6 +37,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<{ error: Error | null }>;
+  resetPassword: (newPassword: string) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: string | string[]) => boolean;
@@ -160,6 +162,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
+   * 发送密码重置邮件
+   */
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  /**
+   * 重置密码
+   */
+  const resetPassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  /**
    * 检查用户是否有指定角色
    */
   const hasRole = (role: string | string[]): boolean => {
@@ -210,6 +250,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    sendPasswordResetEmail,
+    resetPassword,
     refreshProfile,
     isAuthenticated: !!user,
     hasRole,
