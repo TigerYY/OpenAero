@@ -1,0 +1,83 @@
+═══════════════════════════════════════════════════════════════
+🚨 安全警报：数据库密码泄露 - 快速修复指南
+═══════════════════════════════════════════════════════════════
+
+⏰ 必须在 30 分钟内完成！
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+第一步：轮换密码（最紧急！10 分钟）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 打开 https://app.supabase.com/project/cardynuoazvaytvinxvm
+2. Settings > Database > Reset Password
+3. 复制新密码到密码管理器
+4. 更新 .env.local:
+   DATABASE_URL="postgresql://postgres.cardynuoazvaytvinxvm:[NEW-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:5432/postgres"
+   DIRECT_URL="postgresql://postgres.cardynuoazvaytvinxvm:[NEW-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres"
+5. 测试：npm run dev
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+第二步：删除敏感文件（10 分钟）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+复制并执行以下命令：
+
+cd /Users/yangyang/Documents/YYCode/OpenAero/openaero.web
+
+rm -f DATABASE_QUICK_REFERENCE.md \
+      DATABASE_CONNECTION_FIXED.md \
+      DATABASE_CONNECTION_FIX_GUIDE.md \
+      DATABASE_FIX_SUMMARY.md \
+      RESET_DATABASE_PASSWORD.md \
+      GET_CORRECT_PASSWORD.md \
+      FINAL_PASSWORD_RESET_STEPS.md
+
+git add -A
+git commit -m "security: 删除包含敏感信息的文件"
+git push origin 006-user-auth-system
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+第三步：清理 Git 历史（30 分钟）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 安装工具
+brew install git-filter-repo
+
+# 备份
+cp -r .git .git.backup.$(date +%Y%m%d_%H%M%S)
+
+# 清理历史
+git filter-repo --path DATABASE_QUICK_REFERENCE.md --invert-paths --force
+git filter-repo --path DATABASE_CONNECTION_FIXED.md --invert-paths --force
+git filter-repo --path "DATABASE_*FIX*.md" --invert-paths --force
+git filter-repo --path "*PASSWORD*.md" --invert-paths --force
+
+# 重新添加远程仓库
+git remote add origin https://github.com/TigerYY/OpenAero.git
+
+# 强制推送
+git push --force --all
+git push --force --tags
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+验证
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ 密码已更新
+✓ 应用可以正常启动
+✓ 敏感文件已删除
+✓ Git 历史已清理
+✓ 远程仓库已更新
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+详细文档
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- IMMEDIATE_ACTIONS_REQUIRED.md - 紧急操作指南
+- SECURITY_INCIDENT_RESPONSE.md - 详细响应计划
+- SECURITY_FIX_SUMMARY.md - 修复总结
+- scripts/security-cleanup.sh - 自动化清理脚本
+
+═══════════════════════════════════════════════════════════════
+⚠️ 不要延迟！立即执行！
+═══════════════════════════════════════════════════════════════

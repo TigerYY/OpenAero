@@ -192,3 +192,11 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 *.bundle
+
+# Security - Never commit sensitive information
+*PASSWORD*.md
+*SECRET*.md
+*CREDENTIAL*.md
+*DATABASE*QUICK*.md
+*CONNECTION*FIX*.md
+SECURITY_INCIDENT*.md
