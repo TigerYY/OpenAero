@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
 import { APP_CONFIG } from '@/config/app';
+import { DefaultLayout } from '@/components/layout';
 import '../globals.css';
 
 // 强制动态渲染
@@ -182,7 +183,9 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      {children}
+      <DefaultLayout>
+        {children}
+      </DefaultLayout>
     </NextIntlClientProvider>
   );
 }
