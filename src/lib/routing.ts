@@ -374,8 +374,13 @@ export interface UseRoutingReturn {
  * ```
  */
 export function useRouting(): UseRoutingReturn {
-  const locale = useLocale() as SupportedLocale;
+  const localeFromHook = useLocale();
   const pathname = usePathname();
+  
+  // 确保 locale 有效，如果无效则使用默认 locale
+  const locale: SupportedLocale = (localeFromHook && RoutingUtils.validateLocale(localeFromHook))
+    ? (localeFromHook as SupportedLocale)
+    : APP_CONFIG.defaultLocale;
 
   return {
     // 生成带locale的路由

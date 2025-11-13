@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
 import { InputSanitizer } from '@/lib/security';
 
@@ -111,7 +112,8 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <DefaultLayout>
+        <div className="flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 min-h-[60vh]">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="mx-auto h-12 w-12 text-green-600">
@@ -133,15 +135,16 @@ export default function ResetPasswordPage() {
             </div>
           </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <DefaultLayout>
+      <div className="flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 min-h-[60vh]">
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             设置新密码
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -244,7 +247,8 @@ export default function ResetPasswordPage() {
             </Link>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }

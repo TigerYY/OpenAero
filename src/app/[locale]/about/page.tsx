@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouting } from '@/lib/routing';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 interface AboutPageProps {
   params: {
@@ -12,7 +13,7 @@ interface AboutPageProps {
 export default function AboutPage({ params: { locale } }: AboutPageProps) {
   const { route, routes } = useRouting();
   return (
-    <>
+    <DefaultLayout>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-50 to-secondary-50 py-20">
         <div className="container">
@@ -165,6 +166,6 @@ export default function AboutPage({ params: { locale } }: AboutPageProps) {
             </div>
           </div>
         </section>
-    </>
+    </DefaultLayout>
   );
 }

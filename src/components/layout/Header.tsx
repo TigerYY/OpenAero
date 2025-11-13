@@ -34,12 +34,20 @@ export function Header({ locale: propLocale }: HeaderProps = {}) {
     setIsMounted(true);
   }, []);
 
-  const navigation = [
+  // 确保在客户端挂载后才生成导航链接，避免服务端渲染时 locale 为空
+  const navigation = isMounted ? [
     { name: t('navigation.solutions'), href: route(routes.BUSINESS.SOLUTIONS) },
     { name: t('navigation.shop'), href: route(routes.BUSINESS.SHOP) },
     { name: t('navigation.creators'), href: route(routes.BUSINESS.CREATORS_APPLY) },
     { name: t('navigation.about'), href: route('/about') },
     { name: t('navigation.contact'), href: route(routes.BUSINESS.CONTACT) },
+  ] : [
+    // 服务端渲染时的占位符，使用默认 locale
+    { name: t('navigation.solutions'), href: `/${locale || 'zh-CN'}${routes.BUSINESS.SOLUTIONS}` },
+    { name: t('navigation.shop'), href: `/${locale || 'zh-CN'}${routes.BUSINESS.SHOP}` },
+    { name: t('navigation.creators'), href: `/${locale || 'zh-CN'}${routes.BUSINESS.CREATORS_APPLY}` },
+    { name: t('navigation.about'), href: `/${locale || 'zh-CN'}/about` },
+    { name: t('navigation.contact'), href: `/${locale || 'zh-CN'}${routes.BUSINESS.CONTACT}` },
   ];
 
   const switchLanguage = (newLocale: Locale) => {

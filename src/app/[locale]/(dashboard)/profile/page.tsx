@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useRouting } from '@/lib/routing';
 import AvatarUpload from '@/components/profile/AvatarUpload';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 /**
  * 用户资料页面
@@ -13,7 +14,9 @@ import AvatarUpload from '@/components/profile/AvatarUpload';
 export default function ProfilePage() {
   return (
     <ProtectedRoute>
-      <ProfileContent />
+      <DefaultLayout>
+        <ProfileContent />
+      </DefaultLayout>
     </ProtectedRoute>
   );
 }
@@ -94,7 +97,7 @@ function ProfileContent() {
   // 如果认证还在加载中，显示加载状态
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
           <p className="mt-4 text-gray-600">加载中...</p>
@@ -106,7 +109,7 @@ function ProfileContent() {
   // 如果用户未登录，显示登录提示
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +140,7 @@ function ProfileContent() {
   // 如果 profile 不存在，尝试初始化或显示友好提示
   if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +177,7 @@ function ProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 页面标题 */}
         <div className="mb-8">

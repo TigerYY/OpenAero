@@ -3,6 +3,7 @@
 import { Metadata } from 'next';
 
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export const metadata: Metadata = {
   title: '安全仪表板 | OpenAero',
@@ -11,10 +12,12 @@ export const metadata: Metadata = {
 
 export default function SecurityPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <SecurityDashboard />
+    <DefaultLayout>
+      <div className="bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <SecurityDashboard />
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }

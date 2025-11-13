@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import logger from '@/lib/logger';
 import { formatCurrency } from '@/lib/utils';
 
@@ -418,7 +419,8 @@ export default function ProductsPage() {
   }, [updateURL]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <DefaultLayout>
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           {/* 页面标题和搜索 */}
           <div className="mb-8">
@@ -651,5 +653,6 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+    </DefaultLayout>
   );
 }

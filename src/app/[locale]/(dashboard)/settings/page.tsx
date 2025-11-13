@@ -10,6 +10,7 @@ import Link from 'next/link';
 import PasswordChangeForm from '@/components/profile/PasswordChangeForm';
 import EmailChangeForm from '@/components/profile/EmailChangeForm';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 /**
  * 用户设置页面
@@ -17,7 +18,9 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 export default function SettingsPage() {
   return (
     <ProtectedRoute>
-      <SettingsContent />
+      <DefaultLayout>
+        <SettingsContent />
+      </DefaultLayout>
     </ProtectedRoute>
   );
 }
@@ -31,7 +34,7 @@ function SettingsContent() {
   // 如果认证还在加载中，显示加载状态
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
           <p className="mt-4 text-gray-600">加载中...</p>
@@ -43,7 +46,7 @@ function SettingsContent() {
   // 如果用户未登录，显示登录提示
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +81,7 @@ function SettingsContent() {
     const [initializing, setInitializing] = useState(false);
 
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +126,7 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 页面标题 */}
         <div className="mb-8">

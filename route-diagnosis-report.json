@@ -1,12 +1,15 @@
 {
-  "timestamp": "2025-11-13T08:35:06.473Z",
+  "timestamp": "2025-11-13T16:05:11.085Z",
   "summary": {
-    "totalRoutes": 175,
+    "totalRoutes": 210,
     "routeGroups": 2,
     "dynamicRoutes": 0,
-    "staticRoutes": 173,
-    "totalIssues": 0,
-    "issuesByType": {}
+    "staticRoutes": 208,
+    "totalIssues": 3,
+    "issuesByType": {
+      "hardcoded-push": 2,
+      "missing-route-wrapper": 1
+    }
   },
   "fileSystemRoutes": [
     {
@@ -14,6 +17,12 @@
       "urlPath": "",
       "isDynamic": false,
       "isRouteGroup": true
+    },
+    {
+      "path": "src/app/[locale]/(auth)/error",
+      "urlPath": "/error",
+      "isDynamic": false,
+      "isRouteGroup": false
     },
     {
       "path": "src/app/[locale]/(auth)/forgot-password",
@@ -172,6 +181,24 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/[locale]/payment",
+      "urlPath": "/payment",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/payment/failure",
+      "urlPath": "/payment/failure",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/payment/success",
+      "urlPath": "/payment/success",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/[locale]/security",
       "urlPath": "/security",
       "isDynamic": false,
@@ -316,6 +343,18 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/admin/monitoring/performance",
+      "urlPath": "/api/admin/monitoring/performance",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/monitoring/stats",
+      "urlPath": "/api/admin/monitoring/stats",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/admin/payment-gateways",
       "urlPath": "/api/admin/payment-gateways",
       "isDynamic": false,
@@ -324,6 +363,12 @@
     {
       "path": "src/app/api/admin/products",
       "urlPath": "/api/admin/products",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/products/reviews",
+      "urlPath": "/api/admin/products/reviews",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -340,8 +385,26 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/admin/reviews",
+      "urlPath": "/api/admin/reviews",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/reviews/stats",
+      "urlPath": "/api/admin/reviews/stats",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/admin/solutions",
       "urlPath": "/api/admin/solutions",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/solutions/[id]/review",
+      "urlPath": "/api/admin/solutions/review",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -408,6 +471,18 @@
     {
       "path": "src/app/api/admin/users/[id]/role",
       "urlPath": "/api/admin/users/role",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/users/[id]/status",
+      "urlPath": "/api/admin/users/status",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/admin/users/batch",
+      "urlPath": "/api/admin/users/batch",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -484,6 +559,12 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/auth/resend-verification",
+      "urlPath": "/api/auth/resend-verification",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/auth/reset-password",
       "urlPath": "/api/auth/reset-password",
       "isDynamic": false,
@@ -526,6 +607,18 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/creators/application",
+      "urlPath": "/api/creators/application",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/creators/application/status",
+      "urlPath": "/api/creators/application/status",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/creators/apply",
       "urlPath": "/api/creators/apply",
       "isDynamic": false,
@@ -562,6 +655,12 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/creators/dashboard/revenue",
+      "urlPath": "/api/creators/dashboard/revenue",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/creators/dashboard/stats",
       "urlPath": "/api/creators/dashboard/stats",
       "isDynamic": false,
@@ -570,6 +669,24 @@
     {
       "path": "src/app/api/creators/dashboard/stats 2",
       "urlPath": "/api/creators/dashboard/stats 2",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/creators/solutions",
+      "urlPath": "/api/creators/solutions",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/cron",
+      "urlPath": "/api/cron",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/cron/payments-sync",
+      "urlPath": "/api/cron/payments-sync",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -700,6 +817,30 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/orders/[id]/history",
+      "urlPath": "/api/orders/history",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/orders/[id]/refund",
+      "urlPath": "/api/orders/refund",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/orders/[id]/tracking",
+      "urlPath": "/api/orders/tracking",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/orders/export",
+      "urlPath": "/api/orders/export",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/payments",
       "urlPath": "/api/payments",
       "isDynamic": false,
@@ -742,6 +883,12 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/payments/sync",
+      "urlPath": "/api/payments/sync",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/payments/webhook",
       "urlPath": "/api/payments/webhook",
       "isDynamic": false,
@@ -762,6 +909,36 @@
     {
       "path": "src/app/api/products",
       "urlPath": "/api/products",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/products/[id]/reviews",
+      "urlPath": "/api/products/reviews",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/products/[id]/reviews/[reviewId]/helpful",
+      "urlPath": "/api/products/reviews/helpful",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/products/[id]/reviews/[reviewId]/replies",
+      "urlPath": "/api/products/reviews/replies",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/products/[id]/reviews/stats",
+      "urlPath": "/api/products/reviews/stats",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/products/recommendations",
+      "urlPath": "/api/products/recommendations",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -934,8 +1111,44 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/users/avatar",
+      "urlPath": "/api/users/avatar",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/users/delete",
+      "urlPath": "/api/users/delete",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/users/email",
+      "urlPath": "/api/users/email",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/users/email/change",
+      "urlPath": "/api/users/email/change",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/users/email/verification-status",
+      "urlPath": "/api/users/email/verification-status",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/users/me",
       "urlPath": "/api/users/me",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/users/password",
+      "urlPath": "/api/users/password",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1060,7 +1273,29 @@
       "isRouteGroup": false
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "file": "app/[locale]/(dashboard)/settings/page.tsx",
+      "line": 638,
+      "type": "hardcoded-push",
+      "code": "router.push('/');",
+      "suggestion": "使用: router.push(route('/')) 或 router.push(route(routes.XXX))"
+    },
+    {
+      "file": "components/profile/PasswordChangeForm.tsx",
+      "line": 76,
+      "type": "hardcoded-push",
+      "code": "router.push('/login');",
+      "suggestion": "使用: router.push(route('/login')) 或 router.push(route(routes.XXX))"
+    },
+    {
+      "file": "components/profile/PasswordChangeForm.tsx",
+      "line": 1,
+      "type": "missing-route-wrapper",
+      "code": "// 文件顶部",
+      "suggestion": "需要导入: import { useRouting } from '@/lib/routing'; 并在组件中使用: const { route, routes } = useRouting();"
+    }
+  ],
   "recommendations": [
     "1. 所有 href 应使用 route() 包装",
     "2. 所有 router.push/replace 应使用 route() 包装",

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface RevenueShare {
@@ -119,32 +120,37 @@ export default function RevenuePage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-red-600">{error}</div>
+      <DefaultLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-600">{error}</div>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   if (!revenueData) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">暂无收益数据</div>
+      <DefaultLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-600">暂无收益数据</div>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   const { revenueShares, stats, profile } = revenueData;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">收益中心</h1>
-        <p className="text-gray-600">管理您的创作收益和提现申请</p>
-      </div>
+    <DefaultLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">收益中心</h1>
+          <p className="text-gray-600">管理您的创作收益和提现申请</p>
+        </div>
 
       {/* 收益概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -338,6 +344,8 @@ export default function RevenuePage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+        </div>
+      </div>
+    </DefaultLayout>
   );
 }

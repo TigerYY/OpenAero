@@ -3,6 +3,7 @@ import { useRouting } from '@/lib/routing';
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export default function CreatorApplyStatusPage() {
   const { route, routes } = useRouting();
@@ -33,17 +34,20 @@ export default function CreatorApplyStatusPage() {
 
   if (applicationStatus === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载申请状态...</p>
+      <DefaultLayout>
+        <div className="flex items-center justify-center min-h-[60vh] bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">正在加载申请状态...</p>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <DefaultLayout>
+      <div className="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-8 sm:p-10">
@@ -167,6 +171,6 @@ export default function CreatorApplyStatusPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }

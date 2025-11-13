@@ -1,6 +1,7 @@
 import React from 'react';
 
 import ContactPageClient from './ContactPageClient';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export const metadata = {
   title: '联系我们 - 开元空御',
@@ -14,5 +15,9 @@ export const metadata = {
 };
 
 export default function ContactPage() {
-  return <ContactPageClient />;
+  return (
+    <DefaultLayout>
+      <ContactPageClient />
+    </DefaultLayout>
+  );
 }

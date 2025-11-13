@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { useRouting } from '@/lib/routing';
 import { useParams } from 'next/navigation';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export default function CreatorApplySuccessPage() {
   const params = useParams();
@@ -12,7 +13,8 @@ export default function CreatorApplySuccessPage() {
   const { route } = useRouting();
 
   return (
-    <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
+    <DefaultLayout>
+      <div className="bg-secondary-50 flex items-center justify-center min-h-[60vh]">
         <div className="max-w-2xl mx-auto text-center">
           <div className="bg-white rounded-xl shadow-sm p-8">
             {/* 成功图标 */}
@@ -102,5 +104,6 @@ export default function CreatorApplySuccessPage() {
           </div>
         </div>
       </div>
+    </DefaultLayout>
   );
 }

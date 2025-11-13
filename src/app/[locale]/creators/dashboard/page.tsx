@@ -24,6 +24,7 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import RevenueChart from '@/components/creators/RevenueChart';
 import SolutionsManagement from '@/components/creators/SolutionsManagement';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -119,22 +120,26 @@ export default function CreatorDashboardPage() {
 
   if (loading && !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" message="加载仪表盘数据..." />
-      </div>
+      <DefaultLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" message="加载仪表盘数据..." />
+        </div>
+      </DefaultLayout>
     );
   }
 
   if (error && !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <ErrorMessage error={error} className="mb-4" />
-          <Button onClick={fetchDashboardData} variant="outline">
-            重新加载
-          </Button>
+      <DefaultLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <ErrorMessage error={error} className="mb-4" />
+            <Button onClick={fetchDashboardData} variant="outline">
+              重新加载
+            </Button>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
@@ -159,8 +164,9 @@ export default function CreatorDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <DefaultLayout>
+      <div className="bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 页面标题 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">创作者仪表板</h1>
@@ -382,7 +388,8 @@ export default function CreatorDashboardPage() {
             )}
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
 import { Button } from '@/components/ui/Button';
 import { FileUpload } from '@/components/ui/FileUpload';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 // 图标组件
 const User = () => (
@@ -629,14 +630,15 @@ export default function CreatorApplyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 页面标题 */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">创作者申请</h1>
-          <p className="text-gray-600">
-            加入开元空御创作者社区，分享您的专业知识和经验
-          </p>
+    <DefaultLayout>
+      <div className="bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* 页面标题 */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">创作者申请</h1>
+            <p className="text-gray-600">
+              加入开元空御创作者社区，分享您的专业知识和经验
+            </p>
         </div>
 
         {/* 步骤指示器 */}
@@ -712,7 +714,8 @@ export default function CreatorApplyPage() {
             )}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }

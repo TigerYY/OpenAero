@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SearchFilters } from '@/components/business/SearchFilters';
 import { SolutionCard } from '@/components/business/SolutionCard';
 import { Pagination } from '@/components/ui/Pagination';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Solution, SolutionFilters } from '@/types';
 
 interface SolutionsPageProps {
@@ -76,7 +77,8 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <DefaultLayout>
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -137,5 +139,6 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
           </div>
         </div>
       </div>
+    </DefaultLayout>
   );
 }

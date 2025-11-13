@@ -13,6 +13,7 @@ import { useRouting } from '@/lib/routing';
 import { XCircle, RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export default function PaymentFailurePage() {
   const router = useRouter();
@@ -50,9 +51,10 @@ export default function PaymentFailurePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+    <DefaultLayout>
+      <div className="bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[60vh]">
+        <div className="max-w-2xl w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
           {/* 失败图标 */}
           <div className="flex justify-center mb-6">
             <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
@@ -185,9 +187,10 @@ export default function PaymentFailurePage() {
               })}
             </p>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }
 

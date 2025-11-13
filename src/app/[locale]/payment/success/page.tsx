@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
 import { CheckCircle, ArrowRight, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -35,27 +36,28 @@ export default function PaymentSuccessPage() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          {/* 成功图标 */}
-          <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
-              <CheckCircle className="w-16 h-16 text-green-600" />
+    <DefaultLayout>
+      <div className="bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[60vh]">
+        <div className="max-w-2xl w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+            {/* 成功图标 */}
+            <div className="flex justify-center mb-6">
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                <CheckCircle className="w-16 h-16 text-green-600" />
+              </div>
             </div>
-          </div>
 
-          {/* 成功标题 */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              {t('payment.paymentSuccess', { defaultValue: '支付成功！' })}
-            </h1>
-            <p className="text-lg text-gray-600">
-              {t('payment.paymentSuccessDesc', {
-                defaultValue: '您的订单已成功支付，我们将尽快处理您的订单',
-              })}
-            </p>
-          </div>
+            {/* 成功标题 */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                {t('payment.paymentSuccess', { defaultValue: '支付成功！' })}
+              </h1>
+              <p className="text-lg text-gray-600">
+                {t('payment.paymentSuccessDesc', {
+                  defaultValue: '您的订单已成功支付，我们将尽快处理您的订单',
+                })}
+              </p>
+            </div>
 
           {/* 订单信息卡片 */}
           {(orderId || paymentId || amount) && (
@@ -154,7 +156,7 @@ export default function PaymentSuccessPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }
 
