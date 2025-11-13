@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
 import { useAuth } from '@/contexts/AuthContext';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { isValidEmail } from '@/lib/utils';
+import { getLocalizedErrorMessage } from '@/lib/error-messages';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,18 +25,101 @@ export default function RegisterPage() {
     lastName: '',
     phone: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [passwordValid, setPasswordValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // 验证邮箱格式
+  const validateEmail = (email: string): string | null => {
+    if (!email) {
+      return '邮箱地址是必填项';
+    }
+    if (!isValidEmail(email)) {
+      return '请输入有效的邮箱地址';
+    }
+    return null;
+  };
+
+  // 验证密码
+  const validatePassword = (password: string): string | null => {
+    if (!password) {
+      return '密码是必填项';
+    }
+    if (password.length < 8) {
+      return '密码至少需要8个字符';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return '密码必须包含大写字母';
+    }
+    if (!/[a-z]/.test(password)) {
+      return '密码必须包含小写字母';
+    }
+    if (!/[0-9]/.test(password)) {
+      return '密码必须包含数字';
+    }
+    return null;
+  };
+
+  // 实时验证邮箱
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    setFormData({ ...formData, email });
+    
+    if (email && !isValidEmail(email)) {
+      setFieldErrors({ ...fieldErrors, email: '请输入有效的邮箱地址' });
+    } else {
+      const { email: _, ...rest } = fieldErrors;
+      setFieldErrors(rest);
+    }
+  };
+
+  // 实时验证密码确认
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const confirmPassword = e.target.value;
+    setFormData({ ...formData, confirmPassword });
+    
+    if (confirmPassword && confirmPassword !== formData.password) {
+      setFieldErrors({ ...fieldErrors, confirmPassword: '两次输入的密码不一致' });
+    } else {
+      const { confirmPassword: _, ...rest } = fieldErrors;
+      setFieldErrors(rest);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     setLoading(true);
 
+    // 验证邮箱
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setFieldErrors({ email: emailError });
+      setLoading(false);
+      return;
+    }
+
     // 验证密码
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setFieldErrors({ password: passwordError });
+      setLoading(false);
+      return;
+    }
+
+    // 验证密码确认
     if (formData.password !== formData.confirmPassword) {
-      setError('两次输入的密码不一致');
+      setFieldErrors({ confirmPassword: '两次输入的密码不一致' });
+      setLoading(false);
+      return;
+    }
+
+    // 验证密码强度
+    if (!passwordValid) {
+      setError('密码强度不足，请使用更强的密码');
       setLoading(false);
       return;
     }
@@ -48,12 +136,18 @@ export default function RegisterPage() {
       );
 
       if (signUpError) {
-        throw signUpError;
+        // 使用统一的错误消息处理
+        const localizedError = getLocalizedErrorMessage(signUpError, 'zh-CN');
+        setError(localizedError);
+        setLoading(false);
+        return;
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || '注册失败，请稍后重试');
+    } catch (err: unknown) {
+      // 使用统一的错误消息处理
+      const localizedError = getLocalizedErrorMessage(err, 'zh-CN');
+      setError(localizedError);
     } finally {
       setLoading(false);
     }
@@ -104,9 +198,11 @@ export default function RegisterPage() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
-            </div>
+            <ErrorMessage
+              error={error}
+              type="error"
+              showIcon={true}
+            />
           )}
 
           <div className="rounded-md shadow-sm space-y-4">
@@ -151,10 +247,15 @@ export default function RegisterPage() {
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                onChange={handleEmailChange}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  fieldErrors.email ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="your@email.com"
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -182,10 +283,31 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  // 清除密码错误
+                  if (fieldErrors.password) {
+                    const { password: _, ...rest } = fieldErrors;
+                    setFieldErrors(rest);
+                  }
+                }}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  fieldErrors.password ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="至少 8 个字符"
               />
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+              )}
+              {formData.password && (
+                <div className="mt-2">
+                  <PasswordStrengthIndicator
+                    password={formData.password}
+                    onValidationChange={(isValid) => setPasswordValid(isValid)}
+                    showRequirements={true}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -198,21 +320,38 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                onChange={handleConfirmPasswordChange}
+                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  fieldErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="再次输入密码"
               />
+              {fieldErrors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+              )}
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !passwordValid}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '注册中...' : '注册'}
+              {loading ? (
+                <span className="flex items-center">
+                  <LoadingSpinner size="sm" message="" />
+                  <span className="ml-2">{t('auth.registering', { defaultValue: '注册中...' })}</span>
+                </span>
+              ) : (
+                t('auth.register', { defaultValue: '注册' })
+              )}
             </button>
+            {!passwordValid && formData.password && (
+              <p className="mt-2 text-sm text-yellow-600 text-center">
+                请确保密码满足所有要求
+              </p>
+            )}
           </div>
 
           <div className="text-xs text-center text-gray-500">

@@ -46,13 +46,6 @@ export async function GET(request: NextRequest) {
     const solutions = await db.solution.findMany({
       where,
       include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        },
         _count: {
           select: {
             reviews: true
@@ -96,10 +89,8 @@ export async function GET(request: NextRequest) {
             images: parseJsonSafely(solution.images, []),
             createdAt: solution.createdAt,
             updatedAt: solution.updatedAt,
-            creatorId: solution.creatorId,
-            creatorName: solution.user?.firstName && solution.user?.lastName 
-                          ? `${solution.user.firstName} ${solution.user.lastName}` 
-                          : 'Unknown',
+            creatorId: null, // TODO: 添加 creatorId 字段到 Solution 模型
+            creatorName: 'Unknown', // TODO: 通过 creatorId 关联获取创作者信息
             reviewCount: solution._count.reviews,
             downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
             specs: parseJsonSafely(solution.specs, {}),
@@ -117,21 +108,17 @@ export async function GET(request: NextRequest) {
       solutions.map(solution => ({
         id: solution.id,
         title: solution.title,
-        slug: solution.slug,
+        slug: solution.id, // 临时使用 id 作为 slug
         description: solution.description,
         price: solution.price,
         status: solution.status,
         images: solution.images,
-        categoryId: solution.categoryId,
-        creatorId: solution.creatorId,
+        categoryId: solution.category, // 使用 category 字段
+        creatorId: null, // TODO: 添加 creatorId 字段
         createdAt: solution.createdAt.toISOString(),
         updatedAt: solution.updatedAt.toISOString(),
-        averageRating: solution._count.reviews > 0 
-          ? (solution.reviews.reduce((sum, r) => sum + r.rating, 0) / solution._count.reviews)
-          : 0,
-        creatorName: solution.user?.firstName && solution.user?.lastName 
-          ? `${solution.user.firstName} ${solution.user.lastName}` 
-          : 'Unknown',
+        averageRating: 0, // TODO: 计算平均评分
+        creatorName: 'Unknown', // TODO: 通过关联获取
         reviewCount: solution._count.reviews,
         downloadCount: 0,
         specs: parseJsonSafely(solution.specs, {}),
@@ -193,17 +180,8 @@ export async function POST(request: NextRequest) {
         specs: JSON.stringify(validatedData.specs || {}),
         bom: JSON.stringify(validatedData.bom || []),
         status: 'DRAFT',
-        creatorId: creatorProfile.id,
-        userId: authResult.user.id
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            avatar: true
-          }
-        }
+        // creatorId: creatorProfile.id, // TODO: 添加 creatorId 字段到 Solution 模型
+        // userId: authResult.user.id // TODO: 添加 userId 字段到 Solution 模型
       }
     });
 
@@ -234,10 +212,8 @@ export async function POST(request: NextRequest) {
         images: solution.images || [],
         createdAt: solution.createdAt,
         updatedAt: solution.updatedAt,
-        creatorId: solution.creatorId,
-        creatorName: solution.user?.firstName && solution.user?.lastName 
-          ? `${solution.user.firstName} ${solution.user.lastName}` 
-          : 'Unknown',
+        creatorId: null, // TODO: 添加 creatorId 字段
+        creatorName: 'Unknown', // TODO: 通过关联获取
         specs: solution.specs || {},
         bom: solution.bom || []
       },

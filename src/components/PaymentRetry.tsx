@@ -1,3 +1,8 @@
+/**
+ * 支付重试组件
+ * 支持支付失败后的重试功能，包含重试次数限制和状态检查
+ */
+
 'use client';
 
 import { 
@@ -11,10 +16,13 @@ import {
   Building
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface PaymentRetryProps {
   payment: {
@@ -41,6 +49,7 @@ export default function PaymentRetry({
   onRetry, 
   onStatusCheck 
 }: PaymentRetryProps) {
+  const t = useTranslations();
   const [isRetrying, setIsRetrying] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +57,12 @@ export default function PaymentRetry({
 
   // 格式化金额
   const formatCurrency = (amount: number) => {
-    return `¥${amount.toFixed(2)}`;
+    return `${t('payment.currency', { defaultValue: '¥' })}${amount.toFixed(2)}`;
   };
 
   // 格式化日期
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN');
+    return new Date(dateString).toLocaleString();
   };
 
   // 获取支付方式图标
@@ -76,15 +85,15 @@ export default function PaymentRetry({
   const getPaymentMethodName = (method: string) => {
     switch (method) {
       case 'ALIPAY':
-        return '支付宝';
+        return t('payment.alipay', { defaultValue: '支付宝' });
       case 'WECHAT_PAY':
-        return '微信支付';
+        return t('payment.wechatPay', { defaultValue: '微信支付' });
       case 'CREDIT_CARD':
-        return '信用卡';
+        return t('payment.creditCard', { defaultValue: '信用卡' });
       case 'BANK_TRANSFER':
-        return '银行转账';
+        return t('payment.bankTransfer', { defaultValue: '银行转账' });
       case 'PAYPAL':
-        return 'PayPal';
+        return t('payment.paypal', { defaultValue: 'PayPal' });
       default:
         return method;
     }
@@ -112,15 +121,15 @@ export default function PaymentRetry({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return '支付成功';
+        return t('payment.status.completed', { defaultValue: '支付成功' });
       case 'PENDING':
-        return '待支付';
+        return t('payment.status.pending', { defaultValue: '待支付' });
       case 'PROCESSING':
-        return '处理中';
+        return t('payment.status.processing', { defaultValue: '处理中' });
       case 'FAILED':
-        return '支付失败';
+        return t('payment.status.failed', { defaultValue: '支付失败' });
       case 'CANCELLED':
-        return '已取消';
+        return t('payment.status.cancelled', { defaultValue: '已取消' });
       default:
         return status;
     }
@@ -154,10 +163,10 @@ export default function PaymentRetry({
       setSuccess(null);
       
       await onRetry(payment.id);
-      setSuccess('支付重试已发起，请完成支付');
+      setSuccess(t('payment.retryInitiated', { defaultValue: '支付重试已发起，请完成支付' }));
     } catch (error) {
       console.error('支付重试失败:', error);
-      setError('支付重试失败，请稍后再试');
+      setError(t('payment.retryFailed', { defaultValue: '支付重试失败，请稍后再试' }));
     } finally {
       setIsRetrying(false);
     }
@@ -173,10 +182,10 @@ export default function PaymentRetry({
       setSuccess(null);
       
       await onStatusCheck(payment.id);
-      setSuccess('支付状态已更新');
+      setSuccess(t('payment.statusUpdated', { defaultValue: '支付状态已更新' }));
     } catch (error) {
       console.error('状态检查失败:', error);
-      setError('状态检查失败，请稍后再试');
+      setError(t('payment.statusCheckFailed', { defaultValue: '状态检查失败，请稍后再试' }));
     } finally {
       setIsChecking(false);
     }
@@ -187,7 +196,7 @@ export default function PaymentRetry({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           {getStatusIcon(payment.status)}
-          <span>支付状态</span>
+          <span>{t('payment.paymentStatus', { defaultValue: '支付状态' })}</span>
           <Badge className={getStatusColor(payment.status)}>
             {getStatusText(payment.status)}
           </Badge>
@@ -198,22 +207,22 @@ export default function PaymentRetry({
         {/* 支付信息 */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <div className="text-gray-600">支付金额</div>
+            <div className="text-gray-600">{t('payment.amount', { defaultValue: '支付金额' })}</div>
             <div className="font-semibold text-lg">{formatCurrency(payment.amount)}</div>
           </div>
           <div>
-            <div className="text-gray-600">支付方式</div>
+            <div className="text-gray-600">{t('payment.method', { defaultValue: '支付方式' })}</div>
             <div className="flex items-center space-x-2">
               {getPaymentMethodIcon(payment.paymentMethod)}
               <span className="font-medium">{getPaymentMethodName(payment.paymentMethod)}</span>
             </div>
           </div>
           <div>
-            <div className="text-gray-600">创建时间</div>
+            <div className="text-gray-600">{t('payment.createdAt', { defaultValue: '创建时间' })}</div>
             <div className="font-medium">{formatDate(payment.createdAt)}</div>
           </div>
           <div>
-            <div className="text-gray-600">支付ID</div>
+            <div className="text-gray-600">{t('payment.paymentId', { defaultValue: '支付ID' })}</div>
             <div className="font-mono text-xs">{payment.id.slice(0, 8)}...</div>
           </div>
         </div>
@@ -224,7 +233,9 @@ export default function PaymentRetry({
             <div className="flex items-start space-x-2">
               <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
               <div>
-                <div className="text-sm font-medium text-red-800">支付失败原因</div>
+                <div className="text-sm font-medium text-red-800">
+                  {t('payment.failureReason', { defaultValue: '支付失败原因' })}
+                </div>
                 <div className="text-sm text-red-700 mt-1">{payment.failureReason}</div>
               </div>
             </div>
@@ -235,22 +246,18 @@ export default function PaymentRetry({
         {payment.status === 'FAILED' && (
           <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <div className="text-sm text-gray-600 space-y-1">
-              <div>失败次数: {retryInfo.failedCount} / {retryInfo.maxRetries}</div>
-              <div>剩余重试次数: {retryInfo.remainingRetries}</div>
+              <div>
+                {t('payment.failedCount', { defaultValue: '失败次数' })}: {retryInfo.failedCount} / {retryInfo.maxRetries}
+              </div>
+              <div>
+                {t('payment.remainingRetries', { defaultValue: '剩余重试次数' })}: {retryInfo.remainingRetries}
+              </div>
             </div>
           </div>
         )}
 
         {/* 错误和成功提示 */}
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <XCircle className="h-4 w-4 text-red-600 mt-0.5" />
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          </div>
-        )}
-
+        {error && <ErrorMessage error={error} className="mb-2" />}
         {success && (
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-start space-x-2">
@@ -271,13 +278,13 @@ export default function PaymentRetry({
             >
               {isRetrying ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  重试中...
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2">{t('payment.retrying', { defaultValue: '重试中...' })}</span>
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  重新支付
+                  {t('payment.retryPayment', { defaultValue: '重新支付' })}
                 </>
               )}
             </Button>
@@ -293,13 +300,13 @@ export default function PaymentRetry({
             >
               {isChecking ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  检查中...
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2">{t('payment.checking', { defaultValue: '检查中...' })}</span>
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  检查状态
+                  {t('payment.checkStatus', { defaultValue: '检查状态' })}
                 </>
               )}
             </Button>
@@ -310,8 +317,8 @@ export default function PaymentRetry({
         {!retryInfo.canRetry && payment.status === 'FAILED' && (
           <div className="text-sm text-gray-600 text-center py-2">
             {retryInfo.remainingRetries === 0 ? 
-              '已达到最大重试次数，请联系客服处理' : 
-              '当前不支持重试，请稍后再试'
+              t('payment.maxRetriesReached', { defaultValue: '已达到最大重试次数，请联系客服处理' }) : 
+              t('payment.retryNotAvailable', { defaultValue: '当前不支持重试，请稍后再试' })
             }
           </div>
         )}
@@ -319,7 +326,7 @@ export default function PaymentRetry({
         {payment.status === 'COMPLETED' && (
           <div className="text-sm text-green-600 text-center py-2 flex items-center justify-center space-x-1">
             <CheckCircle className="h-4 w-4" />
-            <span>支付已完成</span>
+            <span>{t('payment.completed', { defaultValue: '支付已完成' })}</span>
           </div>
         )}
       </CardContent>

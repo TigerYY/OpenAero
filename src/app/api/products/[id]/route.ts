@@ -1,20 +1,55 @@
+/**
+ * 产品详情 API
+ * GET /api/products/[id] - 获取产品详情（支持通过 id 或 slug 查询）
+ */
+
 import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { db } from '@/lib/prisma';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+} from '@/lib/api-helpers';
 
-// 获取单个商品详情（公开接口）
+export const dynamic = 'force-dynamic';
+
+/**
+ * 判断字符串是否为 UUID 格式
+ */
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
+ * GET /api/products/[id] - 获取产品详情
+ * 支持通过 id（UUID）或 slug（字符串）查询
+ */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    const identifier = id;
+
+    // 判断是 id 还是 slug
+    const isId = isUUID(identifier);
+
+    // 构建查询条件
+    const where: any = {
+      status: ProductStatus.PUBLISHED,
+      isActive: true,
+    };
+
+    if (isId) {
+      where.id = identifier;
+    } else {
+      where.slug = identifier;
+    }
+
     const product = await db.product.findUnique({
-      where: { 
-        slug: params.slug,
-        status: ProductStatus.PUBLISHED,
-        isActive: true,
-      },
+      where,
       include: {
         category: {
           select: {
@@ -81,18 +116,14 @@ export async function GET(
         },
         _count: {
           select: {
-            reviews: {
-              where: {
-                status: ReviewStatus.COMPLETED,
-              },
-            },
+            reviews: true,
           },
         },
       },
     });
 
     if (!product) {
-      return NextResponse.json({ error: '商品不存在' }, { status: 404 });
+      return createErrorResponse('商品不存在', 404);
     }
 
     // 增加浏览次数
@@ -155,9 +186,14 @@ export async function GET(
       })),
     };
 
-    return NextResponse.json(formattedProduct);
+    return createSuccessResponse({ product: formattedProduct }, '获取商品详情成功');
   } catch (error) {
     console.error('获取商品详情失败:', error);
-    return NextResponse.json({ error: '获取商品详情失败' }, { status: 500 });
+    return createErrorResponse(
+      '获取商品详情失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
+    );
   }
 }
+

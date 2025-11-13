@@ -19,6 +19,11 @@ import { useState, useEffect } from 'react';
 import { useRouting } from '@/lib/routing';
 
 import PaymentRetry from '@/components/PaymentRetry';
+import OrderTracking from '@/components/orders/OrderTracking';
+import OrderRefund from '@/components/orders/OrderRefund';
+import OrderHistory from '@/components/orders/OrderHistory';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -128,14 +133,15 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       setError(null);
       
       const response = await fetch(`/api/orders/${params.id}`);
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      
+      if (data.success) {
         setOrder(data.data);
       } else if (response.status === 404) {
         setError('订单不存在');
         setTimeout(() => router.push(route(routes.ORDERS.HOME)), 2000);
       } else {
-        setError('获取订单详情失败，请稍后重试');
+        setError(data.message || '获取订单详情失败，请稍后重试');
       }
     } catch (error) {
       console.error('获取订单详情失败:', error);
@@ -326,10 +332,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <div className="text-lg text-gray-600">加载订单详情中...</div>
-          </div>
+          <LoadingSpinner size="lg" message="加载订单详情中..." />
         </div>
       </div>
     );
@@ -340,7 +343,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-red-600 text-lg mb-4">{error}</div>
+            <ErrorMessage error={error} className="mb-4" />
             <Button onClick={fetchOrderDetail} variant="outline">
               重新加载
             </Button>
@@ -694,6 +697,23 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               </CardContent>
             </Card>
           )}
+
+          {/* 物流跟踪 */}
+          {order.status !== 'CANCELLED' && order.status !== 'REFUNDED' && (
+            <OrderTracking orderId={order.id} />
+          )}
+
+          {/* 退款信息 */}
+          {(order.status === 'DELIVERED' || order.status === 'SHIPPED' || order.status === 'REFUNDED') && (
+            <OrderRefund
+              orderId={order.id}
+              orderStatus={order.status}
+              canRefund={order.status !== 'CANCELLED' && order.status !== 'PENDING'}
+            />
+          )}
+
+          {/* 订单历史 */}
+          <OrderHistory orderId={order.id} />
         </div>
       </div>
     </div>

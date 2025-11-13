@@ -76,6 +76,12 @@ const ROUTES = {
     DETAIL: '/orders/[id]',
   },
   
+  // 支付路由
+  PAYMENT: {
+    SUCCESS: '/payment/success',
+    FAILURE: '/payment/failure',
+  },
+  
   // 供应链路由
   SUPPLY_CHAIN: {
     FACTORIES: '/supply-chain/factories',

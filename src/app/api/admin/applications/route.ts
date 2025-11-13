@@ -1,158 +1,126 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminAuth, createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { VerificationStatus } from '@prisma/client';
+import {
+  requireAdminAuth,
+  createSuccessResponse,
+  createErrorResponse,
+  createPaginatedResponse,
+  logAuditAction,
+} from '@/lib/api-helpers';
+import { getApplications, reviewApplication } from '@/lib/creator-application';
 
-interface CreatorApplication {
-  id: string;
-  userId: string;
-  userName: string;
-  email: string;
-  specialties: string[];
-  experience: string;
-  portfolio: string[];
-  submittedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
-  reviewedAt?: string;
-  reviewedBy?: string;
-  reviewNotes?: string;
-}
+export const dynamic = 'force-dynamic';
 
-// 模拟数据库
-const mockApplications: CreatorApplication[] = [
-  {
-    id: '1',
-    userId: 'user_1',
-    userName: '王五',
-    email: 'wangwu@example.com',
-    specialties: ['React', 'Node.js', 'TypeScript'],
-    experience: '5年前端开发经验，专注于React生态系统',
-    portfolio: ['https://github.com/wangwu/react-components', 'https://wangwu.dev'],
-    submittedAt: '2024-01-15T09:00:00Z',
-    status: 'pending'
-  },
-  {
-    id: '2',
-    userId: 'user_2',
-    userName: '陈七',
-    email: 'chenqi@example.com',
-    specialties: ['Vue.js', 'Python', 'Django'],
-    experience: '4年全栈开发经验，熟悉Vue.js和Python',
-    portfolio: ['https://github.com/chenqi/vue-admin', 'https://chenqi.com'],
-    submittedAt: '2024-01-15T08:30:00Z',
-    status: 'pending'
-  },
-  {
-    id: '3',
-    userId: 'user_3',
-    userName: '刘八',
-    email: 'liuba@example.com',
-    specialties: ['Angular', 'Java', 'Spring'],
-    experience: '6年企业级应用开发经验',
-    portfolio: ['https://github.com/liuba/angular-enterprise'],
-    submittedAt: '2024-01-15T08:00:00Z',
-    status: 'pending'
-  }
-];
+const applicationsQuerySchema = z.object({
+  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
+  status: z.nativeEnum(VerificationStatus).optional(),
+});
+
+const reviewApplicationSchema = z.object({
+  applicationId: z.string().min(1, '申请ID不能为空'),
+  action: z.enum(['approve', 'reject']),
+  notes: z.string().max(1000, '备注不能超过1000个字符').optional(),
+});
 
 // GET - 获取申请列表
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    // 验证管理员权限
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
-      return authResult.response;
+      return authResult.error;
     }
 
-    let filteredApplications = mockApplications;
+    const searchParams = request.nextUrl.searchParams;
+    const queryResult = applicationsQuerySchema.safeParse({
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      status: searchParams.get('status'),
+    });
 
-    // 按状态筛选
-    if (status && status !== 'all') {
-      filteredApplications = mockApplications.filter(app => app.status === status);
+    if (!queryResult.success) {
+      return createErrorResponse('查询参数无效', 400);
     }
 
-    // 分页
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedApplications = filteredApplications.slice(startIndex, endIndex);
+    const { page, limit, status } = queryResult.data;
+    const result = await getApplications(page, limit, status);
 
     return createPaginatedResponse(
-      paginatedApplications,
-      page,
-      limit,
-      filteredApplications.length,
+      result.applications,
+      {
+        page,
+        limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+      },
       '获取申请列表成功'
     );
   } catch (error) {
     console.error('获取申请列表失败:', error);
-    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
+    return createErrorResponse(
+      '获取申请列表失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
+    );
   }
 }
 
 // PUT - 审核申请
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { applicationId, action, notes } = body;
-
-    // 验证请求参数
-    if (!applicationId || !action || !['approve', 'reject'].includes(action)) {
-      return createErrorResponse('无效的请求参数', 400);
-    }
-
-    // 验证管理员权限
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
-      return authResult.response;
+      return authResult.error;
     }
 
-    // 查找申请
-    const applicationIndex = mockApplications.findIndex(app => app.id === applicationId);
-    if (applicationIndex === -1) {
-      return createErrorResponse('申请不存在', 404);
+    const body = await request.json();
+    const validationResult = reviewApplicationSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return createErrorResponse('请求参数无效', 400);
     }
 
-    const application = mockApplications[applicationIndex];
-    if (!application || application.status !== 'pending') {
-      return createErrorResponse('申请已被处理或不存在', 400);
-    }
+    const { applicationId, action, notes } = validationResult.data;
 
-    // 更新申请状态
-    const updatedApplication: CreatorApplication = {
-      ...application,
-      status: action === 'approve' ? 'approved' : 'rejected',
-      reviewedAt: new Date().toISOString(),
-      reviewedBy: authResult.user.id,
-      reviewNotes: notes
-    };
+    const updatedApplication = await reviewApplication(
+      applicationId,
+      action === 'approve',
+      authResult.user.id,
+      notes
+    );
 
-    mockApplications[applicationIndex] = updatedApplication;
+    // 记录审计日志
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: action === 'approve' ? 'CREATOR_APPLICATION_APPROVED' : 'CREATOR_APPLICATION_REJECTED',
+      resource: 'creator_applications',
+      resource_id: applicationId,
+      metadata: {
+        action,
+        notes,
+        userId: updatedApplication.userId,
+      },
+    });
 
-    // TODO: 如果批准，创建创作者档案
-    if (action === 'approve') {
-      // await createCreatorProfile(application.userId, {
-      //   specialties: application.specialties,
-      //   experience: application.experience,
-      //   portfolio: application.portfolio
-      // });
-      
-      // TODO: 发送批准通知邮件
-      console.log(`发送批准通知给 ${application.email}`);
-    } else {
-      // TODO: 发送拒绝通知邮件
-      console.log(`发送拒绝通知给 ${application.email}`);
-    }
+    // TODO: 发送通知邮件
+    // if (action === 'approve') {
+    //   await sendApplicationApprovedEmail(updatedApplication.user.email, updatedApplication);
+    // } else {
+    //   await sendApplicationRejectedEmail(updatedApplication.user.email, updatedApplication, notes);
+    // }
 
     return createSuccessResponse(
-      { application: updatedApplication },
+      updatedApplication,
       `申请已${action === 'approve' ? '批准' : '拒绝'}`
     );
   } catch (error) {
     console.error('审核申请失败:', error);
-    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
+    return createErrorResponse(
+      error instanceof Error ? error.message : '审核申请失败',
+      error instanceof Error && error.message.includes('不存在') ? 404 : 500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
+    );
   }
 }
 

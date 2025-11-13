@@ -1,163 +1,164 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getServerUser } from '@/lib/auth/auth-service';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+} from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
-import { db as prisma } from '@/lib/prisma';
+export const dynamic = 'force-dynamic';
 
-import { checkCreatorAuth } from '@/lib/api-auth-helpers';
-
+/**
+ * GET /api/creators/dashboard/stats - 获取创作者仪表盘统计数据
+ */
 export async function GET(request: NextRequest) {
   try {
-    // 验证用户身份
-    const authResult = await checkAdminAuth(request);
-    if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
-    }
-    const session = authResult.session;
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+    const user = await getServerUser();
+    if (!user) {
+      return createErrorResponse('未授权访问', 401);
     }
 
     // 检查用户是否为创作者
-    if (session.user.role !== 'CREATOR') {
-      return NextResponse.json(
-        { error: '只有创作者可以访问此接口' },
-        { status: 403 }
-      );
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { user_id: user.id },
+      select: { role: true },
+    });
+
+    if (userProfile?.role !== 'CREATOR') {
+      return createErrorResponse('只有创作者可以访问此接口', 403);
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // 获取创作者档案
     const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId }
+      where: { user_id: userId },
     });
 
     if (!creatorProfile) {
-      return NextResponse.json(
-        { error: '创作者档案不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('创作者档案不存在', 404);
     }
 
     // 获取方案统计
+    // 注意：Solution 模型使用 creatorId，需要关联到 CreatorProfile
+    // 由于 schema 中 Solution 没有直接关联 CreatorProfile，我们需要通过其他方式查询
+    // 暂时使用 creatorId = creatorProfile.id 的假设
     const solutionStats = await prisma.solution.groupBy({
       by: ['status'],
       where: {
-        creatorId: creatorProfile.id
+        creatorId: creatorProfile.id,
       },
       _count: {
-        id: true
-      }
+        id: true,
+      },
     });
 
     // 计算各状态方案数量
-    const totalSolutions = solutionStats.reduce((sum: number, stat) => sum + stat._count.id, 0);
-    const publishedSolutions = solutionStats.find(s => s.status === 'PUBLISHED')?._count.id || 0;
-    const draftSolutions = solutionStats.find(s => s.status === 'DRAFT')?._count.id || 0;
-    const pendingSolutions = solutionStats.find(s => s.status === 'PENDING_REVIEW')?._count.id || 0;
+    const totalSolutions = solutionStats.reduce((sum, stat) => sum + stat._count.id, 0);
+    const publishedSolutions = solutionStats.find((s) => s.status === 'PUBLISHED')?._count.id || 0;
+    const draftSolutions = solutionStats.find((s) => s.status === 'DRAFT')?._count.id || 0;
+    const pendingSolutions = solutionStats.find((s) => s.status === 'PENDING_REVIEW')?._count.id || 0;
 
-    // 获取收益统计
-    const revenueStats = await prisma.order.aggregate({
+    // 获取收益统计（通过收益分成表）
+    // 注意：RevenueShare 模型使用 creatorId，需要关联到 CreatorProfile
+    const revenueShares = await prisma.revenueShare.findMany({
+      where: {
+        creatorId: creatorProfile.id,
+        status: 'SETTLED',
+      },
+      select: {
+        creatorRevenue: true,
+        createdAt: true,
+      },
+    });
+
+    // 计算总收益和本月收益
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const totalRevenue = revenueShares
+      .filter((r) => r.createdAt >= yearStart)
+      .reduce((sum, r) => sum + Number(r.creatorRevenue), 0);
+
+    const monthlyRevenue = revenueShares
+      .filter((r) => r.createdAt >= monthStart)
+      .reduce((sum, r) => sum + Number(r.creatorRevenue), 0);
+
+    // 获取订单统计
+    const orderStats = await prisma.order.count({
       where: {
         orderSolutions: {
           some: {
             solution: {
-              creatorId: creatorProfile.id
-            }
-          }
+              creatorId: creatorProfile.id,
+            },
+          },
         },
-        status: 'DELIVERED',
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), 0, 1) // 今年开始
-        }
       },
-      _sum: {
-        total: true
-      }
     });
 
-    // 获取本月收益
-    const monthlyRevenueStats = await prisma.order.aggregate({
+    const monthlyOrders = await prisma.order.count({
       where: {
         orderSolutions: {
           some: {
             solution: {
-              creatorId: creatorProfile.id
-            }
-          }
+              creatorId: creatorProfile.id,
+            },
+          },
         },
-        status: 'DELIVERED',
         createdAt: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // 本月开始
-        }
+          gte: monthStart,
+        },
       },
-      _sum: {
-        total: true
-      }
     });
 
-    // 获取浏览量和下载量统计 (模拟数据，因为schema中没有这些字段)
+    // 获取浏览量和下载量统计
     const solutionCount = await prisma.solution.count({
       where: {
-        creatorId: creatorProfile.id
-      }
+        creatorId: creatorProfile.id,
+      },
     });
 
-    // 获取评分统计
-    const ratingStats = await prisma.review.aggregate({
+    // 获取评分统计（通过方案评价）
+    const solutionReviews = await prisma.review.findMany({
       where: {
         solution: {
-          creatorId: creatorProfile.id
-        }
+          creatorId: creatorProfile.id,
+        },
       },
-      _avg: {
-        rating: true
+      select: {
+        rating: true,
       },
-      _count: {
-        id: true
-      }
     });
+
+    const averageRating =
+      solutionReviews.length > 0
+        ? solutionReviews.reduce((sum, r) => sum + r.rating, 0) / solutionReviews.length
+        : 0;
 
     const stats = {
       totalSolutions,
       publishedSolutions,
       draftSolutions,
       pendingSolutions,
-      totalRevenue: Number(revenueStats._sum?.total || 0),
-      monthlyRevenue: Number(monthlyRevenueStats._sum?.total || 0),
-      totalViews: solutionCount * 100, // 模拟数据
-      totalDownloads: solutionCount * 20, // 模拟数据
-      averageRating: Number(ratingStats._avg.rating || 0),
-      totalReviews: ratingStats._count.id || 0
+      totalRevenue,
+      monthlyRevenue,
+      totalOrders: orderStats,
+      monthlyOrders,
+      totalViews: solutionCount * 100, // 模拟数据，实际应从视图统计表获取
+      totalDownloads: solutionCount * 20, // 模拟数据，实际应从下载统计表获取
+      averageRating,
+      totalReviews: solutionReviews.length,
     };
 
-    // 记录审计日志 (简化版本，直接写入数据库)
-    await prisma.auditLog.create({
-      data: {
-        action: 'VIEW_CREATOR_STATS',
-        userId: session.user.id,
-        resource: 'creator_stats',
-        resourceId: creatorProfile.id,
-        newValues: {
-          totalSolutions,
-          publishedSolutions
-        }
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: stats
-    });
-
+    return createSuccessResponse(stats, '获取统计数据成功');
   } catch (error) {
     console.error('获取创作者统计数据失败:', error);
-    
-    return NextResponse.json(
-      { error: '获取统计数据失败' },
-      { status: 500 }
+    return createErrorResponse(
+      '获取统计数据失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

@@ -1,94 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { authenticateSupabaseSession } from '@/lib/supabase-auth-middleware';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { getServerUser } from '@/lib/auth/auth-service';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  logAuditAction,
+} from '@/lib/api-helpers';
+import { createCreatorApplication } from '@/lib/creator-application';
 
+export const dynamic = 'force-dynamic';
+
+const createApplicationSchema = z.object({
+  bio: z.string().min(10, '个人简介至少需要10个字符').max(1000, '个人简介不能超过1000个字符'),
+  website: z.string().url('请输入有效的网址').optional().or(z.literal('')),
+  experience: z.string().min(10, '相关经验至少需要10个字符').max(2000, '相关经验不能超过2000个字符'),
+  specialties: z.array(z.string()).min(1, '至少选择一个专长领域').max(10, '最多选择10个专长领域'),
+  portfolio: z.array(z.string().url()).optional(),
+  documents: z.array(z.string().url()).optional(),
+});
+
+/**
+ * POST /api/creators/apply - 提交创作者申请
+ */
 export async function POST(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return createErrorResponse('未授权访问', 401);
+    }
+
     const body = await request.json();
-    const { bio, website, experience, specialties } = body;
+    const validationResult = createApplicationSchema.safeParse(body);
 
-    // 验证输入
-    if (!bio || !experience || !specialties) {
-      return NextResponse.json(
-        { error: '个人简介、相关经验和专长领域是必填项' },
-        { status: 400 }
-      );
+    if (!validationResult.success) {
+      return createValidationErrorResponse(validationResult.error);
     }
 
-    // 验证Supabase会话
-    const authResult = await authenticateSupabaseSession(request);
-    if (authResult) {
-      return authResult;
-    }
+    const applicationData = {
+      userId: user.id,
+      ...validationResult.data,
+    };
 
-    const user = (request as any).user;
-    const userId = user.userId;
+    const application = await createCreatorApplication(applicationData);
 
-    // 检查用户是否已经是创作者
-    const { prisma } = await import('@/lib/prisma');
-    const existingCreator = await prisma.user.findFirst({
-      where: { 
-        id: userId,
-        role: 'CREATOR'
-      }
+    // 记录审计日志
+    await logAuditAction(request, {
+      userId: user.id,
+      action: 'CREATOR_APPLICATION_SUBMITTED',
+      resource: 'creator_applications',
+      resource_id: application.id,
+      metadata: {
+        bio: application.bio,
+        specialties: application.specialties,
+      },
     });
 
-    if (existingCreator) {
-      return NextResponse.json(
-        { error: '您已经是创作者了' },
-        { status: 409 }
-      );
-    }
+    // TODO: 发送申请提交通知邮件
 
-    // 检查是否已经有待审核的申请
-    const existingApplication = await prisma.creatorApplication.findFirst({
-      where: { 
-        userId,
-        status: 'PENDING'
-      }
-    });
-
-    if (existingApplication) {
-      return NextResponse.json(
-        { error: '您已经有一个待审核的创作者申请' },
-        { status: 409 }
-      );
-    }
-
-    // 创建创作者申请
-    const application = await prisma.creatorApplication.create({
-      data: {
-        userId,
-        bio,
-        website: website || null,
-        experience,
-        specialties,
-        status: 'PENDING'
-      }
-    });
-
-    // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action: 'CREATOR_APPLICATION_SUBMITTED',
-        resource: 'CreatorApplication',
-        resourceId: application.id,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: '创作者申请提交成功，我们将在3个工作日内审核您的申请',
-      applicationId: application.id
-    });
-
+    return createSuccessResponse(
+      {
+        applicationId: application.id,
+        status: application.status,
+        submittedAt: application.submittedAt,
+      },
+      '创作者申请提交成功，我们将在3个工作日内审核您的申请',
+      201
+    );
   } catch (error) {
     console.error('创作者申请错误:', error);
-    return NextResponse.json(
-      { error: '申请提交失败，请稍后重试' },
-      { status: 500 }
+    return createErrorResponse(
+      error instanceof Error ? error.message : '申请提交失败，请稍后重试',
+      error instanceof Error && (error.message.includes('已经是') || error.message.includes('已经有一个'))
+        ? 409
+        : 500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

@@ -7,57 +7,66 @@ import {
   XCircle,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  Search,
+  Filter,
+  FileDown
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useRouting } from '@/lib/routing';
+import { OrderStatus } from '@prisma/client';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Input } from '@/components/ui/Input';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 import { formatCurrency, formatDate } from '@/lib/utils';
-
-
-// 订单状态类型
-type OrderStatus = 'PENDING' | 'PAID' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
 
 // 订单接口
 interface Order {
   id: string;
-  orderNumber: string;
+  userId: string;
+  orderNumber: string | null;
   status: OrderStatus;
-  totalAmount: number;
+  total: number | string;
   createdAt: string;
   updatedAt: string;
   orderSolutions: Array<{
     id: string;
     quantity: number;
-    price: number;
+    price: number | string;
+    subtotal: number | string;
     solution: {
       id: string;
       title: string;
-      description: string;
-      price: number;
-      creator: {
-        id: string;
-        name: string;
-      };
+      images: string[];
     };
+  }>;
+  paymentTransactions?: Array<{
+    id: string;
+    paymentMethod: string;
+    amount: number | string;
+    status: string;
+    createdAt: string;
   }>;
 }
 
 // API响应接口
 interface OrdersResponse {
-  data: {
-    orders: Order[];
-    total: number;
+  success: boolean;
+  data: Order[];
+  pagination?: {
     page: number;
     limit: number;
+    total: number;
     totalPages: number;
   };
+  message?: string;
 }
 
 export default function OrdersPage() {
@@ -73,11 +82,13 @@ export default function OrdersPage() {
     totalPages: 0,
   });
   const [activeTab, setActiveTab] = useState<'all' | OrderStatus>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
 
 
 
   // 获取订单列表
-  const fetchOrders = async (page = 1, status?: OrderStatus | 'all') => {
+  const fetchOrders = async (page = 1, status?: OrderStatus | 'all', search?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -91,18 +102,25 @@ export default function OrdersPage() {
         params.append('status', status);
       }
 
+      if (search && search.trim()) {
+        params.append('search', search.trim());
+      }
+
       const response = await fetch(`/api/orders?${params}`);
-      if (response.ok) {
-        const data: OrdersResponse = await response.json();
-        setOrders(data.data.orders);
-        setPagination({
-          page: data.data.page,
-          limit: data.data.limit,
-          total: data.data.total,
-          totalPages: data.data.totalPages,
-        });
+      const data: OrdersResponse = await response.json();
+      
+      if (data.success) {
+        setOrders(data.data);
+        if (data.pagination) {
+          setPagination({
+            page: data.pagination.page,
+            limit: data.pagination.limit,
+            total: data.pagination.total,
+            totalPages: data.pagination.totalPages,
+          });
+        }
       } else {
-        setError('获取订单列表失败，请稍后重试');
+        setError(data.message || '获取订单列表失败，请稍后重试');
       }
     } catch (error) {
       console.error('获取订单列表失败:', error);
@@ -113,21 +131,65 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders(pagination.page, activeTab === 'all' ? undefined : activeTab);
-  }, [activeTab]);
+    fetchOrders(pagination.page, activeTab === 'all' ? undefined : activeTab, searchQuery);
+  }, [activeTab, searchQuery]);
+
+  // 处理搜索
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchInput);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // 处理导出
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: '1',
+        limit: pagination.total.toString(),
+      });
+
+      if (activeTab !== 'all') {
+        params.append('status', activeTab);
+      }
+
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await fetch(`/api/orders/export?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        setError('导出订单失败，请稍后重试');
+      }
+    } catch (error) {
+      console.error('导出订单失败:', error);
+      setError('导出订单失败，请检查网络连接');
+    }
+  };
 
   // 获取状态徽章样式
-  const getStatusBadge = (status: OrderStatus) => {
-    const statusConfig = {
-      PENDING: { label: '待付款', variant: 'secondary' as const, icon: Clock },
-      PAID: { label: '已付款', variant: 'default' as const, icon: CheckCircle },
-      PROCESSING: { label: '处理中', variant: 'default' as const, icon: RefreshCw },
-      COMPLETED: { label: '已完成', variant: 'default' as const, icon: CheckCircle },
-      CANCELLED: { label: '已取消', variant: 'destructive' as const, icon: XCircle },
-      REFUNDED: { label: '已退款', variant: 'secondary' as const, icon: RefreshCw },
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive'; icon: any }> = {
+      PENDING: { label: '待处理', variant: 'secondary', icon: Clock },
+      CONFIRMED: { label: '已确认', variant: 'default', icon: CheckCircle },
+      PROCESSING: { label: '处理中', variant: 'default', icon: RefreshCw },
+      SHIPPED: { label: '已发货', variant: 'default', icon: Package },
+      DELIVERED: { label: '已送达', variant: 'default', icon: CheckCircle },
+      CANCELLED: { label: '已取消', variant: 'destructive', icon: XCircle },
+      REFUNDED: { label: '已退款', variant: 'secondary', icon: RefreshCw },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] || { label: status, variant: 'secondary' as const, icon: Package };
     const Icon = config.icon;
 
     return (
@@ -148,48 +210,79 @@ export default function OrdersPage() {
   // 处理分页
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    fetchOrders(newPage, activeTab === 'all' ? undefined : activeTab);
+    fetchOrders(newPage, activeTab === 'all' ? undefined : activeTab, searchQuery);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">我的订单</h1>
-        <p className="text-gray-600">查看和管理您的订单记录</p>
-      </div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">我的订单</h1>
+            <p className="text-gray-600">查看和管理您的订单记录</p>
+          </div>
+          {orders.length > 0 && (
+            <Button onClick={handleExport} variant="outline">
+              <FileDown className="w-4 h-4 mr-2" />
+              导出订单
+            </Button>
+          )}
+        </div>
 
-      {error && (
-        <Card className="mb-6 border-red-200 bg-red-50">
+        {/* 搜索和筛选 */}
+        <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-red-600">
-              <XCircle className="w-5 h-5" />
-              <span>{error}</span>
-            </div>
+            <form onSubmit={handleSearch} className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="搜索订单号或备注..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button type="submit">
+                <Search className="w-4 h-4 mr-2" />
+                搜索
+              </Button>
+              {searchQuery && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearchQuery('');
+                  }}
+                >
+                  清除
+                </Button>
+              )}
+            </form>
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="all">全部</TabsTrigger>
-          <TabsTrigger value="PENDING">待付款</TabsTrigger>
-          <TabsTrigger value="PAID">已付款</TabsTrigger>
-          <TabsTrigger value="PROCESSING">处理中</TabsTrigger>
-          <TabsTrigger value="COMPLETED">已完成</TabsTrigger>
-          <TabsTrigger value="CANCELLED">已取消</TabsTrigger>
-          <TabsTrigger value="REFUNDED">已退款</TabsTrigger>
-        </TabsList>
+      {error && <ErrorMessage error={error} className="mb-6" />}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" message="加载订单列表..." />
+        </div>
+      ) : (
+
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="all">全部</TabsTrigger>
+            <TabsTrigger value="PENDING">待处理</TabsTrigger>
+            <TabsTrigger value="CONFIRMED">已确认</TabsTrigger>
+            <TabsTrigger value="PROCESSING">处理中</TabsTrigger>
+            <TabsTrigger value="SHIPPED">已发货</TabsTrigger>
+            <TabsTrigger value="DELIVERED">已送达</TabsTrigger>
+            <TabsTrigger value="CANCELLED">已取消</TabsTrigger>
+            <TabsTrigger value="REFUNDED">已退款</TabsTrigger>
+          </TabsList>
 
         <TabsContent value={activeTab} className="space-y-6">
           {orders.length === 0 ? (
@@ -222,7 +315,7 @@ export default function OrdersPage() {
                       <div className="flex items-center gap-3">
                         {getStatusBadge(order.status)}
                         <span className="text-lg font-semibold text-gray-900">
-                          {formatCurrency(order.totalAmount)}
+                          {formatCurrency(Number(order.total))}
                         </span>
                       </div>
                     </div>
@@ -235,19 +328,20 @@ export default function OrdersPage() {
                             <h4 className="font-medium text-gray-900">
                               {orderSolution.solution.title}
                             </h4>
-                            <p className="text-sm text-gray-500 mt-1">
-                              创作者: {orderSolution.solution.creator.name}
-                            </p>
                             <p className="text-sm text-gray-500">
-                              数量: {orderSolution.quantity} × {formatCurrency(orderSolution.price)}
+                              数量: {orderSolution.quantity} × {formatCurrency(Number(orderSolution.price))}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(route(routes.ORDERS.DETAIL, { id: order.id }))}
+                            >
                               <Eye className="w-4 h-4 mr-1" />
                               查看详情
                             </Button>
-                            {order.status === 'COMPLETED' && (
+                            {(order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
                               <Button variant="outline" size="sm">
                                 <Download className="w-4 h-4 mr-1" />
                                 下载
@@ -285,8 +379,9 @@ export default function OrdersPage() {
               )}
             </>
           )}
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

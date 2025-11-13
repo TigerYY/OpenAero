@@ -3,9 +3,17 @@
  * POST /api/auth/register
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { AuthService } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  logAuditAction,
+  getRequestIp,
+  getRequestUserAgent,
+} from '@/lib/api-helpers';
 
 // 注册请求验证 schema
 const registerSchema = z.object({
@@ -29,13 +37,7 @@ export async function POST(request: NextRequest) {
     // 验证输入
     const validationResult = registerSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return createValidationErrorResponse(validationResult.error);
     }
 
     const { email, password, firstName, lastName, displayName } = validationResult.data;
@@ -51,43 +53,52 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       // 处理常见错误
-      if (error.message.includes('already registered')) {
-        return NextResponse.json(
-          { error: '该邮箱已被注册' },
-          { status: 409 }
-        );
+      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        await logAuditAction(request, {
+          action: 'USER_REGISTER_FAILED',
+          resource: 'auth',
+          metadata: { email, reason: 'email_already_exists' },
+          success: false,
+          errorMessage: error.message,
+        });
+
+        return createErrorResponse('该邮箱已被注册', 409);
       }
 
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      await logAuditAction(request, {
+        action: 'USER_REGISTER_FAILED',
+        resource: 'auth',
+        metadata: { email },
+        success: false,
+        errorMessage: error.message,
+      });
+
+      return createErrorResponse(error.message, 400);
     }
 
     // 记录审计日志
-    await AuthService.logAudit({
-      user_id: user?.id,
+    await logAuditAction(request, {
+      userId: user?.id,
       action: 'USER_REGISTER',
       resource: 'auth',
-      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
-      user_agent: request.headers.get('user-agent') || 'Unknown',
       metadata: { email },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: '注册成功！请查收邮箱验证邮件',
-      user: {
+    return createSuccessResponse(
+      {
         id: user?.id,
         email: user?.email,
       },
-    });
-  } catch (error: any) {
+      '注册成功！请查收邮箱验证邮件',
+      201
+    );
+  } catch (error: unknown) {
     console.error('Register error:', error);
     
-    return NextResponse.json(
-      { error: '注册失败，请稍后重试' },
-      { status: 500 }
+    return createErrorResponse(
+      '注册失败，请稍后重试',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

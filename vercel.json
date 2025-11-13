@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/payments-sync",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}
+

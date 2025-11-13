@@ -1,56 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-
-import { authenticateSupabaseSession, requireSupabaseAdmin, logUserAction } from '@/lib/supabase-auth-middleware';
-
+import {
+  requireAdminAuth,
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  createPaginatedResponse,
+  logAuditAction,
+} from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 // 获取用户列表的查询参数验证
 const getUsersQuerySchema = z.object({
   page: z.string().optional().default('1').transform(Number),
   limit: z.string().optional().default('20').transform(Number),
-  role: z.enum(['CUSTOMER', 'CREATOR', 'ADMIN']).optional(),
-  status: z.enum(['ACTIVE', 'SUSPENDED', 'BANNED']).optional(),
-  emailVerified: z.enum(['true', 'false']).optional().transform(val => val === 'true'),
+  role: z.enum(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN']).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']).optional(),
   search: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
 });
 
-// GET /api/admin/users - 获取用户列表
+/**
+ * GET /api/admin/users - 获取用户列表
+ */
 export async function GET(request: NextRequest) {
   try {
-    // 验证Supabase会话
-    const authResult = await authenticateSupabaseSession(request);
-    if (authResult) {
-      return authResult;
-    }
-
     // 验证管理员权限
-    const adminResult = await requireSupabaseAdmin()(request as any);
-    if (adminResult) {
-      return adminResult;
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.error;
     }
-
-    const user = (request as any).user;
 
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
     const queryParams = Object.fromEntries(searchParams.entries());
-    const validatedQuery = getUsersQuerySchema.parse(queryParams);
+    const validationResult = getUsersQuerySchema.safeParse(queryParams);
 
-    const {
-      page,
-      limit,
-      role,
-      status,
-      emailVerified,
-      search,
-      dateFrom,
-      dateTo
-    } = validatedQuery;
+    if (!validationResult.success) {
+      return createValidationErrorResponse(validationResult.error);
+    }
 
-    // 构建查询条件
+    const { page, limit, role, status, search, dateFrom, dateTo } = validationResult.data;
+
+    // 构建查询条件（使用 UserProfile）
     const where: any = {};
 
     if (role) {
@@ -61,25 +56,21 @@ export async function GET(request: NextRequest) {
       where.status = status;
     }
 
-    if (emailVerified !== undefined) {
-      where.emailVerified = emailVerified;
-    }
-
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
+        { first_name: { contains: search, mode: 'insensitive' } },
+        { last_name: { contains: search, mode: 'insensitive' } },
+        { display_name: { contains: search, mode: 'insensitive' } },
       ];
     }
 
     if (dateFrom || dateTo) {
-      where.createdAt = {};
+      where.created_at = {};
       if (dateFrom) {
-        where.createdAt.gte = new Date(dateFrom);
+        where.created_at.gte = new Date(dateFrom);
       }
       if (dateTo) {
-        where.createdAt.lte = new Date(dateTo);
+        where.created_at.lte = new Date(dateTo);
       }
     }
 
@@ -88,84 +79,76 @@ export async function GET(request: NextRequest) {
 
     // 并行获取用户列表和总数
     const [users, total] = await Promise.all([
-      prisma.user.findMany({
+      prisma.userProfile.findMany({
         where,
         select: {
           id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
+          user_id: true,
+          first_name: true,
+          last_name: true,
+          display_name: true,
+          avatar: true,
           role: true,
-          emailVerified: true,
           status: true,
-          createdAt: true,
-          updatedAt: true,
-          lastLoginAt: true,
-          _count: {
-            select: {
-              solutions: true,
-              solutionReviews: true,
-            },
-          },
+          created_at: true,
+          updated_at: true,
+          last_login_at: true,
+          is_blocked: true,
+          blocked_reason: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip,
         take: limit,
       }),
-      prisma.user.count({ where }),
+      prisma.userProfile.count({ where }),
     ]);
 
     // 格式化响应数据
-    const formattedUsers = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+    const formattedUsers = users.map((user) => ({
+      id: user.user_id,
+      email: '', // 需要从 Supabase Auth 获取
+      firstName: user.first_name,
+      lastName: user.last_name,
+      displayName: user.display_name,
+      avatar: user.avatar,
       role: user.role,
-      emailVerified: user.emailVerified,
       status: user.status,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      lastLoginAt: user.lastLoginAt,
-      solutionCount: user._count.solutions,
-      reviewCount: user._count.solutionReviews,
+      isBlocked: user.is_blocked,
+      blockedReason: user.blocked_reason,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+      lastLoginAt: user.last_login_at,
     }));
 
     // 记录审计日志
-    await logUserAction(
-      user.userId,
-      'GET_USER_LIST',
-      'user',
-      undefined,
-      undefined,
-      { page, limit, total },
-      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      request.headers.get('user-agent') || 'unknown'
-    );
-
-    return NextResponse.json({
-      users: formattedUsers,
-      pagination: {
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'GET_USER_LIST',
+      resource: 'user_profiles',
+      metadata: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        filters: { role, status, search },
       },
     });
 
+    return createPaginatedResponse(
+      formattedUsers,
+      {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+      '获取用户列表成功'
+    );
   } catch (error) {
     console.error('获取用户列表失败:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: '查询参数格式错误' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '获取用户列表失败' },
-      { status: 500 }
+    return createErrorResponse(
+      '获取用户列表失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }
@@ -176,94 +159,53 @@ const createUserSchema = z.object({
   password: z.string().min(8, '密码至少8个字符'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  role: z.enum(['CUSTOMER', 'CREATOR', 'ADMIN']).default('CUSTOMER'),
+  role: z.enum(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN']).default('USER'),
 });
 
-// POST /api/admin/users - 创建新用户
+/**
+ * POST /api/admin/users - 创建新用户
+ * 注意：由于使用 Supabase Auth，需要通过 Supabase Admin API 创建用户
+ */
 export async function POST(request: NextRequest) {
   try {
-    // 验证Supabase会话
-    const authResult = await authenticateSupabaseSession(request);
-    if (authResult) {
-      return authResult;
-    }
-
-    const user = (request as any).user;
-    if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足，仅管理员可以创建用户' },
-        { status: 403 }
-      );
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.error;
     }
 
     const body = await request.json();
-    const validatedData = createUserSchema.parse(body);
+    const validationResult = createUserSchema.safeParse(body);
 
-    // 检查邮箱是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { email: validatedData.email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: '该邮箱地址已被注册' },
-        { status: 400 }
-      );
+    if (!validationResult.success) {
+      return createValidationErrorResponse(validationResult.error);
     }
 
-    // 创建用户
-    const newUser = await prisma.user.create({
-      data: {
-        email: validatedData.email,
-        password: validatedData.password, // 注意：这里应该使用哈希后的密码
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        role: validatedData.role,
-        emailVerified: true, // 管理员创建的用户默认已验证
-        status: 'ACTIVE',
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        emailVerified: true,
-        status: true,
-        createdAt: true,
-      },
-    });
+    const validatedData = validationResult.data;
+
+    // TODO: 使用 Supabase Admin API 创建用户
+    // 1. 在 Supabase Auth 中创建用户
+    // 2. 自动创建 UserProfile（通过触发器）
+    // 3. 更新 UserProfile 的额外信息
 
     // 记录审计日志
-    await logUserAction(
-      user.userId,
-      'CREATE_USER',
-      'user',
-      newUser.id,
-      undefined,
-      { email: newUser.email, role: newUser.role },
-      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      request.headers.get('user-agent') || 'unknown'
-    );
-
-    return NextResponse.json({
-      message: '用户创建成功',
-      user: newUser,
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'CREATE_USER',
+      resource: 'user_profiles',
+      metadata: {
+        email: validatedData.email,
+        role: validatedData.role,
+      },
     });
 
+    return createErrorResponse('用户创建功能需要集成 Supabase Admin API', 501);
   } catch (error) {
     console.error('创建用户失败:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '创建用户失败' },
-      { status: 500 }
+    return createErrorResponse(
+      '创建用户失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

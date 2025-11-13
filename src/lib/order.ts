@@ -117,13 +117,29 @@ export async function getOrderById(orderId: string): Promise<OrderWithDetails | 
 export async function getUserOrders(
   userId: string,
   page: number = 1,
-  limit: number = 10
+  limit: number = 10,
+  status?: OrderStatus,
+  search?: string
 ): Promise<{ orders: OrderWithDetails[]; total: number }> {
   const skip = (page - 1) * limit;
 
+  // 构建查询条件
+  const where: any = { userId };
+  
+  if (status) {
+    where.status = status;
+  }
+  
+  if (search) {
+    where.OR = [
+      { orderNumber: { contains: search, mode: 'insensitive' } },
+      { notes: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
-      where: { userId },
+      where,
       include: {
         orderSolutions: {
           include: {
@@ -142,7 +158,7 @@ export async function getUserOrders(
       skip,
       take: limit,
     }),
-    prisma.order.count({ where: { userId } }),
+    prisma.order.count({ where }),
   ]);
 
   return {
@@ -156,12 +172,37 @@ export async function getUserOrders(
  */
 export async function updateOrderStatus(
   orderId: string,
-  status: OrderStatus
+  status: OrderStatus,
+  changedBy?: string
 ): Promise<Order> {
-  return await prisma.order.update({
+  // 获取当前订单状态
+  const currentOrder = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { status: true },
+  });
+
+  if (!currentOrder) {
+    throw new Error('订单不存在');
+  }
+
+  // 更新订单状态
+  const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: { status },
   });
+
+  // 记录状态变更历史
+  if (currentOrder.status !== status) {
+    try {
+      const { recordOrderStatusChange } = await import('@/lib/order-history');
+      await recordOrderStatusChange(orderId, currentOrder.status, status, changedBy);
+    } catch (error) {
+      // 如果历史记录功能不可用，只记录错误，不影响主流程
+      console.error('记录订单状态变更历史失败:', error);
+    }
+  }
+
+  return updatedOrder;
 }
 
 /**

@@ -1,11 +1,16 @@
 import { SolutionStatus } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
-
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import {
+  requireAdminAuth,
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  createPaginatedResponse,
+} from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
-import { db } from '@/lib/prisma';
-
-import { checkAdminAuth } from '@/lib/api-auth-helpers';
+export const dynamic = 'force-dynamic';
 
 // 查询参数验证
 const querySchema = z.object({
@@ -18,28 +23,15 @@ const querySchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
+/**
+ * GET /api/admin/solutions - 获取方案列表（管理员）
+ */
 export async function GET(request: NextRequest) {
   try {
-    // 验证用户身份和权限
-    const authResult = await checkAdminAuth(request);
-    if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
-    }
-    const session = authResult.session;
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
-    }
-
-    // 检查管理员权限
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '权限不足' },
-        { status: 403 }
-      );
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.error;
     }
 
     // 解析查询参数
@@ -82,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     // 查询方案列表
     const [solutions, total] = await Promise.all([
-      db.solution.findMany({
+      prisma.solution.findMany({
         where,
         orderBy,
         skip: offset,
@@ -145,7 +137,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
-      db.solution.count({ where })
+      prisma.solution.count({ where })
     ]);
 
     // 格式化返回数据
@@ -199,24 +191,22 @@ export async function GET(request: NextRequest) {
       reviewCount: (solution as any)._count?.solutionReviews || 0,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        solutions: formattedSolutions,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        }
-      }
-    });
-
+    return createPaginatedResponse(
+      formattedSolutions,
+      {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+      '获取方案列表成功'
+    );
   } catch (error) {
     console.error('获取方案列表失败:', error);
-    return NextResponse.json(
-      { error: '获取方案列表失败' },
-      { status: 500 }
+    return createErrorResponse(
+      '获取方案列表失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

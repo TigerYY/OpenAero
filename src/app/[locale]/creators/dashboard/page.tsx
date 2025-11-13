@@ -20,6 +20,10 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import RevenueChart from '@/components/creators/RevenueChart';
+import SolutionsManagement from '@/components/creators/SolutionsManagement';
 
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -81,40 +85,54 @@ export default function CreatorDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // 获取统计数据
       const statsResponse = await fetch('/api/creators/dashboard/stats');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
+      const statsData = await statsResponse.json();
+      if (statsData.success) {
         setStats(statsData.data);
+      } else {
+        setError(statsData.message || '获取统计数据失败');
       }
 
       // 获取最近的方案
       const solutionsResponse = await fetch('/api/creators/dashboard/recent-solutions');
-      if (solutionsResponse.ok) {
-        const solutionsData = await solutionsResponse.json();
+      const solutionsData = await solutionsResponse.json();
+      if (solutionsData.success) {
         setRecentSolutions(solutionsData.data);
       }
 
       // 获取最近的订单
       const ordersResponse = await fetch('/api/creators/dashboard/recent-orders');
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
+      const ordersData = await ordersResponse.json();
+      if (ordersData.success) {
         setRecentOrders(ordersData.data);
       }
     } catch (error) {
       console.error('获取仪表盘数据失败:', error);
+      setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading && !stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" message="加载仪表盘数据..." />
+      </div>
+    );
+  }
+
+  if (error && !stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <ErrorMessage error={error} className="mb-4" />
+          <Button onClick={fetchDashboardData} variant="outline">
+            重新加载
+          </Button>
         </div>
       </div>
     );
@@ -151,129 +169,219 @@ export default function CreatorDashboardPage() {
           </p>
         </div>
 
+        {error && <ErrorMessage error={error} className="mb-6" />}
+
         {/* 统计卡片 */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">总收益</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">¥{dashboardData.totalRevenue.toLocaleString()}</dd>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">活跃产品</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">{dashboardData.activeProducts}</dd>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">总销量</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">{dashboardData.totalSales}</dd>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">待处理订单</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">{dashboardData.pendingOrders}</dd>
-            </div>
-          </div>
-        </div>
-
-        {/* 快速操作 */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">产品管理</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => router.push(route('/creators/products'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
-                >
-                  查看我的产品
-                </button>
-                <button
-                  onClick={() => router.push(route('/creators/products/new'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-md"
-                >
-                  创建新产品
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">订单管理</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => router.push(route('/creators/orders'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md"
-                >
-                  查看所有订单
-                </button>
-                <button
-                  onClick={() => router.push(route('/creators/orders/pending'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-md"
-                >
-                  处理待发货订单
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">数据分析</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => router.push(route('/creators/analytics'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-md"
-                >
-                  查看销售分析
-                </button>
-                <button
-                  onClick={() => router.push(route('/creators/reports'))}
-                  className="w-full text-left px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md"
-                >
-                  生成收益报告
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 最近活动 */}
-        <div className="mt-8 bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">最近活动</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-sm text-gray-600">新产品 "FPV竞速无人机" 已上架</span>
+        {stats && (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">总收益</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {formatCurrency(stats.totalRevenue)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      本月: {formatCurrency(stats.monthlyRevenue)}
+                    </p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-600" />
                 </div>
-                <span className="text-sm text-gray-500">2小时前</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span className="text-sm text-gray-600">收到新订单 #ORD-2024-001</span>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">方案总数</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {stats.totalSolutions}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      已发布: {stats.publishedSolutions}
+                    </p>
+                  </div>
+                  <FileText className="h-8 w-8 text-blue-600" />
                 </div>
-                <span className="text-sm text-gray-500">5小时前</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-sm text-gray-600">产品 "农业植保方案" 收到新评价</span>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">总订单</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {stats.totalOrders}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      本月: {stats.monthlyOrders}
+                    </p>
+                  </div>
+                  <ShoppingCart className="h-8 w-8 text-purple-600" />
                 </div>
-                <span className="text-sm text-gray-500">1天前</span>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">平均评分</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                      {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : 'N/A'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      评价数: {stats.totalReviews || 0}
+                    </p>
+                  </div>
+                  <Star className="h-8 w-8 text-yellow-600" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        )}
+
+        {/* 标签页内容 */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">概览</TabsTrigger>
+            <TabsTrigger value="revenue">收益</TabsTrigger>
+            <TabsTrigger value="solutions">方案</TabsTrigger>
+            <TabsTrigger value="orders">订单</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* 最近方案 */}
+            {recentSolutions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>最近方案</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentSolutions.slice(0, 5).map((solution) => (
+                      <div
+                        key={solution.id}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                      >
+                        <div>
+                          <h4 className="font-medium text-gray-900">{solution.title}</h4>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                            <span>{getStatusText(solution.status)}</span>
+                            <span>{formatCurrency(solution.price)}</span>
+                            <span>{formatDate(solution.updatedAt)}</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          查看
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 最近订单 */}
+            {recentOrders.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>最近订单</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentOrders.slice(0, 5).map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                      >
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            订单号: {order.orderNumber}
+                          </h4>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                            <Badge className={getStatusColor(order.status)}>
+                              {getStatusText(order.status)}
+                            </Badge>
+                            <span>{formatCurrency(order.totalAmount)}</span>
+                            <span>{formatDate(order.createdAt)}</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          查看
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="revenue" className="space-y-6">
+            {stats && <RevenueChart creatorId={stats.totalSolutions.toString()} />}
+          </TabsContent>
+
+          <TabsContent value="solutions" className="space-y-6">
+            {stats && <SolutionsManagement creatorId={stats.totalSolutions.toString()} />}
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-6">
+            {recentOrders.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>订单列表</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentOrders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            订单号: {order.orderNumber}
+                          </h4>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                            <Badge className={getStatusColor(order.status)}>
+                              {getStatusText(order.status)}
+                            </Badge>
+                            <span>总额: {formatCurrency(order.totalAmount)}</span>
+                            <span>{formatDate(order.createdAt)}</span>
+                          </div>
+                          {order.solutions.length > 0 && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              方案: {order.solutions.map((s) => s.title).join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          查看详情
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-12 text-gray-500">
+                    <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                    <p>暂无订单</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

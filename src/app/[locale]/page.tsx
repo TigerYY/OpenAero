@@ -4,22 +4,25 @@ import { PartnersSection } from '@/components/sections/PartnersSection';
 import { SolutionsSection } from '@/components/sections/SolutionsSection';
 import { TransparencySection } from '@/components/sections/TransparencySection';
 import { ValueFlowSection } from '@/components/sections/ValueFlowSection';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 interface HomePageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
 export default async function HomePage({ params }: HomePageProps) {
+  const { locale } = await params;
+  
   return (
-    <>
+    <DefaultLayout>
       <HeroSection />
       <ValueFlowSection />
       <SolutionsSection />
       <TransparencySection />
       <PartnersSection />
       <CaseStudiesSection />
-    </>
+    </DefaultLayout>
   );
 }

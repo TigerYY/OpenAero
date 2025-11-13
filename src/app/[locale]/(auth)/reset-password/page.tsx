@@ -3,10 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
 import { useAuth } from '@/contexts/AuthContext';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { InputSanitizer } from '@/lib/security';
 
 export default function ResetPasswordPage() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { route, routes } = useRouting();
@@ -17,53 +24,86 @@ export default function ResetPasswordPage() {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+  const [passwordValid, setPasswordValid] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
 
   // 检查是否有有效的 token (从 URL hash 获取)
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
     
-    if (!accessToken) {
-      setError('无效的重置链接，请重新申请密码重置');
+    // Supabase 密码重置链接格式: #access_token=xxx&type=recovery
+    if (!accessToken || type !== 'recovery') {
+      setTokenValid(false);
+      setError(t('errors.invalidResetLink', { defaultValue: '无效的重置链接，请重新申请密码重置' }));
+    } else {
+      setTokenValid(true);
     }
-  }, []);
+  }, [t]);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setFormData({ ...formData, password: newPassword });
+    
+    // 验证密码强度
+    const validation = InputSanitizer.validatePassword(newPassword);
+    setPasswordValid(validation.isValid && validation.score >= 4);
+    
+    // 清除密码错误
+    if (fieldErrors.password) {
+      const { password: _, ...rest } = fieldErrors;
+      setFieldErrors(rest);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(null);
+    setFieldErrors({});
     setLoading(true);
 
     // 验证密码
     if (formData.password !== formData.confirmPassword) {
-      setError('两次输入的密码不一致');
+      setFieldErrors({ confirmPassword: t('errors.passwordsMismatch', { defaultValue: '两次输入的密码不一致' }) });
       setLoading(false);
       return;
     }
 
     // 验证密码强度
-    if (formData.password.length < 8) {
-      setError('密码长度至少为 8 个字符');
+    if (!passwordValid) {
+      setFieldErrors({ password: t('errors.passwordTooWeak', { defaultValue: '密码强度不足' }) });
       setLoading(false);
       return;
     }
 
     try {
-      const { error: resetError } = await resetPassword(formData.password);
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: formData.password }),
+      });
 
-      if (resetError) {
-        throw resetError;
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(true);
+        
+        // 3秒后跳转到登录页
+        setTimeout(() => {
+          router.push(route(routes.AUTH.LOGIN) + '?reset=success');
+        }, 3000);
+      } else {
+        setError(data.message || getLocalizedErrorMessage(data.error || '密码重置失败，请稍后重试', 'zh-CN'));
       }
-
-      setSuccess(true);
-      
-      // 3秒后跳转到登录页
-      setTimeout(() => {
-        router.push(route(routes.AUTH.LOGIN) + '?reset=success');
-      }, 3000);
-    } catch (err: any) {
-      setError(err.message || '密码重置失败，请稍后重试');
+    } catch (err: unknown) {
+      console.error('Reset password error:', err);
+      setError(getLocalizedErrorMessage(err, 'zh-CN'));
     } finally {
       setLoading(false);
     }
@@ -109,71 +149,101 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
-            </div>
-          )}
+        {tokenValid === false && error && (
+          <ErrorMessage error={error} className="mb-4" />
+        )}
 
-          <div className="rounded-md shadow-sm space-y-4">
+        {tokenValid === true && (
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            {error && <ErrorMessage error={error} className="mb-4" />}
+
+            <div className="rounded-md shadow-sm space-y-4">
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  {t('auth.newPassword', { defaultValue: '新密码' })}
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handlePasswordChange}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                    fieldErrors.password ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  placeholder={t('auth.passwordPlaceholder', { defaultValue: '至少 8 个字符' })}
+                  disabled={loading}
+                />
+                {fieldErrors.password && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+                )}
+                {formData.password && (
+                  <div className="mt-2">
+                    <PasswordStrengthIndicator
+                      password={formData.password}
+                      onValidationChange={(isValid) => setPasswordValid(isValid)}
+                      showRequirements={true}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  {t('auth.confirmPassword', { defaultValue: '确认新密码' })}
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    setFormData({ ...formData, confirmPassword: e.target.value });
+                    if (fieldErrors.confirmPassword) {
+                      const { confirmPassword: _, ...rest } = fieldErrors;
+                      setFieldErrors(rest);
+                    }
+                  }}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                    fieldErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  placeholder={t('auth.confirmPasswordPlaceholder', { defaultValue: '再次输入新密码' })}
+                  disabled={loading}
+                />
+                {fieldErrors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                新密码
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="至少 8 个字符"
-                minLength={8}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                密码长度至少为 8 个字符
-              </p>
+              <button
+                type="submit"
+                disabled={loading || !passwordValid || formData.password !== formData.confirmPassword}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <LoadingSpinner size="sm" message={t('auth.resetting', { defaultValue: '重置中...' })} />
+                ) : (
+                  t('auth.resetPassword', { defaultValue: '重置密码' })
+                )}
+              </button>
             </div>
+          </form>
+        )}
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                确认新密码
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="再次输入新密码"
-                minLength={8}
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? '重置中...' : '重置密码'}
-            </button>
-          </div>
-
-          <div className="text-center">
+        {tokenValid === true && (
+          <div className="text-center mt-4">
             <Link
               href={route(routes.AUTH.LOGIN)}
               className="text-sm text-blue-600 hover:text-blue-500"
             >
-              返回登录
+              {t('auth.login', { defaultValue: '返回登录' })}
             </Link>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

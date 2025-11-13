@@ -2,6 +2,7 @@ import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
+import { syncPaymentStatus } from '@/lib/payment/payment-status-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,18 +66,45 @@ export async function GET(
       );
     }
 
-    // 如果支付状态是处理中，尝试查询第三方支付状态
-    if (payment.status === PaymentStatus.PROCESSING && payment.externalId) {
+    // 如果支付状态是处理中或待支付，尝试同步第三方支付状态
+    if (
+      (payment.status === PaymentStatus.PROCESSING || payment.status === PaymentStatus.PENDING) &&
+      payment.externalId
+    ) {
       try {
-        const updatedPayment = await checkExternalPaymentStatus(payment);
-        if (updatedPayment) {
-          return NextResponse.json({
-            success: true,
-            data: updatedPayment,
+        const synced = await syncPaymentStatus(paymentId);
+        if (synced) {
+          // 重新查询更新后的支付记录
+          const updatedPayment = await prisma.paymentTransaction.findUnique({
+            where: { id: paymentId },
+            include: {
+              order: {
+                include: {
+                  orderSolutions: {
+                    include: {
+                      solution: {
+                        select: {
+                          id: true,
+                          title: true,
+                          price: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           });
+          
+          if (updatedPayment) {
+            return NextResponse.json({
+              success: true,
+              data: updatedPayment,
+            });
+          }
         }
       } catch (error) {
-        console.error('查询第三方支付状态失败:', error);
+        console.error('同步支付状态失败:', error);
         // 继续返回当前状态，不影响主流程
       }
     }

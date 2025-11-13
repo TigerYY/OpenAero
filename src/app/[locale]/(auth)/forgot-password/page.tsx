@@ -2,32 +2,74 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
 import { useAuth } from '@/contexts/AuthContext';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { isValidEmail } from '@/lib/utils';
+import { getLocalizedErrorMessage } from '@/lib/error-messages';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations();
   const { route, routes } = useRouting();
   const { sendPasswordResetEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    
+    // 清除错误
+    if (error) setError(null);
+    if (fieldErrors.email) {
+      const { email: _, ...rest } = fieldErrors;
+      setFieldErrors(rest);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(null);
+    setFieldErrors({});
     setLoading(true);
 
+    // 验证邮箱格式
+    if (!email) {
+      setFieldErrors({ email: t('errors.emailRequired', { defaultValue: '邮箱地址是必填项' }) });
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setFieldErrors({ email: t('errors.invalidEmail', { defaultValue: '请输入有效的邮箱地址' }) });
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { error: resetError } = await sendPasswordResetEmail(email);
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (resetError) {
-        throw resetError;
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(true);
+      } else {
+        setError(data.message || getLocalizedErrorMessage(data.error || '请求失败，请稍后重试', 'zh-CN'));
       }
-
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || '请求失败，请稍后重试');
+    } catch (err: unknown) {
+      console.error('Forgot password error:', err);
+      setError(getLocalizedErrorMessage(err, 'zh-CN'));
     } finally {
       setLoading(false);
     }
@@ -74,15 +116,11 @@ export default function ForgotPasswordPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
-            </div>
-          )}
+          {error && <ErrorMessage error={error} className="mb-4" />}
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              邮箱地址
+              {t('auth.email', { defaultValue: '邮箱地址' })}
             </label>
             <input
               id="email"
@@ -90,19 +128,29 @@ export default function ForgotPasswordPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              onChange={handleEmailChange}
+              className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                fieldErrors.email ? 'border-red-300' : 'border-gray-300'
+              } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
               placeholder="your@email.com"
+              disabled={loading}
             />
+            {fieldErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !email}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '发送中...' : '发送重置链接'}
+              {loading ? (
+                <LoadingSpinner size="sm" message={t('auth.sendingEmail', { defaultValue: '发送中...' })} />
+              ) : (
+                t('auth.sendResetLink', { defaultValue: '发送重置链接' })
+              )}
             </button>
           </div>
 

@@ -12,6 +12,20 @@ const nextConfig = {
   // 输出配置 - 禁用静态生成以避免预渲染错误
   output: 'standalone',
   
+  // 页面优化
+  poweredByHeader: false, // 移除 X-Powered-By 头
+  compress: true, // 启用 gzip 压缩
+  
+  // 实验性功能 - 性能优化
+  experimental: {
+    // 启用服务器组件
+    serverComponentsExternalPackages: ['@prisma/client', 'bcrypt'],
+    // 优化包导入
+    optimizePackageImports: ['lucide-react', '@headlessui/react'],
+    // 暂时禁用instrumentationHook以提高构建速度
+    // instrumentationHook: true,
+  },
+  
   // TypeScript配置
   typescript: {
     ignoreBuildErrors: true,
@@ -22,13 +36,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // 实验性功能
-  experimental: {
-    // 启用服务器组件
-    serverComponentsExternalPackages: ['@prisma/client', 'bcrypt'],
-    // 暂时禁用instrumentationHook以提高构建速度
-    // instrumentationHook: true,
-  },
 
   // 图片优化
   images: {

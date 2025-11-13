@@ -4,6 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { RevenueService } from '@/lib/revenue.service';
+import { verifyAlipaySignature, verifyPaymentAmount } from '@/lib/payment/alipay-utils';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  logAuditAction,
+} from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,19 +36,32 @@ export async function POST(request: NextRequest) {
       gmtPayment
     });
 
-    // TODO: 验证签名
-    // 在实际应用中，需要使用支付宝公钥验证签名
+    // 验证必要参数
     if (!sign) {
       logger.error('支付宝回调缺少签名');
-      return NextResponse.json({ success: false }, { status: 400 });
+      await logAuditAction(request, {
+        action: 'ALIPAY_WEBHOOK_INVALID',
+        resource: 'payments',
+        metadata: { reason: '缺少签名' },
+        success: false,
+        errorMessage: '缺少签名',
+      });
+      return createErrorResponse('缺少签名', 400);
     }
 
     if (!outTradeNo) {
       logger.error('支付宝回调缺少外部订单号');
-      return NextResponse.json({ success: false }, { status: 400 });
+      await logAuditAction(request, {
+        action: 'ALIPAY_WEBHOOK_INVALID',
+        resource: 'payments',
+        metadata: { reason: '缺少外部订单号' },
+        success: false,
+        errorMessage: '缺少外部订单号',
+      });
+      return createErrorResponse('缺少外部订单号', 400);
     }
 
-    // 根据externalId查找支付记录
+    // 根据externalId查找支付记录（先查找以获取金额用于验证）
     const paymentTransaction = await prisma.paymentTransaction.findFirst({
       where: { externalId: outTradeNo },
       include: {
@@ -60,7 +79,67 @@ export async function POST(request: NextRequest) {
 
     if (!paymentTransaction) {
       logger.error('支付记录不存在', { externalId: outTradeNo });
-      return NextResponse.json({ success: false }, { status: 404 });
+      await logAuditAction(request, {
+        action: 'ALIPAY_WEBHOOK_INVALID',
+        resource: 'payments',
+        metadata: { externalId: outTradeNo, reason: '支付记录不存在' },
+        success: false,
+        errorMessage: '支付记录不存在',
+      });
+      return createErrorResponse('支付记录不存在', 404);
+    }
+
+    // 验证签名
+    const alipayPublicKey = process.env.ALIPAY_PUBLIC_KEY;
+    const isValidSignature = verifyAlipaySignature(params, sign, alipayPublicKey);
+    
+    if (!isValidSignature) {
+      logger.error('支付宝回调签名验证失败', {
+        externalId: outTradeNo,
+        paymentId: paymentTransaction.id,
+      });
+      await logAuditAction(request, {
+        userId: paymentTransaction.order.userId,
+        action: 'ALIPAY_WEBHOOK_SIGNATURE_FAILED',
+        resource: 'payments',
+        resourceId: paymentTransaction.id,
+        metadata: {
+          externalId: outTradeNo,
+          tradeNo,
+        },
+        success: false,
+        errorMessage: '签名验证失败',
+      });
+      return createErrorResponse('签名验证失败', 400);
+    }
+
+    // 验证支付金额
+    if (totalAmount) {
+      const amountMatch = verifyPaymentAmount(
+        Number(paymentTransaction.amount),
+        totalAmount
+      );
+      if (!amountMatch) {
+        logger.error('支付宝回调金额不匹配', {
+          expected: paymentTransaction.amount,
+          actual: totalAmount,
+          externalId: outTradeNo,
+        });
+        await logAuditAction(request, {
+          userId: paymentTransaction.order.userId,
+          action: 'ALIPAY_WEBHOOK_AMOUNT_MISMATCH',
+          resource: 'payments',
+          resourceId: paymentTransaction.id,
+          metadata: {
+            externalId: outTradeNo,
+            expectedAmount: paymentTransaction.amount,
+            actualAmount: totalAmount,
+          },
+          success: false,
+          errorMessage: '支付金额不匹配',
+        });
+        return createErrorResponse('支付金额不匹配', 400);
+      }
     }
 
     // 创建支付事件记录
@@ -86,7 +165,16 @@ export async function POST(request: NextRequest) {
     if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'TRADE_FINISHED') {
       if (!tradeNo) {
         logger.error('支付宝回调缺少交易号');
-        return NextResponse.json({ success: false }, { status: 400 });
+        await logAuditAction(request, {
+          userId: paymentTransaction.order.userId,
+          action: 'ALIPAY_WEBHOOK_INVALID',
+          resource: 'payments',
+          resourceId: paymentTransaction.id,
+          metadata: { reason: '缺少交易号' },
+          success: false,
+          errorMessage: '缺少交易号',
+        });
+        return createErrorResponse('缺少交易号', 400);
       }
 
       logger.info('支付宝支付成功', {
@@ -145,10 +233,24 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // 记录审计日志
+      await logAuditAction(request, {
+        userId: paymentTransaction.order.userId,
+        action: 'ALIPAY_PAYMENT_COMPLETED',
+        resource: 'payments',
+        resourceId: paymentTransaction.id,
+        metadata: {
+          externalId: outTradeNo,
+          tradeNo,
+          totalAmount,
+          buyerId,
+        },
+      });
+
       // TODO: 发送支付成功通知
       await sendPaymentNotification(paymentTransaction.orderId, 'success');
       
-      return NextResponse.json({ success: true });
+      return createSuccessResponse({ tradeNo, outTradeNo }, '支付成功');
     }
 
     // 处理支付失败
@@ -184,15 +286,51 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // TODO: 发送支付失败通知
-      await sendPaymentNotification(paymentTransaction.orderId, 'failed');
-    }
+      // 记录审计日志
+      await logAuditAction(request, {
+        userId: paymentTransaction.order.userId,
+        action: 'ALIPAY_PAYMENT_FAILED',
+        resource: 'payments',
+        resourceId: paymentTransaction.id,
+        metadata: {
+          externalId: outTradeNo,
+          tradeStatus,
+          reason: '支付被关闭',
+        },
+        success: false,
+        errorMessage: '支付被关闭',
+      });
 
-    return NextResponse.json({ success: true });
+        // TODO: 发送支付失败通知
+        await sendPaymentNotification(paymentTransaction.orderId, 'failed');
+        
+        // 返回失败响应，包含跳转URL
+        return createSuccessResponse(
+          {
+            tradeNo,
+            outTradeNo,
+            redirectUrl: `/payment/failure?orderId=${paymentTransaction.orderId}&paymentId=${paymentTransaction.id}&error=${encodeURIComponent('支付被关闭')}`,
+          },
+          '支付失败'
+        );
+      }
 
-  } catch (error) {
+      return createSuccessResponse(null, '回调处理成功');
+
+  } catch (error: unknown) {
     logger.error('处理支付宝回调失败', { error });
-    return NextResponse.json({ success: false }, { status: 500 });
+    await logAuditAction(request, {
+      action: 'ALIPAY_WEBHOOK_ERROR',
+      resource: 'payments',
+      metadata: { error: error instanceof Error ? error.message : '未知错误' },
+      success: false,
+      errorMessage: error instanceof Error ? error.message : '未知错误',
+    });
+    return createErrorResponse(
+      '处理回调失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
+    );
   }
 }
 

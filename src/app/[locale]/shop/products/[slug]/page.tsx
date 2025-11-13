@@ -129,7 +129,14 @@ export default function ProductDetailPage() {
       }
 
       const data = await response.json();
-      setProduct(data.product);
+      // 支持统一响应格式和旧格式
+      if (data.success && data.data) {
+        setProduct(data.data.product || data.data);
+      } else if (data.product) {
+        setProduct(data.product);
+      } else {
+        setProduct(data);
+      }
     } catch (error) {
       console.error('获取商品详情失败:', error);
       toast.error(error instanceof Error ? error.message : '获取商品详情失败');
@@ -236,14 +243,13 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">商品不存在</h2>
-            <p className="text-gray-600 mb-4">您访问的商品可能已下架或不存在</p>
-            <Link href={route('/shop/products')}>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="h-4 w-4" />
-                返回商品列表
-              </Button>
-            </Link>
-          </div>
+          <p className="text-gray-600 mb-4">您访问的商品可能已下架或不存在</p>
+          <Link href={route('/shop/products')}>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+              <ArrowLeft className="h-4 w-4" />
+              返回商品列表
+            </Button>
+          </Link>
         </div>
       </div>
     );

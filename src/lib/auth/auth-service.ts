@@ -215,6 +215,59 @@ export class AuthService {
   }
 
   /**
+   * 创建用户资料（如果不存在）
+   */
+  static async createProfileIfNotExists(userId: string, data: Partial<UserProfile> = {}): Promise<{ error: Error | null }> {
+    try {
+      const supabaseAdmin = createSupabaseAdmin();
+      
+      // 先检查是否存在
+      const { data: existing } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (existing) {
+        // 已存在，直接返回成功
+        return { error: null };
+      }
+
+      // 不存在，创建新记录
+      const { error } = await supabaseAdmin
+        .from('user_profiles')
+        .insert([
+          {
+            user_id: userId,
+            role: 'USER',
+            status: 'ACTIVE',
+            ...data,
+          },
+        ]);
+
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  }
+
+  /**
+   * 更新用户手机号码（存储在 auth.users 中）
+   */
+  static async updateUserPhone(userId: string, phone: string | null): Promise<{ error: AuthError | null }> {
+    try {
+      const supabaseAdmin = createSupabaseAdmin();
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        phone: phone || undefined,
+      });
+
+      return { error };
+    } catch (error) {
+      return { error: error as AuthError };
+    }
+  }
+
+  /**
    * 更新最后登录时间
    */
   private static async updateLastLogin(userId: string): Promise<void> {
@@ -356,7 +409,7 @@ export class AuthService {
  * 服务器端获取当前用户
  */
 export async function getServerUser(): Promise<User | null> {
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   const { data } = await supabase.auth.getUser();
   return data.user;
 }
@@ -365,7 +418,7 @@ export async function getServerUser(): Promise<User | null> {
  * 服务器端获取当前会话
  */
 export async function getServerSession(): Promise<Session | null> {
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   const { data } = await supabase.auth.getSession();
   return data.session;
 }

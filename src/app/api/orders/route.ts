@@ -1,40 +1,77 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-import { createOrder, getUserOrders } from '@/lib/order';
+import { NextRequest } from 'next/server';
+import { OrderStatus } from '@prisma/client';
+import { getServerUser } from '@/lib/auth/auth-service';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createPaginatedResponse,
+} from '@/lib/api-helpers';
+import { getUserOrders, createOrder } from '@/lib/order';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const orderQuerySchema = z.object({
+  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
+  status: z.nativeEnum(OrderStatus).optional(),
+  search: z.string().optional(),
+});
+
+const createOrderSchema = z.object({
+  items: z.array(
+    z.object({
+      solutionId: z.string().min(1, '解决方案ID不能为空'),
+      quantity: z.number().int().positive('数量必须大于0'),
+      price: z.number().positive('价格必须大于0'),
+    })
+  ).min(1, '订单项不能为空'),
+  notes: z.string().optional(),
+  shippingAddress: z.any().optional(),
+  billingAddress: z.any().optional(),
+});
 
 /**
  * GET /api/orders - 获取用户订单列表
  */
 export async function GET(request: NextRequest) {
   try {
-    // 验证用户身份
-    if (authResult) {
-      return authResult; // 返回认证错误
+    const user = await getServerUser();
+    if (!user) {
+      return createErrorResponse('未授权访问', 401);
     }
 
-    // 获取用户信息
-    const user = (request as any).user;
-    
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    const result = await getUserOrders(user.userId, page, limit);
-
-    return NextResponse.json({
-      success: true,
-      data: result,
+    const queryResult = orderQuerySchema.safeParse({
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      status: searchParams.get('status'),
+      search: searchParams.get('search'),
     });
+
+    if (!queryResult.success) {
+      return createErrorResponse('查询参数无效', 400);
+    }
+
+    const { page, limit, status, search } = queryResult.data;
+    const result = await getUserOrders(user.id, page, limit, status, search);
+
+    return createPaginatedResponse(
+      result.orders,
+      {
+        page,
+        limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+      },
+      '获取订单列表成功'
+    );
   } catch (error) {
     console.error('获取订单列表失败:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : '获取订单列表失败' 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '获取订单列表失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }
@@ -44,44 +81,26 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // 验证用户身份
-    if (authResult) {
-      return authResult; // 返回认证错误
+    const user = await getServerUser();
+    if (!user) {
+      return createErrorResponse('未授权访问', 401);
     }
 
-    // 获取用户信息
-    const user = (request as any).user;
-
     const body = await request.json();
-    const { items, notes, shippingAddress, billingAddress } = body;
+    const validationResult = createOrderSchema.safeParse(body);
 
-    // 验证请求数据
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: '订单项不能为空' },
-        { status: 400 }
+    if (!validationResult.success) {
+      return createErrorResponse(
+        '订单数据验证失败',
+        400,
+        { errors: validationResult.error.errors }
       );
     }
 
-    // 验证每个订单项
-    for (const item of items) {
-      if (!item.solutionId || !item.quantity || !item.price) {
-        return NextResponse.json(
-          { error: '订单项信息不完整' },
-          { status: 400 }
-        );
-      }
-      
-      if (item.quantity <= 0 || item.price <= 0) {
-        return NextResponse.json(
-          { error: '数量和价格必须大于0' },
-          { status: 400 }
-        );
-      }
-    }
+    const { items, notes, shippingAddress, billingAddress } = validationResult.data;
 
     const orderData = {
-      userId: user.userId,
+      userId: user.id,
       items,
       notes,
       shippingAddress,
@@ -90,19 +109,13 @@ export async function POST(request: NextRequest) {
 
     const order = await createOrder(orderData);
 
-    return NextResponse.json({
-      success: true,
-      data: order,
-      message: '订单创建成功',
-    });
+    return createSuccessResponse(order, '订单创建成功');
   } catch (error) {
     console.error('创建订单失败:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : '创建订单失败' 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '创建订单失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

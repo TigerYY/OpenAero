@@ -3,9 +3,15 @@
  * POST /api/auth/forgot-password
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { AuthService } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  logAuditAction,
+} from '@/lib/api-helpers';
 
 // 忘记密码请求验证 schema
 const forgotPasswordSchema = z.object({
@@ -20,13 +26,7 @@ export async function POST(request: NextRequest) {
     // 验证输入
     const validationResult = forgotPasswordSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return createValidationErrorResponse(validationResult.error);
     }
 
     const { email } = validationResult.data;
@@ -37,37 +37,33 @@ export async function POST(request: NextRequest) {
     if (error) {
       // 出于安全考虑，即使邮箱不存在也返回成功消息
       // 但记录错误到审计日志
-      await AuthService.logAudit({
+      await logAuditAction(request, {
         action: 'PASSWORD_RESET_REQUEST_FAILED',
         resource: 'auth',
-        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
-        user_agent: request.headers.get('user-agent') || 'Unknown',
         metadata: { email },
         success: false,
-        error_message: error.message,
+        errorMessage: error.message,
       });
     } else {
       // 记录成功的密码重置请求
-      await AuthService.logAudit({
+      await logAuditAction(request, {
         action: 'PASSWORD_RESET_REQUEST',
         resource: 'auth',
-        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '0.0.0.0',
-        user_agent: request.headers.get('user-agent') || 'Unknown',
         metadata: { email },
       });
     }
 
     // 始终返回成功消息（安全最佳实践）
-    return NextResponse.json({
-      success: true,
-      message: '如果该邮箱已注册，我们已发送密码重置链接到您的邮箱',
-    });
-  } catch (error: any) {
+    return createSuccessResponse(
+      null,
+      '如果该邮箱已注册，我们已发送密码重置链接到您的邮箱。链接有效期为1小时。'
+    );
+  } catch (error: unknown) {
     console.error('Forgot password error:', error);
-    
-    return NextResponse.json(
-      { error: '请求失败，请稍后重试' },
-      { status: 500 }
+    return createErrorResponse(
+      '请求失败，请稍后重试',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }

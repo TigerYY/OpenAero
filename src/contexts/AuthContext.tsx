@@ -60,9 +60,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * 获取用户扩展信息 (从 user_profiles 表)
+   * 优先使用 API 端点，失败时回退到直接查询
    */
   const fetchUserProfile = async (userId: string) => {
     try {
+      // 优先尝试使用 API 端点
+      try {
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.profile) {
+            setProfile(data.data.profile as UserProfile);
+            return;
+          }
+        }
+      } catch (apiError) {
+        console.warn('API 获取用户资料失败，尝试直接查询:', apiError);
+      }
+
+      // 回退到直接查询 Supabase
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -72,31 +88,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('获取用户资料失败:', error);
         
-        // 如果是"未找到记录"错误，尝试创建一个默认profile
-        if (error.code === 'PGRST116') {
-          console.log('未找到用户profile，尝试创建...');
-          const { data: newProfile, error: createError } = await supabase
-            .from('user_profiles')
-            .insert([
-              {
-                user_id: userId,
-                role: 'USER',
-                status: 'ACTIVE',
-              },
-            ])
-            .select()
-            .single();
+        // 如果是"未找到记录"错误，尝试通过 API 创建
+        if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
+          console.log('未找到用户profile，尝试通过 API 创建...');
+          
+          // 尝试通过 API 创建（如果 API 支持自动创建）
+          // 或者尝试直接创建
+          try {
+            const { data: newProfile, error: createError } = await supabase
+              .from('user_profiles')
+              .insert([
+                {
+                  user_id: userId,
+                  role: 'USER',
+                  status: 'ACTIVE',
+                },
+              ])
+              .select()
+              .single();
 
-          if (createError) {
-            console.error('创建用户profile失败:', createError);
-            setProfile(null);
-          } else if (newProfile) {
-            console.log('用户profile创建成功:', newProfile);
-            setProfile(newProfile as UserProfile);
+            if (createError) {
+              console.error('创建用户profile失败:', createError);
+              // 不设置为 null，让页面显示友好的错误提示
+              // setProfile(null);
+            } else if (newProfile) {
+              console.log('用户profile创建成功:', newProfile);
+              setProfile(newProfile as UserProfile);
+            }
+          } catch (createErr) {
+            console.error('创建用户profile异常:', createErr);
           }
         } else {
-          // 其他错误，设置为null
-          setProfile(null);
+          // 其他错误（如权限问题），不设置为 null，让页面显示错误提示
+          console.error('获取用户资料错误:', error.code, error.message);
         }
         return;
       }
@@ -104,19 +128,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data) {
         setProfile(data as UserProfile);
       } else {
-        setProfile(null);
+        // 数据为空，但不设置为 null，让页面有机会显示友好提示
+        console.warn('用户profile数据为空');
       }
     } catch (error) {
-      console.error('获取用户资料失败:', error);
-      setProfile(null);
+      console.error('获取用户资料异常:', error);
+      // 不设置为 null，让页面显示友好的错误提示
     }
   };
 
   /**
    * 刷新用户资料
+   * 优先使用 API 端点获取完整用户信息
    */
   const refreshProfile = async () => {
-    if (user) {
+    if (!user) return;
+    
+    try {
+      // 优先使用 API 端点获取完整用户信息（包含 phone 等字段）
+      const response = await fetch('/api/users/me');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          // 更新 user 和 profile
+          if (data.data.profile) {
+            setProfile(data.data.profile as UserProfile);
+          }
+          // 注意: user 对象来自 Supabase Auth，不能直接更新
+          // phone 等信息需要从 data.data.phone 获取，但这里我们主要更新 profile
+        }
+      } else {
+        // API 失败，回退到直接查询
+        await fetchUserProfile(user.id);
+      }
+    } catch (error) {
+      console.error('刷新用户资料失败:', error);
+      // 回退到直接查询
       await fetchUserProfile(user.id);
     }
   };

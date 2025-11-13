@@ -1,233 +1,175 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * 审计日志查询 API
+ * GET /api/admin/audit-logs - 获取审计日志列表
+ */
+
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-
-
-
+import {
+  requireAdminAuth,
+  createSuccessResponse,
+  createErrorResponse,
+  createValidationErrorResponse,
+  createPaginatedResponse,
+} from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 
-// 获取审计日志的查询参数验证
-const getAuditLogsQuerySchema = z.object({
-  page: z.string().optional().default('1').transform(Number),
-  limit: z.string().optional().default('50').transform(Number),
-  search: z.string().optional(),
+export const dynamic = 'force-dynamic';
+
+const auditLogsQuerySchema = z.object({
+  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 50)),
   action: z.string().optional(),
   resource: z.string().optional(),
-  status: z.enum(['SUCCESS', 'FAILED', 'WARNING']).optional(),
-  user: z.string().optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  ipAddress: z.string().optional(),
+  userId: z.string().optional(),
+  success: z.string().optional().transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined)),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  search: z.string().optional(),
 });
 
-// GET /api/admin/audit-logs - 获取审计日志列表
+/**
+ * GET - 获取审计日志列表
+ */
 export async function GET(request: NextRequest) {
   try {
-    // 移除了用户认证，因为用户系统已被清除
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.error;
+    }
 
-    // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
-    const queryParams = Object.fromEntries(searchParams.entries());
-    const validatedQuery = getAuditLogsQuerySchema.parse(queryParams);
+    const queryResult = auditLogsQuerySchema.safeParse({
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      action: searchParams.get('action'),
+      resource: searchParams.get('resource'),
+      userId: searchParams.get('userId'),
+      success: searchParams.get('success'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate'),
+      search: searchParams.get('search'),
+    });
 
-    const {
-      page,
-      limit,
-      search,
-      action,
-      resource,
-      status,
-      user: userEmail,
-      dateFrom,
-      dateTo,
-      ipAddress
-    } = validatedQuery;
+    if (!queryResult.success) {
+      return createValidationErrorResponse(queryResult.error);
+    }
 
-    // 构建查询条件
+    const { page, limit, action, resource, userId, success, startDate, endDate, search } =
+      queryResult.data;
+    const skip = (page - 1) * limit;
+
     const where: any = {};
 
     if (action) {
-      where.action = action;
+      where.action = { contains: action, mode: 'insensitive' };
     }
 
     if (resource) {
-      where.resourceType = resource;
+      where.resource = { contains: resource, mode: 'insensitive' };
     }
 
-    if (status) {
-      where.status = status;
+    if (userId) {
+      where.userId = userId;
     }
 
-    if (userEmail) {
-      where.userEmail = userEmail;
+    if (success !== undefined) {
+      where.success = success;
     }
 
-    if (ipAddress) {
-      where.ipAddress = { contains: ipAddress };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
     }
 
     if (search) {
       where.OR = [
         { action: { contains: search, mode: 'insensitive' } },
-        { resourceType: { contains: search, mode: 'insensitive' } },
-        { resourceName: { contains: search, mode: 'insensitive' } },
-        { userEmail: { contains: search, mode: 'insensitive' } },
-        { userName: { contains: search, mode: 'insensitive' } },
+        { resource: { contains: search, mode: 'insensitive' } },
+        { resourceId: { contains: search, mode: 'insensitive' } },
+        { errorMessage: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    if (dateFrom || dateTo) {
-      where.timestamp = {};
-      if (dateFrom) {
-        where.timestamp.gte = new Date(dateFrom);
-      }
-      if (dateTo) {
-        where.timestamp.lte = new Date(dateTo);
-      }
-    }
-
-    // 计算分页
-    const skip = (page - 1) * limit;
-
-    // 并行获取日志列表和总数
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where,
-        orderBy: { timestamp: 'desc' },
+        select: {
+          id: true,
+          userId: true,
+          action: true,
+          resource: true,
+          resourceId: true,
+          success: true,
+          errorMessage: true,
+          metadata: true,
+          ipAddress: true,
+          userAgent: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       prisma.auditLog.count({ where }),
     ]);
 
-    return NextResponse.json({
-      logs: logs.map(log => ({
-        id: log.id,
-        userId: log.userId,
-        userEmail: log.userEmail,
-        userName: log.userName,
-        action: log.action,
-        resourceType: log.resourceType,
-        resourceId: log.resourceId,
-        resourceName: log.resourceName,
-        details: log.details,
-        ipAddress: log.ipAddress,
-        userAgent: log.userAgent,
-        status: log.status,
-        timestamp: log.timestamp,
-        duration: log.duration,
-      })),
-      pagination: {
+    // 获取用户信息（如果需要）
+    const userIds = [...new Set(logs.map((log) => log.userId).filter(Boolean))];
+    const users = userIds.length > 0
+      ? await prisma.userProfile.findMany({
+          where: { user_id: { in: userIds } },
+          select: {
+            user_id: true,
+            first_name: true,
+            last_name: true,
+            display_name: true,
+          },
+        })
+      : [];
+
+    const userMap = new Map(users.map((u) => [u.user_id, u]));
+
+    const formattedLogs = logs.map((log) => ({
+      id: log.id,
+      userId: log.userId,
+      userName: log.userId
+        ? userMap.get(log.userId)?.display_name ||
+          `${userMap.get(log.userId)?.first_name || ''} ${userMap.get(log.userId)?.last_name || ''}`.trim() ||
+          'Unknown'
+        : 'System',
+      action: log.action,
+      resource: log.resource,
+      resourceId: log.resourceId,
+      success: log.success,
+      errorMessage: log.errorMessage,
+      metadata: log.metadata,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent,
+      createdAt: log.createdAt,
+    }));
+
+    return createPaginatedResponse(
+      formattedLogs,
+      {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
-    });
-
+      '获取审计日志成功'
+    );
   } catch (error) {
     console.error('获取审计日志失败:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: '查询参数格式错误' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '获取审计日志失败' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/admin/audit-logs/export - 导出审计日志
-export async function POST(request: NextRequest) {
-  try {
-    // 移除了用户认证，因为用户系统已被清除
-
-    const body = await request.json();
-    const { dateFrom, dateTo, format = 'json' } = body;
-
-    // 构建查询条件
-    const where: any = {};
-
-    if (dateFrom || dateTo) {
-      where.timestamp = {};
-      if (dateFrom) {
-        where.timestamp.gte = new Date(dateFrom);
-      }
-      if (dateTo) {
-        where.timestamp.lte = new Date(dateTo);
-      }
-    }
-
-    // 获取日志数据
-    const logs = await prisma.auditLog.findMany({
-      where,
-      orderBy: { timestamp: 'desc' },
-      take: 10000, // 限制导出数量
-    });
-
-    // 格式化导出数据
-    const exportData = logs.map(log => ({
-      id: log.id,
-      userId: log.userId,
-      userEmail: log.userEmail,
-      userName: log.userName,
-      action: log.action,
-      resourceType: log.resourceType,
-      resourceId: log.resourceId,
-      resourceName: log.resourceName,
-      details: log.details,
-      ipAddress: log.ipAddress,
-      userAgent: log.userAgent,
-      status: log.status,
-      timestamp: log.timestamp,
-      duration: log.duration,
-    }));
-
-    if (format === 'csv') {
-      // CSV格式导出（简化实现）
-      const headers = ['ID', '用户', '操作', '资源', '状态', '时间', 'IP地址'];
-      const csvRows = [headers.join(',')];
-      
-      exportData.forEach(log => {
-        const row = [
-          log.id,
-          `"${log.userName || log.userEmail}"`,
-          `"${log.action}"`,
-          `"${log.resourceType}"`,
-          log.status,
-          new Date(log.timestamp).toISOString(),
-          log.ipAddress
-        ];
-        csvRows.push(row.join(','));
-      });
-
-      const csvContent = csvRows.join('\n');
-      
-      return new NextResponse(csvContent, {
-        headers: {
-          'Content-Type': 'text/csv',
-          'Content-Disposition': `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.csv"`,
-        },
-      });
-    } else {
-      // JSON格式导出
-      return new NextResponse(JSON.stringify(exportData, null, 2), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Disposition': `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.json"`,
-        },
-      });
-    }
-
-  } catch (error) {
-    console.error('导出审计日志失败:', error);
-    return NextResponse.json(
-      { error: '导出审计日志失败' },
-      { status: 500 }
+    return createErrorResponse(
+      '获取审计日志失败',
+      500,
+      error instanceof Error ? { name: error.name, message: error.message } : undefined
     );
   }
 }
