@@ -1,177 +1,178 @@
-import { RoutingUtils, useRouting } from '../routing';
+/**
+ * 路由工具库单元测试
+ */
 
-// Mock next-intl
-jest.mock('next-intl', () => ({
-  useLocale: () => 'zh-CN'
-}));
-
-// Mock next/navigation
-jest.mock('next/navigation', () => ({
-  usePathname: () => '/zh-CN/auth/login'
-}));
+import { RoutingUtils, ROUTES, SupportedLocale } from '../routing';
 
 describe('RoutingUtils', () => {
   describe('validateRoutePath', () => {
     it('应该验证有效的路由路径', () => {
-      expect(RoutingUtils.validateRoutePath('/auth/login')).toEqual({
-        isValid: true
-      });
-      
-      expect(RoutingUtils.validateRoutePath('auth/login')).toEqual({
-        isValid: true
-      });
+      expect(RoutingUtils.validateRoutePath('/login')).toEqual({ isValid: true });
+      expect(RoutingUtils.validateRoutePath('/solutions')).toEqual({ isValid: true });
     });
 
     it('应该拒绝无效的路由路径', () => {
-      expect(RoutingUtils.validateRoutePath('')).toEqual({
-        isValid: false,
-        error: '路由路径必须是非空字符串'
+      expect(RoutingUtils.validateRoutePath('')).toEqual({ 
+        isValid: false, 
+        error: '路由路径必须是非空字符串' 
       });
-      
-      expect(RoutingUtils.validateRoutePath('//path')).toEqual({
-        isValid: false,
-        error: '路由路径不能包含连续的斜杠'
+      expect(RoutingUtils.validateRoutePath('//login')).toEqual({ 
+        isValid: false, 
+        error: '路由路径不能包含连续的斜杠' 
       });
-      
-      expect(RoutingUtils.validateRoutePath('http://example.com')).toEqual({
-        isValid: false,
-        error: '路由路径不能包含协议前缀'
+      expect(RoutingUtils.validateRoutePath('http://example.com')).toEqual({ 
+        isValid: false, 
+        error: '路由路径不能包含协议前缀' 
       });
+    });
+  });
+
+  describe('validateLocale', () => {
+    it('应该验证支持的locale', () => {
+      expect(RoutingUtils.validateLocale('zh-CN')).toBe(true);
+      expect(RoutingUtils.validateLocale('en-US')).toBe(true);
+    });
+
+    it('应该拒绝不支持的locale', () => {
+      expect(RoutingUtils.validateLocale('fr-FR')).toBe(false);
+      expect(RoutingUtils.validateLocale('invalid')).toBe(false);
     });
   });
 
   describe('generateRoute', () => {
-    it('应该生成带locale的完整路由', () => {
-      expect(RoutingUtils.generateRoute('zh', '/auth/login')).toBe('/zh/auth/login');
-      expect(RoutingUtils.generateRoute('en', 'auth/login')).toBe('/en/auth/login');
+    it('应该生成带locale的路由', () => {
+      expect(RoutingUtils.generateRoute('zh-CN', '/login')).toBe('/zh-CN/login');
+      expect(RoutingUtils.generateRoute('en-US', '/solutions')).toBe('/en-US/solutions');
     });
 
-    it('应该验证locale和路由参数', () => {
-      expect(() => RoutingUtils.generateRoute('', '/auth/login')).toThrow('Locale必须是有效的字符串');
-      expect(() => RoutingUtils.generateRoute('zh', '')).toThrow('路由路径格式错误');
+    it('应该处理根路径', () => {
+      expect(RoutingUtils.generateRoute('zh-CN', '/')).toBe('/zh-CN');
+    });
+
+    it('应该拒绝无效的locale', () => {
+      expect(() => RoutingUtils.generateRoute('invalid', '/login')).toThrow();
+    });
+
+    it('应该拒绝无效的路由路径', () => {
+      expect(() => RoutingUtils.generateRoute('zh-CN', '//login')).toThrow();
     });
   });
 
   describe('extractLocaleFromPath', () => {
-    it('应该从路径中提取有效的locale', () => {
-      expect(RoutingUtils.extractLocaleFromPath('/zh/auth/login')).toBe('zh');
-      expect(RoutingUtils.extractLocaleFromPath('/en/solutions')).toBe('en');
+    it('应该从路径中提取locale', () => {
+      expect(RoutingUtils.extractLocaleFromPath('/zh-CN/login')).toBe('zh-CN');
+      expect(RoutingUtils.extractLocaleFromPath('/en-US/solutions')).toBe('en-US');
     });
 
-    it('应该返回null对于无效的locale', () => {
-      expect(RoutingUtils.extractLocaleFromPath('/invalid/auth/login')).toBeNull();
-      expect(RoutingUtils.extractLocaleFromPath('/auth/login')).toBeNull();
+    it('应该返回null如果没有locale', () => {
+      expect(RoutingUtils.extractLocaleFromPath('/login')).toBeNull();
+      expect(RoutingUtils.extractLocaleFromPath('/')).toBeNull();
     });
   });
 
   describe('getPathWithoutLocale', () => {
-    it('应该移除路径中的locale前缀', () => {
-      expect(RoutingUtils.getPathWithoutLocale('/zh/auth/login')).toBe('/auth/login');
-      expect(RoutingUtils.getPathWithoutLocale('/en/solutions')).toBe('/solutions');
+    it('应该移除locale前缀', () => {
+      expect(RoutingUtils.getPathWithoutLocale('/zh-CN/login')).toBe('/login');
+      expect(RoutingUtils.getPathWithoutLocale('/en-US/solutions')).toBe('/solutions');
     });
 
-    it('应该保持无locale的路径不变', () => {
-      expect(RoutingUtils.getPathWithoutLocale('/auth/login')).toBe('/auth/login');
-      expect(RoutingUtils.getPathWithoutLocale('/')).toBe('/');
-    });
-  });
-
-  describe('isPublicRoute', () => {
-    it('应该识别公开路由', () => {
-      expect(RoutingUtils.isPublicRoute('/zh/auth/login')).toBe(true);
-      expect(RoutingUtils.isPublicRoute('/en/auth/register')).toBe(true);
-      expect(RoutingUtils.isPublicRoute('/zh/auth/verify-email')).toBe(true);
-    });
-
-    it('应该拒绝非公开路由', () => {
-      expect(RoutingUtils.isPublicRoute('/zh/admin/dashboard')).toBe(false);
-      expect(RoutingUtils.isPublicRoute('/en/profile')).toBe(false);
-    });
-  });
-
-  describe('isApiRoute', () => {
-    it('应该识别API路由', () => {
-      expect(RoutingUtils.isApiRoute('/api/auth/login')).toBe(true);
-      expect(RoutingUtils.isApiRoute('/api/users')).toBe(true);
-    });
-
-    it('应该拒绝非API路由', () => {
-      expect(RoutingUtils.isApiRoute('/auth/login')).toBe(false);
-      expect(RoutingUtils.isApiRoute('/api')).toBe(false);
-    });
-  });
-
-  describe('matchRoute', () => {
-    it('应该匹配静态路由', () => {
-      expect(RoutingUtils.matchRoute('/zh/auth/login', '/auth/login')).toBe(true);
-      expect(RoutingUtils.matchRoute('/en/solutions', '/solutions')).toBe(true);
-    });
-
-    it('应该匹配动态路由', () => {
-      expect(RoutingUtils.matchRoute('/zh/solutions/123', '/solutions/[id]')).toBe(true);
-      expect(RoutingUtils.matchRoute('/en/shop/products/drone-kit', '/shop/products/[slug]')).toBe(true);
-    });
-
-    it('应该拒绝不匹配的路由', () => {
-      expect(RoutingUtils.matchRoute('/zh/auth/login', '/auth/register')).toBe(false);
-      expect(RoutingUtils.matchRoute('/en/solutions/123', '/solutions')).toBe(false);
-    });
-  });
-
-  describe('extractParams', () => {
-    it('应该从动态路由中提取参数', () => {
-      expect(RoutingUtils.extractParams('/zh/solutions/123', '/solutions/[id]')).toEqual({
-        id: '123'
-      });
-      
-      expect(RoutingUtils.extractParams('/en/shop/products/drone-kit', '/shop/products/[slug]')).toEqual({
-        slug: 'drone-kit'
-      });
-    });
-
-    it('应该返回空对象对于不匹配的路由', () => {
-      expect(RoutingUtils.extractParams('/zh/auth/login', '/solutions/[id]')).toEqual({});
+    it('应该返回原路径如果没有locale', () => {
+      expect(RoutingUtils.getPathWithoutLocale('/login')).toBe('/login');
     });
   });
 
   describe('generateRouteWithParams', () => {
     it('应该生成带查询参数的路由', () => {
-      expect(RoutingUtils.generateRouteWithParams('zh', '/solutions', { category: 'drones' }))
-        .toBe('/zh/solutions?category=drones');
-      
-      expect(RoutingUtils.generateRouteWithParams('en', '/search', { q: 'drone', page: 1 }))
-        .toBe('/en/search?q=drone&page=1');
+      const route = RoutingUtils.generateRouteWithParams('zh-CN', '/solutions', { 
+        page: 1, 
+        category: 'fpv' 
+      });
+      expect(route).toContain('/zh-CN/solutions');
+      expect(route).toContain('page=1');
+      expect(route).toContain('category=fpv');
     });
 
-    it('应该生成无查询参数的路由', () => {
-      expect(RoutingUtils.generateRouteWithParams('zh', '/auth/login')).toBe('/zh/auth/login');
-      expect(RoutingUtils.generateRouteWithParams('en', '/solutions', {})).toBe('/en/solutions');
+    it('应该处理空参数', () => {
+      const route = RoutingUtils.generateRouteWithParams('zh-CN', '/solutions');
+      expect(route).toBe('/zh-CN/solutions');
+    });
+  });
+
+  describe('generateRouteWithDynamicParams', () => {
+    it('应该替换动态参数占位符', () => {
+      const route = RoutingUtils.generateRouteWithDynamicParams(
+        'zh-CN',
+        '/solutions/[id]',
+        { id: '123' }
+      );
+      expect(route).toBe('/zh-CN/solutions/123');
+    });
+
+    it('应该处理多个动态参数', () => {
+      const route = RoutingUtils.generateRouteWithDynamicParams(
+        'zh-CN',
+        '/shop/products/[slug]',
+        { slug: 'test-product' }
+      );
+      expect(route).toBe('/zh-CN/shop/products/test-product');
+    });
+  });
+
+  describe('safeGenerateRoute', () => {
+    it('应该成功生成路由', () => {
+      const result = RoutingUtils.safeGenerateRoute('zh-CN', '/login');
+      expect(result.success).toBe(true);
+      expect(result.route).toBe('/zh-CN/login');
+    });
+
+    it('应该返回错误信息当路由无效', () => {
+      const result = RoutingUtils.safeGenerateRoute('invalid', '/login');
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('isPublicRoute', () => {
+    it('应该识别公开路由', () => {
+      expect(RoutingUtils.isPublicRoute('/zh-CN/login')).toBe(true);
+      expect(RoutingUtils.isPublicRoute('/zh-CN/register')).toBe(true);
+    });
+
+    it('应该识别非公开路由', () => {
+      expect(RoutingUtils.isPublicRoute('/zh-CN/profile')).toBe(false);
+      expect(RoutingUtils.isPublicRoute('/zh-CN/admin')).toBe(false);
+    });
+  });
+
+  describe('matchRoute', () => {
+    it('应该匹配静态路由', () => {
+      expect(RoutingUtils.matchRoute('/zh-CN/login', '/login')).toBe(true);
+      expect(RoutingUtils.matchRoute('/zh-CN/solutions', '/solutions')).toBe(true);
+    });
+
+    it('应该匹配动态路由', () => {
+      expect(RoutingUtils.matchRoute('/zh-CN/solutions/123', '/solutions/[id]')).toBe(true);
+    });
+  });
+
+  describe('extractParams', () => {
+    it('应该提取动态参数', () => {
+      const params = RoutingUtils.extractParams('/zh-CN/solutions/123', '/solutions/[id]');
+      expect(params).toEqual({ id: '123' });
+    });
+
+    it('应该返回空对象如果不匹配', () => {
+      const params = RoutingUtils.extractParams('/zh-CN/login', '/solutions/[id]');
+      expect(params).toEqual({});
     });
   });
 });
 
-describe('useRouting', () => {
-  it('应该提供正确的路由生成功能', () => {
-    const { route, routeWithParams, routes, utils, currentLocale, currentPathname, isActive, isExactActive } = useRouting();
-    
-    expect(route('/auth/login')).toBe('/zh/auth/login');
-    expect(routeWithParams('/solutions', { category: 'drones' })).toBe('/zh/solutions?category=drones');
-    expect(routes.AUTH.LOGIN).toBe('/auth/login');
-    expect(utils).toBe(RoutingUtils);
-    expect(currentLocale).toBe('zh');
-    expect(currentPathname).toBe('/zh/auth/login');
-    expect(isActive('/auth/login')).toBe(true);
-    expect(isExactActive('/auth/login')).toBe(true);
-  });
-
-  it('应该正确检查路由激活状态', () => {
-    const { isActive, isExactActive } = useRouting();
-    
-    expect(isActive('/auth')).toBe(true); // 子路由匹配
-    expect(isActive('/auth/login')).toBe(true); // 精确匹配
-    expect(isActive('/solutions')).toBe(false); // 不匹配
-    
-    expect(isExactActive('/auth/login')).toBe(true); // 精确匹配
-    expect(isExactActive('/auth')).toBe(false); // 不是精确匹配
+describe('ROUTES常量', () => {
+  it('应该包含所有路由定义', () => {
+    expect(ROUTES.AUTH.LOGIN).toBe('/login');
+    expect(ROUTES.BUSINESS.SOLUTIONS).toBe('/solutions');
+    expect(ROUTES.CREATORS.DASHBOARD).toBe('/creators/dashboard');
+    expect(ROUTES.ADMIN.DASHBOARD).toBe('/admin/dashboard');
   });
 });

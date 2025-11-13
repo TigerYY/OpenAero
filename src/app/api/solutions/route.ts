@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
+import { logAuditAction, createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
 
 // GET /api/solutions - 获取方案列表
 export async function GET(request: NextRequest) {
@@ -112,20 +113,38 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    return NextResponse.json(response);
+    return createPaginatedResponse(
+      solutions.map(solution => ({
+        id: solution.id,
+        title: solution.title,
+        slug: solution.slug,
+        description: solution.description,
+        price: solution.price,
+        status: solution.status,
+        images: solution.images,
+        categoryId: solution.categoryId,
+        creatorId: solution.creatorId,
+        createdAt: solution.createdAt.toISOString(),
+        updatedAt: solution.updatedAt.toISOString(),
+        averageRating: solution._count.reviews > 0 
+          ? (solution.reviews.reduce((sum, r) => sum + r.rating, 0) / solution._count.reviews)
+          : 0,
+        creatorName: solution.user?.firstName && solution.user?.lastName 
+          ? `${solution.user.firstName} ${solution.user.lastName}` 
+          : 'Unknown',
+        reviewCount: solution._count.reviews,
+        downloadCount: 0,
+        specs: parseJsonSafely(solution.specs, {}),
+        bom: parseJsonSafely(solution.bom, [])
+      })),
+      page,
+      limit,
+      total,
+      '获取方案列表成功'
+    );
   } catch (error) {
     console.error('获取方案列表失败:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined
-    });
-    const response: ApiResponse<null> = {
-      success: false,
-      error: '获取方案列表失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: 500 });
+    return createErrorResponse(error instanceof Error ? error : new Error('获取方案列表失败'), 500);
   }
 }
 // POST /api/solutions - 创建新方案
@@ -134,14 +153,7 @@ export async function POST(request: NextRequest) {
     // 验证用户身份
     const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
-      return authResult.error || NextResponse.json(
-        {
-          success: false,
-          error: '未授权访问',
-          data: null
-        } as ApiResponse<null>,
-        { status: 401 }
-      );
+      return authResult.error || createErrorResponse('未授权访问', 401);
     }
 
     const body = await request.json();
@@ -166,14 +178,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!creatorProfile) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '创作者档案不存在',
-          data: null
-        } as ApiResponse<null>,
-        { status: 404 }
-      );
+      return createErrorResponse('创作者档案不存在', 404);
     }
 
     // 创建方案
@@ -203,11 +208,21 @@ export async function POST(request: NextRequest) {
     });
 
     // 记录审计日志
-    // TODO: 实现审计日志功能
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'SOLUTION_CREATED',
+      resource: 'solution',
+      resourceId: solution.id,
+      newValue: {
+        title: solution.title,
+        category: solution.category,
+        price: solution.price,
+      },
+      metadata: { creatorId: creatorProfile.id },
+    });
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
+    return createSuccessResponse(
+      {
         id: solution.id,
         title: solution.title,
         description: solution.description,
@@ -221,21 +236,19 @@ export async function POST(request: NextRequest) {
         updatedAt: solution.updatedAt,
         creatorId: solution.creatorId,
         creatorName: solution.user?.firstName && solution.user?.lastName 
-                      ? `${solution.user.firstName} ${solution.user.lastName}` 
-                      : 'Unknown',
+          ? `${solution.user.firstName} ${solution.user.lastName}` 
+          : 'Unknown',
         specs: solution.specs || {},
         bom: solution.bom || []
-      }
-    };
-
-    return NextResponse.json(response, { status: 201 });
+      },
+      '方案创建成功',
+      201
+    );
   } catch (error) {
     console.error('创建方案失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: error instanceof Error ? error.message : '创建方案失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: 500 });
+    return createErrorResponse(
+      error instanceof Error ? error : new Error('创建方案失败'),
+      500
+    );
   }
 }

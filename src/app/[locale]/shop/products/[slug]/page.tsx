@@ -142,7 +142,8 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
     
-    // TODO: 实现添加到购物车逻辑
+    // TODO: 实现添加到购物车逻辑（需要集成购物车Context）
+    // addToCart({ id: product.id, name: product.name, price: product.price, quantity });
     toast.success(`已将 ${quantity} 个 ${product.name} 添加到购物车`);
   };
 
@@ -150,7 +151,9 @@ export default function ProductDetailPage() {
   const handleBuyNow = () => {
     if (!product) return;
     
-    // TODO: 实现立即购买逻辑
+    // TODO: 实现立即购买逻辑（需要先添加到购物车，然后跳转到结算页面）
+    // addToCart({ id: product.id, name: product.name, price: product.price, quantity });
+    // router.push(route(routes.ORDERS.HOME));
     toast.success('正在跳转到结算页面...');
   };
 

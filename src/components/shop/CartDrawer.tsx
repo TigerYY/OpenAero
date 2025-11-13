@@ -10,6 +10,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/Badge';
@@ -28,6 +29,7 @@ interface CartDrawerProps {
 export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
   const { state, updateQuantity, removeItem, clearCart } = useCart();
   const { route, routes } = useRouting();
+  const router = useRouter();
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -39,7 +41,9 @@ export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
 
   const handleCheckout = () => {
     onClose();
-    // TODO: 跳转到结算页面
+    // 跳转到结算页面
+    const checkoutRoute = route(routes.ORDERS.HOME);
+    router.push(checkoutRoute);
   };
 
   if (!isOpen) return null;

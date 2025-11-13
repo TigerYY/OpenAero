@@ -108,23 +108,23 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
         </svg>
       ),
       submenu: [
-        { name: '工厂管理', href: '/supply-chain/factories' },
-        { name: '样品订单', href: '/supply-chain/sample-orders' },
-        { name: '供应商网络', href: '/supply-chain/suppliers' }
+        { name: '工厂管理', href: route(routes.SUPPLY_CHAIN.FACTORIES) },
+        { name: '样品订单', href: route(routes.SUPPLY_CHAIN.SAMPLE_ORDERS) },
+        { name: '供应商网络', href: route('/supply-chain/suppliers') }
       ]
     },
     {
       name: '创作者',
-      href: '/creators', // 注意：creators路由不在ROUTES中定义
+      href: route(routes.CREATORS.HOME),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
         </svg>
       ),
       submenu: [
-        { name: '申请加入', href: routes.BUSINESS.CREATORS_APPLY },
-        { name: '创作者社区', href: '/creators/community' },
-        { name: '资源中心', href: '/creators/resources' }
+        { name: '申请加入', href: route(routes.CREATORS.APPLY) },
+        { name: '创作者社区', href: route('/creators/community') },
+        { name: '资源中心', href: route('/creators/resources') }
       ]
     },
     {

@@ -1,16 +1,12 @@
 {
-  "timestamp": "2025-11-12T16:52:39.980Z",
+  "timestamp": "2025-11-13T08:16:44.297Z",
   "summary": {
-    "totalRoutes": 183,
+    "totalRoutes": 178,
     "routeGroups": 2,
     "dynamicRoutes": 0,
-    "staticRoutes": 181,
-    "totalIssues": 7,
-    "issuesByType": {
-      "hardcoded-href": 3,
-      "missing-route-wrapper": 3,
-      "hardcoded-redirect": 1
-    }
+    "staticRoutes": 176,
+    "totalIssues": 0,
+    "issuesByType": {}
   },
   "fileSystemRoutes": [
     {
@@ -56,6 +52,12 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/[locale]/(dashboard)/settings",
+      "urlPath": "/settings",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/[locale]/about",
       "urlPath": "/about",
       "isDynamic": false,
@@ -68,8 +70,62 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/[locale]/admin/analytics",
+      "urlPath": "/admin/analytics",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/audit-logs",
+      "urlPath": "/admin/audit-logs",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/dashboard",
+      "urlPath": "/admin/dashboard",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/[locale]/admin/monitoring",
       "urlPath": "/admin/monitoring",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/permissions",
+      "urlPath": "/admin/permissions",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/products",
+      "urlPath": "/admin/products",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/review-stats",
+      "urlPath": "/admin/review-stats",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/review-workbench",
+      "urlPath": "/admin/review-workbench",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/solutions",
+      "urlPath": "/admin/solutions",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/users",
+      "urlPath": "/admin/users",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -106,6 +162,12 @@
     {
       "path": "src/app/[locale]/creators/dashboard",
       "urlPath": "/creators/dashboard",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/creators/revenue",
+      "urlPath": "/creators/revenue",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -166,72 +228,6 @@
     {
       "path": "src/app/[locale]/solutions",
       "urlPath": "/solutions",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin",
-      "urlPath": "/admin",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/analytics",
-      "urlPath": "/admin/analytics",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/audit-logs",
-      "urlPath": "/admin/audit-logs",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/dashboard",
-      "urlPath": "/admin/dashboard",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/monitoring",
-      "urlPath": "/admin/monitoring",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/permissions",
-      "urlPath": "/admin/permissions",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/products",
-      "urlPath": "/admin/products",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/review-stats",
-      "urlPath": "/admin/review-stats",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/review-workbench",
-      "urlPath": "/admin/review-workbench",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/solutions",
-      "urlPath": "/admin/solutions",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/admin/users",
-      "urlPath": "/admin/users",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -950,36 +946,6 @@
       "isRouteGroup": false
     },
     {
-      "path": "src/app/creators",
-      "urlPath": "/creators",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/creators/apply",
-      "urlPath": "/creators/apply",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/creators/apply/success",
-      "urlPath": "/creators/apply/success",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/creators/dashboard",
-      "urlPath": "/creators/dashboard",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/creators/revenue",
-      "urlPath": "/creators/revenue",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
       "path": "src/app/file-upload-test",
       "urlPath": "/file-upload-test",
       "isDynamic": false,
@@ -1112,57 +1078,7 @@
       "isRouteGroup": false
     }
   ],
-  "issues": [
-    {
-      "file": "app/[locale]/about/page.tsx",
-      "line": 151,
-      "type": "hardcoded-href",
-      "code": "href=\"/contact\"",
-      "suggestion": "使用: href={route('/contact')} 或 href={route(routes.XXX)}"
-    },
-    {
-      "file": "app/[locale]/about/page.tsx",
-      "line": 157,
-      "type": "hardcoded-href",
-      "code": "href=\"/creators/apply\"",
-      "suggestion": "使用: href={route('/creators/apply')} 或 href={route(routes.XXX)}"
-    },
-    {
-      "file": "app/[locale]/about/page.tsx",
-      "line": 1,
-      "type": "missing-route-wrapper",
-      "code": "// 文件顶部",
-      "suggestion": "需要导入: import { useRouting } from '@/lib/routing'; 并在组件中使用: const { route, routes } = useRouting();"
-    },
-    {
-      "file": "app/creators/page.tsx",
-      "line": 17,
-      "type": "hardcoded-href",
-      "code": "href=\"/zh-CN\"",
-      "suggestion": "使用: href={route('/zh-CN')} 或 href={route(routes.XXX)}"
-    },
-    {
-      "file": "app/creators/page.tsx",
-      "line": 1,
-      "type": "missing-route-wrapper",
-      "code": "// 文件顶部",
-      "suggestion": "需要导入: import { useRouting } from '@/lib/routing'; 并在组件中使用: const { route, routes } = useRouting();"
-    },
-    {
-      "file": "app/page.tsx",
-      "line": 5,
-      "type": "hardcoded-redirect",
-      "code": "redirect('/zh-CN');",
-      "suggestion": "使用: redirect(route('/zh-CN'))"
-    },
-    {
-      "file": "app/page.tsx",
-      "line": 1,
-      "type": "missing-route-wrapper",
-      "code": "// 文件顶部",
-      "suggestion": "需要导入: import { useRouting } from '@/lib/routing'; 并在组件中使用: const { route, routes } = useRouting();"
-    }
-  ],
+  "issues": [],
   "recommendations": [
     "1. 所有 href 应使用 route() 包装",
     "2. 所有 router.push/replace 应使用 route() 包装",

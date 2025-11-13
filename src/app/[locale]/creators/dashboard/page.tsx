@@ -1,37 +1,109 @@
 'use client';
+import { useRouting } from '@/lib/routing';
 
+import { 
+  TrendingUp, 
+  DollarSign, 
+  FileText, 
+  ShoppingCart,
+  Eye,
+  Star,
+  Calendar,
+  ArrowUpRight
+} from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useRouting } from '@/lib/routing';
+
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+
+import { formatCurrency, formatDate } from '@/lib/utils';
+
+
+interface CreatorStats {
+  totalSolutions: number;
+  publishedSolutions: number;
+  draftSolutions: number;
+  pendingSolutions: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  totalOrders: number;
+  monthlyOrders: number;
+  totalViews: number;
+  averageRating: number;
+  totalDownloads?: number;
+  totalReviews?: number;
+}
+
+interface RecentSolution {
+  id: string;
+  title: string;
+  status: string;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+  viewCount?: number;
+  downloadCount?: number;
+}
+
+interface RecentOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  solutionTitle?: string;
+  amount?: number;
+  solutions: Array<{
+    id: string;
+    title: string;
+    price: number;
+  }>;
+}
 
 export default function CreatorDashboardPage() {
   const router = useRouter();
   const { route } = useRouting();
-  const [dashboardData, setDashboardData] = useState({
-    totalRevenue: 0,
-    activeProducts: 0,
-    totalSales: 0,
-    pendingOrders: 0
-  });
+  const [stats, setStats] = useState<CreatorStats | null>(null);
+  const [recentSolutions, setRecentSolutions] = useState<RecentSolution[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 获取仪表板数据
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     try {
-      // 这里应该调用API获取创作者仪表板数据
-      // 暂时使用模拟数据
-      setDashboardData({
-        totalRevenue: 12500,
-        activeProducts: 8,
-        totalSales: 156,
-        pendingOrders: 3
-      });
+      setLoading(true);
+      
+      // 获取统计数据
+      const statsResponse = await fetch('/api/creators/dashboard/stats');
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData.data);
+      }
+
+      // 获取最近的方案
+      const solutionsResponse = await fetch('/api/creators/dashboard/recent-solutions');
+      if (solutionsResponse.ok) {
+        const solutionsData = await solutionsResponse.json();
+        setRecentSolutions(solutionsData.data);
+      }
+
+      // 获取最近的订单
+      const ordersResponse = await fetch('/api/creators/dashboard/recent-orders');
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        setRecentOrders(ordersData.data);
+      }
     } catch (error) {
-      console.error('获取仪表板数据失败:', error);
+      console.error('获取仪表盘数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -39,14 +111,34 @@ export default function CreatorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载仪表板...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
         </div>
       </div>
     );
   }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PUBLISHED': return 'bg-green-100 text-green-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'DRAFT': return 'bg-gray-100 text-gray-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PUBLISHED': return '已发布';
+      case 'PENDING': return '审核中';
+      case 'DRAFT': return '草稿';
+      case 'REJECTED': return '已拒绝';
+      default: return status;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

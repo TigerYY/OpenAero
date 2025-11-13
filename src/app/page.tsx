@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation';
+import { RoutingUtils } from '@/lib/routing';
 
 export default function RootPage() {
   // Redirect to default locale (zh-CN)
-  redirect('/zh-CN');
+  const defaultLocale = 'zh-CN';
+  const homeRoute = RoutingUtils.generateRoute(defaultLocale, '/');
+  redirect(homeRoute);
 }
 
 // Force dynamic rendering to prevent static generation issues

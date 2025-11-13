@@ -25,6 +25,7 @@ http://localhost:3000
 
 ### 数据库和认证
 - [Supabase 集成](README_SUPABASE.md) - Supabase 配置和使用指南
+- [Supabase MCP 设置](DOCS/supabase-mcp-setup.md) - Supabase MCP 服务器配置指南
 - [数据库设置](DATABASE_SETUP.md) - 数据库初始化和迁移
 - [数据迁移指南](MIGRATION_GUIDE.md) - 数据库迁移流程
 
@@ -56,6 +57,8 @@ cp .env.example .env.local
 必填配置：
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase 项目 URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase 匿名密钥
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase 服务角色密钥
+- `SUPABASE_ACCESS_TOKEN` - Supabase Personal Access Token (用于 MCP)
 - `DATABASE_URL` - 数据库连接字符串
 
 ## 主要功能
@@ -77,6 +80,17 @@ node scripts/fix-database.js
 
 ### 快速诊断
 访问 `http://localhost:3000/quick-auth-check.html` 进行认证系统诊断。
+
+### Supabase MCP 设置
+```bash
+# 设置 Supabase MCP 服务器（用于 Cursor IDE）
+npm run mcp:setup
+
+# 测试 MCP 连接
+npm run mcp:test
+```
+
+详细说明请参考 [Supabase MCP 设置指南](DOCS/supabase-mcp-setup.md)。
 
 ## License
 

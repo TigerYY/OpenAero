@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { solutionService } from '@/backend/solution/solution.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { ApiResponse } from '@/types';
+import { logAuditAction } from '@/lib/api-helpers';
 
 // POST /api/solutions/[id]/submit - 提交方案审核
 export async function POST(
@@ -32,7 +33,16 @@ export async function POST(
     );
 
     // 记录审计日志
-    // TODO: 实现审计日志功能
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'SOLUTION_SUBMITTED',
+      resource: 'solution',
+      resourceId: solutionId,
+      metadata: {
+        status: result.status,
+        submittedAt: result.submittedAt,
+      },
+    });
 
     const response: ApiResponse<typeof result> = {
       success: true,

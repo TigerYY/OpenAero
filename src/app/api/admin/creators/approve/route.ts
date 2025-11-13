@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { requireAdminAuth } from '@/lib/api-helpers';
 
 const prisma = new PrismaClient();
 
@@ -16,21 +17,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 从认证头中获取管理员信息
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供认证令牌' },
-        { status: 401 }
-      );
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
     }
-
-    const token = authHeader.substring(7);
-    
-    // 这里应该验证JWT令牌并检查管理员权限
-    // 暂时使用模拟数据
-    const adminUserId = 'admin-user-id'; // TODO: 从JWT令牌中获取实际管理员ID
+    const adminUserId = authResult.user.id;
 
     // 查找申请记录
     const application = await prisma.creatorApplication.findUnique({
@@ -135,21 +127,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 从认证头中获取管理员信息
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供认证令牌' },
-        { status: 401 }
-      );
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
     }
-
-    const token = authHeader.substring(7);
-    
-    // 这里应该验证JWT令牌并检查管理员权限
-    // 暂时使用模拟数据
-    const adminUserId = 'admin-user-id'; // TODO: 从JWT令牌中获取实际管理员ID
+    const adminUserId = authResult.user.id;
 
     // 查找申请记录
     const application = await prisma.creatorApplication.findUnique({

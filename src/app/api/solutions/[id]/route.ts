@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { solutionService } from '@/backend/solution/solution.service';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
 import { updateSolutionSchema } from '@/lib/validations';
 import { ApiResponse } from '@/types';
+import { logAuditAction } from '@/lib/api-helpers';
 
 interface RouteParams {
   params: {
@@ -101,6 +103,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/solutions/[id] - 更新方案
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // 验证用户身份
+    const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
       const response: ApiResponse<null> = {
         success: false,
@@ -113,13 +117,33 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = params;
     const body = await request.json();
     
+    // 获取旧值用于审计日志
+    const oldSolution = await db.solution.findUnique({ where: { id } });
+    
     // 验证输入数据
     const validatedData = updateSolutionSchema.parse(body);
 
     const solution = await solutionService.updateSolution(id, validatedData, authResult.user.id);
 
     // 记录审计日志
-    // TODO: 实现审计日志功能
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'SOLUTION_UPDATED',
+      resource: 'solution',
+      resourceId: solution.id,
+      oldValue: oldSolution ? {
+        title: oldSolution.title,
+        category: oldSolution.category,
+        price: oldSolution.price,
+        status: oldSolution.status,
+      } : undefined,
+      newValue: {
+        title: solution.title,
+        category: solution.category,
+        price: solution.price,
+        status: solution.status,
+      },
+    });
 
     const response: ApiResponse<any> = {
       success: true,
@@ -157,6 +181,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/solutions/[id] - 删除方案
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // 验证用户身份
+    const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
       const response: ApiResponse<null> = {
         success: false,
@@ -168,10 +194,32 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { id } = params;
 
+    // 获取旧值用于审计日志
+    const oldSolution = await db.solution.findUnique({ where: { id } });
+    if (!oldSolution) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: '方案不存在',
+        data: null
+      };
+      return NextResponse.json(response, { status: 404 });
+    }
+
     await solutionService.deleteSolution(id, authResult.user.id);
 
     // 记录审计日志
-    // TODO: 实现审计日志功能
+    await logAuditAction(request, {
+      userId: authResult.user.id,
+      action: 'SOLUTION_DELETED',
+      resource: 'solution',
+      resourceId: id,
+      oldValue: {
+        title: oldSolution.title,
+        category: oldSolution.category,
+        price: oldSolution.price,
+        status: oldSolution.status,
+      },
+    });
 
     const response: ApiResponse<null> = {
       success: true,

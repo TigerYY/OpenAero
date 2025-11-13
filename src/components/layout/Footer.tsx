@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
+import { ROUTES } from '@/lib/routing';
 
 export function Footer() {
   const t = useTranslations('footer');
-  const { route } = useRouting();
+  const { route, routes } = useRouting();
 
   const footerLinks = {
     solutions: [
@@ -17,8 +18,8 @@ export function Footer() {
     ],
     creators: [
       { name: '创作者计划', href: route('/creators/plan') },
-      { name: '申请流程', href: route('/creators/apply') },
-      { name: '收益分成', href: route('/creators/revenue') },
+      { name: '申请流程', href: route(routes.CREATORS.APPLY) },
+      { name: '收益分成', href: route(routes.CREATORS.REVENUE) },
       { name: '技术支持', href: route('/creators/support') },
     ],
     resources: [

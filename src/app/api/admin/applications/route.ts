@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminAuth, createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
 
 interface CreatorApplication {
   id: string;
@@ -60,11 +61,11 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    // TODO: 验证管理员权限
-    // const user = await getCurrentUser();
-    // if (!user || !user.isAdmin) {
-    //   return NextResponse.json({ success: false, error: '权限不足' }, { status: 403 });
-    // }
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     let filteredApplications = mockApplications;
 
@@ -78,24 +79,16 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit;
     const paginatedApplications = filteredApplications.slice(startIndex, endIndex);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        applications: paginatedApplications,
-        pagination: {
-          page,
-          limit,
-          total: filteredApplications.length,
-          totalPages: Math.ceil(filteredApplications.length / limit)
-        }
-      }
-    });
+    return createPaginatedResponse(
+      paginatedApplications,
+      page,
+      limit,
+      filteredApplications.length,
+      '获取申请列表成功'
+    );
   } catch (error) {
     console.error('获取申请列表失败:', error);
-    return NextResponse.json(
-      { success: false, error: '服务器错误' },
-      { status: 500 }
-    );
+    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
   }
 }
 
@@ -107,33 +100,24 @@ export async function PUT(request: NextRequest) {
 
     // 验证请求参数
     if (!applicationId || !action || !['approve', 'reject'].includes(action)) {
-      return NextResponse.json(
-        { success: false, error: '无效的请求参数' },
-        { status: 400 }
-      );
+      return createErrorResponse('无效的请求参数', 400);
     }
 
-    // TODO: 验证管理员权限
-    // const user = await getCurrentUser();
-    // if (!user || !user.isAdmin) {
-    //   return NextResponse.json({ success: false, error: '权限不足' }, { status: 403 });
-    // }
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     // 查找申请
     const applicationIndex = mockApplications.findIndex(app => app.id === applicationId);
     if (applicationIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: '申请不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('申请不存在', 404);
     }
 
     const application = mockApplications[applicationIndex];
     if (!application || application.status !== 'pending') {
-      return NextResponse.json(
-        { success: false, error: '申请已被处理或不存在' },
-        { status: 400 }
-      );
+      return createErrorResponse('申请已被处理或不存在', 400);
     }
 
     // 更新申请状态
@@ -141,7 +125,7 @@ export async function PUT(request: NextRequest) {
       ...application,
       status: action === 'approve' ? 'approved' : 'rejected',
       reviewedAt: new Date().toISOString(),
-      reviewedBy: 'admin_user', // TODO: 从认证中获取管理员ID
+      reviewedBy: authResult.user.id,
       reviewNotes: notes
     };
 
@@ -162,19 +146,13 @@ export async function PUT(request: NextRequest) {
       console.log(`发送拒绝通知给 ${application.email}`);
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        application: updatedApplication,
-        message: `申请已${action === 'approve' ? '批准' : '拒绝'}`
-      }
-    });
+    return createSuccessResponse(
+      { application: updatedApplication },
+      `申请已${action === 'approve' ? '批准' : '拒绝'}`
+    );
   } catch (error) {
     console.error('审核申请失败:', error);
-    return NextResponse.json(
-      { success: false, error: '服务器错误' },
-      { status: 500 }
-    );
+    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
   }
 }
 
@@ -185,41 +163,29 @@ export async function DELETE(request: NextRequest) {
     const applicationId = searchParams.get('id');
 
     if (!applicationId) {
-      return NextResponse.json(
-        { success: false, error: '缺少申请ID' },
-        { status: 400 }
-      );
+      return createErrorResponse('缺少申请ID', 400);
     }
 
-    // TODO: 验证管理员权限
-    // const user = await getCurrentUser();
-    // if (!user || !user.isAdmin) {
-    //   return NextResponse.json({ success: false, error: '权限不足' }, { status: 403 });
-    // }
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     const applicationIndex = mockApplications.findIndex(app => app.id === applicationId);
     if (applicationIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: '申请不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('申请不存在', 404);
     }
 
     // 删除申请
     const deletedApplication = mockApplications.splice(applicationIndex, 1)[0];
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        message: '申请已删除',
-        deletedApplication
-      }
-    });
+    return createSuccessResponse(
+      { deletedApplication },
+      '申请已删除'
+    );
   } catch (error) {
     console.error('删除申请失败:', error);
-    return NextResponse.json(
-      { success: false, error: '服务器错误' },
-      { status: 500 }
-    );
+    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
   }
 }

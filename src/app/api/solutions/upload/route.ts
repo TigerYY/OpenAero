@@ -5,6 +5,7 @@ import { fileService } from '@/backend/file/file.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { db } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
+import { logAuditAction } from '@/lib/api-helpers';
 
 // POST /api/solutions/upload - 上传方案相关文件
 export async function POST(request: NextRequest) {
@@ -133,7 +134,18 @@ export async function POST(request: NextRequest) {
         });
 
         // 记录审计日志
-        // TODO: 实现审计日志功能
+        await logAuditAction(request, {
+          userId: user.id,
+          action: 'SOLUTION_FILE_UPLOADED',
+          resource: 'solution_file',
+          resourceId: fileRecord.id,
+          metadata: {
+            solutionId,
+            filename: fileRecord.filename,
+            fileType,
+            size: fileRecord.size,
+          },
+        });
       } catch (error: any) {
         console.error(`文件上传失败: ${file.name}`, error);
         errors.push({
@@ -220,7 +232,16 @@ export async function DELETE(request: NextRequest) {
     await fileService.deleteFile(file.filename, user.id);
 
     // 记录审计日志
-    // TODO: 实现审计日志功能
+    await logAuditAction(request, {
+      userId: user.id,
+      action: 'SOLUTION_FILE_DELETED',
+      resource: 'solution_file',
+      resourceId: fileId,
+      metadata: {
+        solutionId: solutionId || undefined,
+        filename: file.filename,
+      },
+    });
 
     const response: ApiResponse<null> = {
       success: true,

@@ -1,0 +1,292 @@
+{
+  "summary": {
+    "total": 39,
+    "completed": 0,
+    "needsImplementation": 16,
+    "needsFix": 0,
+    "needsIssue": 0,
+    "unclear": 23
+  },
+  "details": {
+    "completed": [],
+    "needsImplementation": [
+      {
+        "file": "app/[locale]/creators/revenue/page.tsx",
+        "line": 106,
+        "marker": "TODO",
+        "comment": "实现提现功能",
+        "code": "// TODO: 实现提现功能"
+      },
+      {
+        "file": "app/[locale]/shop/products/[slug]/page.tsx",
+        "line": 145,
+        "marker": "TODO",
+        "comment": "实现添加到购物车逻辑",
+        "code": "// TODO: 实现添加到购物车逻辑"
+      },
+      {
+        "file": "app/[locale]/shop/products/[slug]/page.tsx",
+        "line": 153,
+        "marker": "TODO",
+        "comment": "实现立即购买逻辑",
+        "code": "// TODO: 实现立即购买逻辑"
+      },
+      {
+        "file": "app/api/admin/stats/route.ts",
+        "line": 130,
+        "marker": "TODO",
+        "comment": "实际实现中，这里会触发统计数据的重新计算",
+        "code": "// TODO: 实际实现中，这里会触发统计数据的重新计算"
+      },
+      {
+        "file": "app/api/payments/webhook/alipay/route.ts",
+        "line": 202,
+        "marker": "TODO",
+        "comment": "实际实现中应该发送邮件或推送通知",
+        "code": "// TODO: 实际实现中应该发送邮件或推送通知"
+      },
+      {
+        "file": "app/api/payments/webhook/wechat/route.ts",
+        "line": 133,
+        "marker": "TODO",
+        "comment": "实际实现中应该更新数据库",
+        "code": "// TODO: 实际实现中应该更新数据库"
+      },
+      {
+        "file": "app/api/payments/webhook/wechat/route.ts",
+        "line": 145,
+        "marker": "TODO",
+        "comment": "实际实现中应该发送邮件或推送通知",
+        "code": "// TODO: 实际实现中应该发送邮件或推送通知"
+      },
+      {
+        "file": "app/api/solutions/[id]/route.ts",
+        "line": 122,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "app/api/solutions/[id]/route.ts",
+        "line": 174,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "app/api/solutions/[id]/submit/route.ts",
+        "line": 35,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "app/api/solutions/route.ts",
+        "line": 206,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "app/api/solutions/upload/route.ts",
+        "line": 136,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "app/api/solutions/upload/route.ts",
+        "line": 223,
+        "marker": "TODO",
+        "comment": "实现审计日志功能",
+        "code": "// TODO: 实现审计日志功能"
+      },
+      {
+        "file": "backend/notification/notification.service.ts",
+        "line": 278,
+        "marker": "TODO",
+        "comment": "实现邮件通知功能",
+        "code": "// TODO: 实现邮件通知功能"
+      },
+      {
+        "file": "components/business/SolutionCard.tsx",
+        "line": 25,
+        "marker": "TODO",
+        "comment": "实现收藏功能",
+        "code": "// TODO: 实现收藏功能"
+      },
+      {
+        "file": "lib/email-service.ts",
+        "line": 19,
+        "marker": "TODO",
+        "comment": "实现实际的邮件发送逻辑",
+        "code": "// TODO: 实现实际的邮件发送逻辑"
+      }
+    ],
+    "needsFix": [],
+    "needsIssue": [],
+    "unclear": [
+      {
+        "file": "app/[locale]/shop/products/[slug]/page.tsx",
+        "line": 209,
+        "marker": "TODO",
+        "comment": "从实际库存数据获取",
+        "code": "// TODO: 从实际库存数据获取"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 63,
+        "marker": "TODO",
+        "comment": "验证管理员权限",
+        "code": "// TODO: 验证管理员权限"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 116,
+        "marker": "TODO",
+        "comment": "验证管理员权限",
+        "code": "// TODO: 验证管理员权限"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 144,
+        "marker": "TODO",
+        "comment": "从认证中获取管理员ID",
+        "code": "reviewedBy: 'admin_user', // TODO: 从认证中获取管理员ID"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 150,
+        "marker": "TODO",
+        "comment": "如果批准，创建创作者档案",
+        "code": "// TODO: 如果批准，创建创作者档案"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 158,
+        "marker": "TODO",
+        "comment": "发送批准通知邮件",
+        "code": "// TODO: 发送批准通知邮件"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 161,
+        "marker": "TODO",
+        "comment": "发送拒绝通知邮件",
+        "code": "// TODO: 发送拒绝通知邮件"
+      },
+      {
+        "file": "app/api/admin/applications/route.ts",
+        "line": 194,
+        "marker": "TODO",
+        "comment": "验证管理员权限",
+        "code": "// TODO: 验证管理员权限"
+      },
+      {
+        "file": "app/api/admin/creators/approve/route.ts",
+        "line": 33,
+        "marker": "TODO",
+        "comment": "从JWT令牌中获取实际管理员ID",
+        "code": "const adminUserId = 'admin-user-id'; // TODO: 从JWT令牌中获取实际管理员ID"
+      },
+      {
+        "file": "app/api/admin/creators/approve/route.ts",
+        "line": 152,
+        "marker": "TODO",
+        "comment": "从JWT令牌中获取实际管理员ID",
+        "code": "const adminUserId = 'admin-user-id'; // TODO: 从JWT令牌中获取实际管理员ID"
+      },
+      {
+        "file": "app/api/admin/stats/route.ts",
+        "line": 36,
+        "marker": "TODO",
+        "comment": "验证管理员权限",
+        "code": "// TODO: 验证管理员权限"
+      },
+      {
+        "file": "app/api/admin/stats/route.ts",
+        "line": 124,
+        "marker": "TODO",
+        "comment": "验证管理员权限",
+        "code": "// TODO: 验证管理员权限"
+      },
+      {
+        "file": "app/api/ai/optimize/route.ts",
+        "line": 136,
+        "marker": "BUG",
+        "comment": "',",
+        "code": "impact: '避免意外的类型转换和潜在的 bug',"
+      },
+      {
+        "file": "app/api/auth/verify-email/route.ts",
+        "line": 3,
+        "marker": "XXX",
+        "comment": "",
+        "code": "* GET /api/auth/verify-email?token=xxx"
+      },
+      {
+        "file": "app/api/payments/webhook/alipay/route.ts",
+        "line": 33,
+        "marker": "TODO",
+        "comment": "验证签名",
+        "code": "// TODO: 验证签名"
+      },
+      {
+        "file": "app/api/payments/webhook/alipay/route.ts",
+        "line": 148,
+        "marker": "TODO",
+        "comment": "发送支付成功通知",
+        "code": "// TODO: 发送支付成功通知"
+      },
+      {
+        "file": "app/api/payments/webhook/alipay/route.ts",
+        "line": 187,
+        "marker": "TODO",
+        "comment": "发送支付失败通知",
+        "code": "// TODO: 发送支付失败通知"
+      },
+      {
+        "file": "app/api/payments/webhook/wechat/route.ts",
+        "line": 47,
+        "marker": "TODO",
+        "comment": "验证签名",
+        "code": "// TODO: 验证签名"
+      },
+      {
+        "file": "app/api/payments/webhook/wechat/route.ts",
+        "line": 73,
+        "marker": "TODO",
+        "comment": "更新订单状态到数据库",
+        "code": "// TODO: 更新订单状态到数据库"
+      },
+      {
+        "file": "app/api/payments/webhook/wechat/route.ts",
+        "line": 80,
+        "marker": "TODO",
+        "comment": "发送支付成功通知",
+        "code": "// TODO: 发送支付成功通知"
+      },
+      {
+        "file": "components/shop/CartDrawer.tsx",
+        "line": 42,
+        "marker": "TODO",
+        "comment": "跳转到结算页面",
+        "code": "// TODO: 跳转到结算页面"
+      },
+      {
+        "file": "pages/api/contact.ts",
+        "line": 50,
+        "marker": "TODO",
+        "comment": "保存到数据库",
+        "code": "// TODO: 保存到数据库"
+      },
+      {
+        "file": "pages/api/contact.ts",
+        "line": 251,
+        "marker": "TODO",
+        "comment": "保存联系表单提交记录到数据库",
+        "code": "// TODO: 保存联系表单提交记录到数据库"
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/api-helpers';
 
 interface DashboardStats {
   totalUsers: number;
@@ -33,11 +34,11 @@ interface DashboardStats {
 // GET - 获取仪表盘统计数据
 export async function GET(request: NextRequest) {
   try {
-    // TODO: 验证管理员权限
-    // const user = await getCurrentUser();
-    // if (!user || !user.isAdmin) {
-    //   return NextResponse.json({ success: false, error: '权限不足' }, { status: 403 });
-    // }
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     // 模拟从数据库获取统计数据
     const stats: DashboardStats = {
@@ -121,11 +122,11 @@ export async function GET(request: NextRequest) {
 // POST - 刷新统计数据
 export async function POST(request: NextRequest) {
   try {
-    // TODO: 验证管理员权限
-    // const user = await getCurrentUser();
-    // if (!user || !user.isAdmin) {
-    //   return NextResponse.json({ success: false, error: '权限不足' }, { status: 403 });
-    // }
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     // TODO: 实际实现中，这里会触发统计数据的重新计算
     // await refreshDashboardStats();
