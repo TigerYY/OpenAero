@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-import { MainLayout } from '@/components/layout/MainLayout';
-
 interface AboutPageProps {
   params: {
     locale: string;
@@ -10,7 +8,7 @@ interface AboutPageProps {
 
 export default function AboutPage({ params: { locale } }: AboutPageProps) {
   return (
-    <MainLayout locale={locale}>
+    <>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-50 to-secondary-50 py-20">
         <div className="container">
@@ -163,6 +161,6 @@ export default function AboutPage({ params: { locale } }: AboutPageProps) {
             </div>
           </div>
         </section>
-    </MainLayout>
+    </>
   );
 }

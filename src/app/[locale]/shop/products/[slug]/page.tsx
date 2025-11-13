@@ -31,7 +31,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -219,24 +218,21 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <MainLayout locale="zh-CN">
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">加载中...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">加载中...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!product) {
     return (
-      <MainLayout locale="zh-CN">
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">商品不存在</h2>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">商品不存在</h2>
             <p className="text-gray-600 mb-4">您访问的商品可能已下架或不存在</p>
             <Link href={route('/shop/products')}>
               <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
@@ -246,7 +242,7 @@ export default function ProductDetailPage() {
             </Link>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -257,8 +253,7 @@ export default function ProductDetailPage() {
     : 0;
 
   return (
-    <MainLayout locale="zh-CN">
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           {/* 面包屑导航 */}
           <nav className="flex items-center gap-2 text-sm text-gray-600 mb-6">
@@ -733,6 +728,5 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
-    </MainLayout>
   );
 }

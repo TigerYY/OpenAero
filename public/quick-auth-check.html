@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>快速认证检查 - OpenAero</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      background: white; 
+      border-radius: 12px; 
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { 
+      color: #667eea; 
+      margin-bottom: 10px; 
+      font-size: 28px;
+    }
+    .subtitle { 
+      color: #666; 
+      margin-bottom: 30px; 
+      font-size: 14px;
+    }
+    .check-item { 
+      padding: 15px; 
+      margin: 10px 0; 
+      border-radius: 8px; 
+      border-left: 4px solid #ddd;
+      background: #f9f9f9;
+    }
+    .check-item.pending { border-left-color: #ffa500; background: #fff9f0; }
+    .check-item.success { border-left-color: #10b981; background: #f0fdf4; }
+    .check-item.error { border-left-color: #ef4444; background: #fef2f2; }
+    .check-item h3 { 
+      font-size: 16px; 
+      margin-bottom: 8px; 
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .check-item p { font-size: 14px; color: #666; line-height: 1.6; }
+    .icon { font-size: 20px; }
+    .code { 
+      background: #1e293b; 
+      color: #e2e8f0; 
+      padding: 15px; 
+      border-radius: 6px; 
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    button { 
+      background: #667eea; 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 16px;
+      margin: 10px 10px 10px 0;
+      transition: all 0.3s;
+    }
+    button:hover { background: #5568d3; transform: translateY(-2px); }
+    button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .summary {
+      background: #f0f9ff;
+      border: 2px solid #0ea5e9;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .summary h3 { color: #0369a1; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 OpenAero 快速认证检查</h1>
+    <p class="subtitle">系统性检查用户认证状态和 profile 数据</p>
+
+    <button onclick="runAllChecks()" id="checkBtn">开始检查</button>
+    <button onclick="location.reload()">重置</button>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://cardynuoazvaytvinxvm.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1ODk0MTUsImV4cCI6MjA3NjE2NTQxNX0.s7gVeKupd0Rny4JeQr3SL4BTuv9uE6jdDz_rt-X9UaI';
+
+    const results = document.getElementById('results');
+
+    function addCheckItem(title, status, message, details = '') {
+      const icons = {
+        pending: '⏳',
+        success: '✅',
+        error: '❌'
+      };
+      
+      const item = document.createElement('div');
+      item.className = `check-item ${status}`;
+      item.innerHTML = `
+        <h3><span class="icon">${icons[status]}</span>${title}</h3>
+        <p>${message}</p>
+        ${details ? `<div class="code">${details}</div>` : ''}
+      `;
+      results.appendChild(item);
+    }
+
+    async function runAllChecks() {
+      results.innerHTML = '';
+      document.getElementById('checkBtn').disabled = true;
+
+      // 检查 1: Supabase 配置
+      addCheckItem('检查 Supabase 配置', 'pending', '正在验证...');
+      
+      if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+        addCheckItem(
+          '检查 Supabase 配置', 
+          'error', 
+          '请先配置 Supabase URL 和 ANON KEY',
+          '在此文件中修改 SUPABASE_URL 和 SUPABASE_ANON_KEY 常量'
+        );
+        document.getElementById('checkBtn').disabled = false;
+        return;
+      }
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      results.innerHTML = '';
+      
+      addCheckItem('检查 Supabase 配置', 'success', '配置正确');
+
+      // 检查 2: 认证状态
+      addCheckItem('检查认证状态', 'pending', '正在检查...');
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        addCheckItem('检查认证状态', 'error', `获取会话失败: ${sessionError.message}`);
+        document.getElementById('checkBtn').disabled = false;
+        return;
+      }
+
+      if (!session) {
+        addCheckItem('检查认证状态', 'error', '未登录', '请先登录后再运行此检查');
+        document.getElementById('checkBtn').disabled = false;
+        return;
+      }
+
+      addCheckItem(
+        '检查认证状态', 
+        'success', 
+        `已登录: ${session.user.email}`,
+        `用户 ID: ${session.user.id}\n创建时间: ${new Date(session.user.created_at).toLocaleString('zh-CN')}`
+      );
+
+      // 检查 3: User Profile 存在性
+      addCheckItem('检查 User Profile', 'pending', '正在查询...');
+      
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profileError) {
+        if (profileError.code === 'PGRST116') {
+          addCheckItem(
+            '检查 User Profile', 
+            'error', 
+            '❌ Profile 不存在！这是主要问题！',
+            `错误代码: PGRST116 (未找到记录)\n\n这意味着 auth.users 中有你的账号，但 user_profiles 表中没有对应记录。\n\n可能原因：\n1. 数据库触发器未正确执行\n2. 注册时的 profile 创建失败\n\n解决方案：\n1. 执行修复脚本: ./scripts/diagnose-and-fix.sh\n2. 或手动执行: supabase db execute --file scripts/fix-missing-profiles.sql`
+          );
+        } else {
+          addCheckItem(
+            '检查 User Profile', 
+            'error', 
+            `查询失败: ${profileError.message}`,
+            JSON.stringify(profileError, null, 2)
+          );
+        }
+      } else if (profile) {
+        addCheckItem(
+          '检查 User Profile', 
+          'success', 
+          'Profile 存在',
+          `显示名称: ${profile.display_name || '(未设置)'}\n角色: ${profile.role}\n状态: ${profile.status}\n创建时间: ${new Date(profile.created_at).toLocaleString('zh-CN')}`
+        );
+
+        // 检查 4: 字段完整性
+        addCheckItem('检查 Profile 字段', 'pending', '正在验证...');
+        
+        const requiredFields = ['user_id', 'role', 'status', 'created_at', 'updated_at'];
+        const missingFields = requiredFields.filter(field => !profile[field]);
+        
+        if (missingFields.length > 0) {
+          addCheckItem(
+            '检查 Profile 字段', 
+            'error', 
+            `缺少必填字段: ${missingFields.join(', ')}`
+          );
+        } else {
+          addCheckItem('检查 Profile 字段', 'success', '所有必填字段完整');
+        }
+
+        // 检查 5: 字段映射正确性
+        addCheckItem('检查字段映射', 'pending', '正在验证...');
+        
+        const oldFieldsFound = [];
+        if (profile.fullName !== undefined) oldFieldsFound.push('fullName');
+        if (profile.username !== undefined) oldFieldsFound.push('username');
+        if (profile.phoneNumber !== undefined) oldFieldsFound.push('phoneNumber');
+        
+        if (oldFieldsFound.length > 0) {
+          addCheckItem(
+            '检查字段映射', 
+            'error', 
+            `发现旧字段: ${oldFieldsFound.join(', ')}`,
+            '数据库中不应该有这些字段，请检查数据库迁移'
+          );
+        } else {
+          addCheckItem('检查字段映射', 'success', '没有发现旧字段引用');
+        }
+      }
+
+      // 检查 6: RLS 策略
+      addCheckItem('检查 RLS 策略', 'pending', '正在测试...');
+      
+      const { count, error: countError } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        addCheckItem(
+          '检查 RLS 策略', 
+          'error', 
+          `RLS 可能阻止访问: ${countError.message}`,
+          '请运行 scripts/verify-rls-policies.sql 检查策略'
+        );
+      } else {
+        addCheckItem(
+          '检查 RLS 策略', 
+          'success', 
+          `RLS 策略正常，可访问 ${count} 条记录`
+        );
+      }
+
+      // 最终总结
+      const summary = document.createElement('div');
+      summary.className = 'summary';
+      
+      if (!profile) {
+        summary.innerHTML = `
+          <h3>🔴 检查完成 - 发现问题</h3>
+          <p><strong>主要问题：</strong>User Profile 不存在</p>
+          <p><strong>立即执行：</strong></p>
+          <div class="code">cd /Users/yangyang/Documents/YYCode/OpenAero/openaero.web
+./scripts/diagnose-and-fix.sh</div>
+          <p>或在 Supabase Dashboard SQL Editor 中执行 scripts/fix-missing-profiles.sql</p>
+        `;
+      } else {
+        summary.innerHTML = `
+          <h3>🟢 检查完成 - 基本正常</h3>
+          <p><strong>下一步：</strong>清除浏览器缓存并访问 /zh-CN/profile 测试</p>
+        `;
+      }
+      
+      results.appendChild(summary);
+      document.getElementById('checkBtn').disabled = false;
+    }
+  </script>
+</body>
+</html>

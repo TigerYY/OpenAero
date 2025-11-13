@@ -21,7 +21,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 
 
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -419,8 +418,7 @@ export default function ProductsPage() {
   }, [updateURL]);
 
   return (
-    <MainLayout locale="zh-CN">
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           {/* 页面标题和搜索 */}
           <div className="mb-8">
@@ -653,6 +651,5 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-    </MainLayout>
   );
 }

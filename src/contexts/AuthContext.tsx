@@ -71,14 +71,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('获取用户资料失败:', error);
+        
+        // 如果是"未找到记录"错误，尝试创建一个默认profile
+        if (error.code === 'PGRST116') {
+          console.log('未找到用户profile，尝试创建...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('user_profiles')
+            .insert([
+              {
+                user_id: userId,
+                role: 'USER',
+                status: 'ACTIVE',
+              },
+            ])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('创建用户profile失败:', createError);
+            setProfile(null);
+          } else if (newProfile) {
+            console.log('用户profile创建成功:', newProfile);
+            setProfile(newProfile as UserProfile);
+          }
+        } else {
+          // 其他错误，设置为null
+          setProfile(null);
+        }
         return;
       }
 
       if (data) {
         setProfile(data as UserProfile);
+      } else {
+        setProfile(null);
       }
     } catch (error) {
       console.error('获取用户资料失败:', error);
+      setProfile(null);
     }
   };
 
@@ -124,8 +154,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     metadata?: {
-      username?: string;
-      fullName?: string;
+      first_name?: string;
+      last_name?: string;
+      display_name?: string;
     }
   ) => {
     try {
@@ -214,24 +245,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   useEffect(() => {
     // 获取初始会话
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id);
       }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('获取会话失败:', error);
       setLoading(false);
     });
 
     // 监听认证状态变化
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id);
       } else {
         setProfile(null);
       }

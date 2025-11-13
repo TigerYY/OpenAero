@@ -18,15 +18,13 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, loading: authLoading } = useAuth();
   const router = useRouter();
   const { route } = useRouting();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
-    username: '',
+    display_name: '',
     bio: '',
-    phoneNumber: '',
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -34,10 +32,8 @@ function ProfileContent() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        fullName: profile.fullName || '',
-        username: profile.username || '',
+        display_name: profile.display_name || '',
         bio: profile.bio || '',
-        phoneNumber: profile.phoneNumber || '',
       });
     }
   }, [profile]);
@@ -72,12 +68,51 @@ function ProfileContent() {
     }
   };
 
-  if (!profile) {
+  // 如果认证还在加载中，显示加载状态
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
           <p className="mt-4 text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果用户未登录或profile不存在，显示错误提示
+  if (!user || !profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">无法加载用户资料</h2>
+          <p className="text-gray-600 mb-6">
+            {!user ? '请先登录您的账号' : '您的账号资料正在初始化中...'}
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              刷新页面
+            </button>
+            {!user && (
+              <button
+                onClick={() => router.push(route('/login'))}
+                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                返回登录
+              </button>
+            )}
+          </div>
+          <p className="mt-6 text-sm text-gray-500">
+            如果问题持续存在，请联系技术支持
+          </p>
         </div>
       </div>
     );
@@ -118,13 +153,13 @@ function ProfileContent() {
                 {profile.avatar ? (
                   <img
                     src={profile.avatar}
-                    alt={profile.fullName}
+                    alt={profile.display_name || '用户'}
                     className="h-32 w-32 rounded-full border-4 border-white object-cover"
                   />
                 ) : (
                   <div className="h-32 w-32 rounded-full border-4 border-white bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
                     <span className="text-5xl font-bold text-white">
-                      {profile.fullName?.[0] || user?.email?.[0] || 'U'}
+                      {profile.display_name?.[0] || user?.email?.[0] || 'U'}
                     </span>
                   </div>
                 )}
@@ -139,14 +174,16 @@ function ProfileContent() {
 
             {/* 用户基本信息 */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">{profile.fullName}</h2>
-              <p className="text-gray-600">@{profile.username}</p>
+              <h2 className="text-2xl font-bold text-gray-900">{profile.display_name || '未设置名称'}</h2>
+              <p className="text-gray-600">@{profile.display_name || user.email?.split('@')[0]}</p>
               <div className="mt-2 flex items-center space-x-4">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
                   {profile.role === 'ADMIN' && '管理员'}
                   {profile.role === 'CREATOR' && '创作者'}
                   {profile.role === 'USER' && '普通用户'}
                   {profile.role === 'SUPER_ADMIN' && '超级管理员'}
+                  {profile.role === 'REVIEWER' && '审核员'}
+                  {profile.role === 'FACTORY_MANAGER' && '工厂管理员'}
                 </span>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                   profile.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -176,37 +213,20 @@ function ProfileContent() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* 完整姓名 */}
+                  {/* 显示名称 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      完整姓名
+                      显示名称
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        value={formData.display_name}
+                        onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     ) : (
-                      <p className="text-gray-900">{profile.fullName}</p>
-                    )}
-                  </div>
-
-                  {/* 用户名 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      用户名
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">@{profile.username}</p>
+                      <p className="text-gray-900">{profile.display_name || '未设置'}</p>
                     )}
                   </div>
 
@@ -217,29 +237,12 @@ function ProfileContent() {
                     </label>
                     <p className="text-gray-900 flex items-center">
                       {user?.email}
-                      {profile.emailVerified && (
+                      {user?.email_confirmed_at && (
                         <svg className="ml-2 w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}
                     </p>
-                  </div>
-
-                  {/* 电话号码 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      电话号码
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{profile.phoneNumber || '未设置'}</p>
-                    )}
                   </div>
                 </div>
 
@@ -268,15 +271,15 @@ function ProfileContent() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">账号ID:</span>
-                    <span className="text-gray-900 font-mono">{profile.userId.substring(0, 16)}...</span>
+                    <span className="text-gray-900 font-mono">{profile.user_id.substring(0, 16)}...</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">创建时间:</span>
-                    <span className="text-gray-900">{new Date(profile.createdAt).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-gray-900">{new Date(profile.created_at).toLocaleDateString('zh-CN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">最后更新:</span>
-                    <span className="text-gray-900">{new Date(profile.updatedAt).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-gray-900">{new Date(profile.updated_at).toLocaleDateString('zh-CN')}</span>
                   </div>
                 </div>
               </div>
@@ -289,10 +292,8 @@ function ProfileContent() {
                     onClick={() => {
                       setIsEditing(false);
                       setFormData({
-                        fullName: profile.fullName || '',
-                        username: profile.username || '',
+                        display_name: profile.display_name || '',
                         bio: profile.bio || '',
-                        phoneNumber: profile.phoneNumber || '',
                       });
                     }}
                     className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"

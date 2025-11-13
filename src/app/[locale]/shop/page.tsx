@@ -25,7 +25,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -155,8 +154,7 @@ export default function ShopPage() {
   }, []);
 
   return (
-    <MainLayout locale="zh-CN">
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         {/* 英雄区域 */}
         <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
           <div className="container mx-auto px-4">
@@ -428,6 +426,5 @@ export default function ShopPage() {
           </div>
         </section>
       </div>
-    </MainLayout>
   );
 }

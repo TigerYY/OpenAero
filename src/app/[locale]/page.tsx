@@ -1,4 +1,3 @@
-import { MainLayout } from '@/components/layout/MainLayout';
 import { CaseStudiesSection } from '@/components/sections/CaseStudiesSection';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { PartnersSection } from '@/components/sections/PartnersSection';
@@ -14,13 +13,13 @@ interface HomePageProps {
 
 export default async function HomePage({ params }: HomePageProps) {
   return (
-    <MainLayout locale={params.locale}>
+    <>
       <HeroSection />
       <ValueFlowSection />
       <SolutionsSection />
       <TransparencySection />
       <PartnersSection />
       <CaseStudiesSection />
-    </MainLayout>
+    </>
   );
 }

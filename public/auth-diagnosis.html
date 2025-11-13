@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证系统诊断工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .section { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 { 
+            color: #0066cc; 
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e5e5;
+        }
+        button { 
+            background: #0066cc; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover { background: #0052a3; }
+        button.secondary { background: #6c757d; }
+        button.secondary:hover { background: #5a6268; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .status { 
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 OpenAero 认证系统诊断工具</h1>
+        
+        <!-- 环境检查 -->
+        <div class="section">
+            <h2>1. 环境配置检查</h2>
+            <button onclick="checkEnvironment()">检查环境</button>
+            <pre id="env-output">点击按钮开始检查...</pre>
+        </div>
+
+        <!-- Supabase连接测试 -->
+        <div class="section">
+            <h2>2. Supabase连接测试</h2>
+            <button onclick="testSupabaseConnection()">测试连接</button>
+            <pre id="connection-output">点击按钮开始测试...</pre>
+        </div>
+
+        <!-- 数据库表检查 -->
+        <div class="section">
+            <h2>3. 数据库表检查</h2>
+            <button onclick="checkTables()">检查表结构</button>
+            <button class="secondary" onclick="checkRLS()">检查RLS策略</button>
+            <pre id="tables-output">点击按钮开始检查...</pre>
+        </div>
+
+        <!-- 登录测试 -->
+        <div class="section">
+            <h2>4. 登录功能测试</h2>
+            <div class="grid">
+                <input type="email" id="test-email" placeholder="测试邮箱">
+                <input type="password" id="test-password" placeholder="测试密码">
+            </div>
+            <button onclick="testLogin()">测试登录</button>
+            <button class="secondary" onclick="testRegister()">测试注册</button>
+            <button class="danger" onclick="testLogout()">测试登出</button>
+            <pre id="login-output">输入测试账号后点击按钮...</pre>
+        </div>
+
+        <!-- 当前会话检查 -->
+        <div class="section">
+            <h2>5. 当前会话状态</h2>
+            <button onclick="checkSession()">检查会话</button>
+            <button class="secondary" onclick="checkProfile()">检查Profile</button>
+            <button class="secondary" onclick="createProfile()">创建Profile</button>
+            <pre id="session-output">点击按钮开始检查...</pre>
+        </div>
+
+        <!-- 触发器检查 -->
+        <div class="section">
+            <h2>6. 数据库触发器测试</h2>
+            <button onclick="checkTriggers()">检查触发器</button>
+            <button class="secondary" onclick="testTrigger()">测试触发器</button>
+            <pre id="trigger-output">点击按钮开始检查...</pre>
+        </div>
+
+        <!-- 完整诊断 -->
+        <div class="section">
+            <h2>7. 完整系统诊断</h2>
+            <button onclick="runFullDiagnosis()" style="background: #28a745;">运行完整诊断</button>
+            <pre id="full-output">点击按钮开始完整诊断...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Supabase配置
+        const SUPABASE_URL = 'https://cardynuoazvaytvinxvm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmR5bnVvYXp2YXl0dmlueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1ODk0MTUsImV4cCI6MjA3NjE2NTQxNX0.s7gVeKupd0Rny4JeQr3SL4BTuv9uE6jdDz_rt-X9UaI';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            el.textContent += `[${timestamp}] ${icon} ${message}\n`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function clear(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+
+        // 1. 环境检查
+        async function checkEnvironment() {
+            clear('env-output');
+            log('env-output', '开始检查环境配置...');
+            
+            log('env-output', `Supabase URL: ${SUPABASE_URL}`, 'success');
+            log('env-output', `Anon Key: ${SUPABASE_ANON_KEY.substring(0, 20)}...`, 'success');
+            
+            // 检查localStorage
+            const keys = Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('openaero'));
+            log('env-output', `LocalStorage keys: ${keys.length} 个`, keys.length > 0 ? 'success' : 'warning');
+            keys.forEach(k => log('env-output', `  - ${k}`));
+        }
+
+        // 2. Supabase连接测试
+        async function testSupabaseConnection() {
+            clear('connection-output');
+            log('connection-output', '测试Supabase连接...');
+            
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                log('connection-output', 'Supabase连接成功！', 'success');
+                log('connection-output', `会话状态: ${data.session ? '已登录' : '未登录'}`, data.session ? 'success' : 'warning');
+            } catch (error) {
+                log('connection-output', `连接失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. 检查表
+        async function checkTables() {
+            clear('tables-output');
+            log('tables-output', '检查数据库表...');
+            
+            const tables = ['user_profiles', 'creator_profiles'];
+            
+            for (const table of tables) {
+                try {
+                    const { count, error } = await supabase
+                        .from(table)
+                        .select('*', { count: 'exact', head: true });
+                    
+                    if (error) {
+                        log('tables-output', `${table}: ❌ ${error.message}`, 'error');
+                    } else {
+                        log('tables-output', `${table}: ✅ 存在 (${count} 条记录)`, 'success');
+                    }
+                } catch (error) {
+                    log('tables-output', `${table}: ❌ ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // 检查RLS
+        async function checkRLS() {
+            log('tables-output', '\n检查RLS策略...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    log('tables-output', `RLS检查: ${error.message}`, 'warning');
+                } else {
+                    log('tables-output', 'RLS策略正常', 'success');
+                }
+            } catch (error) {
+                log('tables-output', `RLS错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. 测试登录
+        async function testLogin() {
+            clear('login-output');
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            if (!email || !password) {
+                log('login-output', '请输入邮箱和密码', 'error');
+                return;
+            }
+            
+            log('login-output', `尝试登录: ${email}`);
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                log('login-output', '登录成功！', 'success');
+                log('login-output', `用户ID: ${data.user.id}`);
+                log('login-output', `邮箱: ${data.user.email}`);
+                log('login-output', `邮箱确认: ${data.user.email_confirmed_at ? '是' : '否'}`);
+                
+                // 检查profile
+                setTimeout(checkProfile, 1000);
+            } catch (error) {
+                log('login-output', `登录失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试注册
+        async function testRegister() {
+            clear('login-output');
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            if (!email || !password) {
+                log('login-output', '请输入邮箱和密码', 'error');
+                return;
+            }
+            
+            log('login-output', `尝试注册: ${email}`);
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                log('login-output', '注册成功！', 'success');
+                log('login-output', `用户ID: ${data.user?.id}`);
+                log('login-output', '请检查邮箱验证邮件', 'warning');
+            } catch (error) {
+                log('login-output', `注册失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试登出
+        async function testLogout() {
+            log('login-output', '\n尝试登出...');
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                log('login-output', '登出成功', 'success');
+            } catch (error) {
+                log('login-output', `登出失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. 检查会话
+        async function checkSession() {
+            clear('session-output');
+            log('session-output', '检查当前会话...');
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (session) {
+                    log('session-output', '✅ 已登录', 'success');
+                    log('session-output', `用户ID: ${session.user.id}`);
+                    log('session-output', `邮箱: ${session.user.email}`);
+                    log('session-output', `Token过期: ${new Date(session.expires_at * 1000).toLocaleString()}`);
+                } else {
+                    log('session-output', '未登录', 'warning');
+                }
+            } catch (error) {
+                log('session-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 检查Profile
+        async function checkProfile() {
+            log('session-output', '\n检查用户Profile...');
+            
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    log('session-output', '请先登录', 'warning');
+                    return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+                
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        log('session-output', '❌ Profile不存在', 'error');
+                        log('session-output', '可以点击"创建Profile"按钮', 'info');
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    log('session-output', '✅ Profile存在', 'success');
+                    log('session-output', JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                log('session-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 创建Profile
+        async function createProfile() {
+            log('session-output', '\n尝试创建Profile...');
+            
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    log('session-output', '请先登录', 'warning');
+                    return;
+                }
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .insert([{
+                        user_id: user.id,
+                        role: 'USER',
+                        status: 'ACTIVE'
+                    }])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                log('session-output', '✅ Profile创建成功！', 'success');
+                log('session-output', JSON.stringify(data, null, 2));
+            } catch (error) {
+                log('session-output', `创建失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 6. 检查触发器
+        async function checkTriggers() {
+            clear('trigger-output');
+            log('trigger-output', '检查数据库触发器...');
+            log('trigger-output', '注意: 需要管理员权限才能查看触发器', 'warning');
+        }
+
+        // 7. 完整诊断
+        async function runFullDiagnosis() {
+            clear('full-output');
+            log('full-output', '========== 开始完整系统诊断 ==========\n');
+            
+            const output = document.getElementById('full-output');
+            
+            // 1. 环境
+            log('full-output', '【1/6】环境配置检查');
+            log('full-output', `✅ Supabase URL: ${SUPABASE_URL}`, 'success');
+            
+            // 2. 连接
+            log('full-output', '\n【2/6】连接测试');
+            try {
+                await supabase.auth.getSession();
+                log('full-output', '✅ Supabase连接正常', 'success');
+            } catch (e) {
+                log('full-output', `❌ 连接失败: ${e.message}`, 'error');
+            }
+            
+            // 3. 表检查
+            log('full-output', '\n【3/6】数据库表检查');
+            const tables = ['user_profiles', 'creator_profiles'];
+            for (const table of tables) {
+                try {
+                    const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
+                    log('full-output', `✅ ${table}: ${count} 条记录`, 'success');
+                } catch (e) {
+                    log('full-output', `❌ ${table}: ${e.message}`, 'error');
+                }
+            }
+            
+            // 4. 会话检查
+            log('full-output', '\n【4/6】会话状态');
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                log('full-output', `✅ 已登录: ${session.user.email}`, 'success');
+                
+                // 5. Profile检查
+                log('full-output', '\n【5/6】Profile检查');
+                const { data: profile, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .single();
+                
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        log('full-output', '❌ Profile不存在 - 需要创建', 'error');
+                    } else {
+                        log('full-output', `❌ Profile错误: ${error.message}`, 'error');
+                    }
+                } else {
+                    log('full-output', '✅ Profile正常', 'success');
+                    log('full-output', `   角色: ${profile.role}`);
+                    log('full-output', `   状态: ${profile.status}`);
+                }
+            } else {
+                log('full-output', '⚠️ 未登录', 'warning');
+            }
+            
+            // 6. 总结
+            log('full-output', '\n【6/6】诊断总结');
+            log('full-output', '========================================');
+            
+            if (!session) {
+                log('full-output', '问题: 用户未登录', 'error');
+                log('full-output', '建议: 请先登录或注册账号', 'info');
+            } else if (error && error.code === 'PGRST116') {
+                log('full-output', '问题: Profile未创建', 'error');
+                log('full-output', '建议: 点击"创建Profile"按钮或检查触发器', 'info');
+            } else {
+                log('full-output', '✅ 系统状态正常！', 'success');
+            }
+        }
+    </script>
+</body>
+</html>
