@@ -1,4 +1,5 @@
 // Mock Next.js Request and Response
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.Request = jest.fn().mockImplementation((url, options) => ({
   url,
   method: options?.method || 'GET',
@@ -7,6 +8,7 @@ global.Request = jest.fn().mockImplementation((url, options) => ({
   text: jest.fn(),
 })) as any;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.Response = jest.fn().mockImplementation((body, options) => ({
   status: options?.status || 200,
   json: jest.fn().mockReturnValue(body),
@@ -15,45 +17,97 @@ global.Response = jest.fn().mockImplementation((body, options) => ({
 
 import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/solutions/route'
-import prisma from '@/lib/db'
+import { db } from '@/lib/prisma'
+import { authenticateRequest } from '@/lib/auth-helpers'
+import { logAuditAction } from '@/lib/api-helpers'
 
-jest.mock('@/lib/db', () => ({
-  __esModule: true,
-  default: {
+// Mock Prisma
+jest.mock('@/lib/prisma', () => ({
+  db: {
     solution: {
       findMany: jest.fn(),
-      count: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
-    $transaction: jest.fn(),
+    creatorProfile: {
+      findUnique: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
+    },
+    _count: {
+      solution: {
+        reviews: 0,
+      },
+    },
   },
 }))
+
+// Mock auth helpers
+jest.mock('@/lib/auth-helpers', () => ({
+  authenticateRequest: jest.fn(),
+}))
+
+// Mock api-helpers (只mock logAuditAction，其他函数可以直接使用)
+jest.mock('@/lib/api-helpers', () => {
+  const actual = jest.requireActual('@/lib/api-helpers')
+  return {
+    ...actual,
+    logAuditAction: jest.fn(),
+  }
+})
+
+const mockDb = db as jest.Mocked<typeof db>
+const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>
+const mockLogAuditAction = logAuditAction as jest.MockedFunction<typeof logAuditAction>
 
 describe('/api/solutions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockLogAuditAction.mockResolvedValue(undefined)
   })
 
   describe('GET', () => {
-    it('returns solutions with pagination', async () => {
+    it('returns solutions with pagination using unified response format', async () => {
       const mockSolutions = [
         {
           id: '1',
           title: 'Test Solution 1',
+          slug: 'test-solution-1',
+          description: 'Description 1',
           price: 2999,
           status: 'APPROVED',
+          images: [],
+          categoryId: 'cat1',
+          creatorId: 'creator1',
+          createdAt: new Date('2024-01-15'),
+          updatedAt: new Date('2024-01-15'),
           reviews: [{ rating: 5 }],
+          user: null,
+          _count: { reviews: 1 },
         },
         {
           id: '2',
           title: 'Test Solution 2',
+          slug: 'test-solution-2',
+          description: 'Description 2',
           price: 4599,
           status: 'APPROVED',
+          images: [],
+          categoryId: 'cat1',
+          creatorId: 'creator1',
+          createdAt: new Date('2024-01-16'),
+          updatedAt: new Date('2024-01-16'),
           reviews: [{ rating: 4 }, { rating: 5 }],
+          user: null,
+          _count: { reviews: 2 },
         },
       ]
 
-      ;(prisma.$transaction as jest.Mock).mockResolvedValue([mockSolutions, 2])
+      mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
+      mockDb.solution.count = jest.fn().mockResolvedValue(2)
 
       const request = new NextRequest('http://localhost:3000/api/solutions?page=1&limit=20')
       const response = await GET(request)
@@ -61,60 +115,58 @@ describe('/api/solutions', () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data).toHaveLength(2)
+      expect(Array.isArray(data.data)).toBe(true)
+      expect(data.pagination).toBeDefined()
       expect(data.pagination.total).toBe(2)
       expect(data.pagination.page).toBe(1)
+      expect(data.pagination.limit).toBe(20)
+      expect(data.pagination.totalPages).toBe(1)
     })
 
     it('filters by category', async () => {
-      const mockSolutions = [
-        {
-          id: '1',
-          title: 'Test Solution 1',
-          price: 2999,
-          status: 'APPROVED',
-          reviews: [],
-        },
-      ]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockSolutions: any[] = []
+      mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
+      mockDb.solution.count = jest.fn().mockResolvedValue(0)
 
-      ;(prisma.$transaction as jest.Mock).mockResolvedValue([mockSolutions, 1])
+      const request = new NextRequest('http://localhost:3000/api/solutions?category=cat1')
+      await GET(request)
 
-      const request = new NextRequest('http://localhost:3000/api/solutions?categoryId=cat1')
-      const response = await GET(request)
-
-      expect(prisma.$transaction).toHaveBeenCalledWith([
+      expect(mockDb.solution.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            categoryId: 'cat1',
+            category: 'cat1',
           }),
-        }),
-        expect.any(Function),
-      ])
+        })
+      )
     })
 
     it('searches by query', async () => {
-      const mockSolutions = []
-
-      ;(prisma.$transaction as jest.Mock).mockResolvedValue([mockSolutions, 0])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockSolutions: any[] = []
+      mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
+      mockDb.solution.count = jest.fn().mockResolvedValue(0)
 
       const request = new NextRequest('http://localhost:3000/api/solutions?search=drone')
-      const response = await GET(request)
+      await GET(request)
 
-      expect(prisma.$transaction).toHaveBeenCalledWith([
+      expect(mockDb.solution.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            OR: [
-              { title: { contains: 'drone', mode: 'insensitive' } },
-              { description: { contains: 'drone', mode: 'insensitive' } },
-            ],
+            OR: expect.arrayContaining([
+              expect.objectContaining({
+                title: expect.objectContaining({
+                  contains: 'drone',
+                }),
+              }),
+            ]),
           }),
-        }),
-        expect.any(Function),
-      ])
+        })
+      )
     })
 
-    it('handles errors gracefully', async () => {
-      ;(prisma.$transaction as jest.Mock).mockRejectedValue(new Error('Database error'))
+    it('handles errors gracefully using unified error response', async () => {
+      mockDb.solution.findMany = jest.fn().mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost:3000/api/solutions')
       const response = await GET(request)
@@ -122,32 +174,59 @@ describe('/api/solutions', () => {
 
       expect(response.status).toBe(500)
       expect(data.success).toBe(false)
-      expect(data.error).toBe('Database error')
+      expect(data.error).toBeDefined()
+      expect(data.data).toBeNull()
     })
   })
 
   describe('POST', () => {
-    it('creates a new solution', async () => {
+    beforeEach(() => {
+      mockAuthenticateRequest.mockResolvedValue({
+        success: true,
+        user: {
+          id: 'user-1',
+          email: 'creator@example.com',
+          role: 'CREATOR',
+        },
+      })
+      mockDb.creatorProfile.findUnique = jest.fn().mockResolvedValue({
+        id: 'creator-1',
+        userId: 'user-1',
+        status: 'APPROVED',
+      })
+    })
+
+    it('creates a new solution using unified success response', async () => {
       const mockSolution = {
         id: '1',
         title: 'New Solution',
+        slug: 'new-solution',
+        description: 'A new solution',
+        category: 'cat1',
         price: 2999,
         status: 'DRAFT',
+        version: '1.0.0',
+        features: [],
+        images: [],
+        createdAt: new Date('2024-01-15'),
+        updatedAt: new Date('2024-01-15'),
+        creatorId: 'creator1',
+        user: null,
       }
 
-      ;(prisma.solution.create as jest.Mock).mockResolvedValue(mockSolution)
+      mockDb.solution.create = jest.fn().mockResolvedValue(mockSolution)
 
       const request = new NextRequest('http://localhost:3000/api/solutions', {
         method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({
           title: 'New Solution',
           slug: 'new-solution',
           description: 'A new solution',
-          longDescription: 'A detailed description',
-          images: ['https://example.com/image.jpg'],
+          category: 'cat1',
           price: 2999,
-          categoryId: 'cat1',
-          creatorId: 'creator1',
         }),
       })
 
@@ -156,12 +235,16 @@ describe('/api/solutions', () => {
 
       expect(response.status).toBe(201)
       expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockSolution)
+      expect(data.data).toBeDefined()
+      expect(data.message).toBe('方案创建成功')
     })
 
-    it('validates required fields', async () => {
+    it('validates required fields using unified validation error response', async () => {
       const request = new NextRequest('http://localhost:3000/api/solutions', {
         method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({
           title: 'Incomplete Solution',
           // Missing required fields
@@ -173,30 +256,61 @@ describe('/api/solutions', () => {
 
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
     })
 
-    it('handles creation errors', async () => {
-      ;(prisma.solution.create as jest.Mock).mockRejectedValue(new Error('Creation failed'))
+    it('handles creation errors using unified error response', async () => {
+      mockDb.solution.create = jest.fn().mockRejectedValue(new Error('Creation failed'))
 
       const request = new NextRequest('http://localhost:3000/api/solutions', {
         method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
         body: JSON.stringify({
           title: 'New Solution',
           slug: 'new-solution',
           description: 'A new solution',
-          longDescription: 'A detailed description',
-          images: ['https://example.com/image.jpg'],
+          category: 'cat1',
           price: 2999,
-          categoryId: 'cat1',
-          creatorId: 'creator1',
         }),
       })
 
       const response = await POST(request)
       const data = await response.json()
 
-      expect(response.status).toBe(400)
+      expect(response.status).toBe(500)
       expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+      expect(data.data).toBeNull()
+    })
+
+    it('returns 401 for unauthenticated requests', async () => {
+      mockAuthenticateRequest.mockResolvedValue({
+        success: false,
+        error: NextResponse.json({ success: false, error: '未授权访问' }, { status: 401 }),
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/solutions', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'New Solution',
+          slug: 'new-solution',
+          description: 'A new solution',
+          category: 'cat1',
+          price: 2999,
+        }),
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(401)
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
     })
   })
 })

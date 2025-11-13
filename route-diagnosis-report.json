@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-13T08:16:44.297Z",
+  "timestamp": "2025-11-13T08:35:06.473Z",
   "summary": {
-    "totalRoutes": 178,
+    "totalRoutes": 175,
     "routeGroups": 2,
     "dynamicRoutes": 0,
-    "staticRoutes": 176,
+    "staticRoutes": 173,
     "totalIssues": 0,
     "issuesByType": {}
   },
@@ -952,20 +952,8 @@
       "isRouteGroup": false
     },
     {
-      "path": "src/app/forgot-password",
-      "urlPath": "/forgot-password",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
       "path": "src/app/i18n-demo",
       "urlPath": "/i18n-demo",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/login",
-      "urlPath": "/login",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1014,12 +1002,6 @@
     {
       "path": "src/app/orders/[id] 2",
       "urlPath": "/orders/[id] 2",
-      "isDynamic": false,
-      "isRouteGroup": false
-    },
-    {
-      "path": "src/app/register",
-      "urlPath": "/register",
       "isDynamic": false,
       "isRouteGroup": false
     },
