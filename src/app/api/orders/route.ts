@@ -58,12 +58,9 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(
       result.orders,
-      {
-        page,
-        limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
-      },
+      page,
+      limit,
+      result.total,
       '获取订单列表成功'
     );
   } catch (error) {

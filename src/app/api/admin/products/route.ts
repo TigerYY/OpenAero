@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
+import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 // 创建商品的验证模式
 const createProductSchema = z.object({
@@ -42,10 +43,14 @@ const createProductSchema = z.object({
 // 获取商品列表
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return createErrorResponse(authResult.error, authResult.status);
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+      return createErrorResponse('权限不足', 403);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -96,7 +101,7 @@ export async function GET(request: NextRequest) {
 
     // 获取商品列表
     const [products, total] = await Promise.all([
-      db.product.findMany({
+      prisma.product.findMany({
         where,
         include: {
           category: {
@@ -132,7 +137,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      db.product.count({ where }),
+      prisma.product.count({ where }),
     ]);
 
     // 格式化返回数据
@@ -145,73 +150,69 @@ export async function GET(request: NextRequest) {
       rating: product.rating ? Number(product.rating) : null,
     }));
 
-    return NextResponse.json({
-      products: formattedProducts,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return createPaginatedResponse(formattedProducts, page, limit, total, '获取商品列表成功');
   } catch (error) {
     console.error('获取商品列表失败:', error);
-    return NextResponse.json({ error: '获取商品列表失败' }, { status: 500 });
+    return createErrorResponse('获取商品列表失败', 500);
   }
 }
 
 // 创建商品
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return createErrorResponse(authResult.error, authResult.status);
+    }
+    const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+      return createErrorResponse('权限不足', 403);
     }
 
     const body = await request.json();
     const validatedData = createProductSchema.parse(body);
 
     // 检查SKU是否已存在
-    const existingSku = await db.product.findUnique({
+    const existingSku = await prisma.product.findUnique({
       where: { sku: validatedData.sku },
     });
 
     if (existingSku) {
-      return NextResponse.json({ error: '商品编码已存在' }, { status: 400 });
+      return createErrorResponse('商品编码已存在', 400);
     }
 
     // 检查slug是否已存在
-    const existingSlug = await db.product.findUnique({
+    const existingSlug = await prisma.product.findUnique({
       where: { slug: validatedData.slug },
     });
 
     if (existingSlug) {
-      return NextResponse.json({ error: 'URL标识符已存在' }, { status: 400 });
+      return createErrorResponse('URL标识符已存在', 400);
     }
 
     // 检查分类是否存在
-    const category = await db.productCategory.findUnique({
+    const category = await prisma.productCategory.findUnique({
       where: { id: validatedData.categoryId },
     });
 
     if (!category) {
-      return NextResponse.json({ error: '分类不存在' }, { status: 400 });
+      return createErrorResponse('分类不存在', 400);
     }
 
     // 如果关联了方案，检查方案是否存在
     if (validatedData.solutionId) {
-      const solution = await db.solution.findUnique({
+      const solution = await prisma.solution.findUnique({
         where: { id: validatedData.solutionId },
       });
 
       if (!solution) {
-        return NextResponse.json({ error: '关联的方案不存在' }, { status: 400 });
+        return createErrorResponse('关联的方案不存在', 400);
       }
     }
 
     // 创建商品
-    const product = await db.product.create({
+    const product = await prisma.product.create({
       data: validatedData,
       include: {
         category: {
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 创建对应的库存记录
-    await db.productInventory.create({
+    await prisma.productInventory.create({
       data: {
         productId: product.id,
         quantity: 0,
@@ -250,13 +251,13 @@ export async function POST(request: NextRequest) {
       rating: product.rating ? Number(product.rating) : null,
     };
 
-    return NextResponse.json(formattedProduct, { status: 201 });
+    return createSuccessResponse(formattedProduct, '创建商品成功', 201);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('创建商品失败:', error);
-    return NextResponse.json({ error: '创建商品失败' }, { status: 500 });
+    return createErrorResponse('创建商品失败', 500);
   }
 }

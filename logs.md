@@ -1,54 +1,726 @@
-react-dom.development.js:32366 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main-app.js?v=1763095395684:94 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: false, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+page.tsx:84 [AdminUsersPage] useEffect 触发，开始加载用户列表
+page.tsx:135 [AdminUsersPage] 开始加载用户列表...
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: false, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+page.tsx:84 [AdminUsersPage] useEffect 触发，开始加载用户列表
+page.tsx:135 [AdminUsersPage] 开始加载用户列表...
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: false, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+icon-144x144.png:1  GET http://localhost:3000/icons/icon-144x144.png 404 (Not Found)
+users:1 Error while trying to use the following icon from the Manifest: http://localhost:3000/icons/icon-144x144.png (Download error or resource isn't a valid image)
+page.tsx:137  GET http://localhost:3000/api/admin/users 500 (Internal Server Error)
+loadUsers @ page.tsx:137
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+commitHookPassiveMountEffects @ react-dom.development.js:19742
+commitPassiveMountOnFiber @ react-dom.development.js:19826
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19832
+commitPassiveMountEffects @ react-dom.development.js:19799
+flushPassiveEffectsImpl @ react-dom.development.js:22446
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+page.tsx:141 [AdminUsersPage] API 响应状态: 500 Internal Server Error
+page.tsx:145 [AdminUsersPage] API 错误响应: {error: '未知错误'}
+window.console.error @ app-index.js:35
+console.error @ hydration-error-info.js:41
+loadUsers @ page.tsx:145
+await in loadUsers
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+commitHookPassiveMountEffects @ react-dom.development.js:19742
+commitPassiveMountOnFiber @ react-dom.development.js:19826
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19832
+commitPassiveMountEffects @ react-dom.development.js:19799
+flushPassiveEffectsImpl @ react-dom.development.js:22446
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+page.tsx:171 [AdminUsersPage] 获取用户列表错误: Error: 未知错误
+    at loadUsers (page.tsx:146:15)
+window.console.error @ app-index.js:35
+console.error @ hydration-error-info.js:41
+loadUsers @ page.tsx:171
+await in loadUsers
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+commitHookPassiveMountEffects @ react-dom.development.js:19742
+commitPassiveMountOnFiber @ react-dom.development.js:19826
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19824
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19918
+recursivelyTraversePassiveMountEffects @ react-dom.development.js:19808
+commitPassiveMountOnFiber @ react-dom.development.js:19832
+commitPassiveMountEffects @ react-dom.development.js:19799
+flushPassiveEffectsImpl @ react-dom.development.js:22446
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+AuthContext.tsx:318 [hasRole] 用户资料不存在，返回 false
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: true, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: false, …}
+ProtectedRoute.tsx:46 [ProtectedRoute] 仍在加载中，等待...
+page.tsx:137  GET http://localhost:3000/api/admin/users 500 (Internal Server Error)
+loadUsers @ page.tsx:137
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+invokePassiveEffectMountInDEV @ react-dom.development.js:20423
+invokeEffectsInDev @ react-dom.development.js:22728
+legacyCommitDoubleInvokeEffectsInDEV @ react-dom.development.js:22715
+commitDoubleInvokeEffectsInDEV @ react-dom.development.js:22700
+flushPassiveEffectsImpl @ react-dom.development.js:22459
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+flushWork @ scheduler.development.js:178
+performWorkUntilDeadline @ scheduler.development.js:416
+page.tsx:141 [AdminUsersPage] API 响应状态: 500 Internal Server Error
+page.tsx:145 [AdminUsersPage] API 错误响应: {error: '未知错误'}
+window.console.error @ app-index.js:35
+console.error @ hydration-error-info.js:41
+loadUsers @ page.tsx:145
+await in loadUsers
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+invokePassiveEffectMountInDEV @ react-dom.development.js:20423
+invokeEffectsInDev @ react-dom.development.js:22728
+legacyCommitDoubleInvokeEffectsInDEV @ react-dom.development.js:22715
+commitDoubleInvokeEffectsInDEV @ react-dom.development.js:22700
+flushPassiveEffectsImpl @ react-dom.development.js:22459
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+flushWork @ scheduler.development.js:178
+performWorkUntilDeadline @ scheduler.development.js:416
+page.tsx:171 [AdminUsersPage] 获取用户列表错误: Error: 未知错误
+    at loadUsers (page.tsx:146:15)
+window.console.error @ app-index.js:35
+console.error @ hydration-error-info.js:41
+loadUsers @ page.tsx:171
+await in loadUsers
+eval @ page.tsx:85
+commitHookEffectListMount @ react-dom.development.js:18071
+invokePassiveEffectMountInDEV @ react-dom.development.js:20423
+invokeEffectsInDev @ react-dom.development.js:22728
+legacyCommitDoubleInvokeEffectsInDEV @ react-dom.development.js:22715
+commitDoubleInvokeEffectsInDEV @ react-dom.development.js:22700
+flushPassiveEffectsImpl @ react-dom.development.js:22459
+flushPassiveEffects @ react-dom.development.js:22398
+eval @ react-dom.development.js:22188
+workLoop @ scheduler.development.js:200
+flushWork @ scheduler.development.js:178
+performWorkUntilDeadline @ scheduler.development.js:416
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: false, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: true, …}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+ProtectedRoute.tsx:64 [ProtectedRoute] 权限验证通过，允许访问
 warn-once.js:16 Image with src "/images/openaero-logo-trimmed.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
 warnOnce @ warn-once.js:16
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-hot-reloader-client.js:181 [Fast Refresh] rebuilding
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-:3000/icons/icon-144x144.png:1  Failed to load resource: the server responded with a status of 404 (Not Found)
-:3000/zh-CN:1 Error while trying to use the following icon from the Manifest: http://localhost:3000/icons/icon-144x144.png (Download error or resource isn't a valid image)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-:3000/api/solutions?limit=3&status=published:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-:3000/api/solutions?limit=3&status=published:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-:3000/icons/icon-144x144.png:1  Failed to load resource: the server responded with a status of 404 (Not Found)
-profile:1 Error while trying to use the following icon from the Manifest: http://localhost:3000/icons/icon-144x144.png (Download error or resource isn't a valid image)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-:3000/api/users/me:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
-cardynuoazvaytvinxvm.supabase.co/rest/v1/user_profiles?select=*&user_id=eq.dffd7c4e-a40d-4b85-bb13-e30d732e509c:1  Failed to load resource: the server responded with a status of 500 ()
-app-index.js:35 获取用户资料失败: Object
-window.console.error @ app-index.js:35
-app-index.js:35 获取用户资料错误: 42P17 infinite recursion detected in policy for relation "user_profiles"
-window.console.error @ app-index.js:35
+eval @ image-component.js:106
+Promise.then
+handleLoading @ image-component.js:35
+onLoad @ image-component.js:194
+callCallback @ react-dom.development.js:17629
+invokeGuardedCallbackImpl @ react-dom.development.js:17667
+invokeGuardedCallback @ react-dom.development.js:17729
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:17741
+executeDispatch @ react-dom.development.js:27186
+processDispatchQueueItemsInOrder @ react-dom.development.js:27206
+processDispatchQueue @ react-dom.development.js:27215
+dispatchEventsForPlugins @ react-dom.development.js:27223
+eval @ react-dom.development.js:27378
+batchedUpdates$1 @ react-dom.development.js:21180
+batchedUpdates @ react-dom.development.js:24349
+dispatchEventForPluginEventSystem @ react-dom.development.js:27377
+dispatchEvent @ react-dom.development.js:25416
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: false, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: true, …}hasRequiredRole: trueisAuthenticated: trueloading: falseprofileRole: "SUPER_ADMIN"requireAuth: truerequiredRoles: (2) ['ADMIN', 'SUPER_ADMIN']userId: "dffd7c4e-a40d-4b85-bb13-e30d732e509c"[[Prototype]]: Object
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+ProtectedRoute.tsx:64 [ProtectedRoute] 权限验证通过，允许访问
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}
+ProtectedRoute.tsx:35 [ProtectedRoute] 状态检查: {loading: false, isAuthenticated: true, requireAuth: true, requiredRoles: Array(2), hasRequiredRole: true, …}hasRequiredRole: trueisAuthenticated: trueloading: falseprofileRole: "SUPER_ADMIN"requireAuth: truerequiredRoles: (2) ['ADMIN', 'SUPER_ADMIN']userId: "dffd7c4e-a40d-4b85-bb13-e30d732e509c"[[Prototype]]: Object
+AuthContext.tsx:323 [hasRole] 检查角色: {requiredRoles: Array(2), userRole: 'SUPER_ADMIN', result: true}requiredRoles: (2) ['ADMIN', 'SUPER_ADMIN']result: trueuserRole: "SUPER_ADMIN"[[Prototype]]: Object
+ProtectedRoute.tsx:64 [ProtectedRoute] 权限验证通过，允许访问

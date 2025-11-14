@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // 筛选参数验证模式
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     // 查询方案
     const [solutions, totalCount] = await Promise.all([
-      db.solution.findMany({
+      prisma.solution.findMany({
         where,
         include: {
           creator: {
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: validatedParams.limit
       }),
-      db.solution.count({ where })
+      prisma.solution.count({ where })
     ]);
 
     // 格式化返回数据

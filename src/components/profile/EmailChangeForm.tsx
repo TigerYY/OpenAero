@@ -56,6 +56,7 @@ export default function EmailChangeForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 确保发送 cookies
         body: JSON.stringify({
           newEmail: formData.newEmail,
           password: formData.password,

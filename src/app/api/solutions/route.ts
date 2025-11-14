@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 import { logAuditAction, createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
 
@@ -36,19 +36,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取总数 - 使用正确的枚举值
-    const total = await db.solution.count({ 
+    const total = await prisma.solution.count({ 
       where: {
         ...where
       }
     });
 
     // 获取方案列表
-    const solutions = await db.solution.findMany({
+    const solutions = await prisma.solution.findMany({
       where,
       include: {
         _count: {
           select: {
-            reviews: true
+            solutionReviews: true  // 使用 solutionReviews 而不是 reviews
           }
         }
       },
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
             updatedAt: solution.updatedAt,
             creatorId: null, // TODO: 添加 creatorId 字段到 Solution 模型
             creatorName: 'Unknown', // TODO: 通过 creatorId 关联获取创作者信息
-            reviewCount: solution._count.reviews,
+            reviewCount: solution._count.solutionReviews || 0, // 使用 solutionReviews 计数
             downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
             specs: parseJsonSafely(solution.specs, {}),
             bom: parseJsonSafely(solution.bom, [])
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
         updatedAt: solution.updatedAt.toISOString(),
         averageRating: 0, // TODO: 计算平均评分
         creatorName: 'Unknown', // TODO: 通过关联获取
-        reviewCount: solution._count.reviews,
+        reviewCount: solution._count.solutionReviews || 0, // 使用 solutionReviews 计数
         downloadCount: 0,
         specs: parseJsonSafely(solution.specs, {}),
         bom: parseJsonSafely(solution.bom, [])
@@ -160,8 +160,8 @@ export async function POST(request: NextRequest) {
     const validatedData = createSolutionSchema.parse(body);
     
     // 获取创作者档案
-    const creatorProfile = await db.creatorProfile.findUnique({
-      where: { userId: authResult.user.id }
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { user_id: authResult.user.id }
     });
 
     if (!creatorProfile) {
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建方案
-    const solution = await db.solution.create({
+    const solution = await prisma.solution.create({
       data: {
         title: validatedData.title,
         description: validatedData.description,

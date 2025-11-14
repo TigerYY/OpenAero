@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { db as prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 

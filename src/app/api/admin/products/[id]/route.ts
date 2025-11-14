@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // 更新商品的验证模式
 const updateProductSchema = z.object({
@@ -51,7 +51,7 @@ export async function GET(
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const product = await db.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id: params.id },
       include: {
         category: {
@@ -154,7 +154,7 @@ export async function PUT(
     const validatedData = updateProductSchema.parse(body);
 
     // 检查商品是否存在
-    const existingProduct = await db.product.findUnique({
+    const existingProduct = await prisma.product.findUnique({
       where: { id: params.id },
     });
 
@@ -164,7 +164,7 @@ export async function PUT(
 
     // 如果更新SKU，检查是否与其他商品冲突
     if (validatedData.sku && validatedData.sku !== existingProduct.sku) {
-      const existingSku = await db.product.findUnique({
+      const existingSku = await prisma.product.findUnique({
         where: { sku: validatedData.sku },
       });
 
@@ -175,7 +175,7 @@ export async function PUT(
 
     // 如果更新slug，检查是否与其他商品冲突
     if (validatedData.slug && validatedData.slug !== existingProduct.slug) {
-      const existingSlug = await db.product.findUnique({
+      const existingSlug = await prisma.product.findUnique({
         where: { slug: validatedData.slug },
       });
 
@@ -186,7 +186,7 @@ export async function PUT(
 
     // 如果更新分类，检查分类是否存在
     if (validatedData.categoryId) {
-      const category = await db.productCategory.findUnique({
+      const category = await prisma.productCategory.findUnique({
         where: { id: validatedData.categoryId },
       });
 
@@ -197,7 +197,7 @@ export async function PUT(
 
     // 如果更新关联方案，检查方案是否存在
     if (validatedData.solutionId) {
-      const solution = await db.solution.findUnique({
+      const solution = await prisma.solution.findUnique({
         where: { id: validatedData.solutionId },
       });
 
@@ -207,7 +207,7 @@ export async function PUT(
     }
 
     // 更新商品
-    const updatedProduct = await db.product.update({
+    const updatedProduct = await prisma.product.update({
       where: { id: params.id },
       data: {
         ...validatedData,
@@ -272,7 +272,7 @@ export async function DELETE(
     }
 
     // 检查商品是否存在
-    const existingProduct = await db.product.findUnique({
+    const existingProduct = await prisma.product.findUnique({
       where: { id: params.id },
       include: {
         _count: {
@@ -296,7 +296,7 @@ export async function DELETE(
     }
 
     // 使用事务删除商品及其相关数据
-    await db.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 删除购物车项目
       await tx.cartItem.deleteMany({
         where: { productId: params.id },

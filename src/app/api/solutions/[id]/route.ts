@@ -3,10 +3,10 @@ import { z } from 'zod';
 
 import { solutionService } from '@/backend/solution/solution.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { updateSolutionSchema } from '@/lib/validations';
 import { ApiResponse } from '@/types';
-import { logAuditAction } from '@/lib/api-helpers';
+import { logAuditAction, createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 
 interface RouteParams {
   params: {
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
 
-    const solution = await db.solution.findUnique({
+    const solution = await prisma.solution.findUnique({
       where: { id },
       include: {
         creator: {
@@ -55,48 +55,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!solution) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '方案不存在',
-        data: null
-      };
-      return NextResponse.json(response, { status: 404 });
+      return createErrorResponse('方案不存在', 404);
     }
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
-        id: solution.id,
-        title: solution.title,
-        description: solution.description,
-        category: solution.category,
-        status: solution.status,
-        price: Number(solution.price),
-        version: solution.version,
-        tags: solution.features || [],
-        images: solution.images || [],
-        createdAt: solution.createdAt,
-        updatedAt: solution.updatedAt,
-        creatorId: solution.creatorId,
-        creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
-        reviewCount: (solution as any)._count?.solutionReviews || 0,
-        downloadCount: (solution as any)._count?.orders || 0,
-        specs: solution.specs || {},
-        bom: solution.bom || [],
-        files: solution.files || [],
-        reviews: (solution as any).solutionReviews || []
-      }
-    };
-
-    return NextResponse.json(response);
+    return createSuccessResponse({
+      id: solution.id,
+      title: solution.title,
+      description: solution.description,
+      category: solution.category,
+      status: solution.status,
+      price: Number(solution.price),
+      version: solution.version,
+      tags: solution.features || [],
+      images: solution.images || [],
+      createdAt: solution.createdAt,
+      updatedAt: solution.updatedAt,
+      creatorId: solution.creatorId,
+      creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
+      reviewCount: (solution as any)._count?.solutionReviews || 0,
+      downloadCount: (solution as any)._count?.orders || 0,
+      specs: solution.specs || {},
+      bom: solution.bom || [],
+      files: solution.files || [],
+      reviews: (solution as any).solutionReviews || []
+    }, '获取方案详情成功');
   } catch (error) {
     console.error('获取方案详情失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: '获取方案详情失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: 500 });
+    return createErrorResponse('获取方案详情失败', 500);
   }
 }
 
@@ -106,19 +91,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // 验证用户身份
     const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '未授权访问',
-        data: null
-      };
-      return NextResponse.json(response, { status: 401 });
+      return createErrorResponse('未授权访问', 401);
     }
 
     const { id } = params;
     const body = await request.json();
     
     // 获取旧值用于审计日志
-    const oldSolution = await db.solution.findUnique({ where: { id } });
+    const oldSolution = await prisma.solution.findUnique({ where: { id } });
     
     // 验证输入数据
     const validatedData = updateSolutionSchema.parse(body);
@@ -145,36 +125,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
-        id: solution.id,
-        title: solution.title,
-        description: solution.description,
-        category: solution.category,
-        status: solution.status,
-        price: solution.price,
-        version: solution.version,
-        tags: solution.features || [],
-        images: solution.images || [],
-        createdAt: solution.createdAt,
-        updatedAt: solution.updatedAt,
-        creatorId: solution.creatorId,
-        creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
-        specs: solution.specs || {},
-        bom: solution.bom || []
-      }
-    };
-
-    return NextResponse.json(response);
+    return createSuccessResponse({
+      id: solution.id,
+      title: solution.title,
+      description: solution.description,
+      category: solution.category,
+      status: solution.status,
+      price: solution.price,
+      version: solution.version,
+      tags: solution.features || [],
+      images: solution.images || [],
+      createdAt: solution.createdAt,
+      updatedAt: solution.updatedAt,
+      creatorId: solution.creatorId,
+      creatorName: solution.creator?.user ? `${solution.creator.user.firstName ?? ''} ${solution.creator.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown',
+      specs: solution.specs || {},
+      bom: solution.bom || []
+    }, '更新方案成功');
   } catch (error: any) {
     console.error('更新方案失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: error.message || '更新方案失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: error.statusCode || 500 });
+    return createErrorResponse(error.message || '更新方案失败', error.statusCode || 500);
   }
 }
 
@@ -184,25 +154,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // 验证用户身份
     const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '未授权访问',
-        data: null
-      };
-      return NextResponse.json(response, { status: 401 });
+      return createErrorResponse('未授权访问', 401);
     }
 
     const { id } = params;
 
     // 获取旧值用于审计日志
-    const oldSolution = await db.solution.findUnique({ where: { id } });
+    const oldSolution = await prisma.solution.findUnique({ where: { id } });
     if (!oldSolution) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '方案不存在',
-        data: null
-      };
-      return NextResponse.json(response, { status: 404 });
+      return createErrorResponse('方案不存在', 404);
     }
 
     await solutionService.deleteSolution(id, authResult.user.id);
@@ -221,19 +181,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    const response: ApiResponse<null> = {
-      success: true,
-      data: null
-    };
-
-    return NextResponse.json(response);
+    return createSuccessResponse(null, '删除方案成功');
   } catch (error: any) {
     console.error('删除方案失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: error.message || '删除方案失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: error.statusCode || 500 });
+    return createErrorResponse(error.message || '删除方案失败', error.statusCode || 500);
   }
 }

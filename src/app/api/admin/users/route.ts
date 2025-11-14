@@ -9,6 +9,7 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,8 +32,15 @@ export async function GET(request: NextRequest) {
     // 验证管理员权限
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
-      return authResult.error;
+      console.error('[GET /api/admin/users] 权限验证失败:', authResult);
+      // 确保返回响应对象
+      if (authResult.response) {
+        return authResult.response;
+      }
+      return createErrorResponse('权限验证失败', 401);
     }
+    
+    console.log('[GET /api/admin/users] 权限验证成功，用户ID:', authResult.user.id, '角色:', authResult.user.role);
 
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
@@ -77,6 +85,10 @@ export async function GET(request: NextRequest) {
     // 计算分页
     const skip = (page - 1) * limit;
 
+    // 检查数据库中的总用户数（不应用任何筛选条件）
+    const totalUsersInDb = await prisma.userProfile.count();
+    console.log('[GET /api/admin/users] 数据库中的总用户数（无筛选）:', totalUsersInDb);
+    
     // 并行获取用户列表和总数
     const [users, total] = await Promise.all([
       prisma.userProfile.findMany({
@@ -102,23 +114,91 @@ export async function GET(request: NextRequest) {
       }),
       prisma.userProfile.count({ where }),
     ]);
+    
+    console.log('[GET /api/admin/users] 查询结果:', {
+      usersCount: users.length,
+      total,
+      totalUsersInDb,
+      page,
+      limit,
+      where,
+      whereString: JSON.stringify(where, null, 2),
+    });
+    
+    if (users.length > 0) {
+      console.log('[GET /api/admin/users] 第一个用户示例:', {
+        user_id: users[0].user_id,
+        role: users[0].role,
+        status: users[0].status,
+        display_name: users[0].display_name,
+      });
+    } else {
+      console.warn('[GET /api/admin/users] 查询返回空结果，可能原因：');
+      console.warn('  1. 数据库中没有用户数据');
+      console.warn('  2. 筛选条件太严格:', where);
+      console.warn('  3. 分页参数问题: page=', page, 'limit=', limit, 'skip=', skip);
+    }
 
-    // 格式化响应数据
-    const formattedUsers = users.map((user) => ({
-      id: user.user_id,
-      email: '', // 需要从 Supabase Auth 获取
-      firstName: user.first_name,
-      lastName: user.last_name,
-      displayName: user.display_name,
-      avatar: user.avatar,
-      role: user.role,
-      status: user.status,
-      isBlocked: user.is_blocked,
-      blockedReason: user.blocked_reason,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
-      lastLoginAt: user.last_login_at,
-    }));
+    // 从 Supabase Auth 获取用户邮箱信息
+    const supabaseAdmin = createSupabaseAdmin();
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error('[GET /api/admin/users] 获取 Supabase Auth 用户失败:', authError);
+    } else {
+      console.log('[GET /api/admin/users] Supabase Auth 用户数量:', authUsers?.users?.length || 0);
+    }
+    
+    // 创建 user_id -> email 映射
+    const emailMap = new Map<string, string>();
+    authUsers?.users.forEach(authUser => {
+      emailMap.set(authUser.id, authUser.email || '');
+    });
+    
+    console.log('[GET /api/admin/users] Email 映射数量:', emailMap.size);
+
+    // 格式化响应数据（使用字段名转换工具）
+    const formattedUsers = users.map((user) => {
+      const email = emailMap.get(user.user_id) || '';
+      const authUser = authUsers?.users.find(u => u.id === user.user_id);
+      
+      // 使用字段名转换工具将 snake_case 转换为 camelCase
+      const baseUser = convertSnakeToCamel({
+        id: user.user_id,
+        user_id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        display_name: user.display_name,
+        avatar: user.avatar,
+        role: user.role,
+        status: user.status,
+        is_blocked: user.is_blocked,
+        blocked_reason: user.blocked_reason,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        last_login_at: user.last_login_at,
+      });
+      
+      const formatted = {
+        ...baseUser,
+        id: user.user_id, // 保持 id 为 user_id
+        email,
+        emailVerified: !!authUser?.email_confirmed_at,
+        solutionCount: 0, // TODO: 从数据库查询
+        reviewCount: 0, // TODO: 从数据库查询
+        createdAt: user.created_at.toISOString(),
+        updatedAt: user.updated_at.toISOString(),
+        lastLoginAt: user.last_login_at?.toISOString(),
+      };
+      
+      if (!email) {
+        console.warn('[GET /api/admin/users] 用户', user.user_id, '没有找到对应的邮箱');
+      }
+      
+      return formatted;
+    });
+    
+    console.log('[GET /api/admin/users] 格式化后的用户数量:', formattedUsers.length);
 
     // 记录审计日志
     await logAuditAction(request, {
@@ -135,12 +215,9 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(
       formattedUsers,
-      {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      page,
+      limit,
+      total,
       '获取用户列表成功'
     );
   } catch (error) {

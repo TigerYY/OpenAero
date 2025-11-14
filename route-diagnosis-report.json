@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-13T16:05:11.085Z",
+  "timestamp": "2025-11-13T17:02:27.995Z",
   "summary": {
     "totalRoutes": 210,
     "routeGroups": 2,
@@ -1276,7 +1276,7 @@
   "issues": [
     {
       "file": "app/[locale]/(dashboard)/settings/page.tsx",
-      "line": 638,
+      "line": 641,
       "type": "hardcoded-push",
       "code": "router.push('/');",
       "suggestion": "使用: router.push(route('/')) 或 router.push(route(routes.XXX))"

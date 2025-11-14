@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { z } from 'zod';
 
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 import { checkUserAuth } from '@/lib/api-auth-helpers';
+import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 // 库存更新的验证模式
 const updateInventorySchema = z.object({
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     if (lowStock) {
       where.available = {
-        lte: db.productInventory.fields.minStock,
+        lte: prisma.productInventory.fields.minStock,
       };
     }
 
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     // 获取库存列表
     const [inventories, total] = await Promise.all([
-      db.productInventory.findMany({
+      prisma.productInventory.findMany({
         where,
         include: {
           product: {
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      db.productInventory.count({ where }),
+      prisma.productInventory.count({ where }),
     ]);
 
     // 格式化返回数据
@@ -125,18 +126,10 @@ export async function GET(request: NextRequest) {
       stockValue: inventory.available * (inventory.avgCost ? Number(inventory.avgCost) : 0),
     }));
 
-    return NextResponse.json({
-      inventories: formattedInventories,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return createPaginatedResponse(formattedInventories, page, limit, total, '获取库存列表成功');
   } catch (error) {
     console.error('获取库存列表失败:', error);
-    return NextResponse.json({ error: '获取库存列表失败' }, { status: 500 });
+    return createErrorResponse('获取库存列表失败', 500);
   }
 }
 
@@ -145,19 +138,19 @@ export async function POST(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+      return createErrorResponse('权限不足', 403);
     }
 
     const body = await request.json();
     const validatedData = updateInventorySchema.parse(body);
 
     // 检查商品是否存在
-    const product = await db.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id: validatedData.productId },
       include: {
         inventory: true,
@@ -165,11 +158,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!product) {
-      return NextResponse.json({ error: '商品不存在' }, { status: 404 });
+      return createErrorResponse('商品不存在', 404);
     }
 
     if (!product.inventory) {
-      return NextResponse.json({ error: '商品库存记录不存在' }, { status: 404 });
+      return createErrorResponse('商品库存记录不存在', 404);
     }
 
     // 计算新的库存数量
@@ -179,7 +172,7 @@ export async function POST(request: NextRequest) {
     } else if (validatedData.operation === 'SUBTRACT') {
       newQuantity = product.inventory.quantity - validatedData.quantity;
       if (newQuantity < 0) {
-        return NextResponse.json({ error: '库存不足，无法减少指定数量' }, { status: 400 });
+        return createErrorResponse('库存不足，无法减少指定数量', 400);
       }
     }
 
@@ -197,7 +190,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 更新库存
-    const updatedInventory = await db.productInventory.update({
+    const updatedInventory = await prisma.productInventory.update({
       where: { productId: validatedData.productId },
       data: {
         quantity: newQuantity,
@@ -238,14 +231,14 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(formattedInventory);
+    return createSuccessResponse(formattedInventory, '更新库存成功');
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('更新库存失败:', error);
-    return NextResponse.json({ error: '更新库存失败' }, { status: 500 });
+    return createErrorResponse('更新库存失败', 500);
   }
 }
 
@@ -254,12 +247,12 @@ export async function PUT(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     
     if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+      return createErrorResponse('权限不足', 403);
     }
 
     const body = await request.json();
@@ -269,7 +262,7 @@ export async function PUT(request: NextRequest) {
     const errors: any[] = [];
 
     // 使用事务处理批量更新
-    await db.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       for (const update of validatedData.updates) {
         try {
           // 检查商品是否存在
@@ -351,18 +344,18 @@ export async function PUT(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({
+    return createSuccessResponse({
       success: results.length,
       failed: errors.length,
       results,
       errors,
-    });
+    }, '批量更新库存完成');
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('批量更新库存失败:', error);
-    return NextResponse.json({ error: '批量更新库存失败' }, { status: 500 });
+    return createErrorResponse('批量更新库存失败', 500);
   }
 }

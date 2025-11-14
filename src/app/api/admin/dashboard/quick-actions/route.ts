@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // 快速操作验证模式
@@ -22,7 +22,11 @@ const quickActionSchema = z.object({
 // POST /api/admin/dashboard/quick-actions - 执行管理员快速操作
 export async function POST(request: NextRequest) {
   try {
-    // 移除了用户认证，因为用户系统已被清除
+    // 验证管理员权限
+    const authResult = await requireAdminAuth(request);
+    if (!authResult.success) {
+      return authResult.response;
+    }
 
     const body = await request.json();
     const validatedData = quickActionSchema.parse(body);
@@ -101,12 +105,11 @@ export async function POST(request: NextRequest) {
 
 // 批准所有待审核方案
 async function approveAllPendingSolutions(adminId: string) {
-  const pendingSolutions = await db.solution.findMany({
+  const pendingSolutions = await prisma.solution.findMany({
     where: { status: 'PENDING_REVIEW' },
-    include: {
-      creator: {
-        include: { user: true }
-      }
+    select: {
+      id: true,
+      title: true,
     }
   });
 
@@ -115,24 +118,24 @@ async function approveAllPendingSolutions(adminId: string) {
 
   for (const solution of pendingSolutions) {
     try {
-      const updated = await db.solution.update({
+      await prisma.solution.update({
         where: { id: solution.id },
         data: {
           status: 'APPROVED',
-          reviewedAt: new Date(),
-          reviewNotes: '批量批准操作'
+          reviewedAt: new Date(), // Solution 使用 camelCase
+          reviewNotes: '批量批准操作' // Solution 使用 camelCase
         }
       });
 
-      // 创建审核记录
-      await db.solutionReview.create({
+      // 创建审核记录（SolutionReview 使用 camelCase）
+      await prisma.solutionReview.create({
         data: {
-          solutionId: solution.id,
-          reviewerId: adminId,
+          solutionId: solution.id, // SolutionReview 使用 camelCase
+          reviewerId: adminId, // SolutionReview 使用 camelCase
           status: 'COMPLETED',
           decision: 'APPROVED',
           comments: '批量批准操作',
-          reviewedAt: new Date()
+          reviewedAt: new Date() // SolutionReview 使用 camelCase
         }
       });
 
@@ -149,12 +152,11 @@ async function approveAllPendingSolutions(adminId: string) {
 
 // 拒绝所有待审核方案
 async function rejectAllPendingSolutions(adminId: string, reason: string) {
-  const pendingSolutions = await db.solution.findMany({
+  const pendingSolutions = await prisma.solution.findMany({
     where: { status: 'PENDING_REVIEW' },
-    include: {
-      creator: {
-        include: { user: true }
-      }
+    select: {
+      id: true,
+      title: true,
     }
   });
 
@@ -163,24 +165,24 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
 
   for (const solution of pendingSolutions) {
     try {
-      const updated = await db.solution.update({
+      await prisma.solution.update({
         where: { id: solution.id },
         data: {
           status: 'REJECTED',
-          reviewedAt: new Date(),
-          reviewNotes: reason
+          reviewedAt: new Date(), // Solution 使用 camelCase
+          reviewNotes: reason // Solution 使用 camelCase
         }
       });
 
-      // 创建审核记录
-      await db.solutionReview.create({
+      // 创建审核记录（SolutionReview 使用 camelCase）
+      await prisma.solutionReview.create({
         data: {
-          solutionId: solution.id,
-          reviewerId: adminId,
+          solutionId: solution.id, // SolutionReview 使用 camelCase
+          reviewerId: adminId, // SolutionReview 使用 camelCase
           status: 'COMPLETED',
           decision: 'REJECTED',
           comments: reason,
-          reviewedAt: new Date()
+          reviewedAt: new Date() // SolutionReview 使用 camelCase
         }
       });
 
@@ -204,20 +206,27 @@ async function exportSolutions(params: any = {}) {
   }
   
   if (params.dateFrom) {
-    where.createdAt = { gte: new Date(params.dateFrom) };
+    where.createdAt = { gte: new Date(params.dateFrom) }; // Solution 使用 camelCase
   }
 
-  const solutions = await db.solution.findMany({
+  const solutions = await prisma.solution.findMany({
     where,
-    include: {
-      creator: {
-        include: { user: true }
-      }
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      price: true,
+      status: true,
+      createdAt: true, // Solution 使用 camelCase
+      updatedAt: true, // Solution 使用 camelCase
+      reviewedAt: true, // Solution 使用 camelCase
+      reviewNotes: true, // Solution 使用 camelCase
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' } // Solution 使用 camelCase
   });
 
-  // 格式化导出数据
+  // 格式化导出数据（Solution 字段已经是 camelCase，直接使用）
   const exportData = solutions.map(solution => ({
     id: solution.id,
     title: solution.title,
@@ -225,8 +234,6 @@ async function exportSolutions(params: any = {}) {
     category: solution.category,
     price: solution.price,
     status: solution.status,
-    creatorEmail: solution.creator.user.email,
-    creatorName: `${solution.creator.user.firstName || ''} ${solution.creator.user.lastName || ''}`.trim(),
     createdAt: solution.createdAt,
     updatedAt: solution.updatedAt,
     reviewedAt: solution.reviewedAt,
@@ -245,25 +252,48 @@ async function exportUsers(params: any = {}) {
   }
   
   if (params.dateFrom) {
-    where.createdAt = { gte: new Date(params.dateFrom) };
+    where.created_at = { gte: new Date(params.dateFrom) };
   }
 
-  const users = await db.user.findMany({
+  const users = await prisma.userProfile.findMany({
     where,
     select: {
       id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
+      user_id: true, // UserProfile 使用 snake_case
+      first_name: true,
+      last_name: true,
+      display_name: true,
       role: true,
-      emailVerified: true,
-      createdAt: true,
-      updatedAt: true
+      status: true,
+      created_at: true,
+      updated_at: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { created_at: 'desc' }
   });
 
-  return { count: users.length, data: users };
+  // 格式化导出数据（使用字段名转换工具）
+  const exportData = users.map(user => {
+    const converted = convertSnakeToCamel({
+      id: user.user_id,
+      user_id: user.user_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      display_name: user.display_name,
+      role: user.role,
+      status: user.status,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    });
+    return {
+      ...converted,
+      id: user.user_id,
+      email: '', // 需要从 Supabase Auth 获取
+      createdAt: user.created_at.toISOString(),
+      updatedAt: user.updated_at.toISOString(),
+    };
+  });
+
+  return { count: exportData.length, data: exportData };
 }
 
 // 清理旧的审核记录
@@ -271,9 +301,9 @@ async function clearOldReviews(days: number) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
 
-  const result = await db.solutionReview.deleteMany({
+  const result = await prisma.solutionReview.deleteMany({
     where: {
-      reviewedAt: {
+      reviewedAt: { // SolutionReview 使用 camelCase
         lt: cutoffDate
       }
     }
@@ -289,9 +319,13 @@ async function sendBulkNotification(params: any) {
   const message = params.message || '系统通知';
   const targetRole = params.targetRole || 'CREATOR';
 
-  const users = await db.user.findMany({
+  const users = await prisma.userProfile.findMany({
     where: { role: targetRole },
-    select: { id: true, email: true }
+    select: { 
+      id: true,
+      user_id: true,
+      display_name: true,
+    }
   });
 
   // 模拟发送通知
@@ -299,10 +333,10 @@ async function sendBulkNotification(params: any) {
   for (const user of users) {
     try {
       // 这里可以调用通知服务
-      console.log(`发送通知给 ${user.email}: ${message}`);
+      console.log(`发送通知给用户 ${user.user_id} (${user.display_name}): ${message}`);
       sent++;
     } catch (error) {
-      console.error(`发送通知给 ${user.email} 失败:`, error);
+      console.error(`发送通知给用户 ${user.user_id} 失败:`, error);
     }
   }
 

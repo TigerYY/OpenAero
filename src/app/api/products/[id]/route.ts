@@ -5,7 +5,7 @@
 
 import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -48,7 +48,7 @@ export async function GET(
       where.slug = identifier;
     }
 
-    const product = await db.product.findUnique({
+    const product = await prisma.product.findUnique({
       where,
       include: {
         category: {
@@ -127,7 +127,7 @@ export async function GET(
     }
 
     // 增加浏览次数
-    await db.product.update({
+    await prisma.product.update({
       where: { id: product.id },
       data: {
         viewCount: {
@@ -137,7 +137,7 @@ export async function GET(
     });
 
     // 获取相关商品推荐
-    const relatedProducts = await db.product.findMany({
+    const relatedProducts = await prisma.product.findMany({
       where: {
         categoryId: product.categoryId,
         id: { not: product.id },

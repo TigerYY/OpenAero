@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 import { z } from 'zod';
 
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
-import { checkUserAuth } from '@/lib/api-auth-helpers';
+import { createErrorResponse, createSuccessResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 // 验证schemas
 const joinSessionSchema = z.object({
@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return createErrorResponse('未授权', 401);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -43,11 +43,11 @@ export async function GET(request: NextRequest) {
     const documentType = searchParams.get('documentType');
 
     if (!documentId || !documentType) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+      return createErrorResponse('缺少必要参数', 400);
     }
 
     // 查找现有的协作会话
-    const collaborationSession = await db.collaborationSession.findFirst({
+    const collaborationSession = await prisma.collaborationSession.findFirst({
       where: {
         documentId,
         documentType,
@@ -70,14 +70,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!collaborationSession) {
-      return NextResponse.json({ 
+      return createSuccessResponse({ 
         session: null,
         participants: [],
         operations: []
-      });
+      }, '未找到协作会话');
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       session: {
         id: collaborationSession.id,
         documentId: collaborationSession.documentId,
@@ -91,11 +91,11 @@ export async function GET(request: NextRequest) {
         email: user.email,
       })),
       operations: collaborationSession.operations,
-    });
+    }, '获取协作会话成功');
 
   } catch (error) {
     console.error('获取协作会话失败:', error);
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+    return createErrorResponse('服务器错误', 500);
   }
 }
 
@@ -104,18 +104,18 @@ export async function POST(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return createErrorResponse('未授权', 401);
     }
 
     const body = await request.json();
     const { documentId, documentType } = joinSessionSchema.parse(body);
 
     // 查找现有会话
-    let collaborationSession = await db.collaborationSession.findFirst({
+    let collaborationSession = await prisma.collaborationSession.findFirst({
       where: {
         documentId,
         documentType,
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     if (!collaborationSession) {
       // 创建新的协作会话
-      collaborationSession = await db.collaborationSession.create({
+      collaborationSession = await prisma.collaborationSession.create({
         data: {
           documentId,
           documentType,
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
 
       if (!isParticipant) {
         // 将用户添加到现有会话
-        collaborationSession = await db.collaborationSession.update({
+        collaborationSession = await prisma.collaborationSession.update({
           where: { id: collaborationSession.id },
           data: {
             participants: {
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       session: {
         id: collaborationSession.id,
         documentId: collaborationSession.documentId,
@@ -190,18 +190,15 @@ export async function POST(request: NextRequest) {
         name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
         email: user.email,
       })),
-    });
+    }, '创建/加入协作会话成功');
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: '数据验证失败', 
-        details: error.errors 
-      }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('创建/加入协作会话失败:', error);
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+    return createErrorResponse('服务器错误', 500);
   }
 }
 
@@ -210,18 +207,18 @@ export async function PUT(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return createErrorResponse('未授权', 401);
     }
 
     const body = await request.json();
     const { sessionId, operation } = saveOperationSchema.parse(body);
 
     // 验证会话是否存在且用户有权限
-    const collaborationSession = await db.collaborationSession.findFirst({
+    const collaborationSession = await prisma.collaborationSession.findFirst({
       where: {
         id: sessionId,
         isActive: true,
@@ -232,11 +229,11 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!collaborationSession) {
-      return NextResponse.json({ error: '协作会话不存在或无权限' }, { status: 404 });
+      return createErrorResponse('协作会话不存在或无权限', 404);
     }
 
     // 保存操作
-    const savedOperation = await db.collaborationOperation.create({
+    const savedOperation = await prisma.collaborationOperation.create({
       data: {
         sessionId,
         userId: session.user.id,
@@ -248,26 +245,22 @@ export async function PUT(request: NextRequest) {
     });
 
     // 更新会话的最后活动时间
-    await db.collaborationSession.update({
+    await prisma.collaborationSession.update({
       where: { id: sessionId },
       data: { updatedAt: new Date() }
     });
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       operation: savedOperation,
-    });
+    }, '保存协作操作成功');
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: '数据验证失败', 
-        details: error.errors 
-      }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('保存协作操作失败:', error);
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+    return createErrorResponse('服务器错误', 500);
   }
 }
 
@@ -276,18 +269,18 @@ export async function DELETE(request: NextRequest) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return createErrorResponse('未授权', 401);
     }
 
     const body = await request.json();
     const { sessionId } = leaveSessionSchema.parse(body);
 
     // 从会话中移除用户
-    const collaborationSession = await db.collaborationSession.update({
+    const collaborationSession = await prisma.collaborationSession.update({
       where: { id: sessionId },
       data: {
         participants: {
@@ -301,26 +294,20 @@ export async function DELETE(request: NextRequest) {
 
     // 如果没有参与者了，标记会话为非活跃状态
     if (collaborationSession.participants.length === 0) {
-      await db.collaborationSession.update({
+      await prisma.collaborationSession.update({
         where: { id: sessionId },
         data: { isActive: false }
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: '已离开协作会话',
-    });
+    return createSuccessResponse(null, '已离开协作会话');
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: '数据验证失败', 
-        details: error.errors 
-      }, { status: 400 });
+      return createValidationErrorResponse(error);
     }
 
     console.error('离开协作会话失败:', error);
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 });
+    return createErrorResponse('服务器错误', 500);
   }
 }

@@ -60,6 +60,7 @@ export default function PasswordChangeForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 确保发送 cookies
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,

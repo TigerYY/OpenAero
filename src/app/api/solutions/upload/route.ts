@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 import { fileService } from '@/backend/file/file.service';
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
-import { logAuditAction } from '@/lib/api-helpers';
+import { logAuditAction, createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 
 // POST /api/solutions/upload - 上传方案相关文件
 export async function POST(request: NextRequest) {
@@ -19,20 +19,13 @@ export async function POST(request: NextRequest) {
     const user = authResult.user!;
 
     // 检查用户是否为认证创作者
-    const creator = await db.creatorProfile.findUnique({
+    const creator = await prisma.creatorProfile.findUnique({
       where: { userId: user.id },
       select: { id: true, status: true }
     });
 
     if (!creator || creator.status !== 'APPROVED') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Only approved creators can upload solution files',
-          code: 403,
-        } as ApiResponse,
-        { status: 403 }
-      );
+      return createErrorResponse('Only approved creators can upload solution files', 403);
     }
 
     const formData = await request.formData();
@@ -41,17 +34,12 @@ export async function POST(request: NextRequest) {
     const fileType = formData.get('fileType') as string || 'DOCUMENT';
 
     if (!files || files.length === 0) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '请选择要上传的文件',
-        data: null
-      };
-      return NextResponse.json(response, { status: 400 });
+      return createErrorResponse('请选择要上传的文件', 400);
     }
 
     // 验证方案是否存在且属于当前用户
     if (solutionId) {
-      const solution = await db.solution.findFirst({
+      const solution = await prisma.solution.findFirst({
         where: {
           id: solutionId,
           userId: authResult.user.id
@@ -59,12 +47,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!solution) {
-        const response: ApiResponse<null> = {
-          success: false,
-          error: '方案不存在或无权限访问',
-          data: null
-        };
-        return NextResponse.json(response, { status: 404 });
+        return createErrorResponse('方案不存在或无权限访问', 404);
       }
     }
 
@@ -113,7 +96,7 @@ export async function POST(request: NextRequest) {
 
         // 如果指定了方案ID，关联文件到方案
         if (solutionId) {
-          await db.solutionFile.create({
+          await prisma.solutionFile.create({
             data: {
               solutionId,
               fileId: fileRecord.id,
@@ -155,25 +138,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const response: ApiResponse<any> = {
-      success: uploadedFiles.length > 0,
-      data: {
-        uploadedFiles,
-        errors: errors.length > 0 ? errors : undefined
-      }
-    };
+    if (uploadedFiles.length === 0) {
+      return createErrorResponse('所有文件上传失败', 400);
+    }
 
-    return NextResponse.json(response, { 
-      status: uploadedFiles.length > 0 ? 200 : 400 
-    });
+    return createSuccessResponse({
+      uploadedFiles,
+      errors: errors.length > 0 ? errors : undefined
+    }, '文件上传成功');
   } catch (error) {
     console.error('文件上传失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: '文件上传失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: 500 });
+    return createErrorResponse('文件上传失败', 500);
   }
 }
 
@@ -193,16 +168,11 @@ export async function DELETE(request: NextRequest) {
     const solutionId = searchParams.get('solutionId');
 
     if (!fileId) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '文件ID不能为空',
-        data: null
-      };
-      return NextResponse.json(response, { status: 400 });
+      return createErrorResponse('文件ID不能为空', 400);
     }
 
     // 验证文件权限
-    const file = await db.file.findFirst({
+    const file = await prisma.file.findFirst({
       where: {
         id: fileId,
         userId: user.id
@@ -210,17 +180,12 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!file) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: '文件不存在或无权限访问',
-        data: null
-      };
-      return NextResponse.json(response, { status: 404 });
+      return createErrorResponse('文件不存在或无权限访问', 404);
     }
 
     // 如果指定了方案ID，删除方案文件关联
     if (solutionId) {
-      await db.solutionFile.deleteMany({
+      await prisma.solutionFile.deleteMany({
         where: {
           solutionId,
           fileId
@@ -243,19 +208,9 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
-    const response: ApiResponse<null> = {
-      success: true,
-      data: null
-    };
-
-    return NextResponse.json(response);
+    return createSuccessResponse(null, '删除文件成功');
   } catch (error) {
     console.error('删除文件失败:', error);
-    const response: ApiResponse<null> = {
-      success: false,
-      error: '删除文件失败',
-      data: null
-    };
-    return NextResponse.json(response, { status: 500 });
+    return createErrorResponse('删除文件失败', 500);
   }
 }

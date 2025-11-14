@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { z } from 'zod';
 
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 interface RouteParams {
   params: {
@@ -25,14 +26,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return createErrorResponse('未授权访问', 401);
     }
 
     const { id: solutionId } = params;
@@ -40,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
     // 检查方案是否存在
-    const solution = await db.solution.findUnique({
+    const solution = await prisma.solution.findUnique({
       where: { id: solutionId },
       select: { 
         id: true, 
@@ -51,19 +49,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!solution) {
-      return NextResponse.json(
-        { error: '方案不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('方案不存在', 404);
     }
 
     // 检查访问权限 - 创作者可以查看所有文件，其他用户只能查看已发布方案的文件
     const isCreator = solution.creatorId === session.user.id;
     if (!isCreator && solution.status !== 'PUBLISHED') {
-      return NextResponse.json(
-        { error: '无权访问此方案的文件' },
-        { status: 403 }
-      );
+      return createErrorResponse('无权访问此方案的文件', 403);
     }
 
     const where: any = {
@@ -81,7 +73,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const skip = (page - 1) * limit;
 
     const [files, total] = await Promise.all([
-      db.solutionFile.findMany({
+      prisma.solutionFile.findMany({
         where,
         skip,
         take: limit,
@@ -92,32 +84,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         }
       }),
-      db.solutionFile.count({ where })
+      prisma.solutionFile.count({ where })
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        solution: {
-          id: solution.id,
-          title: solution.title
-        },
-        files,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
+    return createSuccessResponse({
+      solution: {
+        id: solution.id,
+        title: solution.title
+      },
+      files,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
-    });
+    }, '获取方案文件列表成功');
 
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createValidationErrorResponse(error);
+    }
     console.error('获取方案文件列表失败:', error);
-    return NextResponse.json(
-      { error: '获取方案文件列表失败' },
-      { status: 500 }
-    );
+    return createErrorResponse('获取方案文件列表失败', 500);
   }
 }
 
@@ -126,14 +115,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return createErrorResponse('未授权访问', 401);
     }
 
     const { id: solutionId } = params;
@@ -146,27 +132,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { fileIds } = associateSchema.parse(body);
 
     // 检查方案是否存在且用户有权限
-    const solution = await db.solution.findUnique({
+    const solution = await prisma.solution.findUnique({
       where: { id: solutionId },
       select: { creatorId: true }
     });
 
     if (!solution) {
-      return NextResponse.json(
-        { error: '方案不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('方案不存在', 404);
     }
 
     if (solution.creatorId !== session.user.id) {
-      return NextResponse.json(
-        { error: '无权修改此方案' },
-        { status: 403 }
-      );
+      return createErrorResponse('无权修改此方案', 403);
     }
 
     // 检查文件是否存在且属于当前用户
-    const files = await db.solutionFile.findMany({
+    const files = await prisma.solutionFile.findMany({
       where: {
         id: { in: fileIds },
         uploadedBy: session.user.id,
@@ -175,14 +155,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (files.length !== fileIds.length) {
-      return NextResponse.json(
-        { error: '部分文件不存在或无权访问' },
-        { status: 400 }
-      );
+      return createErrorResponse('部分文件不存在或无权访问', 400);
     }
 
     // 更新文件关联
-    await db.solutionFile.updateMany({
+    await prisma.solutionFile.updateMany({
       where: {
         id: { in: fileIds }
       },
@@ -193,7 +170,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // 获取更新后的文件列表
-    const updatedFiles = await db.solutionFile.findMany({
+    const updatedFiles = await prisma.solutionFile.findMany({
       where: {
         id: { in: fileIds }
       },
@@ -204,18 +181,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    return NextResponse.json({
-      success: true,
-      data: updatedFiles,
-      message: '文件关联成功'
-    });
+    return createSuccessResponse(updatedFiles, '文件关联成功');
 
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createValidationErrorResponse(error);
+    }
     console.error('关联文件失败:', error);
-    return NextResponse.json(
-      { error: '关联文件失败' },
-      { status: 500 }
-    );
+    return createErrorResponse('关联文件失败', 500);
   }
 }
 
@@ -224,14 +197,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const authResult = await checkAdminAuth(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return createErrorResponse('未授权访问', 401);
     }
 
     const { id: solutionId } = params;
@@ -239,34 +209,25 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const fileIds = searchParams.get('fileIds')?.split(',') || [];
 
     if (fileIds.length === 0) {
-      return NextResponse.json(
-        { error: '请指定要移除的文件' },
-        { status: 400 }
-      );
+      return createErrorResponse('请指定要移除的文件', 400);
     }
 
     // 检查方案是否存在且用户有权限
-    const solution = await db.solution.findUnique({
+    const solution = await prisma.solution.findUnique({
       where: { id: solutionId },
       select: { creatorId: true }
     });
 
     if (!solution) {
-      return NextResponse.json(
-        { error: '方案不存在' },
-        { status: 404 }
-      );
+      return createErrorResponse('方案不存在', 404);
     }
 
     if (solution.creatorId !== session.user.id) {
-      return NextResponse.json(
-        { error: '无权修改此方案' },
-        { status: 403 }
-      );
+      return createErrorResponse('无权修改此方案', 403);
     }
 
     // 移除文件关联（将solutionId设为null）
-    await db.solutionFile.updateMany({
+    await prisma.solutionFile.updateMany({
       where: {
         id: { in: fileIds },
         solutionId: solutionId,
@@ -278,16 +239,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    return NextResponse.json({
-      success: true,
-      message: '文件关联已移除'
-    });
+    return createSuccessResponse(null, '文件关联已移除');
 
   } catch (error) {
     console.error('移除文件关联失败:', error);
-    return NextResponse.json(
-      { error: '移除文件关联失败' },
-      { status: 500 }
-    );
+    return createErrorResponse('移除文件关联失败', 500);
   }
 }

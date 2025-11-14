@@ -6,13 +6,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireUser } from '@/lib/supabase-server-auth';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { 
   UPLOAD_CONFIG, 
   generateUniqueFilename, 
   calculateChecksum, 
   getFileType
 } from '@/lib/multer-config';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 
 
 // 格式化文件大小的辅助函数
@@ -65,17 +66,11 @@ export async function POST(request: NextRequest) {
     // 验证用户身份
     const authResult = await requireUser(request);
     if (authResult.error) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+      return createErrorResponse(authResult.error, authResult.status);
     }
     const session = authResult.session;
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { success: false, error: '未授权访问' },
-        { status: 401 }
-      );
+      return createErrorResponse('未授权访问', 401);
     }
 
     const formData = await request.formData();
@@ -83,34 +78,22 @@ export async function POST(request: NextRequest) {
     const solutionId = formData.get('solutionId') as string;
 
     if (!file) {
-      return NextResponse.json(
-        { success: false, message: '没有找到文件' },
-        { status: 400 }
-      );
+      return createErrorResponse('没有找到文件', 400);
     }
 
     // 验证文件类型
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { success: false, message: `不支持的文件类型: ${file.type}` },
-        { status: 400 }
-      );
+      return createErrorResponse(`不支持的文件类型: ${file.type}`, 400);
     }
 
     // 验证文件大小
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: `文件大小超过限制 (最大 ${formatFileSize(MAX_FILE_SIZE)})` 
-        },
-        { status: 400 }
-      );
+      return createErrorResponse(`文件大小超过限制 (最大 ${formatFileSize(MAX_FILE_SIZE)})`, 400);
     }
 
     // 验证方案是否存在且用户有权限
     if (solutionId) {
-      const solution = await db.solution.findFirst({
+      const solution = await prisma.solution.findFirst({
         where: {
           id: solutionId,
           OR: [
@@ -121,10 +104,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!solution) {
-        return NextResponse.json(
-          { success: false, error: '方案不存在或无权限访问' },
-          { status: 403 }
-        );
+        return createErrorResponse('方案不存在或无权限访问', 403);
       }
     }
 
@@ -176,30 +156,22 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: crypto.randomUUID(),
-        filename: fileRecord.filename,
-        originalName: fileRecord.originalName,
-        url: fileRecord.url,
-        size: fileRecord.size,
-        type: fileRecord.fileType,
-        mimeType: fileRecord.mimeType,
-      },
-      message: '文件上传成功'
-    });
+    return createSuccessResponse({
+      id: crypto.randomUUID(),
+      filename: fileRecord.filename,
+      originalName: fileRecord.originalName,
+      url: fileRecord.url,
+      size: fileRecord.size,
+      type: fileRecord.fileType,
+      mimeType: fileRecord.mimeType,
+    }, '文件上传成功');
 
   } catch (error) {
     console.error('文件上传错误:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        message: '文件上传失败',
-        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
-      },
-      { status: 500 }
-    );
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? (error as Error).message 
+      : '文件上传失败';
+    return createErrorResponse(errorMessage, 500);
   }
 }
 

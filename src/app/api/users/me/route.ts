@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService, getServerUser, getServerExtendedUser } from '@/lib/auth/auth-service';
+import { AuthService, getServerUserFromRequest, getServerExtendedUserFromRequest } from '@/lib/auth/auth-service';
 import { z } from 'zod';
 import {
   createSuccessResponse,
@@ -21,7 +21,21 @@ const updateProfileSchema = z.object({
   display_name: z.string().min(1, '显示名称不能为空').max(100, '显示名称过长').optional(),
   bio: z.string().max(500, '个人简介不能超过500字符').optional(),
   avatar: z.string().url('无效的头像URL').optional(),
-  phone: z.string().regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, '无效的手机号码格式').optional(),
+  phone: z.string()
+    .refine((val) => {
+      if (!val || val.trim() === '') return true; // 允许空值
+      // 移除所有空格、连字符、括号和点，只保留数字和+
+      const cleaned = val.replace(/[\s\-().]/g, '');
+      // 检查是否以+开头，后面跟数字，或者全部是数字
+      // 国际格式：+国家代码+号码（总长度不超过15位，最少7位）
+      // 或者纯数字（最少7位，最多15位）
+      const phoneRegex = /^(\+[1-9]\d{0,14}|\d{7,15})$/;
+      return phoneRegex.test(cleaned);
+    }, {
+      message: '无效的手机号码格式。请输入有效的国际格式（如 +86 138 0013 8000）或纯数字格式',
+    })
+    .optional()
+    .nullable(),
 });
 
 /**
@@ -30,14 +44,14 @@ const updateProfileSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // 获取当前用户
-    const user = await getServerUser();
+    const user = await getServerUserFromRequest(request);
 
     if (!user) {
       return createErrorResponse('未授权访问', 401);
     }
 
     // 获取扩展用户信息
-    let extendedUser = await getServerExtendedUser();
+    let extendedUser = await getServerExtendedUserFromRequest(request);
 
     // 如果 profile 不存在，尝试创建
     if (!extendedUser?.profile) {
@@ -50,7 +64,7 @@ export async function GET(request: NextRequest) {
 
         if (!createError) {
           // 重新获取用户信息
-          extendedUser = await getServerExtendedUser();
+          extendedUser = await getServerExtendedUserFromRequest(request);
           
           // 记录审计日志
           if (extendedUser?.profile) {
@@ -90,7 +104,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // 获取当前用户
-    const user = await getServerUser();
+    const user = await getServerUserFromRequest(request);
 
     if (!user) {
       return createErrorResponse('未授权访问', 401);
@@ -108,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     const updates = validationResult.data;
 
     // 获取当前用户信息用于对比
-    const extendedUser = await getServerExtendedUser();
+    const extendedUser = await getServerExtendedUserFromRequest(request);
     const currentProfile = extendedUser?.profile;
     const currentPhone = user.phone;
 
@@ -171,7 +185,17 @@ export async function PATCH(request: NextRequest) {
 
     // 更新 auth.users 的 phone（如果提供）
     if (phone !== undefined) {
-      const phoneValue = phone || null;
+      // 清理手机号码：移除空格、连字符、括号等，保留数字和+
+      let phoneValue: string | null = phone ? phone.trim() : null;
+      if (phoneValue) {
+        // 移除所有空格、连字符、括号和点，但保留+号
+        phoneValue = phoneValue.replace(/[\s\-().]/g, '');
+        // 如果为空字符串，设置为 null
+        if (phoneValue === '') {
+          phoneValue = null;
+        }
+      }
+      
       // 只有值真正改变时才更新
       if (phoneValue !== currentPhone) {
         const { error: phoneError } = await AuthService.updateUserPhone(user.id, phoneValue);

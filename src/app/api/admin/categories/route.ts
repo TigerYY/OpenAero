@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { requireAdmin } from '@/lib/supabase-server-auth';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // 创建分类的验证模式
 const createCategorySchema = z.object({
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     // 获取分类列表
     const [categories, total] = await Promise.all([
-      db.productCategory.findMany({
+      prisma.productCategory.findMany({
         where,
         include: {
           parent: {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
       }),
-      db.productCategory.count({ where }),
+      prisma.productCategory.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createCategorySchema.parse(body);
 
     // 检查slug是否已存在
-    const existingCategory = await db.productCategory.findUnique({
+    const existingCategory = await prisma.productCategory.findUnique({
       where: { slug: validatedData.slug },
     });
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     // 计算分类层级
     let level = 0;
     if (validatedData.parentId) {
-      const parentCategory = await db.productCategory.findUnique({
+      const parentCategory = await prisma.productCategory.findUnique({
         where: { id: validatedData.parentId },
         select: { level: true },
       });
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建分类
-    const category = await db.productCategory.create({
+    const category = await prisma.productCategory.create({
       data: {
         ...validatedData,
         level,

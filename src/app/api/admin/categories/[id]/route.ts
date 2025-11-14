@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
   params: {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
-    const category = await db.productCategory.findUnique({
+    const category = await prisma.productCategory.findUnique({
       where: { id: params.id },
       include: {
         parent: {
@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const validatedData = updateCategorySchema.parse(body);
 
     // 检查分类是否存在
-    const existingCategory = await db.productCategory.findUnique({
+    const existingCategory = await prisma.productCategory.findUnique({
       where: { id: params.id },
     });
 
@@ -103,7 +103,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // 如果更新了slug，检查是否与其他分类冲突
     if (validatedData.slug && validatedData.slug !== existingCategory.slug) {
-      const slugConflict = await db.productCategory.findUnique({
+      const slugConflict = await prisma.productCategory.findUnique({
         where: { slug: validatedData.slug },
       });
 
@@ -121,7 +121,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           return NextResponse.json({ error: '不能将分类设置为自己的子分类' }, { status: 400 });
         }
 
-        const parentCategory = await db.productCategory.findUnique({
+        const parentCategory = await prisma.productCategory.findUnique({
           where: { id: validatedData.parentId },
           select: { level: true },
         });
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // 更新分类
-    const updatedCategory = await db.productCategory.update({
+    const updatedCategory = await prisma.productCategory.update({
       where: { id: params.id },
       data: {
         ...validatedData,
@@ -193,7 +193,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // 检查分类是否存在
-    const category = await db.productCategory.findUnique({
+    const category = await prisma.productCategory.findUnique({
       where: { id: params.id },
       include: {
         _count: {
@@ -226,7 +226,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // 删除分类
-    await db.productCategory.delete({
+    await prisma.productCategory.delete({
       where: { id: params.id },
     });
 

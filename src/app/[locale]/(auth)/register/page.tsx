@@ -158,24 +158,25 @@ export default function RegisterPage() {
     return (
       <DefaultLayout>
         <div className="flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 min-h-[60vh]">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 text-green-600">
-              <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">注册成功！</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              我们已向您的邮箱发送了验证邮件，请查收并点击链接验证您的账户。
-            </p>
-            <div className="mt-6">
-              <Link
-                href={route('/login')}
-                className="text-blue-600 hover:text-blue-500 font-medium"
-              >
-                返回登录
-              </Link>
+          <div className="max-w-md w-full space-y-8">
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 text-green-600">
+                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="mt-6 text-3xl font-extrabold text-gray-900">注册成功！</h2>
+              <p className="mt-2 text-sm text-gray-600">
+                我们已向您的邮箱发送了验证邮件，请查收并点击链接验证您的账户。
+              </p>
+              <div className="mt-6">
+                <Link
+                  href={route('/login')}
+                  className="text-blue-600 hover:text-blue-500 font-medium"
+                >
+                  返回登录
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -368,8 +369,8 @@ export default function RegisterPage() {
             </Link>
           </div>
         </form>
-        </div>
       </div>
+    </div>
     </DefaultLayout>
   );
 }

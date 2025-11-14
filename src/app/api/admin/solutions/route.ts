@@ -171,23 +171,30 @@ export async function GET(request: NextRequest) {
         name: `${(solution as any).user.firstName ?? ''} ${(solution as any).user.lastName ?? ''}`.trim(),
         email: (solution as any).user.email,
       } : null,
-      files: (solution as any).files?.map((file: any) => ({
-        id: file.id,
-        fileName: file.filename,
-        fileType: file.fileType,
-        fileUrl: file.url,
-        createdAt: file.createdAt,
-      })) || [],
-      reviews: (solution as any).solutionReviews?.map((review: any) => ({
-        id: review.id,
-        rating: review.score ?? null,
-        comment: review.comments ?? null,
-        createdAt: review.createdAt,
-        reviewer: review.reviewer ? {
-          name: `${review.reviewer.firstName ?? ''} ${review.reviewer.lastName ?? ''}`.trim(),
-          email: review.reviewer.email,
-        } : null,
-      })) || [],
+      files: (solution as any).files?.map((file: any) => {
+        const converted = convertSnakeToCamel(file);
+        return {
+          id: converted.id,
+          fileName: converted.filename || converted.fileName,
+          fileType: converted.fileType,
+          fileUrl: converted.url || converted.fileUrl,
+          createdAt: converted.createdAt,
+        };
+      }) || [],
+      reviews: (solution as any).solutionReviews?.map((review: any) => {
+        const converted = convertSnakeToCamel(review);
+        return {
+          id: converted.id,
+          rating: converted.score ?? converted.rating ?? null,
+          comment: converted.comments ?? converted.comment ?? null,
+          createdAt: converted.reviewedAt || converted.createdAt,
+          reviewer: review.reviewer ? convertSnakeToCamel({
+            firstName: review.reviewer.firstName || review.reviewer.first_name,
+            lastName: review.reviewer.lastName || review.reviewer.last_name,
+            email: review.reviewer.email,
+          }) : null,
+        };
+      }) || [],
       reviewCount: (solution as any)._count?.solutionReviews || 0,
     }));
 

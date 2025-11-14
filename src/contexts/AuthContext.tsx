@@ -66,7 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // 优先尝试使用 API 端点
       try {
-        const response = await fetch('/api/users/me');
+        const response = await fetch('/api/users/me', {
+          credentials: 'include', // 确保发送 cookies
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data?.profile) {
@@ -146,7 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // 优先使用 API 端点获取完整用户信息（包含 phone 等字段）
-      const response = await fetch('/api/users/me');
+      const response = await fetch('/api/users/me', {
+        credentials: 'include', // 确保发送 cookies
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -182,9 +186,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
         setUser(data.user);
         setSession(data.session);
+        
+        // 同步 session 到 cookies（通过 API 路由）
+        // 这样服务器端 API 路由可以读取认证信息
+        try {
+          await fetch('/api/auth/sync-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+            }),
+          });
+        } catch (syncError) {
+          console.warn('同步 session 到 cookies 失败:', syncError);
+          // 不阻止登录流程，继续执行
+        }
+        
         await fetchUserProfile(data.user.id);
       }
 
@@ -211,16 +235,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
           data: metadata,
         },
       });
 
       if (error) {
+        console.error('注册错误:', error);
         return { error };
+      }
+
+      // 检查是否成功发送验证邮件
+      if (data.user && !data.session) {
+        // 用户已创建但未验证，说明验证邮件应该已发送
+        console.log('用户注册成功，验证邮件应已发送到:', email);
       }
 
       return { error: null };
     } catch (error) {
+      console.error('注册异常:', error);
       return { error: error as Error };
     }
   };
@@ -281,10 +314,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * 检查用户是否有指定角色
    */
   const hasRole = (role: string | string[]): boolean => {
-    if (!profile) return false;
-
+    if (!profile) {
+      console.log('[hasRole] 用户资料不存在，返回 false');
+      return false;
+    }
     const roles = Array.isArray(role) ? role : [role];
-    return roles.includes(profile.role);
+    const hasRoleResult = roles.includes(profile.role);
+    console.log('[hasRole] 检查角色:', {
+      requiredRoles: roles,
+      userRole: profile.role,
+      result: hasRoleResult,
+    });
+    return hasRoleResult;
+  };
+
+  /**
+   * 同步 session 到 cookies（用于服务器端 API 路由）
+   */
+  const syncSessionToCookies = async (session: Session | null) => {
+    if (!session?.access_token) return;
+    
+    try {
+      await fetch('/api/auth/sync-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+        }),
+      });
+    } catch (error) {
+      console.warn('同步 session 到 cookies 失败:', error);
+    }
   };
 
   /**
@@ -296,6 +360,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        // 同步 session 到 cookies
+        await syncSessionToCookies(session);
         await fetchUserProfile(session.user.id);
       }
       setLoading(false);
@@ -312,6 +378,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // 同步 session 到 cookies
+        await syncSessionToCookies(session);
         await fetchUserProfile(session.user.id);
       } else {
         setProfile(null);

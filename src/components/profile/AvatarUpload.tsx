@@ -87,6 +87,7 @@ export default function AvatarUpload({
       // 上传文件
       const response = await fetch('/api/users/avatar', {
         method: 'POST',
+        credentials: 'include', // 确保发送 cookies
         body: formData,
       });
 
@@ -119,6 +120,7 @@ export default function AvatarUpload({
     try {
       const response = await fetch('/api/users/avatar', {
         method: 'DELETE',
+        credentials: 'include', // 确保发送 cookies
       });
 
       const data = await response.json();

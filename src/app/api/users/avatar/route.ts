@@ -4,8 +4,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
+import { getServerUserFromRequest, AuthService } from '@/lib/auth/auth-service';
+import { createSupabaseServerFromRequest, createSupabaseAdmin } from '@/lib/auth/supabase-client';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -23,7 +23,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 export async function POST(request: NextRequest) {
   try {
     // 获取当前用户
-    const user = await getServerUser();
+    const user = await getServerUserFromRequest(request);
     if (!user) {
       return createErrorResponse('未授权访问', 401);
     }
@@ -52,15 +52,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建 Supabase 客户端
-    const supabase = await createSupabaseServer();
-
-    // 验证用户会话
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      console.error('获取会话失败:', sessionError);
-      return createErrorResponse('用户会话无效，请重新登录', 401);
-    }
+    // 创建 Supabase 客户端（从请求中获取）
+    const supabase = createSupabaseServerFromRequest(request);
 
     // 将文件转换为 ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
@@ -130,11 +123,8 @@ export async function POST(request: NextRequest) {
 
     const avatarUrl = urlData.publicUrl;
 
-    // 更新用户 profile 中的 avatar 字段
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ avatar: avatarUrl })
-      .eq('user_id', user.id);
+    // 使用 Admin 客户端更新用户 profile 中的 avatar 字段（绕过 RLS）
+    const { error: updateError } = await AuthService.updateProfile(user.id, { avatar: avatarUrl });
 
     if (updateError) {
       console.error('更新头像URL失败:', updateError);
@@ -142,7 +132,7 @@ export async function POST(request: NextRequest) {
       // 尝试删除已上传的文件
       await supabase.storage.from('avatars').remove([fileName]);
 
-      return createErrorResponse('更新头像失败', 500);
+      return createErrorResponse(`更新头像失败: ${updateError.message}`, 500);
     }
 
     // 记录审计日志
@@ -181,16 +171,17 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // 获取当前用户
-    const user = await getServerUser();
+    const user = await getServerUserFromRequest(request);
     if (!user) {
       return createErrorResponse('未授权访问', 401);
     }
 
-    // 创建 Supabase 客户端
-    const supabase = await createSupabaseServer();
-
-    // 获取当前头像 URL
-    const { data: profile } = await supabase
+    // 创建 Supabase 客户端（从请求中获取，用于 Storage 操作）
+    const supabase = createSupabaseServerFromRequest(request);
+    
+    // 使用 Admin 客户端获取当前头像 URL（绕过 RLS）
+    const supabaseAdmin = createSupabaseAdmin();
+    const { data: profile } = await supabaseAdmin
       .from('user_profiles')
       .select('avatar')
       .eq('user_id', user.id)
@@ -205,14 +196,11 @@ export async function DELETE(request: NextRequest) {
       await supabase.storage.from('avatars').remove([fileName]);
     }
 
-    // 更新 profile，清除 avatar
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ avatar: null })
-      .eq('user_id', user.id);
+    // 使用 Admin 客户端更新 profile，清除 avatar（绕过 RLS）
+    const { error: updateError } = await AuthService.updateProfile(user.id, { avatar: null });
 
     if (updateError) {
-      return createErrorResponse('删除头像失败', 500);
+      return createErrorResponse(`删除头像失败: ${updateError.message}`, 500);
     }
 
     // 记录审计日志

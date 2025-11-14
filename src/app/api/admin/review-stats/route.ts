@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // 统计查询参数验证
 const statsQuerySchema = z.object({
@@ -84,16 +84,16 @@ export async function GET(request: NextRequest) {
       approvedReviews,
       rejectedReviews,
     ] = await Promise.all([
-      db.solutionReview.count({ where: baseWhere }),
-      db.solutionReview.count({ where: { ...baseWhere, status: 'COMPLETED' } }),
-      db.solutionReview.count({ where: { ...baseWhere, status: 'PENDING' } }),
-      db.solutionReview.count({ where: { ...baseWhere, status: 'IN_PROGRESS' } }),
-      db.solutionReview.count({ where: { ...baseWhere, decision: 'APPROVED' } }),
-      db.solutionReview.count({ where: { ...baseWhere, decision: 'REJECTED' } }),
+      prisma.solutionReview.count({ where: baseWhere }),
+      prisma.solutionReview.count({ where: { ...baseWhere, status: 'COMPLETED' } }),
+      prisma.solutionReview.count({ where: { ...baseWhere, status: 'PENDING' } }),
+      prisma.solutionReview.count({ where: { ...baseWhere, status: 'IN_PROGRESS' } }),
+      prisma.solutionReview.count({ where: { ...baseWhere, decision: 'APPROVED' } }),
+      prisma.solutionReview.count({ where: { ...baseWhere, decision: 'REJECTED' } }),
     ]);
 
     // 2. 平均审核时间
-    const completedReviewsWithTime = await db.solutionReview.findMany({
+    const completedReviewsWithTime = await prisma.solutionReview.findMany({
       where: {
         ...baseWhere,
         status: 'COMPLETED',
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       : 0;
 
     // 3. 审核员效率统计
-    const reviewerStats = await db.solutionReview.groupBy({
+    const reviewerStats = await prisma.solutionReview.groupBy({
       by: ['reviewerId'],
       where: baseWhere,
       _count: {
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 获取审核员详细信息
-    const reviewerDetails = await db.user.findMany({
+    const reviewerDetails = await prisma.user.findMany({
       where: {
         id: { in: reviewerStats.map(stat => stat.reviewerId) },
       },
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
         const reviewer = reviewerDetails.find(r => r.id === stat.reviewerId);
         
         // 计算该审核员的平均审核时间
-        const reviewerCompletedReviews = await db.solutionReview.findMany({
+        const reviewerCompletedReviews = await prisma.solutionReview.findMany({
           where: {
             ...baseWhere,
             reviewerId: stat.reviewerId,
@@ -177,7 +177,7 @@ export async function GET(request: NextRequest) {
     );
 
     // 4. 时间趋势数据
-    const trendData = await db.solutionReview.groupBy({
+    const trendData = await prisma.solutionReview.groupBy({
       by: ['createdAt'],
       where: baseWhere,
       _count: {
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>);
 
     // 5. 方案类别统计
-    const categoryStats = await db.solutionReview.findMany({
+    const categoryStats = await prisma.solutionReview.findMany({
       where: baseWhere,
       include: {
         solution: {
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>);
 
     // 6. 逾期审核统计
-    const overdueReviews = await db.solutionReview.count({
+    const overdueReviews = await prisma.solutionReview.count({
       where: {
         ...baseWhere,
         status: 'IN_PROGRESS',

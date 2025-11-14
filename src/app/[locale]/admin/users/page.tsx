@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { AdminRoute } from '@/components/auth/ProtectedRoute';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -33,14 +35,14 @@ interface UserData {
   email: string;
   firstName?: string;
   lastName?: string;
-  role: 'CUSTOMER' | 'CREATOR' | 'ADMIN';
+  role: 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN';
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
   solutionCount?: number;
   reviewCount?: number;
-  status: 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'DELETED';
 }
 
 export default function AdminUsersPage() {
@@ -72,13 +74,14 @@ export default function AdminUsersPage() {
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
-    role: 'CUSTOMER' as UserData['role']
+    role: 'USER' as UserData['role']
   });
   const [suspendReason, setSuspendReason] = useState('');
   const [batchAction, setBatchAction] = useState<'role' | 'status'>('role');
   const [batchValue, setBatchValue] = useState('');
 
   useEffect(() => {
+    console.log('[AdminUsersPage] useEffect 触发，开始加载用户列表');
     loadUsers();
   }, []);
 
@@ -129,27 +132,45 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
+      console.log('[AdminUsersPage] 开始加载用户列表...');
 
       const response = await fetch('/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // 确保发送 cookies
       });
 
+      console.log('[AdminUsersPage] API 响应状态:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('获取用户列表失败');
+        const errorData = await response.json().catch(() => ({ error: '未知错误' }));
+        console.error('[AdminUsersPage] API 错误响应:', errorData);
+        throw new Error(errorData.error || `获取用户列表失败 (${response.status})`);
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
+      console.log('[AdminUsersPage] API 响应数据:', {
+        success: data.success,
+        dataLength: data.data?.length || 0,
+        pagination: data.pagination,
+        hasData: !!data.data,
+        dataType: Array.isArray(data.data) ? 'array' : typeof data.data,
+      });
+      
+      // API 返回格式: { success: true, data: [...], pagination: {...} }
+      const usersList = data.data || [];
+      console.log('[AdminUsersPage] 解析后的用户列表:', {
+        count: usersList.length,
+        firstUser: usersList[0] || null,
+      });
+      
+      if (usersList.length === 0) {
+        console.warn('[AdminUsersPage] 用户列表为空');
+      }
+      
+      setUsers(usersList);
     } catch (error) {
-      console.error('获取用户列表错误:', error);
-      toast.error('获取用户列表失败');
+      console.error('[AdminUsersPage] 获取用户列表错误:', error);
+      const errorMessage = error instanceof Error ? error.message : '获取用户列表失败';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -321,11 +342,11 @@ export default function AdminUsersPage() {
     return displayUsers.filter(user => {
       switch (activeTab) {
         case 'customers':
-          return user.role === 'CUSTOMER';
+          return user.role === 'USER';
         case 'creators':
           return user.role === 'CREATOR';
         case 'admins':
-          return user.role === 'ADMIN';
+          return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
         case 'suspended':
           return user.status === 'SUSPENDED';
         default:
@@ -336,11 +357,17 @@ export default function AdminUsersPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'SUPER_ADMIN':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'ADMIN':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'CREATOR':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'CUSTOMER':
+      case 'REVIEWER':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'FACTORY_MANAGER':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'USER':
         return 'bg-green-100 text-green-800 border-green-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -351,9 +378,11 @@ export default function AdminUsersPage() {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-800 border-green-200';
+      case 'INACTIVE':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'SUSPENDED':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'BANNED':
+      case 'DELETED':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -362,12 +391,18 @@ export default function AdminUsersPage() {
 
   const getRoleText = (role: string) => {
     switch (role) {
+      case 'SUPER_ADMIN':
+        return '超级管理员';
       case 'ADMIN':
         return '管理员';
       case 'CREATOR':
         return '创作者';
-      case 'CUSTOMER':
-        return '客户';
+      case 'REVIEWER':
+        return '审核员';
+      case 'FACTORY_MANAGER':
+        return '工厂管理员';
+      case 'USER':
+        return '普通用户';
       default:
         return '未知';
     }
@@ -377,10 +412,12 @@ export default function AdminUsersPage() {
     switch (status) {
       case 'ACTIVE':
         return '活跃';
+      case 'INACTIVE':
+        return '未激活';
       case 'SUSPENDED':
         return '已暂停';
-      case 'BANNED':
-        return '已封禁';
+      case 'DELETED':
+        return '已删除';
       default:
         return '未知';
     }
@@ -393,7 +430,9 @@ export default function AdminUsersPage() {
   const currentUsers = getCurrentUsers();
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <AdminRoute>
+      <DefaultLayout>
+        <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">用户管理</h1>
@@ -450,9 +489,12 @@ export default function AdminUsersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">全部角色</option>
-                  <option value="CUSTOMER">客户</option>
+                  <option value="USER">普通用户</option>
                   <option value="CREATOR">创作者</option>
+                  <option value="REVIEWER">审核员</option>
+                  <option value="FACTORY_MANAGER">工厂管理员</option>
                   <option value="ADMIN">管理员</option>
+                  <option value="SUPER_ADMIN">超级管理员</option>
                 </select>
               </div>
 
@@ -465,8 +507,9 @@ export default function AdminUsersPage() {
                 >
                   <option value="all">全部状态</option>
                   <option value="ACTIVE">活跃</option>
+                  <option value="INACTIVE">未激活</option>
                   <option value="SUSPENDED">已暂停</option>
-                  <option value="BANNED">已封禁</option>
+                  <option value="DELETED">已删除</option>
                 </select>
               </div>
 
@@ -717,9 +760,12 @@ export default function AdminUsersPage() {
                 onChange={(e) => setEditForm(prev => ({ ...prev, role: e.target.value as UserData['role'] }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="CUSTOMER">客户</option>
+                <option value="USER">普通用户</option>
                 <option value="CREATOR">创作者</option>
+                <option value="REVIEWER">审核员</option>
+                <option value="FACTORY_MANAGER">工厂管理员</option>
                 <option value="ADMIN">管理员</option>
+                <option value="SUPER_ADMIN">超级管理员</option>
               </select>
             </div>
           </div>
@@ -842,16 +888,20 @@ export default function AdminUsersPage() {
                 {batchAction === 'role' ? (
                   <>
                     <option value="">选择角色</option>
-                    <option value="CUSTOMER">客户</option>
+                    <option value="USER">普通用户</option>
                     <option value="CREATOR">创作者</option>
+                    <option value="REVIEWER">审核员</option>
+                    <option value="FACTORY_MANAGER">工厂管理员</option>
                     <option value="ADMIN">管理员</option>
+                    <option value="SUPER_ADMIN">超级管理员</option>
                   </>
                 ) : (
                   <>
                     <option value="">选择状态</option>
                     <option value="ACTIVE">活跃</option>
+                    <option value="INACTIVE">未激活</option>
                     <option value="SUSPENDED">已暂停</option>
-                    <option value="BANNED">已封禁</option>
+                    <option value="DELETED">已删除</option>
                   </>
                 )}
               </select>
@@ -871,6 +921,8 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </DefaultLayout>
+    </AdminRoute>
   );
 }

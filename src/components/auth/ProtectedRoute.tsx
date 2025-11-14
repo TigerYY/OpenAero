@@ -24,7 +24,7 @@ export function ProtectedRoute({
   redirectTo,
   fallback,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, hasRole, loading } = useAuth();
+  const { isAuthenticated, hasRole, loading, profile, user } = useAuth();
   const router = useRouter();
   const { route, routes } = useRouting();
   
@@ -32,20 +32,37 @@ export function ProtectedRoute({
   const defaultRedirectTo = redirectTo || route(routes.AUTH.LOGIN);
 
   useEffect(() => {
-    if (loading) return;
+    console.log('[ProtectedRoute] 状态检查:', {
+      loading,
+      isAuthenticated,
+      requireAuth,
+      requiredRoles,
+      hasRequiredRole: requiredRoles.length > 0 ? hasRole(requiredRoles) : true,
+      profileRole: profile?.role,
+      userId: user?.id,
+    });
+
+    if (loading) {
+      console.log('[ProtectedRoute] 仍在加载中，等待...');
+      return;
+    }
 
     // 需要认证但未登录
     if (requireAuth && !isAuthenticated) {
+      console.log('[ProtectedRoute] 未认证，重定向到登录页');
       router.push(defaultRedirectTo);
       return;
     }
 
     // 需要特定角色但用户没有
     if (requiredRoles.length > 0 && !hasRole(requiredRoles)) {
+      console.log('[ProtectedRoute] 权限不足，当前角色:', profile?.role, '需要角色:', requiredRoles);
       router.push(route('/unauthorized'));
       return;
     }
-  }, [isAuthenticated, hasRole, loading, requireAuth, requiredRoles, defaultRedirectTo, route, router]);
+
+    console.log('[ProtectedRoute] 权限验证通过，允许访问');
+  }, [isAuthenticated, hasRole, loading, requireAuth, requiredRoles, defaultRedirectTo, route, router, profile, user]);
 
   // 加载中显示 fallback
   if (loading) {
@@ -78,6 +95,7 @@ export function ProtectedRoute({
  * 管理员路由保护
  */
 export function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { route } = useRouting();
   
   return (
     <ProtectedRoute requiredRoles={['ADMIN', 'SUPER_ADMIN']} redirectTo={route('/unauthorized')}>
@@ -90,6 +108,7 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
  * 创作者路由保护
  */
 export function CreatorRoute({ children }: { children: React.ReactNode }) {
+  const { route, routes } = useRouting();
   
   return (
     <ProtectedRoute

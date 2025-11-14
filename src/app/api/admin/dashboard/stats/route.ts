@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
+import { convertSnakeToCamel } from '@/lib/field-mapper';
 
 // GET /api/admin/dashboard/stats - 获取管理员仪表板统计数据
 export async function GET(request: NextRequest) {
@@ -20,8 +21,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 检查管理员权限
-    if (authResult.user.role !== 'ADMIN') {
+    // 检查管理员权限（包括 ADMIN 和 SUPER_ADMIN）
+    if (authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看仪表板统计',
@@ -30,8 +31,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response, { status: 403 });
     }
 
-    // 获取时间范围参数
-    const days = parseInt(request.nextUrl.searchParams.get('days') || '30');
+    // 获取时间范围参数（支持 timeRange 和 days）
+    const timeRangeParam = request.nextUrl.searchParams.get('timeRange');
+    const daysParam = request.nextUrl.searchParams.get('days');
+    const days = parseInt(timeRangeParam || daysParam || '30');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -65,28 +68,28 @@ export async function GET(request: NextRequest) {
       statusTrends
     ] = await Promise.all([
       // 方案统计
-      db.solution.count(),
-      db.solution.count({ where: { status: 'PENDING_REVIEW' } }),
-      db.solution.count({ where: { status: 'APPROVED' } }),
-      db.solution.count({ where: { status: 'REJECTED' } }),
-      db.solution.count({ where: { createdAt: { gte: startDate } } }),
+      prisma.solution.count(),
+      prisma.solution.count({ where: { status: 'PENDING_REVIEW' } }),
+      prisma.solution.count({ where: { status: 'APPROVED' } }),
+      prisma.solution.count({ where: { status: 'REJECTED' } }),
+      prisma.solution.count({ where: { createdAt: { gte: startDate } } }), // Solution 使用 camelCase
       
-      // 用户统计
-      db.user.count(),
-      db.user.count({ where: { role: 'CREATOR' } }),
-      db.user.count({ where: { role: 'ADMIN' } }),
-      db.user.count({ where: { createdAt: { gte: startDate } } }),
+      // 用户统计（使用 userProfile）
+      prisma.userProfile.count(),
+      prisma.userProfile.count({ where: { role: 'CREATOR' } }),
+      prisma.userProfile.count({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } }),
+      prisma.userProfile.count({ where: { created_at: { gte: startDate } } }),
       
       // 审核统计
-      db.solutionReview.count(),
-      db.solutionReview.count({ where: { reviewedAt: { gte: startDate } } }),
+      prisma.solutionReview.count(),
+      prisma.solutionReview.count({ where: { reviewedAt: { gte: startDate } } }), // SolutionReview 使用 camelCase
       
-      // 收入统计
-      db.solution.aggregate({
+      // 收入统计（Solution 使用 camelCase）
+      prisma.solution.aggregate({
         _sum: { price: true },
         where: { status: 'APPROVED' }
       }),
-      db.solution.aggregate({
+      prisma.solution.aggregate({
         _sum: { price: true },
         where: { 
           status: 'APPROVED',
@@ -95,14 +98,14 @@ export async function GET(request: NextRequest) {
       }),
       
       // 分类统计
-      db.solution.groupBy({
+      prisma.solution.groupBy({
         by: ['category'],
         _count: { category: true },
         orderBy: { _count: { category: 'desc' } }
       }),
       
-      // 状态趋势（最近7天）
-      db.solution.groupBy({
+      // 状态趋势（最近7天，Solution 使用 camelCase）
+      prisma.solution.groupBy({
         by: ['status'],
         _count: { status: true },
         where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
@@ -115,25 +118,25 @@ export async function GET(request: NextRequest) {
     previousPeriodStart.setDate(previousPeriodStart.getDate() + days);
 
     const [previousSolutions, previousUsers, previousReviews] = await Promise.all([
-      db.solution.count({
+      prisma.solution.count({
         where: {
-          createdAt: {
+          createdAt: { // Solution 使用 camelCase
             gte: previousPeriodStart,
             lt: startDate
           }
         }
       }),
-      db.user.count({
+      prisma.userProfile.count({
         where: {
-          createdAt: {
+          created_at: { // UserProfile 使用 snake_case
             gte: previousPeriodStart,
             lt: startDate
           }
         }
       }),
-      db.solutionReview.count({
+      prisma.solutionReview.count({
         where: {
-          reviewedAt: {
+          reviewedAt: { // SolutionReview 使用 camelCase
             gte: previousPeriodStart,
             lt: startDate
           }
@@ -154,96 +157,67 @@ export async function GET(request: NextRequest) {
       ? ((recentReviews - previousReviews) / previousReviews * 100)
       : recentReviews > 0 ? 100 : 0;
 
-    // 获取最近活动
-    const recentActivities = await db.solutionReview.findMany({
+    // 获取最近活动（SolutionReview 使用 camelCase 字段名）
+    const recentActivities = await prisma.solutionReview.findMany({
       take: 10,
-      orderBy: { reviewedAt: 'desc' },
-      include: {
-        solution: {
-          select: {
-            id: true,
-            title: true,
-            status: true
-          }
-        },
-        reviewer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
-          }
-        }
+      orderBy: { reviewedAt: 'desc' }, // SolutionReview 使用 camelCase
+      select: {
+        id: true,
+        solutionId: true, // SolutionReview 使用 camelCase
+        reviewerId: true, // SolutionReview 使用 camelCase
+        decision: true,
+        reviewedAt: true, // SolutionReview 使用 camelCase
       }
     });
 
-    // 格式化活动数据
+    // 格式化活动数据（SolutionReview 字段已经是 camelCase）
     const formattedActivities = recentActivities.map(activity => ({
       id: activity.id,
       type: 'review',
       action: activity.decision,
-      description: `${activity.reviewer.firstName || activity.reviewer.email} ${activity.decision === 'APPROVED' ? '批准了' : '拒绝了'} 方案 "${activity.solution.title}"`,
+      description: `审核了方案`,
       timestamp: activity.reviewedAt,
-      solutionId: activity.solution.id,
-      solutionTitle: activity.solution.title,
-      reviewerName: `${activity.reviewer.firstName || ''} ${activity.reviewer.lastName || ''}`.trim() || activity.reviewer.email
+      solutionId: activity.solutionId,
+      reviewerId: activity.reviewerId,
     }));
 
+    // 格式化响应数据以匹配前端期望的格式
     const stats = {
-      // 概览统计
-      overview: {
-        totalSolutions,
-        totalUsers,
-        totalCreators,
-        totalAdmins,
-        pendingReviewSolutions,
-        approvedSolutions,
-        rejectedSolutions,
+      solutions: {
+        total: totalSolutions,
+        pending: pendingReviewSolutions,
+        approved: approvedSolutions,
+        rejected: rejectedSolutions,
+      },
+      users: {
+        total: totalUsers,
+        admins: totalAdmins,
+      },
+      reviews: {
         totalReviews,
-        totalRevenue: totalRevenue._sum.price || 0,
-        recentRevenue: recentRevenue._sum.price || 0
+        avgReviewTime: 0, // TODO: 计算平均审核时间
       },
-      
-      // 增长统计
+      recentActivity: {
+        newSolutions: recentSolutions,
+        newUsers: recentUsers,
+        completedReviews: recentReviews,
+      },
       growth: {
-        solutions: {
-          current: recentSolutions,
-          previous: previousSolutions,
-          rate: Math.round(solutionGrowthRate * 100) / 100
-        },
-        users: {
-          current: recentUsers,
-          previous: previousUsers,
-          rate: Math.round(userGrowthRate * 100) / 100
-        },
-        reviews: {
-          current: recentReviews,
-          previous: previousReviews,
-          rate: Math.round(reviewGrowthRate * 100) / 100
-        }
+        solutionsGrowth: Math.round(solutionGrowthRate * 100) / 100,
+        usersGrowth: Math.round(userGrowthRate * 100) / 100,
+        reviewsGrowth: Math.round(reviewGrowthRate * 100) / 100,
       },
-      
-      // 分类统计
       categories: categoryStats.map(cat => ({
-        name: cat.category,
-        count: cat._count.category
+        name: cat.category || '未分类',
+        count: cat._count.category,
+        percentage: totalSolutions > 0 ? (cat._count.category / totalSolutions * 100) : 0,
       })),
-      
-      // 状态趋势
-      statusTrends: statusTrends.map(trend => ({
-        status: trend.status,
-        count: trend._count.status
+      statusTrend: statusTrends.map(trend => ({
+        date: new Date().toISOString().split('T')[0],
+        approved: trend.status === 'APPROVED' ? trend._count.status : 0,
+        rejected: trend.status === 'REJECTED' ? trend._count.status : 0,
+        pending: trend.status === 'PENDING_REVIEW' ? trend._count.status : 0,
       })),
-      
-      // 最近活动
-      recentActivities: formattedActivities,
-      
-      // 时间范围
-      period: {
-        days,
-        startDate,
-        endDate: new Date()
-      }
     };
 
     const response: ApiResponse<typeof stats> = {

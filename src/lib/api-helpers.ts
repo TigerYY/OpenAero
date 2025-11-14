@@ -67,30 +67,41 @@ export async function requireAdminAuth(
   request: NextRequest
 ): Promise<
   | { success: true; user: { id: string; role: string } }
-  | { success: false; response: NextResponse }
+  | { success: false; response: NextResponse; error?: NextResponse }
 > {
   // 验证用户身份
   const authResult = await authenticateRequest(request);
   if (!authResult.success || !authResult.user) {
+    const errorResponse = authResult.error || NextResponse.json(
+      { success: false, error: '未授权访问' },
+      { status: 401 }
+    );
+    console.log('[requireAdminAuth] 认证失败，返回错误响应');
     return {
       success: false,
-      response: authResult.error || NextResponse.json(
-        { success: false, error: '未授权访问' },
-        { status: 401 }
-      ),
+      response: errorResponse,
+      error: errorResponse,
     };
   }
 
-  // 检查管理员权限
-  if (authResult.user.role !== 'ADMIN') {
+  // 检查管理员权限（包括 ADMIN 和 SUPER_ADMIN）
+  if (authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    console.log('[requireAdminAuth] 权限不足，当前角色:', authResult.user.role);
+    const errorResponse = NextResponse.json(
+      { success: false, error: '权限不足，需要管理员权限' },
+      { status: 403 }
+    );
     return {
       success: false,
-      response: NextResponse.json(
-        { success: false, error: '权限不足，需要管理员权限' },
-        { status: 403 }
-      ),
+      response: errorResponse,
+      error: errorResponse,
     };
   }
+
+  console.log('[requireAdminAuth] 权限验证成功:', {
+    userId: authResult.user.id,
+    role: authResult.user.role,
+  });
 
   return {
     success: true,

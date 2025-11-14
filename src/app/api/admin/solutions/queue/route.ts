@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
-import { db } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
 // 队列筛选参数验证模式
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
 
     // 查询方案列表
     const [solutions, totalCount] = await Promise.all([
-      db.solution.findMany({
+      prisma.solution.findMany({
         where: whereClause,
         include: {
           creator: {
@@ -167,11 +167,11 @@ export async function GET(request: NextRequest) {
         skip,
         take: validatedParams.limit
       }),
-      db.solution.count({ where: whereClause })
+      prisma.solution.count({ where: whereClause })
     ]);
 
     // 计算队列统计信息
-    const queueStats = await db.solution.groupBy({
+    const queueStats = await prisma.solution.groupBy({
       by: ['status'],
       where: {
         status: {
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
     // 计算超期方案数量
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    const overdueCount = await db.solution.count({
+    const overdueCount = await prisma.solution.count({
       where: {
         status: 'PENDING_REVIEW',
         submittedAt: {
@@ -309,7 +309,7 @@ export async function PUT(request: NextRequest) {
     const validatedData = updatePrioritySchema.parse(body);
     
     // 检查方案是否存在
-    const solution = await db.solution.findUnique({
+    const solution = await prisma.solution.findUnique({
       where: { id: validatedData.solutionId },
       select: { id: true, title: true, status: true }
     });

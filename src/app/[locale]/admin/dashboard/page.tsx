@@ -17,10 +17,16 @@ import {
   Activity,
   Settings,
   Mail,
-  Trash2
+  Trash2,
+  ArrowLeft,
+  Home
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useRouting } from '@/lib/routing';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +35,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 
 // 统计数据接口
@@ -78,6 +85,9 @@ interface QuickActionResult {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const { route, routes } = useRouting();
+  const { signOut } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'solutions' | 'users' | 'analytics'>('overview');
@@ -96,28 +106,30 @@ export default function AdminDashboard() {
   const loadDashboardStats = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
       const response = await fetch(`/api/admin/dashboard/stats?timeRange=${timeRange}`, {
+        credentials: 'include', // 使用 cookies 认证
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error('获取统计数据失败');
+        const errorData = await response.json().catch(() => ({ error: '获取统计数据失败' }));
+        throw new Error(errorData.error || '获取统计数据失败');
       }
 
-      const data = await response.json();
-      setStats(data);
+      const responseData = await response.json();
+      // API 返回格式: { success: true, data: {...} }
+      if (responseData.success && responseData.data) {
+        setStats(responseData.data);
+      } else {
+        // 兼容旧格式（直接返回数据）
+        setStats(responseData);
+      }
     } catch (error) {
       console.error('加载仪表盘数据失败:', error);
-      toast.error('加载数据失败，请稍后重试');
+      const errorMessage = error instanceof Error ? error.message : '加载数据失败，请稍后重试';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -127,16 +139,10 @@ export default function AdminDashboard() {
   const handleQuickAction = async (action: string, params?: any) => {
     setQuickActionLoading(action);
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        toast.error('请先登录');
-        return;
-      }
-
       const response = await fetch('/api/admin/dashboard/quick-actions', {
         method: 'POST',
+        credentials: 'include', // 使用 cookies 认证
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -146,7 +152,8 @@ export default function AdminDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error('操作失败');
+        const errorData = await response.json().catch(() => ({ error: '操作失败' }));
+        throw new Error(errorData.error || '操作失败');
       }
 
       const result: QuickActionResult = await response.json();
@@ -155,8 +162,9 @@ export default function AdminDashboard() {
         toast.success(result.message);
         
         // 如果是导出操作，处理下载
-        if (action.startsWith('export') && result.data) {
-          const blob = new Blob([JSON.stringify(result.data, null, 2)], {
+        if ((action.startsWith('export') || action.includes('export')) && result.data) {
+          const exportData = result.data.data || result.data;
+          const blob = new Blob([JSON.stringify(exportData, null, 2)], {
             type: 'application/json',
           });
           const url = URL.createObjectURL(blob);
@@ -176,7 +184,8 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('快速操作失败:', error);
-      toast.error('操作失败，请稍后重试');
+      const errorMessage = error instanceof Error ? error.message : '操作失败，请稍后重试';
+      toast.error(errorMessage);
     } finally {
       setQuickActionLoading(null);
     }
@@ -189,9 +198,9 @@ export default function AdminDashboard() {
       return;
     }
 
-    await handleQuickAction('batchReview', {
-      action: batchAction,
-      notes: batchNotes,
+    const action = batchAction === 'approve' ? 'approve_all_pending' : 'reject_all_pending';
+    await handleQuickAction(action, {
+      reason: batchNotes,
     });
 
     setShowBatchDialog(false);
@@ -226,47 +235,61 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+      <DefaultLayout>
+        <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">加载中...</p>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 头部 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">管理员仪表盘</h1>
-              <p className="text-gray-600">OpenAero 平台管理中心</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* 时间范围选择 */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">时间范围:</span>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                  className="text-sm border border-gray-300 rounded-md px-2 py-1"
+    <DefaultLayout>
+      <div className="bg-gray-50">
+        {/* 头部 */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <Link
+                  href={route(routes.BUSINESS.HOME)}
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                  title="返回首页"
                 >
-                  <option value="7">最近7天</option>
-                  <option value="30">最近30天</option>
-                  <option value="90">最近90天</option>
-                </select>
+                  <ArrowLeft className="h-5 w-5 mr-2" />
+                  <span className="text-sm">返回首页</span>
+                </Link>
+                <div className="h-6 w-px bg-gray-300"></div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">管理员仪表盘</h1>
+                  <p className="text-gray-600">OpenAero 平台管理中心</p>
+                </div>
               </div>
-              <Button onClick={loadDashboardStats} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                刷新数据
-              </Button>
+              <div className="flex items-center space-x-4">
+                {/* 时间范围选择 */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">时间范围:</span>
+                  <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value)}
+                    className="text-sm border border-gray-300 rounded-md px-2 py-1"
+                  >
+                    <option value="7">最近7天</option>
+                    <option value="30">最近30天</option>
+                    <option value="90">最近90天</option>
+                  </select>
+                </div>
+                <Button onClick={loadDashboardStats} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  刷新数据
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* 导航标签 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -274,7 +297,12 @@ export default function AdminDashboard() {
           <TabsList>
             <TabsTrigger value="overview">概览</TabsTrigger>
             <TabsTrigger value="solutions">方案管理</TabsTrigger>
-            <TabsTrigger value="users">用户管理</TabsTrigger>
+            <Link 
+              href={route(routes.ADMIN.USERS)} 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-background hover:text-foreground"
+            >
+              用户管理
+            </Link>
             <TabsTrigger value="analytics">数据分析</TabsTrigger>
           </TabsList>
 
@@ -366,7 +394,7 @@ export default function AdminDashboard() {
                   {/* 批量审核 */}
                   <Button
                     onClick={() => setShowBatchDialog(true)}
-                    disabled={quickActionLoading === 'batchReview'}
+                    disabled={quickActionLoading === 'approve_all_pending' || quickActionLoading === 'reject_all_pending'}
                     className="h-auto p-4 flex flex-col items-center space-y-2"
                   >
                     <CheckCircle className="h-6 w-6" />
@@ -375,8 +403,8 @@ export default function AdminDashboard() {
 
                   {/* 导出方案数据 */}
                   <Button
-                    onClick={() => handleQuickAction('exportSolutions', { status: 'APPROVED' })}
-                    disabled={quickActionLoading === 'exportSolutions'}
+                    onClick={() => handleQuickAction('export_solutions', { status: 'APPROVED' })}
+                    disabled={quickActionLoading === 'export_solutions'}
                     variant="outline"
                     className="h-auto p-4 flex flex-col items-center space-y-2"
                   >
@@ -386,8 +414,8 @@ export default function AdminDashboard() {
 
                   {/* 导出用户数据 */}
                   <Button
-                    onClick={() => handleQuickAction('exportUsers')}
-                    disabled={quickActionLoading === 'exportUsers'}
+                    onClick={() => handleQuickAction('export_users')}
+                    disabled={quickActionLoading === 'export_users'}
                     variant="outline"
                     className="h-auto p-4 flex flex-col items-center space-y-2"
                   >
@@ -397,8 +425,8 @@ export default function AdminDashboard() {
 
                   {/* 清理旧记录 */}
                   <Button
-                    onClick={() => handleQuickAction('cleanupOldRecords')}
-                    disabled={quickActionLoading === 'cleanupOldRecords'}
+                    onClick={() => handleQuickAction('clear_old_reviews', { days: 90 })}
+                    disabled={quickActionLoading === 'clear_old_reviews'}
                     variant="outline"
                     className="h-auto p-4 flex flex-col items-center space-y-2"
                   >
@@ -505,62 +533,7 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* 用户管理标签页 */}
-          <TabsContent value="users" className="space-y-6">
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Users className="h-5 w-5 mr-2" />
-                      用户统计
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span>总用户数</span>
-                        <span className="text-2xl font-bold">{stats.users.total}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>管理员数</span>
-                        <span className="text-lg font-semibold">{stats.users.admins}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>普通用户</span>
-                        <span className="text-lg font-semibold">{stats.users.total - stats.users.admins}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Activity className="h-5 w-5 mr-2" />
-                      最近活动
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span>新增方案</span>
-                        <Badge variant="secondary">{stats.recentActivity.newSolutions}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>新增用户</span>
-                        <Badge variant="secondary">{stats.recentActivity.newUsers}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>完成审核</span>
-                        <Badge variant="secondary">{stats.recentActivity.completedReviews}</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
+          {/* 用户管理标签页 - 已移除，改为直接链接到用户管理页面 */}
 
           {/* 数据分析标签页 */}
           <TabsContent value="analytics" className="space-y-6">
@@ -639,13 +612,14 @@ export default function AdminDashboard() {
             </Button>
             <Button 
               onClick={handleBatchReview}
-              disabled={quickActionLoading === 'batchReview' || !batchNotes.trim()}
+              disabled={(quickActionLoading === 'approve_all_pending' || quickActionLoading === 'reject_all_pending') || !batchNotes.trim()}
             >
-              {quickActionLoading === 'batchReview' ? '处理中...' : '确认审核'}
+              {(quickActionLoading === 'approve_all_pending' || quickActionLoading === 'reject_all_pending') ? '处理中...' : '确认审核'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </DefaultLayout>
   );
 }

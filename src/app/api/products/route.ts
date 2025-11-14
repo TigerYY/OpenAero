@@ -195,12 +195,9 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(
       formattedProducts,
-      {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      page,
+      limit,
+      total,
       '获取商品列表成功'
     );
   } catch (error) {

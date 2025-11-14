@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import type { NextRequest } from 'next/server';
 
 // Supabase 配置
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -55,6 +56,47 @@ export async function createSupabaseServer() {
           cookieStore.set({ name, value: '', ...options });
         } catch (error) {
           console.warn('Failed to remove cookie:', error);
+        }
+      },
+    },
+  });
+}
+
+/**
+ * 在 API 路由中创建 Supabase 服务器客户端
+ * 从 NextRequest 中获取 cookies，并支持设置 cookies 到 NextResponse
+ */
+export function createSupabaseServerFromRequest(
+  request: NextRequest,
+  response?: NextResponse
+) {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        const value = request.cookies.get(name)?.value;
+        return value;
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        // 如果有 response 对象，设置 cookie
+        if (response) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        }
+        // 否则，尝试设置到 request（虽然这通常不会工作）
+        // 但至少不会报错
+      },
+      remove(name: string, options: CookieOptions) {
+        // 如果有 response 对象，删除 cookie
+        if (response) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+            maxAge: 0,
+          });
         }
       },
     },
@@ -149,8 +191,8 @@ export interface ExtendedUser {
   id: string;
   email: string;
   phone?: string;
-  email_confirmed_at?: string;
-  phone_confirmed_at?: string;
+  emailConfirmedAt?: string;
+  phoneConfirmedAt?: string;
   profile?: UserProfile;
-  creator_profile?: CreatorProfile;
+  creatorProfile?: CreatorProfile;
 }

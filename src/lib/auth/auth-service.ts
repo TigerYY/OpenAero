@@ -5,6 +5,8 @@
 
 import { supabaseBrowser, createSupabaseAdmin, createSupabaseServer, type UserProfile, type ExtendedUser } from './supabase-client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
+import type { NextRequest } from 'next/server';
+import { convertSnakeToCamel } from '../field-mapper';
 
 // ============================================
 // 认证服务类
@@ -182,14 +184,18 @@ export class AuthService {
         creatorProfile = creatorData || undefined;
       }
 
+      // 转换字段名为 camelCase
+      const convertedProfile = profileData ? convertSnakeToCamel(profileData) : undefined;
+      const convertedCreatorProfile = creatorProfile ? convertSnakeToCamel(creatorProfile) : undefined;
+
       return {
         id: userData.user.id,
         email: userData.user.email || '',
         phone: userData.user.phone,
-        email_confirmed_at: userData.user.email_confirmed_at,
-        phone_confirmed_at: userData.user.phone_confirmed_at,
-        profile: profileData || undefined,
-        creator_profile: creatorProfile,
+        emailConfirmedAt: userData.user.email_confirmed_at,
+        phoneConfirmedAt: userData.user.phone_confirmed_at,
+        profile: convertedProfile,
+        creatorProfile: convertedCreatorProfile,
       };
     } catch (error) {
       console.error('Failed to get extended user:', error);
@@ -407,11 +413,56 @@ export class AuthService {
 
 /**
  * 服务器端获取当前用户
+ * 用于服务器组件
  */
 export async function getServerUser(): Promise<User | null> {
   const supabase = await createSupabaseServer();
   const { data } = await supabase.auth.getUser();
   return data.user;
+}
+
+/**
+ * 从 API 请求中获取当前用户
+ * 用于 API 路由
+ */
+export async function getServerUserFromRequest(request: NextRequest): Promise<User | null> {
+  try {
+    const { createSupabaseServerFromRequest } = await import('./supabase-client');
+    const supabase = createSupabaseServerFromRequest(request);
+    
+    // 调试：检查 cookies
+    const cookies = request.cookies.getAll();
+    const authCookies = cookies.filter(c => 
+      c.name.includes('auth') || 
+      c.name.includes('supabase') || 
+      c.name.includes('sb-')
+    );
+    
+    if (authCookies.length === 0) {
+      console.warn('[getServerUserFromRequest] 未找到认证相关的 cookies');
+      console.warn('[getServerUserFromRequest] 所有 cookies:', cookies.map(c => c.name));
+    } else {
+      console.log('[getServerUserFromRequest] 找到认证 cookies:', authCookies.map(c => c.name));
+    }
+    
+    const { data, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      console.error('[getServerUserFromRequest] 获取用户失败:', error.message);
+      return null;
+    }
+    
+    if (!data.user) {
+      console.warn('[getServerUserFromRequest] 用户数据为空');
+      return null;
+    }
+    
+    console.log('[getServerUserFromRequest] 成功获取用户:', data.user.id);
+    return data.user;
+  } catch (error) {
+    console.error('[getServerUserFromRequest] 异常:', error);
+    return null;
+  }
 }
 
 /**
@@ -425,9 +476,21 @@ export async function getServerSession(): Promise<Session | null> {
 
 /**
  * 服务器端获取扩展用户信息
+ * 用于服务器组件
  */
 export async function getServerExtendedUser(): Promise<ExtendedUser | null> {
   const user = await getServerUser();
+  if (!user) return null;
+  
+  return AuthService.getExtendedUser(user.id);
+}
+
+/**
+ * 从 API 请求中获取扩展用户信息
+ * 用于 API 路由
+ */
+export async function getServerExtendedUserFromRequest(request: NextRequest): Promise<ExtendedUser | null> {
+  const user = await getServerUserFromRequest(request);
   if (!user) return null;
   
   return AuthService.getExtendedUser(user.id);
