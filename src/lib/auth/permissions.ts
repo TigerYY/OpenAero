@@ -124,11 +124,23 @@ export function roleHasPermission(role: UserRole, permission: string): boolean {
 }
 
 /**
- * 合并角色权限和自定义权限
+ * 合并角色权限和自定义权限（支持多角色）
  */
-export function mergePermissions(role: UserRole, customPermissions: string[] = []): string[] {
-  const rolePermissions = getRolePermissions(role);
-  return Array.from(new Set([...rolePermissions, ...customPermissions]));
+export function mergePermissions(roles: UserRole | UserRole[], customPermissions: string[] = []): string[] {
+  const roleArray = Array.isArray(roles) ? roles : [roles];
+  
+  // 合并所有角色的权限
+  const allRolePermissions = roleArray.flatMap(role => getRolePermissions(role));
+  
+  // 去重并合并自定义权限
+  return Array.from(new Set([...allRolePermissions, ...customPermissions]));
+}
+
+/**
+ * 获取多个角色的合并权限
+ */
+export function getMergedRolePermissions(roles: UserRole[]): string[] {
+  return mergePermissions(roles, []);
 }
 
 /**

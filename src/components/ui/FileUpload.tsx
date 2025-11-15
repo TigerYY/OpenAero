@@ -80,6 +80,96 @@ export function FileUpload({
     return Math.random().toString(36).substr(2, 9);
   };
 
+  // 先定义 uploadFile 函数（uploadFiles 会用到）
+  const uploadFile = useCallback(async (fileWithPreview: FileWithPreview): Promise<UploadResult> => {
+    // 更新文件状态为上传中
+    setFiles(prev => {
+      const exists = prev.some(f => f.id === fileWithPreview.id);
+      if (!exists) {
+        // 如果文件不在状态中，先添加到状态中
+        return [...prev, { ...fileWithPreview, uploading: true, progress: 0 }];
+      }
+      return prev.map(f => 
+        f.id === fileWithPreview.id ? { ...f, uploading: true, progress: 0 } : f
+      );
+    });
+
+    try {
+      const result = await uploadFileWithProgress(
+        fileWithPreview.file,
+        '/api/upload',
+        uploadOptions,
+        (progress) => {
+          setFiles(prev => prev.map(f => 
+            f.id === fileWithPreview.id ? { ...f, progress } : f
+          ));
+          onProgress?.(fileWithPreview.file.name, progress);
+        }
+      );
+
+      // 确保 result 不为 undefined
+      const uploadResult: UploadResult = result || {
+        success: false,
+        error: '上传失败：未返回结果'
+      };
+
+      setFiles(prev => prev.map(f => 
+        f.id === fileWithPreview.id ? { ...f, result: uploadResult, uploading: false, progress: 100 } : f
+      ));
+
+      return uploadResult;
+    } catch (error) {
+      const errorResult: UploadResult = {
+        success: false,
+        error: error instanceof Error ? error.message : '上传失败'
+      };
+
+      setFiles(prev => prev.map(f => 
+        f.id === fileWithPreview.id ? { ...f, result: errorResult, uploading: false } : f
+      ));
+
+      return errorResult;
+    }
+  }, [uploadOptions, onProgress]);
+
+  // 定义 uploadFiles 函数（在 handleFileSelect 之前）
+  const uploadFiles = useCallback(async (filesToUpload?: FileWithPreview[]) => {
+    // 如果传入了 filesToUpload，直接使用；否则从 files 状态中获取未上传的文件
+    const targetFiles = filesToUpload || files.filter(f => !f.result);
+    const results: UploadResult[] = [];
+    
+    for (const fileWithPreview of targetFiles) {
+      // 如果文件已经有结果，跳过
+      if (fileWithPreview.result) {
+        results.push(fileWithPreview.result);
+        continue;
+      }
+
+      try {
+        const result = await uploadFile(fileWithPreview);
+        // 确保 result 不为 undefined
+        if (result) {
+          results.push(result);
+        } else {
+          results.push({
+            success: false,
+            error: '上传失败：未返回结果'
+          });
+        }
+      } catch (error) {
+        results.push({
+          success: false,
+          error: error instanceof Error ? error.message : '上传失败'
+        });
+      }
+    }
+
+    // 确保 results 数组不为空且不包含 undefined
+    if (results.length > 0) {
+      onUpload?.(results.filter((r): r is UploadResult => r != null));
+    }
+  }, [files, onUpload, uploadFile]);
+
   const handleFileSelect = useCallback(async (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
 
@@ -121,11 +211,12 @@ export function FileUpload({
 
     // 自动上传
     if (autoUpload && newFiles.length > 0) {
+      // 使用 setTimeout 确保状态更新后再上传
       setTimeout(() => {
         uploadFiles(newFiles);
       }, 100);
     }
-  }, [files.length, maxFiles, uploadOptions, showPreview, autoUpload]);
+  }, [files.length, maxFiles, uploadOptions, showPreview, autoUpload, uploadFiles]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -171,60 +262,6 @@ export function FileUpload({
       e.target.value = '';
     }
   }, [handleFileSelect]);
-
-  const uploadFile = async (fileWithPreview: FileWithPreview) => {
-    const fileIndex = files.findIndex(f => f.id === fileWithPreview.id);
-    if (fileIndex === -1) return;
-
-    setFiles(prev => prev.map(f => 
-      f.id === fileWithPreview.id ? { ...f, uploading: true, progress: 0 } : f
-    ));
-
-    try {
-      const result = await uploadFileWithProgress(
-        fileWithPreview.file,
-        '/api/upload',
-        uploadOptions,
-        (progress) => {
-          setFiles(prev => prev.map(f => 
-            f.id === fileWithPreview.id ? { ...f, progress } : f
-          ));
-          onProgress?.(fileWithPreview.file.name, progress);
-        }
-      );
-
-      setFiles(prev => prev.map(f => 
-        f.id === fileWithPreview.id ? { ...f, result, uploading: false, progress: 100 } : f
-      ));
-
-      return result;
-    } catch (error) {
-      const errorResult: UploadResult = {
-        success: false,
-        error: error instanceof Error ? error.message : '上传失败'
-      };
-
-      setFiles(prev => prev.map(f => 
-        f.id === fileWithPreview.id ? { ...f, result: errorResult, uploading: false } : f
-      ));
-
-      return errorResult;
-    }
-  };
-
-  const uploadFiles = async (filesToUpload?: FileWithPreview[]) => {
-    const targetFiles = filesToUpload || files.filter(f => !f.result);
-    const results: UploadResult[] = [];
-    
-    for (const fileWithPreview of targetFiles) {
-      if (!fileWithPreview.result) {
-        const result = await uploadFile(fileWithPreview);
-        results.push(result);
-      }
-    }
-
-    onUpload?.(results);
-  };
 
   const uploadAllFiles = async () => {
     await uploadFiles();

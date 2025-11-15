@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import { getRolePermissions } from './permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -60,35 +61,65 @@ export async function getCurrentUser(request: NextRequest) {
 }
 
 /**
- * 检查用户是否有指定角色
+ * 检查用户是否有指定角色（支持多角色）
  */
 export function hasRole(user: any, requiredRoles: UserRole | UserRole[]): boolean {
   if (!user) return false;
 
-  const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-  return roles.includes(user.role);
+  // 支持旧的单一角色格式（向后兼容）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+  
+  const required = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+  
+  // 检查用户是否拥有任意一个所需角色
+  return required.some(role => userRoles.includes(role));
 }
 
 /**
- * 检查用户是否有指定权限
+ * 检查用户是否有指定权限（支持多角色）
  */
 export function hasPermission(user: any, permission: string): boolean {
   if (!user) return false;
 
+  // 支持旧的单一角色格式（向后兼容）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
   // 超级管理员和管理员拥有所有权限
-  if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN) {
+  if (userRoles.includes(UserRole.SUPER_ADMIN) || userRoles.includes(UserRole.ADMIN)) {
     return true;
   }
 
-  return user.permissions?.includes(permission) || false;
+  // 检查自定义权限
+  if (user.permissions?.includes(permission)) {
+    return true;
+  }
+
+  // 检查角色默认权限
+  for (const role of userRoles) {
+    const rolePermissions = getRolePermissions(role);
+    if (rolePermissions.includes(permission)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
  * 角色层级检查
- * 检查用户角色是否大于等于要求的角色
+ * 检查用户角色是否大于等于要求的角色（支持多角色，取最高角色）
  */
 export function hasMinimumRole(user: any, minimumRole: UserRole): boolean {
   if (!user) return false;
+
+  // 支持旧的单一角色格式（向后兼容）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
 
   const roleHierarchy: Record<UserRole, number> = {
     [UserRole.USER]: 1,
@@ -99,10 +130,43 @@ export function hasMinimumRole(user: any, minimumRole: UserRole): boolean {
     [UserRole.SUPER_ADMIN]: 5,
   };
 
-  const userLevel = roleHierarchy[user.role] || 0;
+  // 获取用户的最高角色层级
+  const userLevel = Math.max(
+    ...userRoles.map(role => roleHierarchy[role] || 0),
+    0
+  );
   const requiredLevel = roleHierarchy[minimumRole] || 0;
 
   return userLevel >= requiredLevel;
+}
+
+/**
+ * 获取用户的最高角色
+ */
+export function getHighestRole(user: any): UserRole | null {
+  if (!user) return null;
+
+  // 支持旧的单一角色格式（向后兼容）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
+  if (userRoles.length === 0) return null;
+
+  const roleHierarchy: Record<UserRole, number> = {
+    [UserRole.USER]: 1,
+    [UserRole.CREATOR]: 2,
+    [UserRole.REVIEWER]: 3,
+    [UserRole.FACTORY_MANAGER]: 3,
+    [UserRole.ADMIN]: 4,
+    [UserRole.SUPER_ADMIN]: 5,
+  };
+
+  return userRoles.reduce((highest, role) => {
+    const currentLevel = roleHierarchy[role] || 0;
+    const highestLevel = roleHierarchy[highest] || 0;
+    return currentLevel > highestLevel ? role : highest;
+  }, userRoles[0]);
 }
 
 /**
@@ -188,3 +252,4 @@ export function createProtectedHandler(options: {
     };
   };
 }
+

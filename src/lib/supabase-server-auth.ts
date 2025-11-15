@@ -7,25 +7,18 @@ import { NextRequest } from 'next/server';
  */
 export async function getServerSession(request?: NextRequest) {
   try {
-    const supabase = getSupabaseServerClient();
+    let supabase;
     
-    // 从请求头或cookie中获取令牌
-    let accessToken = null;
-    
+    // 如果有请求对象，使用能够读取cookies的客户端
     if (request) {
-      // 尝试从Authorization头获取
-      const authHeader = request.headers.get('authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        accessToken = authHeader.substring(7);
-      }
-      
-      // 尝试从cookie获取
-      if (!accessToken) {
-        accessToken = request.cookies.get('sb-access-token')?.value;
-      }
+      const { createSupabaseServerFromRequest } = await import('./auth/supabase-client');
+      supabase = createSupabaseServerFromRequest(request);
+    } else {
+      // 否则使用标准服务器客户端
+      supabase = getSupabaseServerClient();
     }
     
-    // 获取用户会话
+    // 获取用户会话（会自动从cookies中读取）
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {

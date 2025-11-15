@@ -13,9 +13,19 @@ import { getApplications, reviewApplication } from '@/lib/creator-application';
 export const dynamic = 'force-dynamic';
 
 const applicationsQuerySchema = z.object({
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
-  status: z.nativeEnum(VerificationStatus).optional(),
+  page: z.string().nullable().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
+  limit: z.string().nullable().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
+  status: z.string().nullable().optional().transform((val) => {
+    // 如果为 null、空字符串或 'all'，返回 undefined
+    if (!val || val === '' || val === 'all') {
+      return undefined;
+    }
+    // 验证是否为有效的 VerificationStatus
+    if (Object.values(VerificationStatus).includes(val as VerificationStatus)) {
+      return val as VerificationStatus;
+    }
+    return undefined;
+  }),
 });
 
 const reviewApplicationSchema = z.object({
@@ -33,27 +43,36 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const statusParam = searchParams.get('status');
+    
+    console.log('API 接收到的查询参数:', {
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      status: statusParam,
+    });
+    
     const queryResult = applicationsQuerySchema.safeParse({
       page: searchParams.get('page'),
       limit: searchParams.get('limit'),
-      status: searchParams.get('status'),
+      status: statusParam,
     });
 
     if (!queryResult.success) {
+      console.error('查询参数验证失败:', queryResult.error);
       return createErrorResponse('查询参数无效', 400);
     }
 
     const { page, limit, status } = queryResult.data;
+    console.log('解析后的查询参数:', { page, limit, status });
+    
     const result = await getApplications(page, limit, status);
+    console.log('查询结果:', { count: result.applications.length, total: result.total });
 
     return createPaginatedResponse(
       result.applications,
-      {
-        page,
-        limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
-      },
+      page,
+      limit,
+      result.total,
       '获取申请列表成功'
     );
   } catch (error) {
@@ -103,12 +122,35 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    // TODO: 发送通知邮件
-    // if (action === 'approve') {
-    //   await sendApplicationApprovedEmail(updatedApplication.user.email, updatedApplication);
-    // } else {
-    //   await sendApplicationRejectedEmail(updatedApplication.user.email, updatedApplication, notes);
-    // }
+    // 发送通知邮件
+    if (updatedApplication.user.email) {
+      try {
+        const { sendEmail } = await import('@/lib/email/smtp-service');
+        const { getCreatorApprovalEmail } = await import('@/lib/email/email-templates');
+        
+        const userName = updatedApplication.user.firstName || updatedApplication.user.lastName 
+          ? `${updatedApplication.user.firstName || ''} ${updatedApplication.user.lastName || ''}`.trim()
+          : updatedApplication.user.email.split('@')[0];
+        
+        const emailTemplate = getCreatorApprovalEmail({
+          userName,
+          approved: action === 'approve',
+          reason: notes || undefined,
+        });
+
+        await sendEmail({
+          to: updatedApplication.user.email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+          text: emailTemplate.text,
+        });
+
+        console.log(`已发送${action === 'approve' ? '批准' : '拒绝'}通知邮件给:`, updatedApplication.user.email);
+      } catch (error) {
+        console.error('发送通知邮件失败:', error);
+        // 不抛出错误，避免影响审核流程
+      }
+    }
 
     return createSuccessResponse(
       updatedApplication,

@@ -9,3 +9,4 @@ export { Footer } from './Footer';
 export { DefaultLayout } from './DefaultLayout';
 export { EmptyLayout } from './EmptyLayout';
 export { MobileMenu } from './MobileMenu';
+export { AdminLayout } from './AdminLayout';

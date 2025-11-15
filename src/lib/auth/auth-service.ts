@@ -172,9 +172,12 @@ export class AuthService {
         console.error('Failed to fetch user profile:', profileError);
       }
 
-      // 如果是创作者，获取创作者资料
+      // 如果是创作者，获取创作者资料（支持多角色）
       let creatorProfile = undefined;
-      if (profileData?.role === 'CREATOR') {
+      const userRoles = Array.isArray(profileData?.roles) 
+        ? profileData.roles 
+        : (profileData?.role ? [profileData.role] : []);
+      if (userRoles.includes('CREATOR')) {
         const { data: creatorData } = await supabaseAdmin
           .from('creator_profiles')
           .select('*')
@@ -242,14 +245,14 @@ export class AuthService {
       // 不存在，创建新记录
       const { error } = await supabaseAdmin
         .from('user_profiles')
-        .insert([
-          {
-            user_id: userId,
-            role: 'USER',
-            status: 'ACTIVE',
-            ...data,
-          },
-        ]);
+          .insert([
+            {
+              user_id: userId,
+              roles: data.roles || ['USER'],
+              status: 'ACTIVE',
+              ...data,
+            },
+          ]);
 
       return { error };
     } catch (error) {
@@ -302,11 +305,19 @@ export class AuthService {
 
       if (!data) return false;
 
-      // 超级管理员拥有所有权限
-      if (data.role === 'SUPER_ADMIN') return true;
+      // 支持多角色数组或单一角色（向后兼容）
+      const userRoles = Array.isArray(data.roles) 
+        ? data.roles 
+        : (data.role ? [data.role] : []);
+
+      // 超级管理员和管理员拥有所有权限
+      if (userRoles.includes('SUPER_ADMIN') || userRoles.includes('ADMIN')) return true;
 
       // 检查自定义权限
-      return data.permissions?.includes(permission) || false;
+      if (data.permissions?.includes(permission)) return true;
+
+      // TODO: 检查角色默认权限（需要导入权限函数）
+      return false;
     } catch (error) {
       console.error('Failed to check permission:', error);
       return false;
@@ -321,13 +332,18 @@ export class AuthService {
       const supabaseAdmin = createSupabaseAdmin();
       const { data } = await supabaseAdmin
         .from('user_profiles')
-        .select('role')
+        .select('roles, role') // 同时查询 roles 和 role（向后兼容）
         .eq('user_id', userId)
         .single();
 
       if (!data) return false;
 
-      return roles.includes(data.role);
+      // 支持多角色数组或单一角色（向后兼容）
+      const userRoles = Array.isArray(data.roles) 
+        ? data.roles 
+        : (data.role ? [data.role] : []);
+
+      return roles.some(role => userRoles.includes(role));
     } catch (error) {
       console.error('Failed to check role:', error);
       return false;
@@ -335,9 +351,9 @@ export class AuthService {
   }
 
   /**
-   * 更新用户角色 (仅管理员)
+   * 更新用户角色 (仅管理员) - 支持多角色
    */
-  static async updateUserRole(userId: string, role: string, updatedBy: string): Promise<{ error: Error | null }> {
+  static async updateUserRole(userId: string, roles: string | string[], updatedBy: string): Promise<{ error: Error | null }> {
     try {
       // 检查操作者权限
       const hasAdminRole = await this.hasRole(updatedBy, ['ADMIN', 'SUPER_ADMIN']);
@@ -345,10 +361,13 @@ export class AuthService {
         return { error: new Error('Unauthorized: Only admins can update user roles') };
       }
 
+      // 确保 roles 是数组
+      const rolesArray = Array.isArray(roles) ? roles : [roles];
+
       const supabaseAdmin = createSupabaseAdmin();
       const { error } = await supabaseAdmin
         .from('user_profiles')
-        .update({ role })
+        .update({ roles: rolesArray })
         .eq('user_id', userId);
 
       // 记录审计日志
@@ -357,7 +376,7 @@ export class AuthService {
         action: 'UPDATE_USER_ROLE',
         resource: 'user_profiles',
         resource_id: userId,
-        new_value: { role },
+        new_value: { roles: rolesArray },
         ip_address: '0.0.0.0', // 应从请求中获取
         user_agent: 'System',
         success: !error,

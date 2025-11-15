@@ -155,10 +155,14 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(stats, '获取统计数据成功');
   } catch (error) {
     console.error('获取创作者统计数据失败:', error);
+    // 返回更详细的错误信息
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('错误详情:', { errorMessage, errorStack });
     return createErrorResponse(
-      '获取统计数据失败',
+      `获取统计数据失败: ${errorMessage}`,
       500,
-      error instanceof Error ? { name: error.name, message: error.message } : undefined
+      error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : undefined
     );
   }
 }

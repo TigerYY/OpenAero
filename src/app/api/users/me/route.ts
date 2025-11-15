@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       console.log('Profile 不存在，尝试创建...');
       try {
         const { error: createError } = await AuthService.createProfileIfNotExists(user.id, {
-          role: 'USER',
+          roles: ['USER'],
           status: 'ACTIVE',
         });
 

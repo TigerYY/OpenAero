@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useRouting } from '@/lib/routing';
@@ -36,6 +36,65 @@ function ProfileContent() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [applicationStatus, setApplicationStatus] = useState<{
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+    submittedAt: Date | null;
+    reviewedAt: Date | null;
+    reviewNotes: string | null;
+  } | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+
+  // 调试日志
+  useEffect(() => {
+    console.log('[ProfilePage] 状态更新:', {
+      authLoading,
+      user: user ? { id: user.id, email: user.email } : null,
+      profile: profile ? { id: profile.id, display_name: profile.display_name } : null,
+    });
+  }, [authLoading, user, profile]);
+
+  // 获取创作者申请状态
+  useEffect(() => {
+    const fetchApplicationStatus = async () => {
+      // 获取用户角色数组（支持多角色）
+      const userRoles = profile?.roles 
+        ? (Array.isArray(profile.roles) ? profile.roles : [profile.roles]) 
+        : (profile?.role ? [profile.role] : []);
+      
+      if (!user || userRoles.includes('CREATOR') || userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) {
+        setApplicationStatus(null);
+        return;
+      }
+
+      setLoadingStatus(true);
+      try {
+        const response = await fetch('/api/creators/application/status', {
+          credentials: 'include',
+        });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          setApplicationStatus({
+            status: result.data.status,
+            submittedAt: result.data.submittedAt ? new Date(result.data.submittedAt) : null,
+            reviewedAt: result.data.reviewedAt ? new Date(result.data.reviewedAt) : null,
+            reviewNotes: result.data.reviewNotes || null,
+          });
+        } else {
+          setApplicationStatus(null);
+        }
+      } catch (error) {
+        console.error('获取申请状态失败:', error);
+        setApplicationStatus(null);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+
+    if (user && profile) {
+      fetchApplicationStatus();
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     if (profile && user) {
@@ -253,12 +312,17 @@ function ProfileContent() {
               <p className="text-gray-600">@{profile.display_name || user.email?.split('@')[0]}</p>
               <div className="mt-2 flex items-center space-x-4">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                  {profile.role === 'ADMIN' && '管理员'}
-                  {profile.role === 'CREATOR' && '创作者'}
-                  {profile.role === 'USER' && '普通用户'}
-                  {profile.role === 'SUPER_ADMIN' && '超级管理员'}
-                  {profile.role === 'REVIEWER' && '审核员'}
-                  {profile.role === 'FACTORY_MANAGER' && '工厂管理员'}
+                  {/* 显示所有角色 */}
+                  {(Array.isArray(profile.roles) ? profile.roles : (profile.role ? [profile.role] : [])).map((role) => (
+                    <span key={role} className="mr-2">
+                      {role === 'ADMIN' && '管理员'}
+                      {role === 'CREATOR' && '创作者'}
+                      {role === 'USER' && '普通用户'}
+                      {role === 'SUPER_ADMIN' && '超级管理员'}
+                      {role === 'REVIEWER' && '审核员'}
+                      {role === 'FACTORY_MANAGER' && '工厂管理员'}
+                    </span>
+                  ))}
                 </span>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                   profile.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -426,15 +490,21 @@ function ProfileContent() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">账号ID:</span>
-                    <span className="text-gray-900 font-mono">{profile.user_id.substring(0, 16)}...</span>
+                    <span className="text-gray-900 font-mono">
+                      {profile.user_id ? `${profile.user_id.substring(0, 16)}...` : user?.id ? `${user.id.substring(0, 16)}...` : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">创建时间:</span>
-                    <span className="text-gray-900">{new Date(profile.created_at).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-gray-900">
+                      {profile.created_at ? new Date(profile.created_at).toLocaleDateString('zh-CN') : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">最后更新:</span>
-                    <span className="text-gray-900">{new Date(profile.updated_at).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-gray-900">
+                      {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('zh-CN') : 'N/A'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -474,6 +544,122 @@ function ProfileContent() {
 
         {/* 其他设置卡片 */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 创作者相关 */}
+          {(() => {
+            // 获取用户角色数组（支持多角色）
+            const userRoles = profile?.roles 
+              ? (Array.isArray(profile.roles) ? profile.roles : [profile.roles]) 
+              : (profile?.role ? [profile.role] : []);
+            
+            return !userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN') ? (
+            <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg shadow-sm border border-primary-200 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+                成为创作者
+              </h3>
+              
+              {loadingStatus ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="text-sm text-gray-600 mt-2">加载中...</p>
+                </div>
+              ) : applicationStatus?.status === 'PENDING' ? (
+                <>
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center mb-2">
+                      <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium text-yellow-800">审核中</span>
+                    </div>
+                    <p className="text-xs text-yellow-700">
+                      您的创作者申请已提交，我们将在3-5个工作日内完成审核。
+                    </p>
+                    {applicationStatus.submittedAt && (
+                      <p className="text-xs text-yellow-600 mt-1">
+                        提交时间: {applicationStatus.submittedAt.toLocaleDateString('zh-CN')}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => router.push(route('/creators/apply/status'))}
+                    className="w-full px-4 py-2 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    查看申请状态 →
+                  </button>
+                </>
+              ) : applicationStatus?.status === 'REJECTED' ? (
+                <>
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center mb-2">
+                      <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="text-sm font-medium text-red-800">申请未通过</span>
+                    </div>
+                    <p className="text-xs text-red-700 mb-2">
+                      很遗憾，您的创作者申请未通过审核。
+                    </p>
+                    {applicationStatus.reviewNotes && (
+                      <p className="text-xs text-red-600 mt-1">
+                        审核意见: {applicationStatus.reviewNotes}
+                      </p>
+                    )}
+                    {applicationStatus.reviewedAt && (
+                      <p className="text-xs text-red-600 mt-1">
+                        审核时间: {applicationStatus.reviewedAt.toLocaleDateString('zh-CN')}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => router.push(route('/creators/apply'))}
+                    className="w-full px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                  >
+                    重新提交申请
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    加入创作者社区，分享您的专业知识，获得50%的利润分成
+                  </p>
+                  <button
+                    onClick={() => router.push(route('/creators/apply'))}
+                    className="w-full px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                  >
+                    立即申请成为创作者
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+                创作者中心
+              </h3>
+              <button
+                onClick={() => router.push(route('/creators/dashboard'))}
+                className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">创作者仪表板</p>
+                    <p className="text-sm text-gray-600">管理您的解决方案和收益</p>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          );
+          })()}
+
           {/* 安全设置 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">安全设置</h3>

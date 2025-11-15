@@ -89,12 +89,15 @@ export default function CreatorDashboardPage() {
       setError(null);
       
       // 获取统计数据
-      const statsResponse = await fetch('/api/creators/dashboard/stats');
+      const statsResponse = await fetch('/api/creators/dashboard/stats', {
+        credentials: 'include',
+      });
       const statsData = await statsResponse.json();
       if (statsData.success) {
         setStats(statsData.data);
       } else {
-        setError(statsData.message || '获取统计数据失败');
+        console.error('获取统计数据失败:', statsData);
+        setError(statsData.error || statsData.message || '获取统计数据失败');
       }
 
       // 获取最近的方案

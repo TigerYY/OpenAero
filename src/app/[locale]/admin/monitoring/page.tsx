@@ -1,5 +1,5 @@
 import { MonitoringDashboard } from '@/components/admin/MonitoringDashboard';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface MonitoringPageProps {
   params: {
@@ -9,12 +9,12 @@ interface MonitoringPageProps {
 
 export default function MonitoringPage({ params: { locale } }: MonitoringPageProps) {
   return (
-    <DefaultLayout>
+    <AdminLayout>
       <div className="bg-gray-50">
         <div className="container py-8">
           <MonitoringDashboard />
         </div>
       </div>
-    </DefaultLayout>
+    </AdminLayout>
   );
 }

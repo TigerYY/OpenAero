@@ -9,6 +9,7 @@ import {
   createPaginatedResponse,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { convertSnakeToCamel } from '@/lib/field-mapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,11 +116,51 @@ export async function GET(request: NextRequest) {
               createdAt: true,
             }
           },
+          assets: {
+            select: {
+              id: true,
+              type: true,
+              url: true,
+              title: true,
+              description: true,
+              createdAt: true,
+            }
+          },
+          bomItems: {
+            select: {
+              id: true,
+              name: true,
+              model: true,
+              quantity: true,
+              unit: true,
+              notes: true,
+              unitPrice: true,
+              supplier: true,
+              partNumber: true,
+              manufacturer: true,
+              category: true,
+              position: true,
+              weight: true,
+              specifications: true,
+              productId: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                  price: true,
+                }
+              },
+              createdAt: true,
+            }
+          },
           solutionReviews: {
             select: {
               id: true,
               score: true,
               comments: true,
+              fromStatus: true,
+              toStatus: true,
               createdAt: true,
               reviewer: {
                 select: {
@@ -133,6 +174,8 @@ export async function GET(request: NextRequest) {
           _count: {
             select: {
               solutionReviews: true,
+              assets: true,
+              bomItems: true,
             }
           }
         }
@@ -181,12 +224,46 @@ export async function GET(request: NextRequest) {
           createdAt: converted.createdAt,
         };
       }) || [],
+      assets: ((solution as any).assets || []).map((asset: any) => ({
+        id: asset.id,
+        type: asset.type,
+        url: asset.url,
+        title: asset.title || null,
+        description: asset.description || null,
+        createdAt: asset.createdAt,
+      })),
+      bomItems: ((solution as any).bomItems || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        model: item.model || null,
+        quantity: item.quantity,
+        unit: item.unit || '个',
+        notes: item.notes || null,
+        unitPrice: item.unitPrice ? Number(item.unitPrice) : null,
+        supplier: item.supplier || null,
+        partNumber: item.partNumber || null,
+        manufacturer: item.manufacturer || null,
+        category: item.category || null,
+        position: item.position || null,
+        weight: item.weight ? Number(item.weight) : null,
+        specifications: item.specifications || null,
+        productId: item.productId || null,
+        product: item.product ? {
+          id: item.product.id,
+          name: item.product.name,
+          sku: item.product.sku,
+          price: Number(item.product.price),
+        } : null,
+        createdAt: item.createdAt,
+      })),
       reviews: (solution as any).solutionReviews?.map((review: any) => {
         const converted = convertSnakeToCamel(review);
         return {
           id: converted.id,
           rating: converted.score ?? converted.rating ?? null,
           comment: converted.comments ?? converted.comment ?? null,
+          fromStatus: converted.fromStatus || null,
+          toStatus: converted.toStatus || null,
           createdAt: converted.reviewedAt || converted.createdAt,
           reviewer: review.reviewer ? convertSnakeToCamel({
             firstName: review.reviewer.firstName || review.reviewer.first_name,
@@ -196,6 +273,8 @@ export async function GET(request: NextRequest) {
         };
       }) || [],
       reviewCount: (solution as any)._count?.solutionReviews || 0,
+      assetCount: (solution as any)._count?.assets || 0,
+      bomItemCount: (solution as any)._count?.bomItems || 0,
     }));
 
     return createPaginatedResponse(

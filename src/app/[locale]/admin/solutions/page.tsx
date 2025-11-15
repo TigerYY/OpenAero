@@ -19,7 +19,9 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useRouting } from '@/lib/routing';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -30,8 +32,9 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
-// Removed Select imports as we're using native HTML select elements
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { AdminRoute } from '@/components/auth/ProtectedRoute';
 
 
 interface Solution {
@@ -74,7 +77,9 @@ interface ReviewHistory {
   };
 }
 
-export default function AdminSolutionsPage() {
+function AdminSolutionsPage() {
+  const router = useRouter();
+  const { route, routes } = useRouting();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -351,8 +356,8 @@ export default function AdminSolutionsPage() {
   };
 
   const handleViewSolution = (solution: Solution) => {
-    setSelectedSolution(solution);
-    fetchReviewHistory(solution.id);
+    // 跳转到详情页
+    router.push(route(`${routes.ADMIN.SOLUTIONS}/${solution.id}`));
   };
 
   const handleStartReview = (action: 'approve' | 'reject') => {
@@ -399,7 +404,8 @@ export default function AdminSolutionsPage() {
   const categories = [...new Set(solutions.map(s => s.category))];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">方案审核管理</h1>
@@ -918,6 +924,16 @@ export default function AdminSolutionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AdminLayout>
+  );
+}
+
+// 包装组件以添加权限保护
+export default function AdminSolutionsPageWithAuth() {
+  return (
+    <AdminRoute>
+      <AdminSolutionsPage />
+    </AdminRoute>
   );
 }

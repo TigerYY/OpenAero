@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 // 类型定义
 interface Solution {
@@ -281,7 +282,8 @@ export default function ReviewWorkbenchPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">审核工作台</h1>
         <p className="text-gray-600">统一管理和审核方案提交</p>
@@ -621,5 +623,6 @@ export default function ReviewWorkbenchPage() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

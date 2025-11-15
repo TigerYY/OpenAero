@@ -185,19 +185,29 @@ export async function uploadFile(
     const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
+      credentials: 'include', // 确保发送 cookies（用于认证）
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `上传失败: ${response.status}`);
+      const errorMessage = errorData.error || errorData.message || `上传失败: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
     
+    // 支持两种响应格式：直接返回 url 或通过 data.url
+    const url = result.url || result.data?.url;
+    const filename = result.filename || result.data?.filename;
+    
+    if (!url) {
+      throw new Error(result.error || result.message || '上传成功但未返回文件URL');
+    }
+    
     return {
       success: true,
-      url: result.url,
-      filename: result.filename,
+      url,
+      filename,
       size: processedFile.size,
       type: processedFile.type,
     };
@@ -274,13 +284,24 @@ export function uploadFileWithProgress(
         if (xhr.status === 200) {
           try {
             const result = JSON.parse(xhr.responseText);
-            resolve({
-              success: true,
-              url: result.url,
-              filename: result.filename,
-              size: processedFile.size,
-              type: processedFile.type,
-            });
+            // 支持两种响应格式：直接返回 url 或通过 data.url
+            const url = result.url || result.data?.url;
+            const filename = result.filename || result.data?.filename;
+            
+            if (url) {
+              resolve({
+                success: true,
+                url,
+                filename,
+                size: processedFile.size,
+                type: processedFile.type,
+              });
+            } else {
+              resolve({
+                success: false,
+                error: result.error || result.message || '上传成功但未返回文件URL'
+              });
+            }
           } catch (error) {
             resolve({
               success: false,
@@ -288,10 +309,18 @@ export function uploadFileWithProgress(
             });
           }
         } else {
-          resolve({
-            success: false,
-            error: `上传失败: ${xhr.status}`
-          });
+          try {
+            const errorResult = JSON.parse(xhr.responseText);
+            resolve({
+              success: false,
+              error: errorResult.error || errorResult.message || `上传失败: ${xhr.status}`
+            });
+          } catch {
+            resolve({
+              success: false,
+              error: `上传失败: ${xhr.status} ${xhr.statusText}`
+            });
+          }
         }
       });
 
@@ -303,6 +332,7 @@ export function uploadFileWithProgress(
       });
 
       xhr.open('POST', endpoint);
+      xhr.withCredentials = true; // 确保发送 cookies（用于认证）
       xhr.send(formData);
     } catch (error) {
       resolve({

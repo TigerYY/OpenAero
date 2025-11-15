@@ -18,8 +18,7 @@ import {
   Settings,
   Mail,
   Trash2,
-  ArrowLeft,
-  Home
+  UserCheck
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -33,9 +32,8 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Label } from '@/components/ui/Label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 
 // 统计数据接口
@@ -90,7 +88,6 @@ export default function AdminDashboard() {
   const { signOut } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'solutions' | 'users' | 'analytics'>('overview');
   const [timeRange, setTimeRange] = useState('30');
   
   // 快速操作状态
@@ -99,9 +96,33 @@ export default function AdminDashboard() {
   const [batchAction, setBatchAction] = useState<'approve' | 'reject'>('approve');
   const [batchNotes, setBatchNotes] = useState('');
 
+  // 申请管理状态
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+
   useEffect(() => {
     loadDashboardStats();
+    loadPendingApplicationsCount();
   }, [timeRange]);
+
+  // 获取待审核申请数量
+  const loadPendingApplicationsCount = async () => {
+    try {
+      const response = await fetch('/api/admin/applications?status=PENDING', {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // API 返回分页数据: { items: [...], pagination: {...} }
+          const applications = result.data?.items || result.data || [];
+          setPendingApplicationsCount(Array.isArray(applications) ? applications.length : 0);
+        }
+      }
+    } catch (error) {
+      console.error('获取待审核申请数量失败:', error);
+    }
+  };
 
   const loadDashboardStats = async () => {
     setLoading(true);
@@ -235,47 +256,36 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <DefaultLayout>
+      <AdminLayout>
         <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">加载中...</p>
           </div>
         </div>
-      </DefaultLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <DefaultLayout>
-      <div className="bg-gray-50">
-        {/* 头部 */}
+    <AdminLayout>
+      <div className="bg-gray-50 min-h-screen">
+        {/* 简洁的页面头部 */}
         <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <Link
-                  href={route(routes.BUSINESS.HOME)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-                  title="返回首页"
-                >
-                  <ArrowLeft className="h-5 w-5 mr-2" />
-                  <span className="text-sm">返回首页</span>
-                </Link>
-                <div className="h-6 w-px bg-gray-300"></div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">管理员仪表盘</h1>
-                  <p className="text-gray-600">OpenAero 平台管理中心</p>
-                </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">仪表盘</h1>
+                <p className="text-gray-600 mt-1">平台数据概览和快速操作</p>
               </div>
               <div className="flex items-center space-x-4">
                 {/* 时间范围选择 */}
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">时间范围:</span>
+                  <Calendar className="h-4 w-4 text-gray-500" />
                   <select
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
-                    className="text-sm border border-gray-300 rounded-md px-2 py-1"
+                    className="text-sm border border-gray-300 rounded-md px-3 py-1.5"
                   >
                     <option value="7">最近7天</option>
                     <option value="30">最近30天</option>
@@ -291,26 +301,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-      {/* 导航标签 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">概览</TabsTrigger>
-            <TabsTrigger value="solutions">方案管理</TabsTrigger>
-            <Link 
-              href={route(routes.ADMIN.USERS)} 
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-background hover:text-foreground"
-            >
-              用户管理
-            </Link>
-            <TabsTrigger value="analytics">数据分析</TabsTrigger>
-          </TabsList>
-
-          {/* 概览标签页 */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* 统计卡片 */}
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* 内容区域 - 移除Tabs，使用简单的分区展示 */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        {/* 统计卡片 */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* 方案总数 */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -380,6 +376,32 @@ export default function AdminDashboard() {
                 </Card>
               </div>
             )}
+
+            {/* 待审核申请卡片 */}
+            {pendingApplicationsCount > 0 && (
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-yellow-800">
+                    <UserCheck className="h-5 w-5 mr-2" />
+                    待审核创作者申请
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-yellow-700">{pendingApplicationsCount}</p>
+                    <p className="text-sm text-yellow-600 mt-1">个创作者申请等待审核</p>
+                  </div>
+                  <Link href={route(routes.ADMIN.APPLICATIONS)}>
+                    <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                      立即审核
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
             {/* 快速操作区域 */}
             <Card>
@@ -463,113 +485,116 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+          </div>
 
-          {/* 方案管理标签页 */}
-          <TabsContent value="solutions" className="space-y-6">
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                      已批准方案
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-green-600">{stats.solutions.approved}</div>
-                    <p className="text-sm text-gray-600 mt-2">
-                      占总数的 {((stats.solutions.approved / stats.solutions.total) * 100).toFixed(1)}%
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Clock className="h-5 w-5 mr-2 text-yellow-600" />
-                      待审核方案
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-yellow-600">{stats.solutions.pending}</div>
-                    <p className="text-sm text-gray-600 mt-2">
-                      需要及时处理
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <XCircle className="h-5 w-5 mr-2 text-red-600" />
-                      已拒绝方案
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-600">{stats.solutions.rejected}</div>
-                    <p className="text-sm text-gray-600 mt-2">
-                      占总数的 {((stats.solutions.rejected / stats.solutions.total) * 100).toFixed(1)}%
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* 状态趋势图占位符 */}
-            <Card>
+        {/* 待审核申请提醒卡片 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+          {pendingApplicationsCount > 0 && (
+            <Card className="border-yellow-200 bg-yellow-50">
               <CardHeader>
-                <CardTitle>审核状态趋势</CardTitle>
+                <CardTitle className="flex items-center text-yellow-800">
+                  <UserCheck className="h-5 w-5 mr-2" />
+                  待审核创作者申请
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>趋势图表组件</p>
-                    <p className="text-sm">显示审核状态随时间的变化</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-yellow-700">{pendingApplicationsCount}</p>
+                  <p className="text-sm text-yellow-600 mt-1">个创作者申请等待审核</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <Link href={route(routes.ADMIN.APPLICATIONS)}>
+                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                    立即审核
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* 用户管理标签页 - 已移除，改为直接链接到用户管理页面 */}
+        {/* 快速操作区域 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              快速操作
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 批量审核 */}
+              <Button
+                onClick={() => setShowBatchDialog(true)}
+                disabled={quickActionLoading === 'approve_all_pending' || quickActionLoading === 'reject_all_pending'}
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                <CheckCircle className="h-6 w-6" />
+                <span>批量审核</span>
+              </Button>
 
-          {/* 数据分析标签页 */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>增长趋势分析</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>增长趋势图表</p>
-                      <p className="text-sm">显示各项指标的增长情况</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* 导出方案数据 */}
+              <Button
+                onClick={() => handleQuickAction('export_solutions', { status: 'APPROVED' })}
+                disabled={quickActionLoading === 'export_solutions'}
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                <Download className="h-6 w-6" />
+                <span>导出方案</span>
+              </Button>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>活动热力图</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>活动热力图</p>
-                      <p className="text-sm">显示用户活动分布</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* 导出用户数据 */}
+              <Button
+                onClick={() => handleQuickAction('export_users')}
+                disabled={quickActionLoading === 'export_users'}
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                <Users className="h-6 w-6" />
+                <span>导出用户</span>
+              </Button>
+
+              {/* 清理旧记录 */}
+              <Button
+                onClick={() => handleQuickAction('clear_old_reviews', { days: 90 })}
+                disabled={quickActionLoading === 'clear_old_reviews'}
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                <Trash2 className="h-6 w-6" />
+                <span>清理记录</span>
+              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* 分类统计 */}
+        {stats && stats.categories.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>方案分类分布</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats.categories.map((category, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 rounded-full bg-blue-500" style={{
+                        backgroundColor: `hsl(${index * 60}, 70%, 50%)`
+                      }}></div>
+                      <span className="text-sm font-medium">{category.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">{category.count}</span>
+                      <Badge variant="secondary">{category.percentage.toFixed(1)}%</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* 批量审核对话框 */}
@@ -619,7 +644,6 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
-    </DefaultLayout>
+    </AdminLayout>
   );
 }

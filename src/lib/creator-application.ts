@@ -52,15 +52,53 @@ export async function createCreatorApplication(
   });
 
   if (existingCreator) {
-    throw new Error('您已经是创作者了');
+    // 如果已存在但状态不是 PENDING，说明已经处理过
+    if (existingCreator.verification_status !== VerificationStatus.PENDING) {
+      throw new Error('您已经是创作者了');
+    }
+    // 如果状态是 PENDING，返回现有申请
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { user_id: data.userId },
+      select: {
+        first_name: true,
+        last_name: true,
+      },
+    });
+
+    let userEmail = '';
+    try {
+      const { createSupabaseServerClient } = await import('./auth/supabase-client');
+      const supabase = createSupabaseServerClient();
+      const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
+      userEmail = authUser?.user?.email || '';
+    } catch (error) {
+      console.warn('获取用户邮箱失败:', error);
+    }
+
+    return {
+      id: existingCreator.id,
+      userId: data.userId,
+      bio: data.bio,
+      website: data.website || null,
+      experience: data.experience,
+      specialties: data.specialties,
+      portfolio: data.portfolio || [],
+      documents: data.documents || [],
+      status: existingCreator.verification_status,
+      submittedAt: existingCreator.created_at,
+      reviewedAt: existingCreator.verified_at,
+      reviewedBy: null,
+      reviewNotes: existingCreator.rejection_reason,
+      user: {
+        id: data.userId,
+        email: userEmail,
+        firstName: userProfile?.first_name || null,
+        lastName: userProfile?.last_name || null,
+      },
+    };
   }
 
-  // 注意：由于 schema 中没有 CreatorApplication 模型，
-  // 我们暂时使用 CreatorProfile 的 verification_status 来管理申请状态
-  // 或者需要创建一个 CreatorApplication 表
-  
-  // TODO: 创建 CreatorApplication 表或使用 CreatorProfile 的 verification_status
-  // 这里暂时返回一个模拟的申请对象
+  // 检查用户资料是否存在
   const userProfile = await prisma.userProfile.findUnique({
     where: { user_id: data.userId },
     select: {
@@ -75,9 +113,30 @@ export async function createCreatorApplication(
     throw new Error('用户资料不存在');
   }
 
-  // 暂时返回模拟数据，实际需要创建 CreatorApplication 表
+  // 创建 CreatorProfile 记录（使用 verification_status = PENDING 表示待审核）
+  const creatorProfile = await prisma.creatorProfile.create({
+    data: {
+      user_id: data.userId,
+      verification_status: VerificationStatus.PENDING,
+      // 注意：CreatorProfile 中没有存储 bio、experience 等字段
+      // 这些信息可能需要存储在单独的 CreatorApplication 表中
+      // 目前先创建 CreatorProfile，状态为 PENDING
+    },
+  });
+
+  // 获取用户邮箱
+  let userEmail = '';
+  try {
+    const { createSupabaseServerClient } = await import('./auth/supabase-client');
+    const supabase = createSupabaseServerClient();
+    const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
+    userEmail = authUser?.user?.email || '';
+  } catch (error) {
+    console.warn('获取用户邮箱失败:', error);
+  }
+
   return {
-    id: `app_${Date.now()}`,
+    id: creatorProfile.id,
     userId: data.userId,
     bio: data.bio,
     website: data.website || null,
@@ -85,14 +144,14 @@ export async function createCreatorApplication(
     specialties: data.specialties,
     portfolio: data.portfolio || [],
     documents: data.documents || [],
-    status: 'PENDING' as ApplicationStatus,
-    submittedAt: new Date(),
-    reviewedAt: null,
+    status: creatorProfile.verification_status,
+    submittedAt: creatorProfile.created_at,
+    reviewedAt: creatorProfile.verified_at,
     reviewedBy: null,
-    reviewNotes: null,
+    reviewNotes: creatorProfile.rejection_reason,
     user: {
       id: data.userId,
-      email: '', // 需要从 Supabase Auth 获取
+      email: userEmail,
       firstName: userProfile.first_name,
       lastName: userProfile.last_name,
     },
@@ -101,6 +160,7 @@ export async function createCreatorApplication(
 
 /**
  * 获取用户的申请状态
+ * 返回所有状态的申请（包括 PENDING、APPROVED、REJECTED）
  */
 export async function getUserApplicationStatus(
   userId: string
@@ -122,11 +182,18 @@ export async function getUserApplicationStatus(
     },
   });
 
-  // 如果状态不是 PENDING，说明已经处理过
-  if (creatorProfile.verification_status !== VerificationStatus.PENDING) {
-    return null; // 或者返回已处理的申请信息
+  // 获取用户邮箱（从 Supabase Auth）
+  let userEmail = '';
+  try {
+    const { createSupabaseServerClient } = await import('./auth/supabase-client');
+    const supabase = createSupabaseServerClient();
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    userEmail = authUser?.user?.email || '';
+  } catch (error) {
+    console.warn('获取用户邮箱失败:', error);
   }
 
+  // 返回所有状态的申请信息（不只是 PENDING）
   return {
     id: creatorProfile.id,
     userId,
@@ -143,7 +210,7 @@ export async function getUserApplicationStatus(
     reviewNotes: creatorProfile.rejection_reason,
     user: {
       id: userId,
-      email: '',
+      email: userEmail,
       firstName: userProfile?.first_name || null,
       lastName: userProfile?.last_name || null,
     },
@@ -160,10 +227,14 @@ export async function getApplications(
 ): Promise<{ applications: ApplicationWithDetails[]; total: number }> {
   const skip = (page - 1) * limit;
 
+  console.log('getApplications 调用参数:', { page, limit, status });
+
   const where: any = {};
   if (status) {
     where.verification_status = status;
   }
+  
+  console.log('Prisma 查询条件:', where);
 
   // 使用 CreatorProfile 查询申请列表
   const [profiles, total] = await Promise.all([
@@ -185,6 +256,31 @@ export async function getApplications(
     prisma.creatorProfile.count({ where }),
   ]);
 
+  // 获取所有用户的邮箱
+  const userIds = profiles.map(p => p.user_id);
+  const emailMap = new Map<string, string>();
+  
+  try {
+    const { createSupabaseServerClient } = await import('./auth/supabase-client');
+    const supabase = createSupabaseServerClient();
+    
+    // 批量获取用户邮箱
+    await Promise.all(
+      userIds.map(async (userId) => {
+        try {
+          const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+          if (authUser?.user?.email) {
+            emailMap.set(userId, authUser.user.email);
+          }
+        } catch (error) {
+          console.warn(`获取用户 ${userId} 邮箱失败:`, error);
+        }
+      })
+    );
+  } catch (error) {
+    console.warn('批量获取用户邮箱失败:', error);
+  }
+
   // 转换为 ApplicationWithDetails 格式
   const applications: ApplicationWithDetails[] = profiles.map((profile) => ({
     id: profile.id,
@@ -202,11 +298,22 @@ export async function getApplications(
     reviewNotes: profile.rejection_reason,
     user: {
       id: profile.user_id,
-      email: '',
+      email: emailMap.get(profile.user_id) || '',
       firstName: profile.userProfile?.first_name || null,
       lastName: profile.userProfile?.last_name || null,
     },
   }));
+
+  console.log('getApplications 返回结果:', {
+    applicationsCount: applications.length,
+    total,
+    firstApplication: applications[0] ? {
+      id: applications[0].id,
+      userId: applications[0].userId,
+      status: applications[0].status,
+      userEmail: applications[0].user.email,
+    } : null,
+  });
 
   return {
     applications,
@@ -272,6 +379,17 @@ export async function reviewApplication(
     });
   }
 
+  // 获取用户邮箱（从 Supabase Auth）
+  let userEmail = '';
+  try {
+    const { createSupabaseServerClient } = await import('./auth/supabase-client');
+    const supabase = createSupabaseServerClient();
+    const { data: authUser } = await supabase.auth.admin.getUserById(creatorProfile.user_id);
+    userEmail = authUser?.user?.email || '';
+  } catch (error) {
+    console.warn('获取用户邮箱失败:', error);
+  }
+
   return {
     id: updatedProfile.id,
     userId: updatedProfile.user_id,
@@ -288,7 +406,7 @@ export async function reviewApplication(
     reviewNotes: updatedProfile.rejection_reason,
     user: {
       id: updatedProfile.user_id,
-      email: '',
+      email: userEmail,
       firstName: updatedProfile.userProfile?.first_name || null,
       lastName: updatedProfile.userProfile?.last_name || null,
     },

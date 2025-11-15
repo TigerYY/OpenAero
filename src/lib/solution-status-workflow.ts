@@ -261,3 +261,138 @@ export function createStatusChangeRecord(
     reason
   };
 }
+
+/**
+ * 用户信息接口（用于权限检查）
+ */
+export interface UserInfo {
+  id: string;
+  roles?: string[];
+  role?: string; // 向后兼容
+}
+
+/**
+ * 方案信息接口（用于权限检查）
+ */
+export interface SolutionInfo {
+  id: string;
+  creatorId?: string | null;
+  status: SolutionStatus;
+}
+
+/**
+ * 检查用户是否可以编辑方案
+ * CREATOR 可以编辑自己创建的 DRAFT 或 REJECTED 状态的方案
+ * ADMIN/SUPER_ADMIN 可以编辑所有方案
+ */
+export function canEditSolution(solution: SolutionInfo, user: UserInfo | null): boolean {
+  if (!user) return false;
+
+  // 获取用户角色数组（支持多角色）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
+  // ADMIN/SUPER_ADMIN 可以编辑所有方案
+  if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) {
+    return true;
+  }
+
+  // CREATOR 只能编辑自己创建的 DRAFT 或 REJECTED 状态的方案
+  if (userRoles.includes('CREATOR')) {
+    if (!solution.creatorId) return false;
+    
+    // 需要获取用户的 CreatorProfile ID 来比较
+    // 这里假设通过 creatorId 字段可以直接比较
+    // 实际使用时可能需要查询 CreatorProfile
+    const canEditStatus = solution.status === SolutionStatus.DRAFT || 
+                          solution.status === SolutionStatus.REJECTED;
+    
+    return canEditStatus; // creatorId 比较需要在调用时进行
+  }
+
+  return false;
+}
+
+/**
+ * 检查用户是否可以审核方案
+ * REVIEWER、ADMIN、SUPER_ADMIN 可以审核 PENDING_REVIEW 状态的方案
+ */
+export function canReviewSolution(solution: SolutionInfo, user: UserInfo | null): boolean {
+  if (!user) return false;
+
+  // 获取用户角色数组（支持多角色）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
+  // 只有 PENDING_REVIEW 状态的方案可以审核
+  if (solution.status !== SolutionStatus.PENDING_REVIEW) {
+    return false;
+  }
+
+  // REVIEWER、ADMIN、SUPER_ADMIN 可以审核
+  return userRoles.includes('REVIEWER') || 
+         userRoles.includes('ADMIN') || 
+         userRoles.includes('SUPER_ADMIN');
+}
+
+/**
+ * 检查用户是否可以发布方案
+ * ADMIN、SUPER_ADMIN 可以发布 APPROVED 状态的方案
+ */
+export function canPublishSolution(solution: SolutionInfo, user: UserInfo | null): boolean {
+  if (!user) return false;
+
+  // 获取用户角色数组（支持多角色）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
+  // 只有 APPROVED 状态的方案可以发布
+  if (solution.status !== SolutionStatus.APPROVED) {
+    return false;
+  }
+
+  // ADMIN、SUPER_ADMIN 可以发布
+  return userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+}
+
+/**
+ * 检查用户是否可以查看方案
+ * 公共访问：只能查看 PUBLISHED 状态的方案
+ * CREATOR：可以查看自己创建的所有方案
+ * ADMIN/REVIEWER：可以查看所有方案
+ */
+export function canViewSolution(
+  solution: SolutionInfo, 
+  user: UserInfo | null,
+  userCreatorId?: string | null
+): boolean {
+  // 公共访问：只能查看 PUBLISHED 状态的方案
+  if (!user) {
+    return solution.status === SolutionStatus.PUBLISHED;
+  }
+
+  // 获取用户角色数组（支持多角色）
+  const userRoles = Array.isArray(user.roles) 
+    ? user.roles 
+    : (user.role ? [user.role] : []);
+
+  // ADMIN、SUPER_ADMIN、REVIEWER 可以查看所有方案
+  if (userRoles.includes('ADMIN') || 
+      userRoles.includes('SUPER_ADMIN') || 
+      userRoles.includes('REVIEWER')) {
+    return true;
+  }
+
+  // CREATOR 可以查看自己创建的所有方案
+  if (userRoles.includes('CREATOR')) {
+    if (userCreatorId && solution.creatorId === userCreatorId) {
+      return true;
+    }
+  }
+
+  // 其他情况：只能查看 PUBLISHED 状态的方案
+  return solution.status === SolutionStatus.PUBLISHED;
+}

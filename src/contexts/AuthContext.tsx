@@ -15,7 +15,8 @@ export interface UserProfile {
   display_name?: string;
   avatar?: string;
   bio?: string;
-  role: 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN';
+  roles: ('USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN')[]; // 多角色数组
+  role?: 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN'; // 向后兼容：单一角色（已废弃）
   permissions: string[];
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'DELETED';
   is_blocked: boolean;
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .insert([
                 {
                   user_id: userId,
-                  role: 'USER',
+                  roles: ['USER'],
                   status: 'ACTIVE',
                 },
               ])
@@ -235,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/welcome`,
           data: metadata,
         },
       });
@@ -311,24 +312,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
-   * 检查用户是否有指定角色
-   */
-  const hasRole = (role: string | string[]): boolean => {
-    if (!profile) {
-      console.log('[hasRole] 用户资料不存在，返回 false');
-      return false;
-    }
-    const roles = Array.isArray(role) ? role : [role];
-    const hasRoleResult = roles.includes(profile.role);
-    console.log('[hasRole] 检查角色:', {
-      requiredRoles: roles,
-      userRole: profile.role,
-      result: hasRoleResult,
-    });
-    return hasRoleResult;
-  };
-
-  /**
    * 同步 session 到 cookies（用于服务器端 API 路由）
    */
   const syncSessionToCookies = async (session: Session | null) => {
@@ -357,14 +340,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 获取初始会话
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // 同步 session 到 cookies
-        await syncSessionToCookies(session);
-        await fetchUserProfile(session.user.id);
+      try {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          // 同步 session 到 cookies
+          try {
+            await syncSessionToCookies(session);
+          } catch (syncError) {
+            console.warn('同步 session 到 cookies 失败:', syncError);
+          }
+          // 获取用户资料（不阻塞 loading 状态）
+          fetchUserProfile(session.user.id).catch((profileError) => {
+            console.error('获取用户资料失败:', profileError);
+          });
+        }
+      } catch (error) {
+        console.error('处理会话时出错:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }).catch((error) => {
       console.error('获取会话失败:', error);
       setLoading(false);
@@ -374,22 +369,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // 同步 session 到 cookies
-        await syncSessionToCookies(session);
-        await fetchUserProfile(session.user.id);
-      } else {
-        setProfile(null);
+      try {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // 同步 session 到 cookies
+          try {
+            await syncSessionToCookies(session);
+          } catch (syncError) {
+            console.warn('同步 session 到 cookies 失败:', syncError);
+          }
+          // 获取用户资料（不阻塞 loading 状态）
+          fetchUserProfile(session.user.id).catch((profileError) => {
+            console.error('获取用户资料失败:', profileError);
+          });
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('处理认证状态变化时出错:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // 辅助函数：检查用户是否有指定角色（支持多角色）
+  const checkRole = (requiredRoles: string | string[]): boolean => {
+    if (!profile) return false;
+    const userRoles = Array.isArray(profile.roles) 
+      ? profile.roles 
+      : (profile.role ? [profile.role] : []);
+    const required = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+    return required.some(role => userRoles.includes(role as any));
+  };
 
   const value: AuthContextType = {
     user,
@@ -403,9 +419,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     refreshProfile,
     isAuthenticated: !!user,
-    hasRole,
-    isAdmin: profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN',
-    isCreator: profile?.role === 'CREATOR' || profile?.role === 'ADMIN' || profile?.role === 'SUPER_ADMIN',
+    hasRole: checkRole,
+    isAdmin: checkRole(['ADMIN', 'SUPER_ADMIN']),
+    isCreator: checkRole(['CREATOR', 'ADMIN', 'SUPER_ADMIN']),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

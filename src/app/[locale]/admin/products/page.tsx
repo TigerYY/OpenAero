@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -381,7 +382,8 @@ export default function AdminProductsPage() {
   }, [currentPage, searchTerm, statusFilter, categoryFilter]);
 
   return (
-    <div className="container mx-auto p-6">
+    <AdminLayout>
+      <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">商品管理</h1>
@@ -931,5 +933,6 @@ export default function AdminProductsPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 }

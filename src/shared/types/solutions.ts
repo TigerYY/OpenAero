@@ -49,11 +49,28 @@ export interface Solution {
   downloadCount?: number;
   specs?: Record<string, string>;
   bom?: Array<{
+    // 基础信息
     name: string;
+    model?: string;
     quantity: number;
-    unitPrice: number;
+    unit?: string;
+    notes?: string;
+    // 价格和成本
+    unitPrice?: number;
+    // 供应商信息
     supplier?: string;
+    // 零件标识
     partNumber?: string;
+    manufacturer?: string;
+    // 分类和位置
+    category?: 'FRAME' | 'MOTOR' | 'ESC' | 'PROPELLER' | 'FLIGHT_CONTROLLER' | 'BATTERY' | 'CAMERA' | 'GIMBAL' | 'RECEIVER' | 'TRANSMITTER' | 'OTHER';
+    position?: string;
+    // 物理属性
+    weight?: number;
+    // 技术规格
+    specifications?: Record<string, any>;
+    // 关联商城商品
+    productId?: string;
   }>;
   createdAt: Date;
   updatedAt: Date;

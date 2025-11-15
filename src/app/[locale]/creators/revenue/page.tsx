@@ -110,11 +110,13 @@ export default function RevenuePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">加载中...</div>
+      <DefaultLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">加载中...</div>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
@@ -152,9 +154,9 @@ export default function RevenuePage() {
           <p className="text-gray-600">管理您的创作收益和提现申请</p>
         </div>
 
-      {/* 收益概览卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+        {/* 收益概览卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">总收益</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />

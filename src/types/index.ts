@@ -43,15 +43,35 @@ export interface SolutionSpec {
   [key: string]: unknown;
 }
 
-// 物料清单类型
+// 物料清单类型（方案 B - 完整增强）
 export interface SolutionBom {
   components: Array<{
+    // 基础信息
     name: string;
+    model?: string;
     quantity: number;
+    unit?: string;
+    notes?: string;
+    // 价格和成本
     price?: number;
+    unitPrice?: number;
+    // 供应商信息
     supplier?: string;
+    // 零件标识
+    partNumber?: string;
+    manufacturer?: string;
+    // 分类和位置
+    category?: 'FRAME' | 'MOTOR' | 'ESC' | 'PROPELLER' | 'FLIGHT_CONTROLLER' | 'BATTERY' | 'CAMERA' | 'GIMBAL' | 'RECEIVER' | 'TRANSMITTER' | 'OTHER';
+    position?: string;
+    // 物理属性
+    weight?: number;
+    // 技术规格
+    specifications?: Record<string, any>;
+    // 关联商城商品
+    productId?: string;
   }>;
   totalCost?: number;
+  totalWeight?: number; // 总重量（克）
   [key: string]: unknown;
 }
 

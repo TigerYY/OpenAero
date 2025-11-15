@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 
 interface StatsOverview {
@@ -147,19 +148,22 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-96">
-          <div className="flex items-center space-x-2">
-            <RefreshCw className="h-6 w-6 animate-spin" />
-            <span>加载分析数据中...</span>
+      <AdminLayout>
+        <div className="container mx-auto p-6">
+          <div className="flex items-center justify-center h-96">
+            <div className="flex items-center space-x-2">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+              <span>加载分析数据中...</span>
+            </div>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <AdminLayout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">
         <div>
@@ -459,5 +463,6 @@ export default function AnalyticsPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </AdminLayout>
   );
 }

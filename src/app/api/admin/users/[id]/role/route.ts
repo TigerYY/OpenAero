@@ -13,32 +13,26 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { createSupabaseServer } from '@/lib/auth/supabase-client';
+import { PrismaClient } from '@prisma/client';
 
-// 用户角色枚举
-const UserRole = {
-  USER: 'USER',
-  CREATOR: 'CREATOR',
-  REVIEWER: 'REVIEWER',
-  FACTORY_MANAGER: 'FACTORY_MANAGER',
-  ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-} as const;
+const prisma = new PrismaClient();
 
-// 请求 schema
+// ... (zod schemas remain the same)
+
+// 请求 schema（支持多角色）
 const updateRoleSchema = z.object({
-  role: z.enum(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN']),
-  reason: z.string().optional(), // 角色变更原因
+  roles: z.array(z.enum(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN']))
+    .min(1, '至少需要选择一个角色'),
+  role: z.enum(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN']).optional(), // 向后兼容
+  reason: z.string().optional(),
 });
 
-/**
- * PATCH - 更新用户角色
- */
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // 验证管理员权限
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
       return authResult.response;
@@ -47,7 +41,6 @@ export async function PATCH(
     const adminUser = authResult.user;
     const userId = params.id;
 
-    // 解析请求体
     const body = await request.json();
     const validationResult = updateRoleSchema.safeParse(body);
 
@@ -55,96 +48,72 @@ export async function PATCH(
       return createValidationErrorResponse(validationResult.error);
     }
 
-    const { role, reason } = validationResult.data;
-
-    // 获取当前用户信息
+    const { roles, role, reason } = validationResult.data;
+    const rolesToSet = roles || (role ? [role] : []);
+    
     const supabase = await createSupabaseServer();
-    const { data: currentProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('role, email')
-      .eq('user_id', userId)
-      .single();
 
-    if (profileError || !currentProfile) {
-      return createErrorResponse('用户不存在', 404);
+    // 1. 从 Supabase Auth 获取权威用户信息
+    const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(userId);
+    if (authUserError || !authUser) {
+      return createErrorResponse('目标用户在认证系统中不存在', 404);
     }
 
-    const oldRole = currentProfile.role;
-
-    // 防止非超级管理员修改超级管理员角色
-    if (currentProfile.role === 'SUPER_ADMIN' && adminUser.role !== 'SUPER_ADMIN') {
+    // 2. 获取现有的 Profile (如果存在)
+    const existingProfile = await prisma.user_profile.findUnique({
+      where: { user_id: userId },
+      select: { roles: true, role: true },
+    });
+    
+    const oldRoles = existingProfile ? (Array.isArray(existingProfile.roles) ? existingProfile.roles : (existingProfile.role ? [existingProfile.role] : [])) : [];
+    const adminRoles = adminUser.roles || (adminUser.role ? [adminUser.role] : []);
+    
+    // 3. 权限检查
+    if (oldRoles.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('无权修改超级管理员角色', 403);
     }
-
-    // 防止非超级管理员将用户设置为超级管理员
-    if (role === 'SUPER_ADMIN' && adminUser.role !== 'SUPER_ADMIN') {
+    if (rolesToSet.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('无权将用户设置为超级管理员', 403);
     }
-
-    // 防止修改自己的角色（除非是超级管理员）
-    if (userId === adminUser.id && adminUser.role !== 'SUPER_ADMIN') {
+    if (userId === adminUser.id && !adminRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('不能修改自己的角色', 400);
     }
 
-    // 更新用户角色
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({
-        role,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('更新用户角色失败:', updateError);
-      await logAuditAction(request, {
-        userId: adminUser.id,
-        action: 'UPDATE_USER_ROLE_FAILED',
-        resource: 'user_profiles',
-        resourceId: userId,
-        metadata: {
-          userId,
-          oldRole,
-          newRole: role,
-          reason,
-        },
-        success: false,
-        errorMessage: updateError.message,
-      });
-
-      return createErrorResponse(`更新用户角色失败: ${updateError.message}`, 500);
-    }
-
-    // 记录审计日志
-    await logAuditAction(request, {
-      userId: adminUser.id,
-      action: 'UPDATE_USER_ROLE',
-      resource: 'user_profiles',
-      resourceId: userId,
-      oldValue: { role: oldRole },
-      newValue: { role, reason },
-      metadata: {
-        userId,
-        oldRole,
-        newRole: role,
-        reason,
-        userEmail: currentProfile.email,
+    // 4. 执行 Upsert 操作
+    const updatedProfile = await prisma.user_profile.upsert({
+      where: { user_id: userId },
+      update: {
+        roles: rolesToSet,
+        updated_at: new Date(),
+      },
+      create: {
+        user_id: userId,
+        email: authUser.user.email, // 从 Auth 用户信息中获取 Email
+        roles: rolesToSet,
+        // 根据需要填充其他默认值
+        // first_name: '', 
+        // last_name: '',
       },
     });
 
-    // TODO: 发送角色变更通知邮件
-    // await sendRoleChangeNotification(userId, role, reason);
+    // 5. 记录审计日志
+    await logAuditAction(request, {
+      userId: adminUser.id,
+      action: existingProfile ? 'UPDATE_USER_ROLE' : 'CREATE_USER_PROFILE_AND_SET_ROLE',
+      resource: 'user_profiles',
+      resourceId: userId,
+      oldValue: { roles: oldRoles },
+      newValue: { roles: rolesToSet },
+      metadata: { reason, userEmail: authUser.user.email },
+    });
 
     return createSuccessResponse(
-      {
-        userId,
-        oldRole,
-        newRole: role,
-      },
-      `用户角色已更新为 ${role}`
+      { userId, oldRoles, newRoles: rolesToSet },
+      `用户角色已成功更新`
     );
+
   } catch (error: unknown) {
-    console.error('Update user role error:', error);
+    console.error('更新用户角色时出错:', error);
     return createErrorResponse(
       '更新用户角色失败',
       500,
@@ -152,4 +121,5 @@ export async function PATCH(
     );
   }
 }
+
 

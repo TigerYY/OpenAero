@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface ReviewStats {
   overview: {
@@ -102,7 +103,8 @@ export default function ReviewStatsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <AdminLayout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* 页面标题和控制 */}
       <div className="flex justify-between items-center">
         <div>
@@ -330,5 +332,6 @@ export default function ReviewStatsPage() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

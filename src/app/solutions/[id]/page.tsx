@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { BomList, BomListItem } from '@/components/solutions';
 
 interface Solution {
   id: string;
@@ -23,7 +24,8 @@ interface Solution {
   images: string[];
   features: string[];
   specs: Record<string, any>;
-  bom: Record<string, any>;
+  bom?: Record<string, any>;
+  bomItems?: BomListItem[];
   createdAt: Date;
   updatedAt: Date;
   averageRating?: number;
@@ -72,7 +74,16 @@ export default function SolutionDetailPage() {
       }
       const data = await response.json();
       if (data.success) {
-        setSolution(data.data);
+        // 如果 API 返回 bomItems，使用 bomItems；否则使用 bom
+        const solutionData = {
+          ...data.data,
+          bomItems: data.data.bomItems || (data.data.bom ? Object.entries(data.data.bom).map(([name, value]) => ({
+            name,
+            quantity: typeof value === 'object' && value !== null ? (value as any).quantity || 1 : 1,
+            unitPrice: typeof value === 'object' && value !== null ? (value as any).unitPrice || 0 : 0,
+          })) : []),
+        };
+        setSolution(solutionData);
       } else {
         setError(data.error || 'Failed to load solution');
       }
@@ -366,12 +377,14 @@ export default function SolutionDetailPage() {
             </TabsContent>
 
             <TabsContent value="bom" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>BOM清单</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {solution.bom && Object.keys(solution.bom).length > 0 ? (
+              {solution.bomItems && solution.bomItems.length > 0 ? (
+                <BomList items={solution.bomItems} showAdvanced={true} showStatistics={true} />
+              ) : solution.bom && Object.keys(solution.bom).length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>BOM清单</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-4">
                       {Object.entries(solution.bom).map(([component, specification]) => (
                         <div key={component} className="flex justify-between items-center py-3 border-b border-gray-100">
@@ -382,11 +395,15 @@ export default function SolutionDetailPage() {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-gray-500">暂无BOM清单信息</p>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-gray-500 text-center py-8">暂无BOM清单信息</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-6">

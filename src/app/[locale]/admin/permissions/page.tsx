@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface Permission {
   id: string;
@@ -406,7 +407,8 @@ export default function AdminPermissionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">权限管理</h1>
@@ -913,5 +915,6 @@ export default function AdminPermissionsPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminLayout>
   );
 }

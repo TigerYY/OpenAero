@@ -24,6 +24,8 @@ export interface ReviewWithDetails {
   solutionId: string;
   reviewerId: string;
   status: ReviewStatus;
+  fromStatus: SolutionStatus; // **新增**：审核前状态
+  toStatus: SolutionStatus; // **新增**：审核后状态
   score: number | null;
   comments: string | null;
   qualityScore: number | null;
@@ -81,13 +83,15 @@ export async function startReview(
     throw new Error('该方案已有进行中的审核');
   }
 
-  // 创建审核记录
+  // 创建审核记录（记录 fromStatus）
   const review = await prisma.solutionReview.create({
     data: {
       solutionId,
       reviewerId,
       status: ReviewStatus.IN_PROGRESS,
       decision: ReviewDecision.PENDING,
+      fromStatus: solution.status, // **新增**：记录审核前的状态
+      toStatus: solution.status, // 初始值设为当前状态，完成审核时会更新
       reviewStartedAt: new Date(),
     },
     include: {
@@ -153,18 +157,30 @@ export async function completeReview(
         },
       });
 
+  // 获取方案当前状态（用于 fromStatus）
+  const solution = await prisma.solution.findUnique({
+    where: { id: solutionId },
+    select: { status: true },
+  });
+
+  if (!solution) {
+    throw new Error('方案不存在');
+  }
+
   // 如果没有找到审核记录，创建一个新的（如果提供了reviewerId）
   if (!review) {
     if (!data.reviewerId) {
       throw new Error('未找到审核记录，请先开始审核或提供审核员ID');
     }
-    // 创建新的审核记录
+    // 创建新的审核记录（记录 fromStatus）
     review = await prisma.solutionReview.create({
       data: {
         solutionId,
         reviewerId: data.reviewerId,
         status: ReviewStatus.IN_PROGRESS,
         decision: ReviewDecision.PENDING,
+        fromStatus: solution.status, // **新增**：记录审核前的状态
+        toStatus: solution.status, // 初始值设为当前状态，完成审核时会更新
         reviewStartedAt: new Date(),
       },
     });
@@ -174,34 +190,11 @@ export async function completeReview(
     throw new Error('只能完成进行中的审核');
   }
 
-  // 更新审核记录
-  const updatedReview = await prisma.solutionReview.update({
-    where: { id: review.id },
-    data: {
-      status: ReviewStatus.COMPLETED,
-      decision: data.decision,
-      score: data.score,
-      comments: data.comments,
-      qualityScore: data.qualityScore,
-      completeness: data.completeness,
-      innovation: data.innovation,
-      marketPotential: data.marketPotential,
-      decisionNotes: data.decisionNotes,
-      suggestions: data.suggestions || [],
-      reviewedAt: new Date(),
-    },
-    include: {
-      solution: {
-        select: {
-          id: true,
-          title: true,
-          status: true,
-        },
-      },
-    },
-  });
+  // 获取审核前的状态（fromStatus）
+  // 优先使用审核记录中已记录的 fromStatus，如果没有则使用方案当前状态
+  const fromStatus = review.fromStatus || solution.status;
 
-  // 更新方案状态
+  // 确定审核后的状态（toStatus）
   let newStatus: SolutionStatus;
   if (data.decision === ReviewDecision.APPROVED) {
     newStatus = SolutionStatus.APPROVED;
@@ -210,15 +203,58 @@ export async function completeReview(
   } else if (data.decision === ReviewDecision.NEEDS_REVISION) {
     newStatus = SolutionStatus.PENDING_REVIEW; // 保持待审核状态，等待修改
   } else {
-    newStatus = review.solution.status; // 保持原状态
+    newStatus = fromStatus; // 保持原状态
   }
 
-  await prisma.solution.update({
+  // 使用事务更新审核记录和方案状态
+  const [updatedReviewRecord, updatedSolution] = await prisma.$transaction([
+    // 更新审核记录（包含 fromStatus/toStatus）
+    prisma.solutionReview.update({
+      where: { id: review.id },
+      data: {
+        status: ReviewStatus.COMPLETED,
+        decision: data.decision,
+        fromStatus: fromStatus, // **新增**：记录审核前的状态
+        toStatus: newStatus, // **新增**：记录审核后的状态
+        score: data.score,
+        comments: data.comments,
+        qualityScore: data.qualityScore,
+        completeness: data.completeness,
+        innovation: data.innovation,
+        marketPotential: data.marketPotential,
+        decisionNotes: data.decisionNotes,
+        suggestions: data.suggestions || [],
+        reviewedAt: new Date(),
+      },
+      include: {
+        solution: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+      },
+    }),
+    // 更新方案状态和 lastReviewedAt
+    prisma.solution.update({
+      where: { id: solutionId },
+      data: {
+        status: newStatus,
+        reviewedAt: new Date(),
+        lastReviewedAt: new Date(), // **新增**：更新最后审核时间
+        reviewNotes: data.decisionNotes || data.comments || null,
+      },
+    }),
+  ]);
+
+  // 获取方案完整信息（用于返回）
+  const solutionFull = await prisma.solution.findUnique({
     where: { id: solutionId },
-    data: {
-      status: newStatus,
-      reviewedAt: new Date(),
-      reviewNotes: data.decisionNotes || data.comments || null,
+    select: {
+      id: true,
+      title: true,
+      status: true,
     },
   });
 
@@ -233,10 +269,10 @@ export async function completeReview(
   });
 
   return {
-    ...updatedReview,
+    ...updatedReviewRecord,
     solution: {
       id: solutionId,
-      title: solution.title,
+      title: solutionFull?.title || '',
       status: newStatus,
     },
     reviewer: {
@@ -284,6 +320,8 @@ export async function getSolutionReviewHistory(
 
   return reviews.map((review) => ({
     ...review,
+    fromStatus: review.fromStatus, // **新增**：包含 fromStatus
+    toStatus: review.toStatus, // **新增**：包含 toStatus
     reviewer: {
       id: review.reviewerId,
       firstName: reviewerMap.get(review.reviewerId)?.firstName || null,

@@ -150,7 +150,8 @@ export interface UserProfile {
   display_name?: string;
   avatar?: string;
   bio?: string;
-  role: UserRole;
+  roles: UserRole[]; // 多角色数组
+  role?: UserRole; // 向后兼容：单一角色（已废弃，使用 roles）
   permissions: string[];
   status: UserStatus;
   is_blocked: boolean;

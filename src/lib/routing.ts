@@ -68,6 +68,9 @@ const ROUTES = {
     STATUS: '/creators/status',
     GUIDE: '/creators/guide',
     REVENUE: '/creators/revenue',
+    SOLUTIONS: '/creators/solutions',
+    SOLUTION_NEW: '/creators/solutions/new',
+    SOLUTION_EDIT: '/creators/solutions/[id]/edit',
   },
   
   // 订单路由
@@ -95,6 +98,7 @@ const ROUTES = {
     SOLUTIONS: '/admin/solutions',
     ORDERS: '/admin/orders',
     CREATORS: '/admin/creators',
+    APPLICATIONS: '/admin/applications',
     SETTINGS: '/admin/settings',
     ANALYTICS: '/admin/analytics',
     AUDIT_LOGS: '/admin/audit-logs',

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
+import { BomForm, BomItem } from '@/components/solutions';
 
 interface SolutionFormData {
   title: string;
@@ -20,13 +21,7 @@ interface SolutionFormData {
   tags: string[];
   images: string[];
   specs: Record<string, string>;
-  bom: Array<{
-    name: string;
-    quantity: number;
-    unitPrice: number;
-    supplier?: string;
-    partNumber?: string;
-  }>;
+  bom: BomItem[];
 }
 
 const categories = [
@@ -58,13 +53,6 @@ export default function CreateSolutionPage() {
 
   const [newTag, setNewTag] = useState('');
   const [newSpec, setNewSpec] = useState({ key: '', value: '' });
-  const [newBomItem, setNewBomItem] = useState({
-    name: '',
-    quantity: 1,
-    unitPrice: 0,
-    supplier: '',
-    partNumber: '',
-  });
 
   const handleInputChange = (field: keyof SolutionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -114,26 +102,10 @@ export default function CreateSolutionPage() {
     });
   };
 
-  const addBomItem = () => {
-    if (newBomItem.name.trim() && newBomItem.quantity > 0 && newBomItem.unitPrice >= 0) {
-      setFormData(prev => ({
-        ...prev,
-        bom: [...prev.bom, { ...newBomItem }]
-      }));
-      setNewBomItem({
-        name: '',
-        quantity: 1,
-        unitPrice: 0,
-        supplier: '',
-        partNumber: '',
-      });
-    }
-  };
-
-  const removeBomItem = (index: number) => {
+  const handleBomChange = (bomItems: BomItem[]) => {
     setFormData(prev => ({
       ...prev,
-      bom: prev.bom.filter((_, i) => i !== index)
+      bom: bomItems
     }));
   };
 
@@ -150,7 +122,24 @@ export default function CreateSolutionPage() {
       submitData.append('price', formData.price.toString());
       submitData.append('tags', JSON.stringify(formData.tags));
       submitData.append('specs', JSON.stringify(formData.specs));
-      submitData.append('bom', JSON.stringify(formData.bom));
+      // 转换 BOM 格式为 API 需要的格式
+      const bomForApi = formData.bom.map(item => ({
+        name: item.name,
+        model: item.model,
+        quantity: item.quantity,
+        unit: item.unit || '个',
+        notes: item.notes,
+        unitPrice: item.unitPrice,
+        supplier: item.supplier,
+        partNumber: item.partNumber,
+        manufacturer: item.manufacturer,
+        category: item.category,
+        position: item.position,
+        weight: item.weight,
+        specifications: item.specifications,
+        productId: item.productId,
+      }));
+      submitData.append('bom', JSON.stringify(bomForApi));
       submitData.append('status', isDraft ? SolutionStatus.DRAFT : SolutionStatus.PENDING_REVIEW);
       
       // 添加图片URLs
@@ -470,93 +459,15 @@ export default function CreateSolutionPage() {
               {currentStep === 4 && (
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
                       BOM清单 *
                     </label>
-                    
-                    {formData.bom.length > 0 && (
-                      <div className="mb-4 overflow-x-auto">
-                        <table className="w-full border border-gray-200 rounded-md">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">零件名称</th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">数量</th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">单价</th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">供应商</th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">零件号</th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">操作</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.bom.map((item, index) => (
-                              <tr key={index} className="border-t border-gray-200">
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.name}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.quantity}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">¥{item.unitPrice.toFixed(2)}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.supplier || '-'}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900">{item.partNumber || '-'}</td>
-                                <td className="px-4 py-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => removeBomItem(index)}
-                                    className="text-red-500 hover:text-red-700 text-sm"
-                                  >
-                                    删除
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-
-                    <div className="p-4 border border-gray-200 rounded-md">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">添加BOM项目</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                        <input
-                          type="text"
-                          value={newBomItem.name}
-                          onChange={(e) => setNewBomItem(prev => ({ ...prev, name: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="零件名称"
-                        />
-                        <input
-                          type="number"
-                          value={newBomItem.quantity}
-                          onChange={(e) => setNewBomItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                          min="1"
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="数量"
-                        />
-                        <input
-                          type="number"
-                          value={newBomItem.unitPrice}
-                          onChange={(e) => setNewBomItem(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
-                          min="0"
-                          step="0.01"
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="单价"
-                        />
-                        <input
-                          type="text"
-                          value={newBomItem.supplier}
-                          onChange={(e) => setNewBomItem(prev => ({ ...prev, supplier: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="供应商"
-                        />
-                        <input
-                          type="text"
-                          value={newBomItem.partNumber}
-                          onChange={(e) => setNewBomItem(prev => ({ ...prev, partNumber: e.target.value }))}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="零件号"
-                        />
-                      </div>
-                      <Button type="button" onClick={addBomItem} className="mt-3" variant="outline">
-                        添加BOM项目
-                      </Button>
-                    </div>
+                    <BomForm
+                      items={formData.bom}
+                      onChange={handleBomChange}
+                      readonly={false}
+                      showAdvanced={true}
+                    />
                   </div>
                 </div>
               )}

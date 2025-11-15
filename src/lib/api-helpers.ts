@@ -66,7 +66,7 @@ export async function logAuditAction(
 export async function requireAdminAuth(
   request: NextRequest
 ): Promise<
-  | { success: true; user: { id: string; role: string } }
+  | { success: true; user: { id: string; role: string; roles?: string[] } }
   | { success: false; response: NextResponse; error?: NextResponse }
 > {
   // 验证用户身份
@@ -84,9 +84,15 @@ export async function requireAdminAuth(
     };
   }
 
+  // 获取用户角色（支持多角色）
+  const userProfile = (authResult.user as any).profile;
+  const userRoles = Array.isArray(userProfile?.roles)
+    ? userProfile.roles
+    : (userProfile?.role ? [userProfile.role] : [authResult.user.role || '']);
+
   // 检查管理员权限（包括 ADMIN 和 SUPER_ADMIN）
-  if (authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
-    console.log('[requireAdminAuth] 权限不足，当前角色:', authResult.user.role);
+  if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
+    console.log('[requireAdminAuth] 权限不足，当前角色:', userRoles);
     const errorResponse = NextResponse.json(
       { success: false, error: '权限不足，需要管理员权限' },
       { status: 403 }
@@ -100,14 +106,125 @@ export async function requireAdminAuth(
 
   console.log('[requireAdminAuth] 权限验证成功:', {
     userId: authResult.user.id,
-    role: authResult.user.role,
+    roles: userRoles,
   });
 
   return {
     success: true,
     user: {
       id: authResult.user.id,
-      role: authResult.user.role,
+      role: userRoles[0] || authResult.user.role || '',
+      roles: userRoles,
+    },
+  };
+}
+
+/**
+ * 验证审核员权限（REVIEWER 或 ADMIN）
+ * 返回用户信息或错误响应
+ */
+export async function requireReviewerAuth(
+  request: NextRequest
+): Promise<
+  | { success: true; user: { id: string; role: string; roles?: string[] } }
+  | { success: false; response: NextResponse; error?: NextResponse }
+> {
+  // 验证用户身份
+  const authResult = await authenticateRequest(request);
+  if (!authResult.success || !authResult.user) {
+    const errorResponse = authResult.error || NextResponse.json(
+      { success: false, error: '未授权访问' },
+      { status: 401 }
+    );
+    return {
+      success: false,
+      response: errorResponse,
+      error: errorResponse,
+    };
+  }
+
+  // 获取用户角色（支持多角色）
+  const userProfile = (authResult.user as any).profile;
+  const userRoles = Array.isArray(userProfile?.roles)
+    ? userProfile.roles
+    : (userProfile?.role ? [userProfile.role] : [authResult.user.role || '']);
+
+  // 检查审核员权限（包括 REVIEWER、ADMIN 和 SUPER_ADMIN）
+  if (!userRoles.includes('REVIEWER') && 
+      !userRoles.includes('ADMIN') && 
+      !userRoles.includes('SUPER_ADMIN')) {
+    const errorResponse = NextResponse.json(
+      { success: false, error: '权限不足，需要审核员权限' },
+      { status: 403 }
+    );
+    return {
+      success: false,
+      response: errorResponse,
+      error: errorResponse,
+    };
+  }
+
+  return {
+    success: true,
+    user: {
+      id: authResult.user.id,
+      role: userRoles[0] || authResult.user.role || '',
+      roles: userRoles,
+    },
+  };
+}
+
+/**
+ * 验证创作者权限
+ * 返回用户信息或错误响应
+ */
+export async function requireCreatorAuth(
+  request: NextRequest
+): Promise<
+  | { success: true; user: { id: string; role: string; roles?: string[] } }
+  | { success: false; response: NextResponse; error?: NextResponse }
+> {
+  // 验证用户身份
+  const authResult = await authenticateRequest(request);
+  if (!authResult.success || !authResult.user) {
+    const errorResponse = authResult.error || NextResponse.json(
+      { success: false, error: '未授权访问' },
+      { status: 401 }
+    );
+    return {
+      success: false,
+      response: errorResponse,
+      error: errorResponse,
+    };
+  }
+
+  // 获取用户角色（支持多角色）
+  const userProfile = (authResult.user as any).profile;
+  const userRoles = Array.isArray(userProfile?.roles)
+    ? userProfile.roles
+    : (userProfile?.role ? [userProfile.role] : [authResult.user.role || '']);
+
+  // 检查创作者权限（包括 CREATOR、ADMIN 和 SUPER_ADMIN）
+  if (!userRoles.includes('CREATOR') && 
+      !userRoles.includes('ADMIN') && 
+      !userRoles.includes('SUPER_ADMIN')) {
+    const errorResponse = NextResponse.json(
+      { success: false, error: '权限不足，需要创作者权限' },
+      { status: 403 }
+    );
+    return {
+      success: false,
+      response: errorResponse,
+      error: errorResponse,
+    };
+  }
+
+  return {
+    success: true,
+    user: {
+      id: authResult.user.id,
+      role: userRoles[0] || authResult.user.role || '',
+      roles: userRoles,
     },
   };
 }
@@ -120,85 +237,55 @@ export function createSuccessResponse<T>(
   message?: string,
   status: number = 200
 ): NextResponse<ApiResponse<T>> {
-  const response: ApiResponse<T> = {
-    success: true,
-    data,
-  };
-  if (message) {
-    response.message = message;
-  }
-  return NextResponse.json(response, { status });
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+      message: message || '操作成功',
+    },
+    { status }
+  );
 }
 
 /**
  * 创建错误响应
  */
 export function createErrorResponse(
-  error: string | Error,
-  status: number = 500,
+  error: string,
+  status: number = 400,
   details?: unknown
 ): NextResponse<ApiResponse<null>> {
-  const errorMessage = error instanceof Error ? error.message : error;
-  const response: ApiResponse<null> = {
-    success: false,
-    error: errorMessage,
-    data: null,
-  };
-  if (details) {
-    (response as ApiResponse<null> & { details: unknown }).details = details;
-  }
-  return NextResponse.json(response, { status });
-}
-
-/**
- * 创建验证错误响应（用于Zod等验证库）
- */
-export function createValidationErrorResponse(
-  errors: z.ZodError | Record<string, string[]>
-): NextResponse<ApiResponse<null>> {
-  const errorDetails = errors instanceof z.ZodError
-    ? errors.flatten().fieldErrors
-    : errors;
-  
   return NextResponse.json(
     {
       success: false,
-      error: '验证失败',
-      data: null,
-      details: errorDetails,
-    } as ApiResponse<null> & { details: unknown },
-    { status: 400 }
+      error,
+      details,
+    },
+    { status }
   );
 }
 
 /**
- * API路由错误处理包装器
- * 自动捕获错误并返回统一格式的错误响应
+ * 创建验证错误响应
  */
-export function withErrorHandler<T extends (...args: any[]) => Promise<NextResponse>>(
-  handler: T,
-  errorMessage?: string
-): T {
-  return (async (...args: Parameters<T>) => {
-    try {
-      return await handler(...args);
-    } catch (error) {
-      console.error(errorMessage || 'API处理失败:', error);
-      
-      // 处理Zod验证错误
-      if (error instanceof z.ZodError) {
-        return createValidationErrorResponse(error);
-      }
-      
-      // 处理其他错误
-      const message = error instanceof Error ? error.message : '服务器错误';
-      return createErrorResponse(
-        errorMessage || message,
-        500,
-        error instanceof Error ? { stack: error.stack, name: error.name } : undefined
-      );
-    }
-  }) as T;
+export function createValidationErrorResponse(
+  zodError: z.ZodError
+): NextResponse<ApiResponse<null>> {
+  const errors = zodError.errors.map((err) => ({
+    field: err.path.join('.'),
+    message: err.message,
+  }));
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: '验证失败',
+      details: {
+        validationErrors: errors,
+      },
+    },
+    { status: 400 }
+  );
 }
 
 /**
@@ -210,18 +297,32 @@ export function createPaginatedResponse<T>(
   limit: number,
   total: number,
   message?: string
-): NextResponse<ApiResponse<T[]> & { pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+): NextResponse<ApiResponse<{
+  items: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}>> {
   const totalPages = Math.ceil(total / limit);
+  
   return NextResponse.json({
     success: true,
-    data,
-    message,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
+    data: {
+      items: data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     },
+    message: message || '获取数据成功',
   });
 }
-

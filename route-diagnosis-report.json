@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-13T17:02:27.995Z",
+  "timestamp": "2025-11-14T19:09:27.652Z",
   "summary": {
-    "totalRoutes": 210,
+    "totalRoutes": 219,
     "routeGroups": 2,
     "dynamicRoutes": 0,
-    "staticRoutes": 208,
+    "staticRoutes": 217,
     "totalIssues": 3,
     "issuesByType": {
       "hardcoded-push": 2,
@@ -81,6 +81,12 @@
     {
       "path": "src/app/[locale]/admin/analytics",
       "urlPath": "/admin/analytics",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/admin/applications",
+      "urlPath": "/admin/applications",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -177,6 +183,24 @@
     {
       "path": "src/app/[locale]/creators/revenue",
       "urlPath": "/creators/revenue",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/creators/solutions",
+      "urlPath": "/creators/solutions",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/creators/solutions/[id]/edit",
+      "urlPath": "/creators/solutions/edit",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/creators/solutions/new",
+      "urlPath": "/creators/solutions/new",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -567,6 +591,12 @@
     {
       "path": "src/app/api/auth/reset-password",
       "urlPath": "/api/auth/reset-password",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/auth/sync-session",
+      "urlPath": "/api/auth/sync-session",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1027,8 +1057,26 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/api/solutions/[id]/assets",
+      "urlPath": "/api/solutions/assets",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/solutions/[id]/bom",
+      "urlPath": "/api/solutions/bom",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/api/solutions/[id]/files",
       "urlPath": "/api/solutions/files",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/solutions/[id]/publish",
+      "urlPath": "/api/solutions/publish",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1065,6 +1113,12 @@
     {
       "path": "src/app/api/solutions/[id]/versions/rollback 2",
       "urlPath": "/api/solutions/versions/rollback 2",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/api/solutions/mine",
+      "urlPath": "/api/solutions/mine",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1283,7 +1337,7 @@
     },
     {
       "file": "components/profile/PasswordChangeForm.tsx",
-      "line": 76,
+      "line": 77,
       "type": "hardcoded-push",
       "code": "router.push('/login');",
       "suggestion": "使用: router.push(route('/login')) 或 router.push(route(routes.XXX))"

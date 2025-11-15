@@ -18,7 +18,7 @@ import {
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { AdminRoute } from '@/components/auth/ProtectedRoute';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -30,12 +30,15 @@ import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
 
+type UserRole = 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN';
+
 interface UserData {
   id: string;
   email: string;
   firstName?: string;
   lastName?: string;
-  role: 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN';
+  roles: UserRole[]; // 多角色数组
+  role?: UserRole; // 向后兼容：单一角色（已废弃）
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
@@ -74,7 +77,7 @@ export default function AdminUsersPage() {
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
-    role: 'USER' as UserData['role']
+    roles: ['USER'] as UserRole[] // 多角色数组
   });
   const [suspendReason, setSuspendReason] = useState('');
   const [batchAction, setBatchAction] = useState<'role' | 'status'>('role');
@@ -98,9 +101,12 @@ export default function AdminUsersPage() {
       );
     }
 
-    // 角色筛选
+    // 角色筛选（支持多角色）
     if (filters.role !== 'all') {
-      filtered = filtered.filter(user => user.role === filters.role);
+      filtered = filtered.filter(user => {
+        const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+        return userRoles.includes(filters.role as UserRole);
+      });
     }
 
     // 状态筛选
@@ -149,24 +155,28 @@ export default function AdminUsersPage() {
       const data = await response.json();
       console.log('[AdminUsersPage] API 响应数据:', {
         success: data.success,
-        dataLength: data.data?.length || 0,
-        pagination: data.pagination,
         hasData: !!data.data,
-        dataType: Array.isArray(data.data) ? 'array' : typeof data.data,
+        hasItems: !!data.data?.items,
+        itemsLength: data.data?.items?.length || 0,
+        pagination: data.data?.pagination,
+        dataType: typeof data.data,
       });
       
-      // API 返回格式: { success: true, data: [...], pagination: {...} }
-      const usersList = data.data || [];
+      // API 返回格式: { success: true, data: { items: [...], pagination: {...} } }
+      // 与 applications 页面保持一致的数据提取逻辑
+      const usersList = data.data?.items || data.data || [];
+      const validUsersList = Array.isArray(usersList) ? usersList : [];
+      
       console.log('[AdminUsersPage] 解析后的用户列表:', {
-        count: usersList.length,
-        firstUser: usersList[0] || null,
+        count: validUsersList.length,
+        firstUser: validUsersList[0] || null,
       });
       
-      if (usersList.length === 0) {
+      if (validUsersList.length === 0) {
         console.warn('[AdminUsersPage] 用户列表为空');
       }
       
-      setUsers(usersList);
+      setUsers(validUsersList);
     } catch (error) {
       console.error('[AdminUsersPage] 获取用户列表错误:', error);
       const errorMessage = error instanceof Error ? error.message : '获取用户列表失败';
@@ -178,10 +188,11 @@ export default function AdminUsersPage() {
 
   const handleEditUser = (user: UserData) => {
     setSelectedUser(user);
+    const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : ['USER']);
     setEditForm({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      role: user.role
+      roles: userRoles
     });
     setShowEditDialog(true);
   };
@@ -189,27 +200,78 @@ export default function AdminUsersPage() {
   const handleSaveEdit = async () => {
     if (!selectedUser) return;
 
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(editForm),
-      });
+    if (editForm.roles.length === 0) {
+      toast.error('至少需要选择一个角色');
+      return;
+    }
 
-      if (response.ok) {
-        toast.success('用户信息更新成功');
-        setShowEditDialog(false);
-        loadUsers();
-      } else {
-        throw new Error('更新失败');
+    try {
+      let infoUpdated = false;
+      let rolesUpdated = false;
+
+      const originalRoles = (Array.isArray(selectedUser.roles) ? selectedUser.roles : (selectedUser.role ? [selectedUser.role] : [])).sort();
+      const newRoles = [...editForm.roles].sort();
+      const rolesChanged = JSON.stringify(originalRoles) !== JSON.stringify(newRoles);
+
+      const infoPayload: { firstName?: string; lastName?: string } = {};
+      // 只有在用户输入非空值且与原值不同时才添加
+      if (editForm.firstName.trim() && editForm.firstName.trim() !== (selectedUser.firstName || '')) {
+        infoPayload.firstName = editForm.firstName.trim();
       }
+      if (editForm.lastName.trim() && editForm.lastName.trim() !== (selectedUser.lastName || '')) {
+        infoPayload.lastName = editForm.lastName.trim();
+      }
+      const infoChanged = Object.keys(infoPayload).length > 0;
+
+      if (!infoChanged && !rolesChanged) {
+        setShowEditDialog(false);
+        return; // 没有检测到任何更改
+      }
+
+      if (infoChanged) {
+        const infoResponse = await fetch(`/api/admin/users/${selectedUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(infoPayload),
+        });
+        if (!infoResponse.ok) {
+          const errorData = await infoResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || '更新用户信息失败');
+        }
+        infoUpdated = true;
+      }
+
+      if (rolesChanged) {
+        const roleResponse = await fetch(`/api/admin/users/${selectedUser.id}/role`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ roles: editForm.roles }),
+        });
+        if (!roleResponse.ok) {
+          const errorData = await roleResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || '更新用户角色失败');
+        }
+        rolesUpdated = true;
+      }
+
+      let successMessage = '更新成功';
+      if (infoUpdated && rolesUpdated) {
+        successMessage = '用户信息和角色已更新';
+      } else if (infoUpdated) {
+        successMessage = '用户信息已更新';
+      } else if (rolesUpdated) {
+        successMessage = '用户角色已更新';
+      }
+
+      toast.success(successMessage);
+      setShowEditDialog(false);
+      loadUsers();
+
     } catch (error) {
       console.error('更新用户信息错误:', error);
-      toast.error('更新用户信息失败');
+      toast.error(error instanceof Error ? error.message : '更新操作失败');
     }
   };
 
@@ -333,20 +395,23 @@ export default function AdminUsersPage() {
   };
 
   const getCurrentUsers = () => {
-    const displayUsers = filteredUsers.length > 0 ? filteredUsers : users;
-    
+    const sourceUsers = (filters.search || filters.role !== 'all' || filters.status !== 'all' || filters.emailVerified !== 'all' || filters.dateFrom || filters.dateTo)
+      ? filteredUsers
+      : users;
+
     if (activeTab === 'all') {
-      return displayUsers;
+      return sourceUsers;
     }
     
-    return displayUsers.filter(user => {
+    return sourceUsers.filter(user => {
+      const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
       switch (activeTab) {
         case 'customers':
-          return user.role === 'USER';
+          return userRoles.includes('USER');
         case 'creators':
-          return user.role === 'CREATOR';
+          return userRoles.includes('CREATOR');
         case 'admins':
-          return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+          return userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
         case 'suspended':
           return user.status === 'SUSPENDED';
         default:
@@ -431,7 +496,7 @@ export default function AdminUsersPage() {
 
   return (
     <AdminRoute>
-      <DefaultLayout>
+      <AdminLayout>
         <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -640,10 +705,13 @@ export default function AdminUsersPage() {
                                   : user.email
                                 }
                               </CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Badge className={getRoleColor(user.role)}>
-                                  {getRoleText(user.role)}
-                                </Badge>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {/* 显示所有角色 */}
+                                {(Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : [])).map((role) => (
+                                  <Badge key={role} className={getRoleColor(role)}>
+                                    {getRoleText(role)}
+                                  </Badge>
+                                ))}
                                 <Badge className={getStatusColor(user.status)}>
                                   {getStatusText(user.status)}
                                 </Badge>
@@ -653,22 +721,22 @@ export default function AdminUsersPage() {
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-4 h-4" />
-                                {user.email}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-1 min-w-[200px]">
+                                <Mail className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate" title={user.email}>{user.email}</span>
+                              </div>
+                              <div className="flex items-center gap-1 min-w-[150px]">
+                                <Calendar className="w-4 h-4 flex-shrink-0" />
+                                <span>注册: {formatDate(user.createdAt)}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                注册: {formatDate(user.createdAt)}
+                                <User className="w-4 h-4 flex-shrink-0" />
+                                <span>方案: {user.solutionCount || 0}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <User className="w-4 h-4" />
-                                方案: {user.solutionCount || 0}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Shield className="w-4 h-4" />
-                                审核: {user.reviewCount || 0}
+                                <Shield className="w-4 h-4 flex-shrink-0" />
+                                <span>审核: {user.reviewCount || 0}</span>
                               </div>
                             </div>
                           </div>
@@ -698,20 +766,23 @@ export default function AdminUsersPage() {
                               暂停
                             </Button>
                           )}
-                          {user.role !== 'ADMIN' && (
-                            <Button
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setShowDeleteDialog(true);
-                              }}
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1 text-red-600 border-red-200 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              删除
-                            </Button>
-                          )}
+                          {(() => {
+                            const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+                            return !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN') ? (
+                              <Button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowDeleteDialog(true);
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 text-red-600 border-red-200 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                删除
+                              </Button>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                     </CardHeader>
@@ -754,19 +825,39 @@ export default function AdminUsersPage() {
             </div>
             
             <div>
-              <Label htmlFor="role">角色</Label>
-              <select 
-                value={editForm.role} 
-                onChange={(e) => setEditForm(prev => ({ ...prev, role: e.target.value as UserData['role'] }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="USER">普通用户</option>
-                <option value="CREATOR">创作者</option>
-                <option value="REVIEWER">审核员</option>
-                <option value="FACTORY_MANAGER">工厂管理员</option>
-                <option value="ADMIN">管理员</option>
-                <option value="SUPER_ADMIN">超级管理员</option>
-              </select>
+              <Label>角色（可多选）</Label>
+              <div className="space-y-2 mt-2 p-4 border border-gray-200 rounded-md bg-gray-50">
+                {(['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN'] as UserRole[]).map((role) => (
+                  <div key={role} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`role-${role}`}
+                      checked={editForm.roles.includes(role)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setEditForm(prev => ({
+                            ...prev,
+                            roles: [...prev.roles, role]
+                          }));
+                        } else {
+                          setEditForm(prev => ({
+                            ...prev,
+                            roles: prev.roles.filter(r => r !== role)
+                          }));
+                        }
+                      }}
+                    />
+                    <Label 
+                      htmlFor={`role-${role}`}
+                      className="text-sm font-medium cursor-pointer flex-1"
+                    >
+                      {getRoleText(role)}
+                    </Label>
+                  </div>
+                ))}
+                {editForm.roles.length === 0 && (
+                  <p className="text-sm text-red-600 mt-2">至少需要选择一个角色</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -922,7 +1013,7 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
         </div>
-      </DefaultLayout>
+      </AdminLayout>
     </AdminRoute>
   );
 }

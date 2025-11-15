@@ -16,16 +16,27 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
+    // 验证用户身份（可选）
+    const authResult = await authenticateRequest(request);
+    const isAuthenticated = authResult.success && authResult.user;
+    const isAdmin = isAuthenticated && (authResult.user.role === 'ADMIN' || authResult.user.role === 'SUPER_ADMIN');
+    const isCreator = isAuthenticated && authResult.user.role === 'CREATOR';
+
     // 构建查询条件
     const where: any = {};
 
-    if (category && category !== 'all') {
-      where.category = category;
+    // **新增**：公共访问时仅返回 PUBLISHED 状态的方案
+    if (!isAuthenticated || (!isAdmin && !isCreator)) {
+      where.status = 'PUBLISHED';
+    } else {
+      // **新增**：管理员/创作者可以筛选状态
+      if (status && status !== 'all') {
+        where.status = status.toUpperCase() as any;
+      }
     }
 
-    if (status && status !== 'all') {
-      // 使用正确的枚举值
-      where.status = status.toUpperCase() as any;
+    if (category && category !== 'all') {
+      where.category = category;
     }
 
     if (search) {
@@ -46,12 +57,47 @@ export async function GET(request: NextRequest) {
     const solutions = await prisma.solution.findMany({
       where,
       include: {
+        creator: {
+          include: {
+            userProfile: {
+              select: {
+                display_name: true,
+                first_name: true,
+                last_name: true
+              }
+            }
+          }
+        } as any,
+        assets: {
+          select: {
+            id: true,
+            type: true,
+            url: true,
+            title: true,
+            description: true,
+          },
+          take: 5, // 限制返回的资产数量
+        },
+        bomItems: {
+          select: {
+            id: true,
+            name: true,
+            model: true,
+            quantity: true,
+            unit: true,
+            unitPrice: true,
+            productId: true,
+          },
+          take: 10, // 限制返回的 BOM 项数量
+        },
         _count: {
           select: {
-            solutionReviews: true  // 使用 solutionReviews 而不是 reviews
-          }
+            solutionReviews: true,
+            assets: true,
+            bomItems: true
+          } as any
         }
-      },
+      } as any,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit
@@ -105,25 +151,53 @@ export async function GET(request: NextRequest) {
     };
 
     return createPaginatedResponse(
-      solutions.map(solution => ({
-        id: solution.id,
-        title: solution.title,
-        slug: solution.id, // 临时使用 id 作为 slug
-        description: solution.description,
-        price: solution.price,
-        status: solution.status,
-        images: solution.images,
-        categoryId: solution.category, // 使用 category 字段
-        creatorId: null, // TODO: 添加 creatorId 字段
-        createdAt: solution.createdAt.toISOString(),
-        updatedAt: solution.updatedAt.toISOString(),
-        averageRating: 0, // TODO: 计算平均评分
-        creatorName: 'Unknown', // TODO: 通过关联获取
-        reviewCount: solution._count.solutionReviews || 0, // 使用 solutionReviews 计数
-        downloadCount: 0,
-        specs: parseJsonSafely(solution.specs, {}),
-        bom: parseJsonSafely(solution.bom, [])
-      })),
+      solutions.map(solution => {
+        const solutionAny = solution as any;
+        return {
+          id: solution.id,
+          title: solution.title,
+          slug: solution.id, // 临时使用 id 作为 slug
+          description: solution.description,
+          summary: solutionAny.summary || null,
+          price: Number(solution.price),
+          status: solution.status,
+          images: solution.images,
+          tags: solutionAny.tags || solution.features || [],
+          categoryId: solution.category,
+          creatorId: solutionAny.creatorId || null,
+          creatorName: solutionAny.creator?.userProfile ? 
+            (solutionAny.creator.userProfile.display_name || 
+             `${solutionAny.creator.userProfile.first_name ?? ''} ${solutionAny.creator.userProfile.last_name ?? ''}`.trim() || 
+             'Unknown') : 'Unknown',
+          createdAt: solution.createdAt.toISOString(),
+          updatedAt: solution.updatedAt.toISOString(),
+          publishedAt: solutionAny.publishedAt?.toISOString() || null,
+          averageRating: 0, // TODO: 计算平均评分
+          reviewCount: solutionAny._count?.solutionReviews || 0,
+          assetCount: solutionAny._count?.assets || 0,
+          bomItemCount: solutionAny._count?.bomItems || 0,
+          downloadCount: 0,
+          specs: solutionAny.technicalSpecs || parseJsonSafely(solution.specs, {}),
+          bom: parseJsonSafely(solution.bom, []),
+          // 包含资产和 BOM 项信息
+          assets: ((solution as any).assets || []).map((asset: any) => ({
+            id: asset.id,
+            type: asset.type,
+            url: asset.url,
+            title: asset.title || null,
+            description: asset.description || null,
+          })),
+          bomItems: ((solution as any).bomItems || []).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            model: item.model || null,
+            quantity: item.quantity,
+            unit: item.unit || '个',
+            unitPrice: item.unitPrice ? Number(item.unitPrice) : null,
+            productId: item.productId || null,
+          }))
+        };
+      }),
       page,
       limit,
       total,
@@ -159,13 +233,18 @@ export async function POST(request: NextRequest) {
     
     const validatedData = createSolutionSchema.parse(body);
     
+    // 验证用户为 CREATOR 角色
+    if (authResult.user.role !== 'CREATOR' && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+      return createErrorResponse('只有创作者可以创建方案', 403);
+    }
+
     // 获取创作者档案
     const creatorProfile = await prisma.creatorProfile.findUnique({
       where: { user_id: authResult.user.id }
     });
 
     if (!creatorProfile) {
-      return createErrorResponse('创作者档案不存在', 404);
+      return createErrorResponse('创作者档案不存在，请先申请成为创作者', 404);
     }
 
     // 创建方案
@@ -177,11 +256,12 @@ export async function POST(request: NextRequest) {
         price: validatedData.price,
         features: validatedData.features || [],
         images: validatedData.images || [],
-        specs: JSON.stringify(validatedData.specs || {}),
-        bom: JSON.stringify(validatedData.bom || []),
+        specs: validatedData.specs ? (typeof validatedData.specs === 'string' ? validatedData.specs : JSON.stringify(validatedData.specs)) : null,
+        technicalSpecs: validatedData.specs ? (typeof validatedData.specs === 'string' ? JSON.parse(validatedData.specs) : validatedData.specs) : null,
+        bom: validatedData.bom ? (typeof validatedData.bom === 'string' ? validatedData.bom : JSON.stringify(validatedData.bom)) : null,
         status: 'DRAFT',
-        // creatorId: creatorProfile.id, // TODO: 添加 creatorId 字段到 Solution 模型
-        // userId: authResult.user.id // TODO: 添加 userId 字段到 Solution 模型
+        creatorId: creatorProfile.id, // 使用 creatorId 字段
+        locale: 'zh-CN', // 默认语言
       }
     });
 
@@ -212,9 +292,9 @@ export async function POST(request: NextRequest) {
         images: solution.images || [],
         createdAt: solution.createdAt,
         updatedAt: solution.updatedAt,
-        creatorId: null, // TODO: 添加 creatorId 字段
-        creatorName: 'Unknown', // TODO: 通过关联获取
-        specs: solution.specs || {},
+        creatorId: solution.creatorId,
+        creatorName: creatorProfile.userProfile?.display_name || 'Unknown',
+        specs: solution.technicalSpecs || solution.specs || {},
         bom: solution.bom || []
       },
       '方案创建成功',

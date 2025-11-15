@@ -13,11 +13,14 @@ export const dynamic = 'force-dynamic';
 
 const createApplicationSchema = z.object({
   bio: z.string().min(10, '个人简介至少需要10个字符').max(1000, '个人简介不能超过1000个字符'),
-  website: z.string().url('请输入有效的网址').optional().or(z.literal('')),
+  website: z.union([
+    z.string().url('请输入有效的网址'),
+    z.literal(''),
+  ]).optional(),
   experience: z.string().min(10, '相关经验至少需要10个字符').max(2000, '相关经验不能超过2000个字符'),
   specialties: z.array(z.string()).min(1, '至少选择一个专长领域').max(10, '最多选择10个专长领域'),
-  portfolio: z.array(z.string().url()).optional(),
-  documents: z.array(z.string().url()).optional(),
+  portfolio: z.array(z.string().url('作品集链接必须是有效的URL')).optional(),
+  documents: z.array(z.string().url('文档链接必须是有效的URL')).optional(),
 });
 
 /**
