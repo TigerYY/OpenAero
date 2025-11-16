@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       include: {
         creator: {
           include: {
-            userProfile: {
+            user: {
               select: {
                 display_name: true,
                 first_name: true,
@@ -67,38 +67,16 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        } as any,
-        assets: {
-          select: {
-            id: true,
-            type: true,
-            url: true,
-            title: true,
-            description: true,
-          },
-          take: 5, // 限制返回的资产数量
-        },
-        bomItems: {
-          select: {
-            id: true,
-            name: true,
-            model: true,
-            quantity: true,
-            unit: true,
-            unitPrice: true,
-            productId: true,
-          },
-          take: 10, // 限制返回的 BOM 项数量
         },
         _count: {
           select: {
             solutionReviews: true,
-            assets: true,
-            bomItems: true
-          } as any
+            files: true,
+            reviews: true
+          }
         }
-      } as any,
-      orderBy: { createdAt: 'desc' },
+      },
+      orderBy: { created_at: 'desc' },
       skip: (page - 1) * limit,
       take: limit
     });
@@ -133,9 +111,9 @@ export async function GET(request: NextRequest) {
             version: solution.version,
             tags: parseJsonSafely(solution.features, []),
             images: parseJsonSafely(solution.images, []),
-            createdAt: solution.createdAt,
-            updatedAt: solution.updatedAt,
-            creatorId: null, // TODO: 添加 creatorId 字段到 Solution 模型
+            createdAt: solution.created_at,
+            updatedAt: solution.updated_at,
+            creatorId: solution.creator_id,
             creatorName: 'Unknown', // TODO: 通过 creatorId 关联获取创作者信息
             reviewCount: solution._count.solutionReviews || 0, // 使用 solutionReviews 计数
             downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
@@ -164,14 +142,14 @@ export async function GET(request: NextRequest) {
           images: solution.images,
           tags: solutionAny.tags || solution.features || [],
           categoryId: solution.category,
-          creatorId: solutionAny.creatorId || null,
-          creatorName: solutionAny.creator?.userProfile ? 
-            (solutionAny.creator.userProfile.display_name || 
-             `${solutionAny.creator.userProfile.first_name ?? ''} ${solutionAny.creator.userProfile.last_name ?? ''}`.trim() || 
+          creatorId: solution.creator_id,
+          creatorName: solution.creator?.user ? 
+            (solution.creator.user.display_name || 
+             `${solution.creator.user.first_name ?? ''} ${solution.creator.user.last_name ?? ''}`.trim() || 
              'Unknown') : 'Unknown',
-          createdAt: solution.createdAt.toISOString(),
-          updatedAt: solution.updatedAt.toISOString(),
-          publishedAt: solutionAny.publishedAt?.toISOString() || null,
+          createdAt: solution.created_at.toISOString(),
+          updatedAt: solution.updated_at.toISOString(),
+          publishedAt: solution.published_at?.toISOString() || null,
           averageRating: 0, // TODO: 计算平均评分
           reviewCount: solutionAny._count?.solutionReviews || 0,
           assetCount: solutionAny._count?.assets || 0,
@@ -257,10 +235,9 @@ export async function POST(request: NextRequest) {
         features: validatedData.features || [],
         images: validatedData.images || [],
         specs: validatedData.specs ? (typeof validatedData.specs === 'string' ? validatedData.specs : JSON.stringify(validatedData.specs)) : null,
-        technicalSpecs: validatedData.specs ? (typeof validatedData.specs === 'string' ? JSON.parse(validatedData.specs) : validatedData.specs) : null,
         bom: validatedData.bom ? (typeof validatedData.bom === 'string' ? validatedData.bom : JSON.stringify(validatedData.bom)) : null,
         status: 'DRAFT',
-        creatorId: creatorProfile.id, // 使用 creatorId 字段
+        creator_id: creatorProfile.id,
         locale: 'zh-CN', // 默认语言
       }
     });
@@ -290,11 +267,11 @@ export async function POST(request: NextRequest) {
         version: solution.version,
         tags: solution.features || [],
         images: solution.images || [],
-        createdAt: solution.createdAt,
-        updatedAt: solution.updatedAt,
-        creatorId: solution.creatorId,
-        creatorName: creatorProfile.userProfile?.display_name || 'Unknown',
-        specs: solution.technicalSpecs || solution.specs || {},
+        createdAt: solution.created_at,
+        updatedAt: solution.updated_at,
+        creatorId: solution.creator_id,
+        creatorName: 'Unknown', // 需要再次查询creator profile
+        specs: solution.specs || {},
         bom: solution.bom || []
       },
       '方案创建成功',

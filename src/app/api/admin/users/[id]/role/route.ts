@@ -33,23 +33,42 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('[PATCH /users/[id]/role] 开始处理角色更新请求, userId:', params.id);
+    
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
+      console.log('[PATCH /users/[id]/role] 认证失败:', authResult.response?.status);
       return authResult.response;
     }
 
     const adminUser = authResult.user;
     const userId = params.id;
+    
+    console.log('[PATCH /users/[id]/role] 认证成功:', {
+      adminId: adminUser.id,
+      adminRoles: adminUser.roles,
+      targetUserId: userId
+    });
 
     const body = await request.json();
+    console.log('[PATCH /users/[id]/role] 请求体:', body);
+    
     const validationResult = updateRoleSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.log('[PATCH /users/[id]/role] 验证失败:', validationResult.error.errors);
       return createValidationErrorResponse(validationResult.error);
     }
 
     const { roles, role, reason } = validationResult.data;
     const rolesToSet = roles || (role ? [role] : []);
+    
+    console.log('[PATCH /users/[id]/role] 解析后的角色:', {
+      roles,
+      role,
+      rolesToSet,
+      reason
+    });
     
     const supabase = await createSupabaseServer();
 
@@ -70,12 +89,27 @@ export async function PATCH(
     
     // 3. 权限检查
     if (oldRoles.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
+      console.warn('[PATCH /users/[id]/role] 无权修改超级管理员角色:', {
+        targetUserId: userId,
+        oldRoles,
+        adminRoles
+      });
       return createErrorResponse('无权修改超级管理员角色', 403);
     }
     if (rolesToSet.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
+      console.warn('[PATCH /users/[id]/role] 无权将用户设置为超级管理员:', {
+        targetUserId: userId,
+        newRoles: rolesToSet,
+        adminRoles
+      });
       return createErrorResponse('无权将用户设置为超级管理员', 403);
     }
     if (userId === adminUser.id && !adminRoles.includes('SUPER_ADMIN')) {
+      console.warn('[PATCH /users/[id]/role] 不能修改自己的角色:', {
+        targetUserId: userId,
+        adminId: adminUser.id,
+        adminRoles
+      });
       return createErrorResponse('不能修改自己的角色', 400);
     }
 

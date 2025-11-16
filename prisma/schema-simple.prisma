@@ -1,0 +1,101 @@
+// This is a simplified schema to fix the immediate issues
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户资料模型 - 扩展 Supabase Auth 用户数据
+model UserProfile {
+  id      String @id @default(uuid()) @@schema("public")
+  user_id String @unique @map("user_id") @@schema("public")
+
+  // 个人资料
+  first_name   String? @map("first_name") @@schema("public")
+  last_name    String? @map("last_name") @@schema("public")
+  display_name String? @map("display_name") @@schema("public")
+  avatar       String? @@schema("public")
+  bio          String? @@schema("public")
+
+  // 角色与权限
+  roles       UserRole[] @default([USER]) @@schema("public")
+  permissions String[] @@schema("public")
+
+  // 状态管理
+  status         UserStatus @default(ACTIVE) @@schema("public")
+  is_blocked     Boolean    @default(false) @map("is_blocked") @@schema("public")
+  blocked_reason String?    @map("blocked_reason") @@schema("public")
+  blocked_at     DateTime?  @map("blocked_at") @@schema("public")
+
+  // 时间戳
+  created_at    DateTime  @default(now()) @map("created_at") @@schema("public")
+  updated_at    DateTime  @updatedAt @map("updated_at") @@schema("public")
+  last_login_at DateTime? @map("last_login_at") @@schema("public")
+
+  @@map("user_profiles")
+}
+
+// 解决方案模型
+model Solution {
+  id             String         @id @default(cuid()) @@schema("public")
+  title          String @@schema("public")
+  description    String @@schema("public")
+  category       String @@schema("public")
+  price          Decimal        @db.Decimal(10, 2) @@schema("public")
+  status         SolutionStatus @default(DRAFT) @@schema("public")
+  images         String[] @@schema("public")
+  features       String[] @@schema("public")
+  tags           String[] @@schema("public")
+  locale         String         @default("zh-CN") @@schema("public")
+  specs          Json? @@schema("public")
+  bom            Json? @@schema("public")
+
+  // 创作者关联
+  creatorId String? @@schema("public")
+
+  // 版本控制
+  version Int @default(1) @@schema("public")
+
+  // 审核相关
+  submittedAt    DateTime? @map("submittedAt") @@schema("public")
+  reviewedAt     DateTime? @map("reviewedAt") @@schema("public")
+  reviewNotes    String? @map("reviewNotes") @@schema("public")
+
+  // 发布相关
+  publishedAt DateTime? @map("publishedAt") @@schema("public")
+  archivedAt  DateTime? @map("archivedAt") @@schema("public")
+
+  createdAt DateTime @default(now()) @@schema("public")
+  updatedAt DateTime @updatedAt @@schema("public")
+
+  @@map("solutions")
+}
+
+// 枚举类型
+enum UserRole {
+  USER
+  CREATOR
+  REVIEWER
+  FACTORY_MANAGER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum SolutionStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+  ARCHIVED
+}

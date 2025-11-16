@@ -1,14 +1,15 @@
 {
-  "timestamp": "2025-11-14T19:09:27.652Z",
+  "timestamp": "2025-11-15T18:43:02.640Z",
   "summary": {
-    "totalRoutes": 219,
+    "totalRoutes": 222,
     "routeGroups": 2,
     "dynamicRoutes": 0,
-    "staticRoutes": 217,
-    "totalIssues": 3,
+    "staticRoutes": 220,
+    "totalIssues": 5,
     "issuesByType": {
-      "hardcoded-push": 2,
-      "missing-route-wrapper": 1
+      "hardcoded-href": 1,
+      "missing-route-wrapper": 2,
+      "hardcoded-push": 2
     }
   },
   "fileSystemRoutes": [
@@ -45,6 +46,12 @@
     {
       "path": "src/app/[locale]/(auth)/reset-password",
       "urlPath": "/reset-password",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/[locale]/(auth)/welcome",
+      "urlPath": "/welcome",
       "isDynamic": false,
       "isRouteGroup": false
     },
@@ -1213,6 +1220,18 @@
       "isRouteGroup": false
     },
     {
+      "path": "src/app/auth",
+      "urlPath": "/auth",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
+      "path": "src/app/auth/callback",
+      "urlPath": "/auth/callback",
+      "isDynamic": false,
+      "isRouteGroup": false
+    },
+    {
       "path": "src/app/file-upload-test",
       "urlPath": "/file-upload-test",
       "isDynamic": false,
@@ -1328,6 +1347,20 @@
     }
   ],
   "issues": [
+    {
+      "file": "app/[locale]/(auth)/welcome/page.tsx",
+      "line": 26,
+      "type": "hardcoded-href",
+      "code": "<Link href=\"/profile\">",
+      "suggestion": "使用: href={route('/profile')} 或 href={route(routes.XXX)}"
+    },
+    {
+      "file": "app/[locale]/(auth)/welcome/page.tsx",
+      "line": 1,
+      "type": "missing-route-wrapper",
+      "code": "// 文件顶部",
+      "suggestion": "需要导入: import { useRouting } from '@/lib/routing'; 并在组件中使用: const { route, routes } = useRouting();"
+    },
     {
       "file": "app/[locale]/(dashboard)/settings/page.tsx",
       "line": 641,

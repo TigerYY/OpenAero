@@ -214,14 +214,26 @@ export default function AdminUsersPage() {
       const rolesChanged = JSON.stringify(originalRoles) !== JSON.stringify(newRoles);
 
       const infoPayload: { firstName?: string; lastName?: string } = {};
+      
+      // 验证输入并构建请求载荷
+      const firstNameInput = editForm.firstName.trim();
+      const lastNameInput = editForm.lastName.trim();
+      
       // 只有在用户输入非空值且与原值不同时才添加
-      if (editForm.firstName.trim() && editForm.firstName.trim() !== (selectedUser.firstName || '')) {
-        infoPayload.firstName = editForm.firstName.trim();
+      if (firstNameInput && firstNameInput !== (selectedUser.firstName || '')) {
+        infoPayload.firstName = firstNameInput;
       }
-      if (editForm.lastName.trim() && editForm.lastName.trim() !== (selectedUser.lastName || '')) {
-        infoPayload.lastName = editForm.lastName.trim();
+      if (lastNameInput && lastNameInput !== (selectedUser.lastName || '')) {
+        infoPayload.lastName = lastNameInput;
       }
+      
       const infoChanged = Object.keys(infoPayload).length > 0;
+      
+      // 表单验证：如果基本信息有输入，检查格式
+      if ((firstNameInput || lastNameInput) && !infoChanged) {
+        toast.error('基本信息与当前值相同，无需修改');
+        return;
+      }
 
       if (!infoChanged && !rolesChanged) {
         setShowEditDialog(false);
@@ -229,30 +241,79 @@ export default function AdminUsersPage() {
       }
 
       if (infoChanged) {
+        console.log('[AdminUsersPage] 开始更新用户基本信息:', {
+          userId: selectedUser.id,
+          infoPayload,
+          endpoint: `/api/admin/users/${selectedUser.id}`
+        });
+        
         const infoResponse = await fetch(`/api/admin/users/${selectedUser.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(infoPayload),
         });
+        
+        console.log('[AdminUsersPage] 基本信息更新API响应:', {
+          status: infoResponse.status,
+          statusText: infoResponse.statusText,
+          ok: infoResponse.ok
+        });
+        
         if (!infoResponse.ok) {
           const errorData = await infoResponse.json().catch(() => ({}));
-          throw new Error(errorData.error || '更新用户信息失败');
+          console.error('[AdminUsersPage] 基本信息更新失败:', errorData);
+          
+          // 提供更具体的错误信息
+          let errorMessage = '更新用户基本信息失败';
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (infoResponse.status === 400) {
+            errorMessage = '请检查表单错误：数据格式不正确';
+          } else if (infoResponse.status === 403) {
+            errorMessage = '权限不足，无法修改此用户信息';
+          } else if (infoResponse.status === 404) {
+            errorMessage = '用户不存在';
+          } else if (infoResponse.status === 500) {
+            errorMessage = '服务器错误，请稍后重试';
+          }
+          
+          throw new Error(errorMessage);
         }
+        
+        const responseData = await infoResponse.json();
+        console.log('[AdminUsersPage] 基本信息更新成功:', responseData);
         infoUpdated = true;
       }
 
       if (rolesChanged) {
+        console.log('[AdminUsersPage] 开始更新用户角色:', {
+          userId: selectedUser.id,
+          currentRoles: editForm.roles,
+          endpoint: `/api/admin/users/${selectedUser.id}/role`
+        });
+        
         const roleResponse = await fetch(`/api/admin/users/${selectedUser.id}/role`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ roles: editForm.roles }),
         });
+        
+        console.log('[AdminUsersPage] 角色更新API响应:', {
+          status: roleResponse.status,
+          statusText: roleResponse.statusText,
+          ok: roleResponse.ok
+        });
+        
         if (!roleResponse.ok) {
           const errorData = await roleResponse.json().catch(() => ({}));
+          console.error('[AdminUsersPage] 角色更新失败:', errorData);
           throw new Error(errorData.error || '更新用户角色失败');
         }
+        
+        const responseData = await roleResponse.json();
+        console.log('[AdminUsersPage] 角色更新成功:', responseData);
         rolesUpdated = true;
       }
 

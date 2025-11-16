@@ -1,68 +1,61 @@
-#!/usr/bin/env node
-
-/**
- * 数据库连接测试脚本
- * 用于测试数据库连接和基本功能
- */
-
 const { PrismaClient } = require('@prisma/client');
 
-async function testDatabaseConnection() {
-  const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: ['query', 'error', 'warn'],
+});
+
+async function main() {
+  console.log('🔍 测试数据库连接...\n');
   
   try {
-    console.log('🔍 测试数据库连接...');
-    
-    // 测试基本连接
+    // 测试连接
     await prisma.$connect();
-    console.log('✅ 数据库连接成功');
+    console.log('✅ 数据库连接成功\n');
     
-    // 测试查询
-    const userCount = await prisma.user.count();
-    const solutionCount = await prisma.solution.count();
-    const categoryCount = await prisma.category.count();
-    
-    console.log('📊 数据库统计:');
-    console.log(`   - 用户数量: ${userCount}`);
-    console.log(`   - 解决方案数量: ${solutionCount}`);
-    console.log(`   - 分类数量: ${categoryCount}`);
-    
-    // 测试复杂查询
-    const solutionsWithDetails = await prisma.solution.findMany({
-      include: {
+    // 测试查询 solutions
+    console.log('📝 测试查询 solutions 表...');
+    const solutions = await prisma.solution.findMany({
+      take: 5,
+      select: {
+        id: true,
+        title: true,
         category: true,
-        creator: {
-          include: {
-            user: true,
-          },
-        },
-        reviews: true,
-      },
-      take: 3,
+        status: true,
+        created_at: true
+      }
     });
     
-    console.log('🔍 示例数据查询成功:');
-    solutionsWithDetails.forEach((solution, index) => {
-      console.log(`   ${index + 1}. ${solution.title} - ${solution.category?.name} - ¥${solution.price}`);
-    });
-    
-    console.log('✅ 数据库测试完成，所有功能正常！');
-    
-  } catch (error) {
-    console.error('❌ 数据库测试失败:', error.message);
-    
-    if (error.code === 'P1001') {
-      console.log('💡 提示: 请确保数据库服务器正在运行');
-    } else if (error.code === 'P1003') {
-      console.log('💡 提示: 请检查数据库URL配置');
-    } else if (error.code === 'P1017') {
-      console.log('💡 提示: 请先运行数据库迁移: npm run db:push');
+    console.log(`✅ 查询成功，找到 ${solutions.length} 条记录`);
+    if (solutions.length > 0) {
+      console.log('\n示例数据:');
+      console.log(JSON.stringify(solutions[0], null, 2));
+    } else {
+      console.log('\n⚠️  数据库为空，没有solution记录');
     }
     
+    // 测试查询 user_profiles
+    console.log('\n📝 测试查询 user_profiles 表...');
+    const profiles = await prisma.userProfile.findMany({
+      take: 5,
+      select: {
+        id: true,
+        user_id: true,
+        display_name: true,
+        created_at: true
+      }
+    });
+    
+    console.log(`✅ 查询成功，找到 ${profiles.length} 条profile记录\n`);
+    
+    console.log('✅ 所有测试通过！');
+    
+  } catch (error) {
+    console.error('❌ 测试失败:');
+    console.error(error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-testDatabaseConnection();
+main();

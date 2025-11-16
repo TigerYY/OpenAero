@@ -22,10 +22,19 @@ const prisma = new PrismaClient();
 
 // 请求 schema
 const updateUserSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
+  firstName: z.string().min(1, '名字不能为空').max(50, '名字不能超过50个字符').optional(),
+  lastName: z.string().min(1, '姓氏不能为空').max(50, '姓氏不能超过50个字符').optional(),
   // 其他可以更新的字段
-});
+}).refine(
+  (data) => {
+    // 至少要有一个字段被更新
+    return data.firstName !== undefined || data.lastName !== undefined;
+  },
+  {
+    message: '至少需要提供一个要更新的字段',
+    path: ['root']
+  }
+);
 
 /**
  * GET - 获取单个用户信息
@@ -62,16 +71,63 @@ export async function PUT(
     }
 
     const { firstName, lastName } = validationResult.data;
-
-    // 更新 Prisma user_profiles 表
-    const updatedProfile = await prisma.user_profile.update({
-      where: { user_id: userId },
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        updated_at: new Date(),
-      },
+    
+    console.log('[PUT /users/[id]] 开始更新用户信息:', {
+      userId,
+      firstName,
+      lastName,
+      adminId: adminUser.id
     });
+
+    // 检查用户是否存在，使用 upsert 确保兼容性
+    let updatedProfile;
+    try {
+      updatedProfile = await prisma.user_profile.update({
+        where: { user_id: userId },
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date(),
+        },
+      });
+      console.log('[PUT /users/[id]] 更新现有 profile 成功');
+    } catch (updateError: any) {
+      if (updateError.code === 'P2025') {
+        // Profile 不存在，创建新的
+        console.log('[PUT /users/[id]] Profile 不存在，创建新 profile');
+        
+        // 从 Supabase Auth 获取用户邮箱
+        const supabase = await createSupabaseServer();
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
+        
+        if (authError || !authUser?.user) {
+          console.error('[PUT /users/[id]] 无法获取认证用户信息:', authError);
+          return createErrorResponse('用户不存在于认证系统中', 404);
+        }
+        
+        try {
+          updatedProfile = await prisma.user_profile.create({
+            data: {
+              user_id: userId,
+              email: authUser.user.email,
+              first_name: firstName,
+              last_name: lastName,
+              roles: ['USER'], // 默认角色
+              status: 'ACTIVE',
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+          console.log('[PUT /users/[id]] 创建新 profile 成功');
+        } catch (createError: any) {
+          console.error('[PUT /users/[id]] 创建 profile 失败:', createError);
+          return createErrorResponse('创建用户资料失败: ' + createError.message, 500);
+        }
+      } else {
+        console.error('[PUT /users/[id]] 更新 profile 失败:', updateError);
+        return createErrorResponse('更新用户资料失败: ' + updateError.message, 500);
+      }
+    }
 
     // 更新 Supabase Auth (如果需要)
     // 注意: Supabase Auth 的 user_metadata 更新可能需要特殊处理

@@ -88,7 +88,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.19",
     "@heroicons/react": "^2.0.18",
-    "@prisma/client": "^5.8.1",
+    "@prisma/client": "5.22.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@sentry/nextjs": "^10.20.0",
     "@sentry/profiling-node": "^10.20.0",
