@@ -111,7 +111,7 @@
 
 ### 开发指南
 - [开发环境](../DEVELOPMENT.md)
-- [开发规范](./development/DEVELOPMENT_GUIDE.md) 🔜 待创建
+- [开发指南](./DEVELOPMENT_GUIDE.md) ⭐⭐⭐⭐⭐
 - [代码规范](./development/CODING_STANDARDS.md) 🔜 待创建
 - [测试指南](./development/TESTING_GUIDE.md) 🔜 待创建
 - [Git 工作流](./development/GIT_WORKFLOW.md) 🔜 待创建
@@ -124,13 +124,14 @@
 - [监控运维](../MONITORING.md)
 
 ### 业务功能
-- [方案管理流程](./business/SOLUTION_WORKFLOW.md) 🔜 待创建
-- [订单支付系统](./business/ORDER_PAYMENT_SYSTEM.md) 🔜 待创建
+- [方案管理流程](./SOLUTION_WORKFLOW.md) ⭐⭐⭐⭐⭐
+- [订单支付系统](./ORDER_PAYMENT_SYSTEM.md) ⭐⭐⭐⭐⭐
 - [用户管理](./business/USER_MANAGEMENT.md) 🔜 待创建
 - [创作者平台](./business/CREATOR_PLATFORM.md) 🔜 待创建
 
-### 安全合规
-- [安全指南](./security/SECURITY.md) 🔜 待创建
+### 开发与安全
+- [开发指南](./DEVELOPMENT_GUIDE.md) ⭐⭐⭐⭐⭐
+- [安全指南](./SECURITY.md) ⭐⭐⭐⭐⭐
 - [数据隐私](./security/DATA_PRIVACY.md) 🔜 待创建
 - [合规性](./security/COMPLIANCE.md) 🔜 待创建
 
@@ -147,14 +148,14 @@
 | 优先级 | 已完成 | 计划中 | 总计 |
 |--------|--------|--------|------|
 | 🔥 高优先级 | 4 | 0 | 4 |
-| 📌 中优先级 | 6 | 8 | 14 |
+| 📌 中优先级 | 10 | 4 | 14 |
 | 📝 低优先级 | 2 | 4 | 6 |
-| **总计** | **12** | **12** | **24** |
+| **总计** | **16** | **8** | **24** |
 
 ### 完成进度
 
 ```
-████████████░░░░░░░░░░░░ 50% (12/24)
+████████████████░░░░░░░░ 67% (16/24)
 ```
 
 ---
@@ -236,7 +237,14 @@
 
 ## 🔄 更新日志
 
-### 2025-01-16
+### 2025-01-16 (下午)
+- ✨ 新增 [方案管理工作流程](./SOLUTION_WORKFLOW.md)
+- ✨ 新增 [订单支付系统](./ORDER_PAYMENT_SYSTEM.md)
+- ✨ 新增 [开发指南](./DEVELOPMENT_GUIDE.md)
+- ✨ 新增 [安全指南](./SECURITY.md)
+- 📊 文档完成度达到 67% (16/24)
+
+### 2025-01-16 (上午)
 - ✨ 新增 [系统架构文档](./ARCHITECTURE.md)
 - ✨ 新增 [数据库架构文档](./DATABASE_SCHEMA.md)
 - ✨ 新增 [API 文档](./API_DOCUMENTATION.md)
