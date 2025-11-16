@@ -1,199 +1,265 @@
-# OpenAero 文档中心
+# 📚 OpenAero 文档中心
 
-**版本**: 1.0.0  
-**最后更新**: 2025-10-23  
-**目的**: OpenAero平台的集中文档管理
-
-## 概述
-
-此目录包含OpenAero平台的所有文档，包括产品需求、技术规范、用户指南和开发资源。采用中文优先的文档管理策略，确保中文团队的高效协作。
-
-## 目录结构
-
-```
-DOCS/
-├── prd/                          # 产品需求文档
-│   ├── enhanced-prd.md          # 主要增强PRD文档 (中文)
-│   ├── enhanced-prd-en.md       # 英文备份
-│   ├── status-tracking/         # 功能实施状态跟踪
-│   │   ├── README.md            # 状态跟踪概览 (中文)
-│   │   ├── README-en.md         # 英文备份
-│   │   ├── user-auth.md         # 用户认证模块 (中文)
-│   │   ├── user-auth-en.md      # 英文备份
-│   │   ├── i18n.md              # 国际化模块 (中文)
-│   │   ├── i18n-en.md           # 英文备份
-│   │   ├── solutions.md         # 解决方案管理 (中文)
-│   │   ├── solutions-en.md      # 英文备份
-│   │   ├── creator-app.md       # 创作者申请 (中文)
-│   │   ├── creator-app-en.md    # 英文备份
-│   │   ├── admin-dashboard.md   # 管理仪表板 (中文)
-│   │   └── admin-dashboard-en.md # 英文备份
-│   └── reviews/                 # 审查历史和反馈 (空目录)
-├── templates/                    # 文档模板
-│   ├── enhanced-prd-template.md
-│   ├── feature-module-template.md
-│   ├── user-story-template.md
-│   ├── technical-requirement-template.md
-│   └── review-record-template.md
-├── scripts/                      # 文档自动化脚本
-│   ├── prd-validator.js         # PRD验证脚本
-│   ├── status-updater.js        # 状态更新脚本
-│   ├── review-helper.js         # 审查助手脚本
-│   ├── link-checker.js          # 链接检查脚本
-│   ├── format-checker.js        # 格式检查脚本
-│   ├── status-validator.js      # 状态验证脚本
-│   ├── status-reporter.js       # 状态报告脚本
-│   ├── status-validator-zh.js   # 中文状态验证脚本
-│   ├── status-reporter-zh.js    # 中文状态报告脚本
-│   ├── simple-sync.js           # 简化同步脚本
-│   ├── sync-docs.js             # 中英文同步脚本
-│   ├── update-references.js     # 引用更新脚本
-│   ├── status-consistency-checker.js # 状态一致性检查脚本
-│   └── ci-status-updater.js     # CI状态更新脚本
-├── README.md                    # 本文档
-├── style-guide.md               # 文档风格指南
-├── translation-plan.md          # 翻译计划
-├── zh-first-strategy.md         # 中文优先策略
-├── GIT_BACKUP_CHECKLIST.md      # Git备份清单
-└── package.json                 # 文档自动化依赖配置
-```
-
-## 快速开始
-
-### 1. 查看增强PRD文档
-主要产品需求文档位于：
-- [增强PRD文档](prd/enhanced-prd.md) (中文版)
-- [Enhanced PRD](prd/enhanced-prd-en.md) (英文版)
-
-### 2. 检查实施状态
-查看当前功能实施状态：
-- [状态跟踪概览](prd/status-tracking/README.md) (中文版)
-- [Status Tracking](prd/status-tracking/README-en.md) (英文版)
-
-### 3. 使用模板
-使用我们的模板创建新文档：
-- [模板库](templates/)
-
-### 4. 运行验证脚本
-验证文档质量：
-```bash
-# 验证PRD文档 (中文版)
-node scripts/status-validator-zh.js
-
-# 生成状态报告 (中文版)
-node scripts/status-reporter-zh.js
-
-# 同步中英文文档
-node scripts/simple-sync.js
-
-# 检查链接
-node scripts/link-checker.js
-
-# 检查格式
-node scripts/format-checker.js
-```
-
-## 文档标准
-
-所有文档遵循我们的[风格指南](style-guide.md)，包括：
-- 一致的格式和结构
-- 清晰的状态指示器
-- 标准化模板
-- 审查和批准流程
-
-## 关键文档
-
-### 产品需求
-- **[增强PRD文档](prd/enhanced-prd.md)** - 主要产品需求文档 (中文)
-- **[Enhanced PRD](prd/enhanced-prd-en.md)** - Main product requirements document (English)
-- **[功能状态跟踪](prd/status-tracking/README.md)** - 所有功能的当前实施状态 (中文)
-
-### 模板
-- **[PRD模板](templates/enhanced-prd-template.md)** - 创建新PRD文档的模板
-- **[功能模块模板](templates/feature-module-template.md)** - 功能规范的模板
-- **[用户故事模板](templates/user-story-template.md)** - 用户故事的模板
-- **[技术需求模板](templates/technical-requirement-template.md)** - 技术需求的模板
-
-### 自动化工具
-- **[验证脚本](scripts/)** - 自动化验证和维护工具
-- **[状态跟踪](scripts/status-updater.js)** - 更新实施状态
-- **[审查流程](scripts/review-helper.js)** - 管理审查工作流
-- **[中英文同步](scripts/simple-sync.js)** - 同步中英文文档
-
-## 贡献指南
-
-### 添加新文档
-1. 使用 `templates/` 中的适当模板
-2. 遵循[风格指南](style-guide.md)
-3. 提交前运行验证脚本
-4. 按照审查流程提交审查
-
-### 更新现有文档
-1. 按照风格指南进行更改
-2. 如适用，更新状态指示器
-3. 运行验证脚本
-4. 提交审查
-
-### 审查流程
-1. **自我审查**: 对照风格指南检查
-2. **同行审查**: 其他团队成员审查
-3. **技术审查**: 技术准确性检查
-4. **业务审查**: 业务一致性检查
-5. **最终批准**: 利益相关者批准
-
-### 中英文同步
-- 优先更新中文版文档
-- 使用 `node scripts/simple-sync.js` 同步到英文版
-- 确保关键信息（状态、优先级、版本）保持一致
-
-## 维护
-
-### 定期任务
-- **每周**: 更新实施状态
-- **每月**: 审查和更新PRD内容
-- **每季度**: 审查和更新风格指南
-- **按需**: 修复损坏链接和更新内容
-
-### 自动化
-- 提交时自动运行链接检查
-- 对所有Markdown文件运行格式验证
-- 状态验证确保一致性
-- 中英文文档自动同步
-
-## 工具和依赖
-
-### 必需工具
-- Node.js 18+ (用于自动化脚本)
-- Git (用于版本控制)
-- Markdown编辑器 (推荐VS Code)
-
-### 可选工具
-- Markdown语法检查工具
-- 链接检查工具
-- 图表生成工具
-
-## 支持
-
-### 获取帮助
-- 查看[风格指南](style-guide.md)了解格式问题
-- 查看[模板库](templates/)了解结构指导
-- 运行验证脚本识别问题
-
-### 报告问题
-- 使用Git issues报告文档错误
-- 使用 `documentation` 标签标记问题
-- 包含具体文件路径和错误消息
-
-## 版本历史
-
-- **v1.0.0** (2025-10-23): 初始文档结构和增强PRD系统，实现中文优先策略
-
-## 许可证
-
-本文档是OpenAero项目的一部分，遵循相同的许可条款。
+欢迎来到 OpenAero 项目文档中心！这里提供了完整的技术文档和开发指南。
 
 ---
 
-**最后更新**: 2025-10-23  
-**维护团队**: OpenAero开发团队  
-**下次审查**: 2026-01-23
+## 🎯 快速导航
+
+### 新手入门
+1. 📖 [项目概述](../README.md) - 了解项目基本信息
+2. 🏗️ [系统架构](./ARCHITECTURE.md) - 理解整体架构设计
+3. 🛠️ [开发指南](../DEVELOPMENT.md) - 快速搭建开发环境
+4. 🗄️ [数据库架构](./DATABASE_SCHEMA.md) - 了解数据结构
+
+### 开发者必读
+- 📡 [API 文档](./API_DOCUMENTATION.md) - 完整的 API 参考
+- 🗄️ [数据库设置](../DATABASE_SETUP.md) - 数据库配置和初始化
+- ⚡ [数据库优化](../DATABASE_OPTIMIZATION_GUIDE.md) - 性能优化指南
+- 🔒 [安全指南](./security/SECURITY.md) - 安全最佳实践（待创建）
+
+### 部署运维
+- 🚀 [部署指南](./DEPLOYMENT_GUIDE.md) - 生产环境部署
+- 📊 [监控指南](../MONITORING.md) - 系统监控和日志
+- ✅ [生产清单](../PRODUCTION-CHECKLIST.md) - 上线检查清单
+
+---
+
+## 📖 核心文档
+
+### 1. [系统架构文档](./ARCHITECTURE.md)
+**最后更新**: 2025-01-16
+
+完整的系统架构说明，包括：
+- ✅ 整体架构设计
+- ✅ 技术栈详解
+- ✅ 分层架构图
+- ✅ 核心模块说明
+- ✅ 数据流说明
+- ✅ 安全架构
+- ✅ 性能优化策略
+- ✅ 部署架构
+
+**适合人群**: 新加入团队的开发者、架构师、技术管理者
+
+---
+
+### 2. [数据库架构文档](./DATABASE_SCHEMA.md)
+**最后更新**: 2025-01-16
+
+详细的数据库设计文档，包括：
+- ✅ 完整的 ER 图
+- ✅ 23 个表的详细说明
+- ✅ 关系说明和约束
+- ✅ 90+ 索引策略
+- ✅ 50+ RLS 安全策略
+- ✅ 15 个枚举类型
+- ✅ 完整的数据字典
+
+**适合人群**: 后端开发者、数据库管理员、系统设计师
+
+---
+
+### 3. [API 文档](./API_DOCUMENTATION.md)
+**最后更新**: 2025-01-16
+
+完整的 RESTful API 文档，包括：
+- ✅ 统一的请求/响应格式
+- ✅ 认证授权机制
+- ✅ 50+ API 端点详细说明
+- ✅ 错误处理规范
+- ✅ 速率限制策略
+- ✅ 版本管理
+
+**适合人群**: 前端开发者、后端开发者、API 集成开发者
+
+---
+
+### 4. [部署指南](./DEPLOYMENT_GUIDE.md)
+**最后更新**: 2025-01-16
+
+生产环境部署完整指南，包括：
+- ✅ 3 种部署方式（Vercel, Docker, VPS）
+- ✅ 详细的环境配置
+- ✅ 数据库迁移步骤
+- ✅ 监控与日志配置
+- ✅ 故障排除指南
+- ✅ 回滚策略
+- ✅ 性能优化建议
+
+**适合人群**: DevOps 工程师、运维人员、系统管理员
+
+---
+
+## 🗂️ 文档分类
+
+### 架构设计
+- [系统架构](./ARCHITECTURE.md) ⭐⭐⭐⭐⭐
+- [数据库架构](./DATABASE_SCHEMA.md) ⭐⭐⭐⭐⭐
+- [项目结构](../PROJECT_STRUCTURE.md)
+- [项目规范](../PROJECT_STANDARDS.md)
+
+### API 与接口
+- [API 文档](./API_DOCUMENTATION.md) ⭐⭐⭐⭐⭐
+- [API 认证](./api/API_AUTHENTICATION.md) 🔜 待创建
+
+### 数据库
+- [数据库架构](./DATABASE_SCHEMA.md) ⭐⭐⭐⭐⭐
+- [数据库设置](../DATABASE_SETUP.md)
+- [数据库优化](../DATABASE_OPTIMIZATION_GUIDE.md)
+- [数据迁移指南](../MIGRATION_GUIDE.md)
+
+### 开发指南
+- [开发环境](../DEVELOPMENT.md)
+- [开发规范](./development/DEVELOPMENT_GUIDE.md) 🔜 待创建
+- [代码规范](./development/CODING_STANDARDS.md) 🔜 待创建
+- [测试指南](./development/TESTING_GUIDE.md) 🔜 待创建
+- [Git 工作流](./development/GIT_WORKFLOW.md) 🔜 待创建
+
+### 部署运维
+- [部署指南](./DEPLOYMENT_GUIDE.md) ⭐⭐⭐⭐⭐
+- [Docker 指南](./deployment/DOCKER_GUIDE.md) 🔜 待创建
+- [Kubernetes 指南](./deployment/KUBERNETES_GUIDE.md) 🔜 待创建
+- [CI/CD 配置](./deployment/CI_CD.md) 🔜 待创建
+- [监控运维](../MONITORING.md)
+
+### 业务功能
+- [方案管理流程](./business/SOLUTION_WORKFLOW.md) 🔜 待创建
+- [订单支付系统](./business/ORDER_PAYMENT_SYSTEM.md) 🔜 待创建
+- [用户管理](./business/USER_MANAGEMENT.md) 🔜 待创建
+- [创作者平台](./business/CREATOR_PLATFORM.md) 🔜 待创建
+
+### 安全合规
+- [安全指南](./security/SECURITY.md) 🔜 待创建
+- [数据隐私](./security/DATA_PRIVACY.md) 🔜 待创建
+- [合规性](./security/COMPLIANCE.md) 🔜 待创建
+
+### 用户文档
+- [用户指南](./user/USER_GUIDE.md) 🔜 待创建
+- [创作者指南](./user/CREATOR_GUIDE.md) 🔜 待创建
+- [常见问题](./user/FAQ.md) 🔜 待创建
+- [国际化指南](./user/I18N_GUIDE.md) 🔜 待创建
+
+---
+
+## 📊 文档状态
+
+| 优先级 | 已完成 | 计划中 | 总计 |
+|--------|--------|--------|------|
+| 🔥 高优先级 | 4 | 0 | 4 |
+| 📌 中优先级 | 6 | 8 | 14 |
+| 📝 低优先级 | 2 | 4 | 6 |
+| **总计** | **12** | **12** | **24** |
+
+### 完成进度
+
+```
+████████████░░░░░░░░░░░░ 50% (12/24)
+```
+
+---
+
+## 🎓 学习路径
+
+### 新手开发者（1-2周）
+1. 📖 阅读 [项目概述](../README.md)
+2. 🏗️ 学习 [系统架构](./ARCHITECTURE.md)
+3. 🛠️ 跟随 [开发指南](../DEVELOPMENT.md) 搭建环境
+4. 🗄️ 了解 [数据库架构](./DATABASE_SCHEMA.md)
+5. 📡 熟悉 [API 文档](./API_DOCUMENTATION.md)
+6. 💻 开始贡献代码
+
+### 后端开发者（3-5天）
+1. 🏗️ [系统架构](./ARCHITECTURE.md) - 理解整体设计
+2. 🗄️ [数据库架构](./DATABASE_SCHEMA.md) - 掌握数据结构
+3. 📡 [API 文档](./API_DOCUMENTATION.md) - 熟悉接口规范
+4. ⚡ [数据库优化](../DATABASE_OPTIMIZATION_GUIDE.md) - 性能调优
+5. 🔒 安全指南 - 安全最佳实践
+
+### 前端开发者（2-3天）
+1. 📡 [API 文档](./API_DOCUMENTATION.md) - 接口调用
+2. 🏗️ [系统架构](./ARCHITECTURE.md) - 了解后端架构
+3. 🎨 组件库文档 - UI 组件使用
+4. 🌍 国际化指南 - 多语言支持
+
+### DevOps 工程师（1周）
+1. 🏗️ [系统架构](./ARCHITECTURE.md) - 理解系统设计
+2. 🚀 [部署指南](./DEPLOYMENT_GUIDE.md) - 部署流程
+3. 📊 [监控指南](../MONITORING.md) - 监控配置
+4. 🔧 Docker/K8s 指南 - 容器化部署
+5. 🔄 CI/CD 配置 - 自动化流程
+
+---
+
+## 🤝 贡献文档
+
+我们欢迎所有形式的文档贡献！
+
+### 如何贡献
+
+1. **发现问题**: 在文档中发现错误或不清楚的地方
+2. **提 Issue**: 在 GitHub 上提交 Issue 说明问题
+3. **提交 PR**: Fork 仓库，修改文档，提交 Pull Request
+4. **审核**: 文档维护者审核并合并
+
+### 文档规范
+
+- 使用 Markdown 格式
+- 遵循现有文档的结构和风格
+- 包含必要的示例和图表
+- 保持语言简洁清晰
+- 中英文混排时注意空格
+
+### 文档模板
+
+参考现有文档的结构：
+- 标题和元信息
+- 目录
+- 主要内容（分节）
+- 相关文档链接
+- 版本历史
+- 维护者信息
+
+---
+
+## 📞 获取帮助
+
+### 文档问题
+- 📧 邮件: docs@openaero.cn
+- 💬 Issues: [GitHub Issues](https://github.com/your-org/openaero.web/issues)
+
+### 技术支持
+- 📧 邮件: support@openaero.cn
+- 💬 社区: [讨论区](https://github.com/your-org/openaero.web/discussions)
+
+---
+
+## 🔄 更新日志
+
+### 2025-01-16
+- ✨ 新增 [系统架构文档](./ARCHITECTURE.md)
+- ✨ 新增 [数据库架构文档](./DATABASE_SCHEMA.md)
+- ✨ 新增 [API 文档](./API_DOCUMENTATION.md)
+- ✨ 新增 [部署指南](./DEPLOYMENT_GUIDE.md)
+- 📝 创建文档中心索引
+
+### 2025-01-01
+- 📝 初始化文档结构
+- 📖 创建基础文档
+
+---
+
+## 📋 图例说明
+
+- ⭐⭐⭐⭐⭐ 核心文档，必读
+- 🔜 计划创建
+- ✅ 已完成
+- 🔄 持续更新中
+- 📌 重要
+- 🔥 高优先级
+
+---
+
+**文档维护者**: OpenAero 文档团队  
+**最后更新**: 2025-01-16  
+**反馈邮箱**: docs@openaero.cn
