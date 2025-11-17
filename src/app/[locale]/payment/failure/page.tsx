@@ -19,7 +19,7 @@ export default function PaymentFailurePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithDynamicParams } = useRouting();
   
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function PaymentFailurePage() {
     setIsRetrying(true);
     try {
       // 跳转到订单详情页面，用户可以重新支付
-      router.push(route(routes.ORDERS.DETAIL.replace('[id]', orderId)));
+      router.push(routeWithDynamicParams(routes.ORDERS.DETAIL, { id: orderId }));
     } catch (error) {
       console.error('重试支付失败:', error);
       setIsRetrying(false);
@@ -163,7 +163,7 @@ export default function PaymentFailurePage() {
             )}
             <div className="flex flex-col sm:flex-row gap-3">
               {orderId && (
-                <Link href={route(routes.ORDERS.DETAIL.replace('[id]', orderId))} className="flex-1">
+                <Link href={routeWithDynamicParams(routes.ORDERS.DETAIL, { id: orderId })} className="flex-1">
                   <Button variant="outline" className="w-full">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     {t('payment.viewOrder', { defaultValue: '查看订单' })}

@@ -379,7 +379,7 @@ export default function CreatorApplyPage() {
 
       if (result.success) {
         alert('申请提交成功！我们将在3-5个工作日内完成审核。');
-        router.push(route('/creators/apply/status'));
+        router.push(route(routes.CREATORS.APPLY_STATUS));
       } else {
         // 显示详细的错误信息
         const errorMessage = result.error || result.message || '未知错误';

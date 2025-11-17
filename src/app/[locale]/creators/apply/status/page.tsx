@@ -161,7 +161,7 @@ export default function CreatorApplyStatusPage() {
 
                 <div className="mt-6">
                   <button
-                    onClick={() => router.push(route('/'))}
+                    onClick={() => router.push(route(routes.BUSINESS.HOME))}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                   >
                     返回首页

@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!session?.user || (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN'))) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
@@ -142,7 +145,10 @@ export async function POST(request: NextRequest) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!session?.user || (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN'))) {
       return createErrorResponse('权限不足', 403);
     }
 
@@ -251,7 +257,10 @@ export async function PUT(request: NextRequest) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!session?.user || (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN'))) {
       return createErrorResponse('权限不足', 403);
     }
 

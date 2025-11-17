@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
         website: (solution as any).creator.website,
         experience: (solution as any).creator.experience,
         specialties: (solution as any).creator.specialties,
-        status: (solution as any).creator.status,
+        status: (solution as any).creator.verification_status,
       } : null,
       user: (solution as any).user ? {
         id: (solution as any).user.id,

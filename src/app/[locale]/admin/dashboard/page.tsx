@@ -34,6 +34,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { DashboardCharts } from '@/components/admin/DashboardCharts';
+import { ActivityFeed } from '@/components/admin/ActivityFeed';
+import { AlertPanel } from '@/components/admin/AlertPanel';
+import { ExportDialog, ExportParams } from '@/components/admin/ExportDialog';
 
 
 // 统计数据接口
@@ -98,11 +102,30 @@ export default function AdminDashboard() {
 
   // 申请管理状态
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30); // 秒
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportType, setExportType] = useState<'solutions' | 'users'>('solutions');
 
   useEffect(() => {
     loadDashboardStats();
     loadPendingApplicationsCount();
+    setLastRefreshTime(new Date());
   }, [timeRange]);
+
+  // 自动刷新机制
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      loadDashboardStats();
+      loadPendingApplicationsCount();
+      setLastRefreshTime(new Date());
+    }, refreshInterval * 1000);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval]);
 
   // 获取待审核申请数量
   const loadPendingApplicationsCount = async () => {
@@ -143,9 +166,11 @@ export default function AdminDashboard() {
       // API 返回格式: { success: true, data: {...} }
       if (responseData.success && responseData.data) {
         setStats(responseData.data);
+        setLastRefreshTime(new Date());
       } else {
         // 兼容旧格式（直接返回数据）
         setStats(responseData);
+        setLastRefreshTime(new Date());
       }
     } catch (error) {
       console.error('加载仪表盘数据失败:', error);
@@ -153,6 +178,20 @@ export default function AdminDashboard() {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 处理导出
+  const handleExport = async (params: ExportParams) => {
+    try {
+      const action = params.type === 'solutions' ? 'export_solutions' : 'export_users';
+      await handleQuickAction(action, {
+        format: params.format,
+        ...params.filters,
+      });
+    } catch (error) {
+      console.error('导出失败:', error);
+      throw error;
     }
   };
 
@@ -254,18 +293,18 @@ export default function AdminDashboard() {
     return 'text-gray-600';
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="min-h-[60vh] bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">加载中...</p>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
+  // 骨架屏组件
+  const SkeletonCard = () => (
+    <Card>
+      <CardHeader>
+        <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-8 bg-gray-200 rounded w-1/2 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <AdminLayout>
@@ -292,10 +331,35 @@ export default function AdminDashboard() {
                     <option value="90">最近90天</option>
                   </select>
                 </div>
-                <Button onClick={loadDashboardStats} variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新数据
-                </Button>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={autoRefresh}
+                      onChange={(e) => setAutoRefresh(e.target.checked)}
+                      className="rounded"
+                    />
+                    自动刷新
+                  </label>
+                  <Button 
+                    onClick={() => {
+                      loadDashboardStats();
+                      loadPendingApplicationsCount();
+                      setLastRefreshTime(new Date());
+                    }} 
+                    variant="outline" 
+                    size="sm"
+                    disabled={loading}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    刷新数据
+                  </Button>
+                  {lastRefreshTime && (
+                    <span className="text-xs text-gray-500">
+                      {lastRefreshTime.toLocaleTimeString('zh-CN')}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -304,6 +368,15 @@ export default function AdminDashboard() {
       {/* 内容区域 - 移除Tabs，使用简单的分区展示 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
+        {/* 加载状态 - 骨架屏 */}
+        {loading && !stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        )}
+
         {/* 统计卡片 */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -425,7 +498,10 @@ export default function AdminDashboard() {
 
                   {/* 导出方案数据 */}
                   <Button
-                    onClick={() => handleQuickAction('export_solutions', { status: 'APPROVED' })}
+                    onClick={() => {
+                      setExportType('solutions');
+                      setShowExportDialog(true);
+                    }}
                     disabled={quickActionLoading === 'export_solutions'}
                     variant="outline"
                     className="h-auto p-4 flex flex-col items-center space-y-2"
@@ -436,7 +512,10 @@ export default function AdminDashboard() {
 
                   {/* 导出用户数据 */}
                   <Button
-                    onClick={() => handleQuickAction('export_users')}
+                    onClick={() => {
+                      setExportType('users');
+                      setShowExportDialog(true);
+                    }}
                     disabled={quickActionLoading === 'export_users'}
                     variant="outline"
                     className="h-auto p-4 flex flex-col items-center space-y-2"
@@ -459,143 +538,67 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* 分类统计 */}
-            {stats && stats.categories.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>方案分类分布</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {stats.categories.map((category, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-blue-500" style={{
-                            backgroundColor: `hsl(${index * 60}, 70%, 50%)`
-                          }}></div>
-                          <span className="text-sm font-medium">{category.name}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-600">{category.count}</span>
-                          <Badge variant="secondary">{category.percentage.toFixed(1)}%</Badge>
-                        </div>
+            {/* 预警面板 */}
+            {!loading && (
+              <AlertPanel 
+                className="col-span-full"
+                autoRefresh={autoRefresh}
+                refreshInterval={refreshInterval}
+              />
+            )}
+
+            {/* 图表区域 */}
+            {!loading && (
+              <div className="col-span-full">
+                <DashboardCharts timeRange={parseInt(timeRange)} />
+              </div>
+            )}
+
+            {/* 活动流和分类统计 - 并排显示 */}
+            {!loading && (
+              <div className="col-span-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 活动流 */}
+                <ActivityFeed 
+                  limit={10}
+                  autoRefresh={autoRefresh}
+                  refreshInterval={refreshInterval}
+                />
+
+                {/* 分类统计 */}
+                {stats && stats.categories.length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>方案分类分布</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {stats.categories.map((category, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-3 h-3 rounded-full bg-blue-500" style={{
+                                backgroundColor: `hsl(${index * 60}, 70%, 50%)`
+                              }}></div>
+                              <span className="text-sm font-medium">{category.name}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-600">{category.count}</span>
+                              <Badge variant="secondary">{category.percentage.toFixed(1)}%</Badge>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center text-gray-500">
+                      <p>暂无分类数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             )}
           </div>
-
-        {/* 待审核申请提醒卡片 */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-          {pendingApplicationsCount > 0 && (
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardHeader>
-                <CardTitle className="flex items-center text-yellow-800">
-                  <UserCheck className="h-5 w-5 mr-2" />
-                  待审核创作者申请
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-yellow-700">{pendingApplicationsCount}</p>
-                  <p className="text-sm text-yellow-600 mt-1">个创作者申请等待审核</p>
-                </div>
-                <Link href={route(routes.ADMIN.APPLICATIONS)}>
-                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                    立即审核
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 快速操作区域 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="h-5 w-5 mr-2" />
-              快速操作
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 批量审核 */}
-              <Button
-                onClick={() => setShowBatchDialog(true)}
-                disabled={quickActionLoading === 'approve_all_pending' || quickActionLoading === 'reject_all_pending'}
-                className="h-auto p-4 flex flex-col items-center space-y-2"
-              >
-                <CheckCircle className="h-6 w-6" />
-                <span>批量审核</span>
-              </Button>
-
-              {/* 导出方案数据 */}
-              <Button
-                onClick={() => handleQuickAction('export_solutions', { status: 'APPROVED' })}
-                disabled={quickActionLoading === 'export_solutions'}
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center space-y-2"
-              >
-                <Download className="h-6 w-6" />
-                <span>导出方案</span>
-              </Button>
-
-              {/* 导出用户数据 */}
-              <Button
-                onClick={() => handleQuickAction('export_users')}
-                disabled={quickActionLoading === 'export_users'}
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center space-y-2"
-              >
-                <Users className="h-6 w-6" />
-                <span>导出用户</span>
-              </Button>
-
-              {/* 清理旧记录 */}
-              <Button
-                onClick={() => handleQuickAction('clear_old_reviews', { days: 90 })}
-                disabled={quickActionLoading === 'clear_old_reviews'}
-                variant="outline"
-                className="h-auto p-4 flex flex-col items-center space-y-2"
-              >
-                <Trash2 className="h-6 w-6" />
-                <span>清理记录</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 分类统计 */}
-        {stats && stats.categories.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>方案分类分布</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.categories.map((category, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" style={{
-                        backgroundColor: `hsl(${index * 60}, 70%, 50%)`
-                      }}></div>
-                      <span className="text-sm font-medium">{category.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{category.count}</span>
-                      <Badge variant="secondary">{category.percentage.toFixed(1)}%</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
 
       {/* 批量审核对话框 */}
       <Dialog open={showBatchDialog} onOpenChange={setShowBatchDialog}>
@@ -644,6 +647,14 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 导出对话框 */}
+      <ExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        exportType={exportType}
+        onExport={handleExport}
+      />
     </AdminLayout>
   );
 }

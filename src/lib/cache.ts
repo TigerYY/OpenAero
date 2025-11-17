@@ -160,15 +160,21 @@ export class MemoryCache<T = any> {
 
 // 浏览器存储缓存
 export class BrowserCache {
-  private storage: Storage;
+  private storage: Storage | null;
   private prefix: string;
 
   constructor(type: 'localStorage' | 'sessionStorage' = 'localStorage', prefix = 'cache_') {
-    this.storage = type === 'localStorage' ? localStorage : sessionStorage;
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      this.storage = type === 'localStorage' ? window.localStorage : window.sessionStorage;
+    } else {
+      this.storage = null;
+    }
     this.prefix = prefix;
   }
 
   set(key: string, value: any, ttl?: number): void {
+    if (!this.storage) return;
+
     const item = {
       value,
       timestamp: Date.now(),
@@ -190,6 +196,8 @@ export class BrowserCache {
   }
 
   get(key: string): any | null {
+    if (!this.storage) return null;
+
     try {
       const itemStr = this.storage.getItem(this.prefix + key);
       if (!itemStr) return null;
@@ -211,10 +219,13 @@ export class BrowserCache {
   }
 
   delete(key: string): void {
+    if (!this.storage) return;
     this.storage.removeItem(this.prefix + key);
   }
 
   clear(): void {
+    if (!this.storage) return;
+
     const keys = Object.keys(this.storage);
     keys.forEach(key => {
       if (key.startsWith(this.prefix)) {
@@ -224,6 +235,8 @@ export class BrowserCache {
   }
 
   private cleanup(): void {
+    if (!this.storage) return;
+
     const keys = Object.keys(this.storage);
     const now = Date.now();
 
@@ -349,7 +362,10 @@ export const memoryCache = new MemoryCache({
   strategy: 'lru'
 });
 
-export const browserCache = new BrowserCache('localStorage', 'app_cache_');
+export const browserCache =
+  typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+    ? new BrowserCache('localStorage', 'app_cache_')
+    : null;
 export const httpCache = new HttpCache();
 
 // 缓存工具函数

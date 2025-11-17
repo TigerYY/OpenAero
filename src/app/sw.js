@@ -124,9 +124,11 @@ async function handleNavigationRequest(request) {
       }
       throw new Error('Root path network response not ok');
     } catch (error) {
-      console.log('Service Worker: Root path failed, redirecting to /zh-CN', error);
-      // 如果根路径失败，直接重定向到中文版本
-      return Response.redirect('/zh-CN', 307);
+      console.log('Service Worker: Root path failed, redirecting to default locale', error);
+      // 如果根路径失败，直接重定向到默认语言版本（中文）
+      // 注意：Service Worker 中无法使用路由工具库，使用硬编码的默认语言
+      const defaultLocale = 'zh-CN';
+      return Response.redirect(`/${defaultLocale}`, 307);
     }
   }
   

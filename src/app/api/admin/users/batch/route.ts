@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
       }
 
       // 防止非超级管理员设置超级管理员角色
-      if (value === 'SUPER_ADMIN' && adminUser.role !== 'SUPER_ADMIN') {
+      const adminRoles = adminUser.roles || [];
+      if (value === 'SUPER_ADMIN' && !adminRoles.includes('SUPER_ADMIN')) {
         return createErrorResponse('无权将用户设置为超级管理员', 403);
       }
     } else if (action === 'status') {
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
       select: {
         user_id: true,
         role: true,
+        roles: true,
         status: true,
       },
     });
@@ -89,8 +91,8 @@ export async function POST(request: NextRequest) {
 
     // 检查权限：防止非超级管理员修改超级管理员
     if (action === 'role' || action === 'status') {
-      const hasSuperAdmin = users.some((u) => u.role === 'SUPER_ADMIN');
-      if (hasSuperAdmin && adminUser.role !== 'SUPER_ADMIN') {
+      const hasSuperAdmin = users.some((u) => u.role === 'SUPER_ADMIN' || (Array.isArray(u.roles) && u.roles.includes('SUPER_ADMIN')));
+      if (hasSuperAdmin && !adminRoles.includes('SUPER_ADMIN')) {
         return createErrorResponse('无权修改超级管理员', 403);
       }
     }
@@ -102,6 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'role') {
       updateData.role = value;
+      updateData.roles = [value]; // 同时更新 roles 数组以保持一致性
     } else if (action === 'status') {
       updateData.status = value;
       if (value === 'SUSPENDED') {

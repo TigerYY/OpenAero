@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
   const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithParams } = useRouting();
   const { resetPassword } = useAuth();
   
   const [formData, setFormData] = useState({
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
         
         // 3秒后跳转到登录页
         setTimeout(() => {
-          router.push(route(routes.AUTH.LOGIN) + '?reset=success');
+          router.push(routeWithParams(routes.AUTH.LOGIN, { reset: 'success' }));
         }, 3000);
       } else {
         setError(data.message || getLocalizedErrorMessage(data.error || '密码重置失败，请稍后重试', 'zh-CN'));

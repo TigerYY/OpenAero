@@ -6,28 +6,28 @@
  * DELETE /api/admin/users/[id] - 删除用户
  */
 
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  createValidationErrorResponse,
+  logAuditAction,
+  requireAdminAuth,
+} from '@/lib/api-helpers';
+import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
+import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  createValidationErrorResponse,
-  requireAdminAuth,
-  logAuditAction,
-} from '@/lib/api-helpers';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
-import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // 请求 schema
 const updateUserSchema = z.object({
-  firstName: z.string().min(1, '名字不能为空').max(50, '名字不能超过50个字符').optional(),
-  lastName: z.string().min(1, '姓氏不能为空').max(50, '姓氏不能超过50个字符').optional(),
+  firstName: z.string().max(50, '名字不能超过50个字符').optional().or(z.literal('')),
+  lastName: z.string().max(50, '姓氏不能超过50个字符').optional().or(z.literal('')),
   // 其他可以更新的字段
 }).refine(
   (data) => {
-    // 至少要有一个字段被更新
+    // 至少要有一个字段被更新（允许空字符串）
     return data.firstName !== undefined || data.lastName !== undefined;
   },
   {
@@ -79,16 +79,24 @@ export async function PUT(
       adminId: adminUser.id
     });
 
+    // 构建更新数据对象，只包含提供的字段
+    const updateData: { first_name?: string | null; last_name?: string | null; updated_at: Date } = {
+      updated_at: new Date(),
+    };
+    
+    if (firstName !== undefined) {
+      updateData.first_name = firstName || null;
+    }
+    if (lastName !== undefined) {
+      updateData.last_name = lastName || null;
+    }
+
     // 检查用户是否存在，使用 upsert 确保兼容性
     let updatedProfile;
     try {
-      updatedProfile = await prisma.user_profile.update({
+      updatedProfile = await prisma.userProfile.update({
         where: { user_id: userId },
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          updated_at: new Date(),
-        },
+        data: updateData,
       });
       console.log('[PUT /users/[id]] 更新现有 profile 成功');
     } catch (updateError: any) {
@@ -97,7 +105,7 @@ export async function PUT(
         console.log('[PUT /users/[id]] Profile 不存在，创建新 profile');
         
         // 从 Supabase Auth 获取用户邮箱
-        const supabase = await createSupabaseServer();
+        const supabase = createSupabaseAdmin();
         const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
         
         if (authError || !authUser?.user) {
@@ -106,16 +114,16 @@ export async function PUT(
         }
         
         try {
-          updatedProfile = await prisma.user_profile.create({
+          const email = authUser.user.email || '';
+          updatedProfile = await prisma.userProfile.create({
             data: {
               user_id: userId,
-              email: authUser.user.email,
-              first_name: firstName,
-              last_name: lastName,
+              display_name: email.split('@')[0] || `User ${userId.slice(0, 8)}`,
+              first_name: firstName || null,
+              last_name: lastName || null,
               roles: ['USER'], // 默认角色
+              permissions: [],
               status: 'ACTIVE',
-              created_at: new Date(),
-              updated_at: new Date(),
             },
           });
           console.log('[PUT /users/[id]] 创建新 profile 成功');
@@ -129,13 +137,14 @@ export async function PUT(
       }
     }
 
-    // 更新 Supabase Auth (如果需要)
-    // 注意: Supabase Auth 的 user_metadata 更新可能需要特殊处理
-    const supabase = await createSupabaseServer();
-    const { data: authUser, error: authError } = await supabase.auth.admin.updateUserById(
-      userId,
-      { user_metadata: { first_name: firstName, last_name: lastName } }
-    );
+    // 更新 Supabase Auth 元数据（需要 Service Role 权限）
+    const supabase = createSupabaseAdmin();
+    const { data: authUser, error: authError } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        first_name: firstName ?? null,
+        last_name: lastName ?? null,
+      },
+    });
 
     if (authError) {
       // 即便 auth 更新失败，profile 已更新，可以只记录错误，不阻断流程

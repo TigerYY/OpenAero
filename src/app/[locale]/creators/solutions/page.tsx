@@ -67,7 +67,7 @@ export default function CreatorSolutionsPage() {
 function CreatorSolutionsContent() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithDynamicParams } = useRouting();
 
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +86,7 @@ function CreatorSolutionsContent() {
         : (profile.role ? [profile.role] : []);
       
       if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
-        router.push(route('/'));
+        router.push(route(routes.BUSINESS.HOME));
         toast.error('只有创作者可以访问此页面');
       }
     }
@@ -174,7 +174,8 @@ function CreatorSolutionsContent() {
 
   // 查看审核历史
   const handleViewReviews = (solutionId: string) => {
-    router.push(route(`/admin/solutions/${solutionId}`));
+    // 注意：管理员方案详情页面路由需要动态生成
+    router.push(routeWithDynamicParams('/admin/solutions/[id]', { id: solutionId }));
   };
 
   if (authLoading || loading) {
@@ -347,7 +348,7 @@ function CreatorSolutionsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(route(routes.CREATORS.SOLUTION_EDIT.replace('[id]', solution.id)))}
+                            onClick={() => router.push(routeWithDynamicParams(routes.CREATORS.SOLUTION_EDIT, { id: solution.id }))}
                           >
                             <Edit className="w-4 h-4 mr-1" />
                             编辑

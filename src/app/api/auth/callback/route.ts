@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServer } from '@/lib/auth/supabase-client';
+import { RoutingUtils, ROUTES } from '@/lib/routing';
 
 /**
  * 从请求中检测用户语言偏好
@@ -54,9 +55,13 @@ export async function GET(request: NextRequest) {
     console.error('[Auth Callback] Supabase 返回错误:', error, error_description);
     const locale = detectUserLocale(request);
     const message = error_description || error;
-    return NextResponse.redirect(
-      new URL(`/${locale}/auth/register?error=${encodeURIComponent(message)}`, request.url)
+    // 使用路由工具库生成注册页面路由
+    const registerRoute = RoutingUtils.generateRouteWithParams(
+      locale,
+      ROUTES.AUTH.REGISTER,
+      { error: message }
     );
+    return NextResponse.redirect(new URL(registerRoute, request.url));
   }
 
   // 🔧 修复：如果 next 不包含语言前缀，自动添加
@@ -65,16 +70,18 @@ export async function GET(request: NextRequest) {
     
     console.log('[Auth Callback] 检测到的语言:', locale);
     
-    // 修复常见路径
+    // 修复常见路径 - 使用路由工具库
     if (next === '/welcome' || next === '/auth/welcome') {
-      next = `/${locale}/welcome`;
+      // 注意：welcome 页面在 (auth) 路由组中，URL 不包含 /auth/
+      next = RoutingUtils.generateRoute(locale, '/welcome');
       console.log('[Auth Callback] 修复 welcome 路径:', next);
     } else if (next === '/' || next === '') {
-      next = `/${locale}/welcome`;
-      console.log('[Auth Callback] 默认跳转到 welcome:', next);
+      next = RoutingUtils.generateRoute(locale, ROUTES.BUSINESS.HOME);
+      console.log('[Auth Callback] 默认跳转到首页:', next);
     } else if (!next.startsWith('/api')) {
       // 其他路径自动添加语言前缀
-      next = `/${locale}${next.startsWith('/') ? next : '/' + next}`;
+      const cleanNext = next.startsWith('/') ? next : '/' + next;
+      next = RoutingUtils.generateRoute(locale, cleanNext);
       console.log('[Auth Callback] 添加语言前缀:', next);
     }
   }
@@ -89,10 +96,13 @@ export async function GET(request: NextRequest) {
       console.error('[Auth Callback] Code 交换失败:', error);
       const locale = detectUserLocale(request);
       
-      // 重定向到注册页面并显示错误
-      return NextResponse.redirect(
-        new URL(`/${locale}/auth/register?error=` + encodeURIComponent(error.message), request.url)
+      // 重定向到注册页面并显示错误 - 使用路由工具库
+      const registerRoute = RoutingUtils.generateRouteWithParams(
+        locale,
+        ROUTES.AUTH.REGISTER,
+        { error: error.message }
       );
+      return NextResponse.redirect(new URL(registerRoute, request.url));
     }
 
     console.log('[Auth Callback] Session 交换成功，用户:', data?.user?.id);

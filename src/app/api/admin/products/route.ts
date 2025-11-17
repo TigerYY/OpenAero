@@ -49,7 +49,11 @@ export async function GET(request: NextRequest) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return createErrorResponse('权限不足', 403);
     }
 
@@ -166,7 +170,11 @@ export async function POST(request: NextRequest) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return createErrorResponse('权限不足', 403);
     }
 

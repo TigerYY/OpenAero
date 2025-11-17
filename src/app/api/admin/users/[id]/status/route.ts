@@ -14,6 +14,7 @@ import {
 } from '@/lib/api-helpers';
 import { createSupabaseServer } from '@/lib/auth/supabase-client';
 import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
+import { sendStatusChangeNotification } from '@/lib/email/smtp-service';
 
 // 用户状态枚举
 const UserStatus = {
@@ -62,7 +63,7 @@ export async function PATCH(
     const supabase = await createSupabaseServer();
     const { data: currentProfile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('status, role, email')
+      .select('status, roles, role, email, display_name, first_name, last_name')
       .eq('user_id', userId)
       .single();
 
@@ -70,8 +71,16 @@ export async function PATCH(
       return createErrorResponse('用户不存在', 404);
     }
 
+    // 统一使用 roles 数组进行权限检查
+    const currentUserRoles = Array.isArray(currentProfile.roles) 
+      ? currentProfile.roles 
+      : (currentProfile.role ? [currentProfile.role] : []);
+    const adminRoles = Array.isArray(adminUser.roles) 
+      ? adminUser.roles 
+      : (adminUser.role ? [adminUser.role] : []);
+
     // 防止修改超级管理员状态（除非是其他超级管理员）
-    if (currentProfile.role === 'SUPER_ADMIN' && adminUser.role !== 'SUPER_ADMIN') {
+    if (currentUserRoles.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('无权修改超级管理员状态', 403);
     }
 
@@ -155,8 +164,25 @@ export async function PATCH(
       },
     });
 
-    // TODO: 发送状态变更通知邮件
-    // await sendStatusChangeNotification(userId, status, reason);
+    // 发送状态变更通知邮件
+    try {
+      const userName = currentProfile.display_name || 
+                      (currentProfile.first_name && currentProfile.last_name 
+                        ? `${currentProfile.first_name} ${currentProfile.last_name}` 
+                        : currentProfile.email?.split('@')[0] || '用户');
+      
+      await sendStatusChangeNotification(
+        currentProfile.email || '',
+        userName,
+        status,
+        oldStatus,
+        reason
+      );
+      console.log(`[用户状态变更] 已发送通知邮件给用户: ${currentProfile.email}`);
+    } catch (emailError) {
+      // 邮件发送失败不影响状态更新，只记录错误
+      console.error('[用户状态变更] 发送通知邮件失败:', emailError);
+    }
 
     return createSuccessResponse(
       {

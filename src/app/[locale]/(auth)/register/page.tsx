@@ -202,7 +202,7 @@ export default function RegisterPage() {
               </p>
               <div className="mt-6">
                 <Link
-                  href={route('/login')}
+                  href={route(routes.AUTH.LOGIN)}
                   className="text-blue-600 hover:text-blue-500 font-medium"
                 >
                   返回登录

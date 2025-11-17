@@ -79,7 +79,7 @@ interface ReviewHistory {
 
 function AdminSolutionsPage() {
   const router = useRouter();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithDynamicParams } = useRouting();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -357,7 +357,7 @@ function AdminSolutionsPage() {
 
   const handleViewSolution = (solution: Solution) => {
     // 跳转到详情页
-    router.push(route(`${routes.ADMIN.SOLUTIONS}/${solution.id}`));
+    router.push(routeWithDynamicParams('/admin/solutions/[id]', { id: solution.id }));
   };
 
   const handleStartReview = (action: 'approve' | 'reject') => {

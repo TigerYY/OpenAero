@@ -54,16 +54,18 @@ model UserProfile {
 
 // 创作者档案
 model CreatorProfile {
-  id          String        @id @default(cuid())
-  user_id     String        @unique @map("user_id")
-  bio         String?
-  website     String?
-  experience  String?
-  specialties String[]
-  status      CreatorStatus @default(PENDING)
-  revenue     Decimal       @default(0) @db.Decimal(10, 2)
-  created_at  DateTime      @default(now()) @map("created_at")
-  updated_at  DateTime      @updatedAt @map("updated_at")
+  id                 String             @id @default(cuid())
+  user_id            String             @unique @map("user_id")
+  bio                String?
+  website            String?
+  experience         String?
+  specialties        String[]
+  verification_status VerificationStatus @default(PENDING) @map("verification_status")
+  verified_at        DateTime?          @map("verified_at")
+  rejection_reason   String?            @map("rejection_reason")
+  revenue            Decimal            @default(0) @db.Decimal(10, 2)
+  created_at         DateTime           @default(now()) @map("created_at")
+  updated_at         DateTime           @updatedAt @map("updated_at")
 
   // 关联关系
   user          UserProfile    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -608,6 +610,13 @@ enum CreatorStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
 }
 
 enum SolutionStatus {

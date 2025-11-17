@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
+import { checkAdminAuth } from '@/lib/api-auth-helpers';
 
 interface ReportConfig {
   type: 'users' | 'orders' | 'solutions' | 'reviews' | 'revenue';
@@ -225,6 +226,20 @@ function convertToCSV(data: any[], type: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    // 验证管理员权限
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
+    
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!session?.user || (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN'))) {
+      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+    }
+
     const config: ReportConfig = await request.json();
 
     let data: any[] = [];
@@ -278,7 +293,21 @@ export async function POST(request: NextRequest) {
 }
 
 // 获取预定义报表模板
-export async function GET() {
+export async function GET(request: NextRequest) {
+  try {
+    // 验证管理员权限
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const session = authResult.session;
+    
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!session?.user || (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN'))) {
+      return NextResponse.json({ error: '权限不足' }, { status: 403 });
+    }
   const templates = [
     {
       id: 'user-activity',
@@ -326,4 +355,12 @@ export async function GET() {
     success: true,
     templates,
   });
+
+  } catch (error) {
+    console.error('获取报表模板失败:', error);
+    return NextResponse.json(
+      { error: '获取报表模板失败' },
+      { status: 500 }
+    );
+  }
 }

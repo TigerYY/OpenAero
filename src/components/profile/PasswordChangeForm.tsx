@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
+import { useRouting } from '@/lib/routing';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -17,6 +18,7 @@ export default function PasswordChangeForm() {
   const router = useRouter();
   const { signOut } = useAuth();
   const t = useTranslations();
+  const { route, routes } = useRouting();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -74,7 +76,7 @@ export default function PasswordChangeForm() {
         // 3秒后登出并跳转到登录页
         setTimeout(async () => {
           await signOut();
-          router.push('/login');
+          router.push(route(routes.AUTH.LOGIN));
         }, 3000);
       } else {
         if (data.details && typeof data.details === 'object') {

@@ -154,7 +154,7 @@ export default function PublicSolutionDetailPage() {
             <div className="text-6xl mb-4">😕</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">方案未找到</h1>
             <p className="text-gray-600 mb-6">{error || '请求的方案不存在或已被删除'}</p>
-            <Button onClick={() => router.push(route('/solutions'))}>
+            <Button onClick={() => router.push(route(routes.BUSINESS.SOLUTIONS))}>
               返回方案列表
             </Button>
           </div>
@@ -176,7 +176,7 @@ export default function PublicSolutionDetailPage() {
         <div className="mb-6">
           <Button
             variant="outline"
-            onClick={() => router.push(route('/solutions'))}
+            onClick={() => router.push(route(routes.BUSINESS.SOLUTIONS))}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

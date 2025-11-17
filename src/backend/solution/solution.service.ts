@@ -30,7 +30,7 @@ export class SolutionService {
     
     // 检查创作者是否存在且已认证
     const creator = await db.creatorProfile.findUnique({
-      where: { userId: creatorId },
+      where: { user_id: creatorId },
       include: { user: true }
     });
 
@@ -38,7 +38,7 @@ export class SolutionService {
       throw new UnauthorizedError('只有认证的创作者才能创建方案');
     }
 
-    if (creator.status !== 'APPROVED') {
+    if (creator.verification_status !== 'APPROVED') {
       throw new UnauthorizedError('创作者账户尚未通过审核');
     }
 
@@ -102,7 +102,7 @@ export class SolutionService {
     }
 
     // 检查权限 - 只有方案创作者可以更新
-    if (solution.creator.userId !== userId) {
+    if (solution.creator.user_id !== userId) {
       throw new UnauthorizedError('只有方案创作者可以更新方案');
     }
 
@@ -168,7 +168,7 @@ export class SolutionService {
     }
 
     // 检查权限 - 只有方案创作者可以删除
-    if (solution.creator.userId !== userId) {
+    if (solution.creator.user_id !== userId) {
       throw new UnauthorizedError('只有方案创作者可以删除方案');
     }
 
@@ -206,7 +206,7 @@ export class SolutionService {
     }
 
     // 检查权限
-    if (solution.creator.userId !== userId) {
+    if (solution.creator.user_id !== userId) {
       throw new UnauthorizedError('只有方案创作者可以提交审核');
     }
 
@@ -252,7 +252,7 @@ export class SolutionService {
       db.solution.findMany({
         where: {
           creator: {
-            userId: creatorId
+            user_id: creatorId
           }
         },
         orderBy: { updatedAt: 'desc' },
@@ -325,10 +325,23 @@ export class SolutionService {
    * 自动分配审核员
    */
   async assignReviewer(solutionId: string) {
-    // 获取可用的审核员（管理员）
+    // 获取可用的审核员（管理员）- 支持多角色
     const availableReviewers = await db.user.findMany({
       where: {
-        role: 'ADMIN',
+        OR: [
+          { role: 'ADMIN' },
+          { role: 'SUPER_ADMIN' },
+          { 
+            profiles: { 
+              some: { 
+                OR: [
+                  { role: 'ADMIN' },
+                  { role: 'SUPER_ADMIN' }
+                ]
+              }
+            }
+          }
+        ],
         // 可以添加更多条件，如在线状态、工作负载等
       },
       select: {
@@ -393,9 +406,25 @@ export class SolutionService {
 
     let assignedReviewer;
     if (reviewerId) {
-      // 手动分配审核员
-      const reviewer = await db.user.findUnique({
-        where: { id: reviewerId, role: 'ADMIN' }
+      // 手动分配审核员 - 支持多角色
+      const reviewer = await db.user.findFirst({
+        where: {
+          id: reviewerId,
+          OR: [
+            { role: 'ADMIN' },
+            { role: 'SUPER_ADMIN' },
+            { 
+              profiles: { 
+                some: { 
+                  OR: [
+                    { role: 'ADMIN' },
+                    { role: 'SUPER_ADMIN' }
+                  ]
+                }
+              }
+            }
+          ]
+        }
       });
       if (!reviewer) {
         throw new ValidationError('指定的审核员不存在或权限不足');

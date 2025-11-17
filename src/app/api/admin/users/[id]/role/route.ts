@@ -3,17 +3,17 @@
  * PATCH /api/admin/users/[id]/role - 更新用户角色
  */
 
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  createValidationErrorResponse,
+  logAuditAction,
+  requireAdminAuth,
+} from '@/lib/api-helpers';
+import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
+import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  createValidationErrorResponse,
-  requireAdminAuth,
-  logAuditAction,
-} from '@/lib/api-helpers';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
-import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -70,7 +70,7 @@ export async function PATCH(
       reason
     });
     
-    const supabase = await createSupabaseServer();
+    const supabase = createSupabaseAdmin();
 
     // 1. 从 Supabase Auth 获取权威用户信息
     const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(userId);
@@ -79,12 +79,12 @@ export async function PATCH(
     }
 
     // 2. 获取现有的 Profile (如果存在)
-    const existingProfile = await prisma.user_profile.findUnique({
+    const existingProfile = await prisma.userProfile.findUnique({
       where: { user_id: userId },
-      select: { roles: true, role: true },
+      select: { roles: true },
     });
     
-    const oldRoles = existingProfile ? (Array.isArray(existingProfile.roles) ? existingProfile.roles : (existingProfile.role ? [existingProfile.role] : [])) : [];
+    const oldRoles = existingProfile ? (Array.isArray(existingProfile.roles) ? existingProfile.roles : []) : [];
     const adminRoles = adminUser.roles || (adminUser.role ? [adminUser.role] : []);
     
     // 3. 权限检查
@@ -114,7 +114,7 @@ export async function PATCH(
     }
 
     // 4. 执行 Upsert 操作
-    const updatedProfile = await prisma.user_profile.upsert({
+    await prisma.userProfile.upsert({
       where: { user_id: userId },
       update: {
         roles: rolesToSet,
@@ -122,11 +122,10 @@ export async function PATCH(
       },
       create: {
         user_id: userId,
-        email: authUser.user.email, // 从 Auth 用户信息中获取 Email
+        display_name: authUser.user.email?.split('@')[0] || `User ${userId.slice(0, 8)}`,
         roles: rolesToSet,
-        // 根据需要填充其他默认值
-        // first_name: '', 
-        // last_name: '',
+        permissions: [],
+        status: 'ACTIVE',
       },
     });
 
@@ -147,11 +146,15 @@ export async function PATCH(
     );
 
   } catch (error: unknown) {
-    console.error('更新用户角色时出错:', error);
+    console.error('[PATCH /users/[id]/role] 更新用户角色时出错:', error);
+    const errorDetails = error instanceof Error 
+      ? { name: error.name, message: error.message, stack: error.stack } 
+      : { error: String(error) };
+    console.error('[PATCH /users/[id]/role] 错误详情:', errorDetails);
     return createErrorResponse(
       '更新用户角色失败',
       500,
-      error instanceof Error ? { name: error.name, message: error.message } : undefined
+      errorDetails
     );
   }
 }

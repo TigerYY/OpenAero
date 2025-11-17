@@ -18,7 +18,7 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithDynamicParams } = useRouting();
   
   const [orderId, setOrderId] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export default function PaymentSuccessPage() {
             {/* 后续操作 */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <Link href={orderId ? route(routes.ORDERS.DETAIL.replace('[id]', orderId)) : route(routes.ORDERS.HOME)}>
+                <Link href={orderId ? routeWithDynamicParams(routes.ORDERS.DETAIL, { id: orderId }) : route(routes.ORDERS.HOME)}>
                   <div className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group">
                     <div className="flex items-center">
                       <Package className="w-6 h-6 text-gray-600 group-hover:text-blue-600 mr-3" />
@@ -130,7 +130,7 @@ export default function PaymentSuccessPage() {
               {/* 操作按钮 */}
               <div className="flex flex-col sm:flex-row gap-3">
                 {orderId && (
-                  <Link href={route(routes.ORDERS.DETAIL.replace('[id]', orderId))} className="flex-1">
+                  <Link href={routeWithDynamicParams(routes.ORDERS.DETAIL, { id: orderId })} className="flex-1">
                     <Button className="w-full">
                       {t('payment.viewOrderDetails', { defaultValue: '查看订单详情' })}
                       <ArrowRight className="w-4 h-4 ml-2" />

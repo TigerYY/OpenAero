@@ -473,3 +473,164 @@ export async function sendRoleChangeEmail(
     html,
   });
 }
+
+/**
+ * 发送用户状态变更通知邮件
+ */
+export async function sendStatusChangeNotification(
+  email: string,
+  userName: string,
+  newStatus: string,
+  oldStatus: string,
+  reason?: string
+): Promise<boolean> {
+  const statusNames: Record<string, { name: string; color: string; icon: string }> = {
+    ACTIVE: { name: '活跃', color: '#10b981', icon: '✅' },
+    INACTIVE: { name: '未激活', color: '#6b7280', icon: '⏸️' },
+    SUSPENDED: { name: '已暂停', color: '#f59e0b', icon: '⚠️' },
+    DELETED: { name: '已删除', color: '#ef4444', icon: '❌' },
+  };
+
+  const statusInfo = statusNames[newStatus] || { name: newStatus, color: '#6b7280', icon: '❓' };
+  const oldStatusInfo = statusNames[oldStatus] || { name: oldStatus, color: '#6b7280', icon: '❓' };
+
+  // 根据状态确定邮件主题和内容
+  let subject = '您的账户状态已变更';
+  let statusMessage = '';
+  let actionMessage = '';
+
+  if (newStatus === 'SUSPENDED') {
+    subject = '您的账户已被暂停';
+    statusMessage = '您的账户已被管理员暂停。在暂停期间，您将无法登录或使用平台功能。';
+    actionMessage = reason 
+      ? `<p><strong>暂停原因：</strong>${reason}</p>`
+      : '<p>如有疑问，请联系我们的支持团队了解详情。</p>';
+  } else if (newStatus === 'DELETED') {
+    subject = '您的账户已被删除';
+    statusMessage = '您的账户已被管理员删除。您将无法再访问平台。';
+    actionMessage = reason 
+      ? `<p><strong>删除原因：</strong>${reason}</p>`
+      : '<p>如有疑问，请联系我们的支持团队。</p>';
+  } else if (newStatus === 'ACTIVE' && oldStatus === 'SUSPENDED') {
+    subject = '您的账户已恢复';
+    statusMessage = '您的账户已被恢复为活跃状态。您现在可以正常使用平台功能了。';
+    actionMessage = '<p>欢迎回来！如有任何问题，请随时联系我们。</p>';
+  } else if (newStatus === 'ACTIVE' && oldStatus === 'INACTIVE') {
+    subject = '您的账户已激活';
+    statusMessage = '您的账户已被激活。您现在可以正常使用平台功能了。';
+    actionMessage = '<p>欢迎加入 OpenAero！如有任何问题，请随时联系我们。</p>';
+  } else {
+    statusMessage = `您的账户状态已从"${oldStatusInfo.name}"变更为"${statusInfo.name}"。`;
+    actionMessage = reason 
+      ? `<p><strong>变更原因：</strong>${reason}</p>`
+      : '<p>如有疑问，请联系我们的支持团队。</p>';
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body {
+          font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .container {
+          background: #ffffff;
+          border-radius: 8px;
+          padding: 40px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .logo {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo h1 {
+          color: #2563eb;
+          font-size: 28px;
+          margin: 0;
+        }
+        .status-change {
+          background: ${newStatus === 'SUSPENDED' || newStatus === 'DELETED' 
+            ? '#fef2f2' 
+            : newStatus === 'ACTIVE' 
+            ? '#f0fdf4' 
+            : '#f3f4f6'};
+          border-left: 4px solid ${statusInfo.color};
+          padding: 20px;
+          margin: 20px 0;
+          border-radius: 6px;
+        }
+        .status-badge {
+          display: inline-block;
+          background: ${statusInfo.color};
+          color: #ffffff;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-weight: 500;
+          margin: 5px 0;
+        }
+        .warning {
+          background: #fef3c7;
+          border-left: 4px solid #f59e0b;
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 6px;
+        }
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+          font-size: 12px;
+          color: #666;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>开元空御 OpenAero</h1>
+        </div>
+        <div class="content">
+          <h2>${subject}</h2>
+          <p>您好${userName ? ` ${userName}` : ''}，</p>
+          <p>${statusMessage}</p>
+          <div class="status-change">
+            <p><strong>原状态：</strong><span class="status-badge" style="background: ${oldStatusInfo.color};">${oldStatusInfo.icon} ${oldStatusInfo.name}</span></p>
+            <p><strong>新状态：</strong><span class="status-badge" style="background: ${statusInfo.color};">${statusInfo.icon} ${statusInfo.name}</span></p>
+          </div>
+          ${actionMessage}
+          ${(newStatus === 'SUSPENDED' || newStatus === 'DELETED') ? `
+          <div class="warning">
+            <p style="margin: 0;"><strong>重要提示：</strong></p>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>您的所有活跃会话已被终止</li>
+              <li>您将无法登录或访问平台</li>
+              <li>如有疑问或需要申诉，请联系支持团队</li>
+            </ul>
+          </div>
+          ` : ''}
+        </div>
+        <div class="footer">
+          <p>这是一封自动发送的邮件，请勿直接回复。</p>
+          <p>如有疑问，请联系 <a href="mailto:support@openaero.cn">support@openaero.cn</a></p>
+          <p>&copy; 2024 OpenAero. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+}

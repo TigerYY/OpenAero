@@ -21,18 +21,24 @@
 - **表单**: React Hook Form (通过自定义组件)
 - **通知**: Sonner 2.0.7
 - **主题**: next-themes 0.4.6
+- **状态管理**: Class Variance Authority 0.7.1 + 自定义Context
+- **数据验证**: Zod 3.22.4
 - **测试**: Jest 29.7.0 + React Testing Library 14.1.2 + Playwright 1.40.1
 
 ### 后端技术栈
 - **运行时**: Node.js 18+ (LTS, engines要求 >=18.0.0)
 - **API**: Next.js API Routes (App Router)
-- **数据库**: PostgreSQL + Prisma ORM 5.8.1
+- **数据库**: PostgreSQL + Prisma ORM 5.22.0
 - **认证**: Supabase Auth (@supabase/ssr 0.7.0, @supabase/supabase-js 2.81.0)
 - **文件处理**: Multer 2.0.2 + Sharp 0.34.4 (图片优化)
 - **邮件**: Nodemailer 7.0.10
-- **监控**: Sentry (@sentry/nextjs 10.20.0) + Prometheus (prom-client 15.1.3)
+- **监控**: Sentry (@sentry/nextjs 10.20.0, @sentry/profiling-node 10.20.0) + Prometheus (prom-client 15.1.3)
 - **文件存储**: AWS S3 + Cloudflare R2 (生产环境)
 - **推送通知**: web-push 3.6.7
+- **密码处理**: bcrypt + bcryptjs
+- **文件压缩**: JSZip 3.10.1
+- **日期处理**: date-fns 4.1.0 + moment 2.30.1
+- **工具库**: fs-extra 11.3.2, uuid 13.0.0, yaml 2.8.1
 
 ### 基础设施
 - **部署平台**: Vercel (前端) + AWS EKS (后端)
@@ -179,6 +185,40 @@ src/
 - 性能验证报告和安全可靠性保证
 - "OpenAero Certified"品牌标准
 
+## Current Development Status
+
+### 开发分支
+- **当前分支**: `006-user-auth-system`
+- **分支状态**: 与origin同步，有未提交的修改
+- **最近提交**: 用户认证系统相关功能
+
+### 当前修改状态
+#### 已修改文件
+- `openspec/AGENTS.md` - OpenSpec代理配置
+- `src/app/api/admin/dashboard/stats/route.ts` - 管理员统计API
+- `src/app/api/admin/solutions/filter/route.ts` - 方案过滤API
+- `src/app/api/admin/solutions/queue/route.ts` - 方案队列API
+- `src/components/layout/AdminLayout.tsx` - 管理员布局组件
+- `src/lib/auth-helpers.ts` - 认证辅助函数
+
+#### 新增文件
+- `ULTRA_SIMPLE_FIX.sql` - 数据库修复脚本
+- `openspec/.codebuddy/` - CodeBuddy配置目录
+- `openspec/CODEBUDDY.md` - CodeBuddy文档
+- `openspec/changes/fix-role-field-consistency/` - 角色字段一致性修复
+
+### 最近解决的问题
+1. **用户认证系统**: 完善了用户注册、登录和权限管理
+2. **角色字段一致性**: 修复了`role`和`roles`字段的不一致问题
+3. **管理员页面**: 修复了管理员页面的导航和权限问题
+4. **API路由**: 统一了权限检查机制，使用`roles`数组而非单一`role`字段
+
+### 技术债务和改进计划
+- **类型安全**: 继续完善TypeScript类型定义
+- **测试覆盖率**: 提高E2E测试覆盖率
+- **性能优化**: 优化数据库查询和API响应时间
+- **代码质量**: 统一代码风格和最佳实践
+
 ## Important Constraints
 
 ### 技术约束
@@ -200,7 +240,22 @@ src/
 - **数据保护**: 敏感数据加密存储
 - **HTTPS加密**: 全站SSL加密
 - **速率限制**: 防止暴力攻击
-- **权限控制**: 基于角色的访问控制
+- **权限控制**: 基于角色的访问控制(RBAC)
+- **RLS策略**: 数据库行级安全策略
+- **认证一致性**: 统一使用`roles`数组进行权限验证
+- **API安全**: 所有API路由必须进行权限检查
+- **环境变量**: 敏感配置通过环境变量管理
+- **输入验证**: 使用Zod进行严格的数据验证
+
+### 开发规范约束
+- **国际化优先**: 所有用户界面必须支持中英双语
+- **组件复用**: 优先使用现有的UI组件库
+- **API设计**: RESTful设计，统一的响应格式
+- **错误处理**: 统一的错误处理和用户反馈机制
+- **日志记录**: 关键操作必须记录日志
+- **性能监控**: 使用Sentry进行错误监控和性能追踪
+- **代码审查**: 所有代码必须通过ESLint和TypeScript检查
+- **Git规范**: 遵循Conventional Commits规范
 
 ## External Dependencies
 
@@ -244,28 +299,93 @@ src/
 - **Kubernetes**: 容器编排 (k8s/目录)
 - **Prometheus**: 监控系统 (prometheus.yml, monitoring/)
 - **Grafana**: 数据可视化 (monitoring/grafana/)
-- **Husky**: Git hooks管理
-- **Lint-staged**: 提交前代码检查
+- **Husky**: Git hooks管理 (8.0.3)
+- **Lint-staged**: 提交前代码检查 (15.2.0)
 - **ESLint**: 代码质量检查 (支持自定义规则，如no-hardcoded-routes)
-- **Prettier**: 代码格式化
-- **Playwright**: E2E测试框架
+- **Prettier**: 代码格式化 (3.1.1)
+- **Playwright**: E2E测试框架 (1.40.1)
+- **增强配置**: 自定义ESLint、Prettier、TypeScript配置文件
+  - `.eslintrc.enhanced.json` - 更严格的代码质量检查
+  - `.prettierrc.enhanced` - 统一的代码格式化规则
+  - `tsconfig.enhanced.json` - 更严格的TypeScript检查
+- **路由管理**: 自定义脚本检查和修复硬编码路由
+- **数据库工具**: BOM迁移和验证脚本、用户配置同步工具
 
 ### 环境变量配置
 主要环境变量包括:
 - **应用配置**: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`
 - **国际化**: `NEXT_PUBLIC_DEFAULT_LOCALE`, `NEXT_PUBLIC_SUPPORTED_LOCALES`
 - **数据库**: `DATABASE_URL`, `DIRECT_URL` (Prisma连接)
-- **Supabase**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **Supabase**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - **Redis**: `REDIS_URL`
 - **监控**: `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`
 - **功能开关**: `NEXT_PUBLIC_ENABLE_ANALYTICS`, `NEXT_PUBLIC_ENABLE_MONITORING`
+- **邮件服务**: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+- **文件存储**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET`
+- **推送通知**: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
+- **支付集成**: `ALIPAY_APP_ID`, `WECHAT_PAY_MCH_ID`, `PAYMENT_SECRET_KEY`
+
+### Next.js配置特性
+- **输出模式**: `standalone` (Docker优化)
+- **SWC编译**: 启用SWC压缩和优化
+- **React严格模式**: 启用
+- **图片优化**: 支持WebP和AVIF格式
+- **国际化路由**: `/[locale]/` 结构
+- **服务器组件**: 外部包配置优化
+- **包导入优化**: lucide-react, @headlessui/react
+- **压缩**: 启用Gzip压缩
+- **构建ID**: 自定义生成逻辑
+
+### TypeScript增强配置
+- **严格模式**: 启用所有严格检查
+- **路径别名**: 完整的`@/`路径映射
+- **类型检查**: noImplicitAny, strictNullChecks, noUncheckedIndexedAccess
+- **构建优化**: 增量编译和类型检查
+- **测试类型**: Jest, Testing Library类型支持
 
 ### 构建和部署脚本
 主要npm脚本:
+
+#### 开发相关
 - **开发**: `npm run dev` (支持端口配置: `dev:3000`, `dev:3001`)
 - **构建**: `npm run build` (生产构建)
-- **测试**: `npm test`, `npm run test:coverage`, `npm run test:e2e`
-- **代码质量**: `npm run lint`, `npm run type-check`, `npm run quality:check`
-- **数据库**: `npm run db:generate`, `npm run db:migrate`, `npm run db:studio`
-- **Docker**: `npm run docker:build`, `npm run docker:dev`, `npm run docker:prod`
+- **启动**: `npm run start`, `npm run start:3000`
+- **分析**: `npm run analyze` (bundle分析)
+
+#### 代码质量
+- **基础检查**: `npm run lint`, `npm run type-check`, `npm run format`
+- **增强检查**: `npm run lint:enhanced`, `npm run type-check:enhanced`, `npm run format:enhanced`
+- **综合检查**: `npm run quality:check`, `npm run quality:check:enhanced`
+- **安全审计**: `npm run security:audit`, `npm run security:check`
+- **依赖检查**: `npm run check-dependencies`, `npm run bundle:analyze`
+
+#### 测试相关
+- **基础测试**: `npm test`, `npm run test:watch`, `npm run test:coverage`
+- **增强测试**: `npm run test:enhanced`, `npm run test:coverage:enhanced`, `npm run test:watch:enhanced`
+- **CI测试**: `npm run test:ci`
+- **E2E测试**: `npm run test:e2e`
+
+#### 数据库相关
+- **Prisma操作**: `npm run db:generate`, `npm run db:migrate`, `npm run db:studio`, `npm run db:push`
+- **数据库管理**: `npm run db:init`, `npm run db:reset`, `npm run db:seed`, `npm run db:rebuild`
+- **表管理**: `npm run db:create-missing`, `npm run db:sync-profiles`
+- **BOM管理**: `npm run bom:check`, `npm run bom:migrate`, `npm run bom:validate`
+- **RLS策略**: `npm run db:rls`
+
+#### 路由管理
+- **路由检查**: `npm run routes:check`, `npm run check:routes`, `npm run check:routes:ci`
+- **路由修复**: `npm run routes:fix`, `npm run fix:routes`
+
+#### Docker和部署
+- **Docker**: `npm run docker:build`, `npm run docker:run`, `npm run docker:dev`, `npm run docker:prod`
+- **Docker管理**: `npm run docker:down`, `npm run docker:logs`
 - **部署**: `npm run deploy:dev`, `npm run deploy:staging`, `npm run deploy:prod`
+
+#### Kubernetes
+- **K8s操作**: `npm run k8s:apply`, `npm run k8s:delete`, `npm run k8s:status`
+
+#### 工具脚本
+- **端口管理**: `npm run clean-ports`
+- **环境验证**: `npm run env:validate`, `npm run config:validate`
+- **项目清理**: `npm run clean`, `npm run fresh`
+- **MCP配置**: `npm run mcp:setup`, `npm run mcp:test`

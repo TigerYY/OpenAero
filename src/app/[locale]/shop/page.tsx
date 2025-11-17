@@ -66,7 +66,7 @@ interface ProductCategory {
 export default function ShopPage() {
   const t = useTranslations();
   const locale = useLocale();
-  const { route } = useRouting();
+  const { route, routes, routeWithParams, routeWithDynamicParams } = useRouting();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -227,7 +227,7 @@ export default function ShopPage() {
                 {categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/${locale}/shop/products?category=${category.slug}`}
+                    href={routeWithParams(routes.BUSINESS.SHOP, { category: category.slug })}
                     className="group"
                   >
                     <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-2 hover:border-blue-200">
@@ -248,7 +248,7 @@ export default function ShopPage() {
             )}
 
             <div className="text-center mt-8">
-              <Link href={`/${locale}/shop/products`}>
+              <Link href={route(routes.BUSINESS.SHOP)}>
                 <Button variant="outline" className="flex items-center gap-2">
                   查看所有分类
                   <ArrowRight className="h-4 w-4" />
@@ -281,7 +281,7 @@ export default function ShopPage() {
                     : 0;
 
                   return (
-                    <Link key={product.id} href={`/${locale}/shop/products/${product.slug}`} className="group">
+                    <Link key={product.id} href={routeWithDynamicParams(routes.BUSINESS.PRODUCT_DETAIL, { slug: product.slug })} className="group">
                       <Card className="h-full hover:shadow-xl transition-all duration-300 border hover:border-blue-200">
                         <div className="relative">
                           {product.images.length > 0 && (
@@ -375,7 +375,7 @@ export default function ShopPage() {
             )}
 
             <div className="text-center mt-8">
-              <Link href={route('/shop/products')}>
+              <Link href={route(routes.BUSINESS.SHOP)}>
                 <Button className="flex items-center gap-2">
                   查看更多商品
                   <ArrowRight className="h-4 w-4" />

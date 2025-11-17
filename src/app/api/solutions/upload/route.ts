@@ -20,11 +20,11 @@ export async function POST(request: NextRequest) {
 
     // 检查用户是否为认证创作者
     const creator = await prisma.creatorProfile.findUnique({
-      where: { userId: user.id },
-      select: { id: true, status: true }
+      where: { user_id: user.id },
+      select: { id: true, verification_status: true }
     });
 
-    if (!creator || creator.status !== 'APPROVED') {
+    if (!creator || creator.verification_status !== 'APPROVED') {
       return createErrorResponse('Only approved creators can upload solution files', 403);
     }
 

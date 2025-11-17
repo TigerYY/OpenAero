@@ -37,7 +37,9 @@ export async function POST(
     }
 
     // 验证用户为方案所有者（ADMIN/SUPER_ADMIN 可以提交任何方案）
-    const userRoles = authResult.user.roles || [authResult.user.role];
+    const userRoles = Array.isArray(authResult.user?.roles) 
+      ? authResult.user.roles 
+      : (authResult.user?.role ? [authResult.user.role] : []);
     const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
     
     if (!isAdmin && solution.creatorId !== solution.creator?.id) {

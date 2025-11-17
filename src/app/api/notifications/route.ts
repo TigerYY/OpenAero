@@ -65,7 +65,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查管理员权限
-    if (session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session.user.roles) 
+      ? session.user.roles 
+      : (session.user.role ? [session.user.role] : []);
+    if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

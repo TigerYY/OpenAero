@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-
 import { requireAdminAuth } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
+import { 
+  exportLargeDataset, 
+  generateExportFilename, 
+  ExportFormat 
+} from '@/lib/admin/export-utils';
+import { dashboardCache } from '@/lib/admin/dashboard-cache';
 
 // 快速操作验证模式
 const quickActionSchema = z.object({
@@ -38,21 +43,79 @@ export async function POST(request: NextRequest) {
       case 'approve_all_pending':
         result = await approveAllPendingSolutions(authResult.user.id);
         message = `批量批准完成: ${result.approved}个方案已批准`;
+        // 清除相关缓存
+        dashboardCache.clearStats();
+        dashboardCache.clearCharts();
+        dashboardCache.clearActivities();
         break;
 
       case 'reject_all_pending':
         const reason = validatedData.params?.reason || '批量拒绝操作';
         result = await rejectAllPendingSolutions(authResult.user.id, reason);
         message = `批量拒绝完成: ${result.rejected}个方案已拒绝`;
+        // 清除相关缓存
+        dashboardCache.clearStats();
+        dashboardCache.clearCharts();
+        dashboardCache.clearActivities();
         break;
 
       case 'export_solutions':
         result = await exportSolutions(validatedData.params);
+        // 如果指定了格式，返回文件数据
+        if (validatedData.params?.format && validatedData.params.format !== 'json') {
+          const format = validatedData.params.format as ExportFormat;
+          const exportResult = await exportLargeDataset(
+            result.data,
+            {
+              format,
+              filename: generateExportFilename('solutions', format),
+              sheetName: '方案数据',
+            }
+          );
+          
+          // 返回文件响应
+          const contentType = format === 'excel' 
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/csv';
+          
+          return new NextResponse(exportResult.data, {
+            status: 200,
+            headers: {
+              'Content-Type': contentType,
+              'Content-Disposition': `attachment; filename="${exportResult.filename}"`,
+            },
+          });
+        }
         message = `方案数据导出完成: ${result.count}条记录`;
         break;
 
       case 'export_users':
         result = await exportUsers(validatedData.params);
+        // 如果指定了格式，返回文件数据
+        if (validatedData.params?.format && validatedData.params.format !== 'json') {
+          const format = validatedData.params.format as ExportFormat;
+          const exportResult = await exportLargeDataset(
+            result.data,
+            {
+              format,
+              filename: generateExportFilename('users', format),
+              sheetName: '用户数据',
+            }
+          );
+          
+          // 返回文件响应
+          const contentType = format === 'excel' 
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/csv';
+          
+          return new NextResponse(exportResult.data, {
+            status: 200,
+            headers: {
+              'Content-Type': contentType,
+              'Content-Disposition': `attachment; filename="${exportResult.filename}"`,
+            },
+          });
+        }
         message = `用户数据导出完成: ${result.count}条记录`;
         break;
 
@@ -201,16 +264,56 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
 async function exportSolutions(params: any = {}) {
   const where: any = {};
   
+  // 状态筛选
   if (params.status) {
-    where.status = params.status;
+    if (Array.isArray(params.status)) {
+      where.status = { in: params.status };
+    } else {
+      where.status = params.status;
+    }
   }
   
+  // 分类筛选
+  if (params.category) {
+    if (Array.isArray(params.category)) {
+      where.category = { in: params.category };
+    } else {
+      where.category = params.category;
+    }
+  }
+  
+  // 日期范围筛选
   if (params.dateFrom) {
     where.createdAt = { gte: new Date(params.dateFrom) }; // Solution 使用 camelCase
   }
+  
+  if (params.dateTo) {
+    if (where.createdAt) {
+      where.createdAt.lte = new Date(params.dateTo);
+    } else {
+      where.createdAt = { lte: new Date(params.dateTo) };
+    }
+  }
+  
+  // 价格范围筛选
+  if (params.priceMin !== undefined) {
+    where.price = { gte: parseFloat(params.priceMin) };
+  }
+  
+  if (params.priceMax !== undefined) {
+    if (where.price) {
+      where.price.lte = parseFloat(params.priceMax);
+    } else {
+      where.price = { lte: parseFloat(params.priceMax) };
+    }
+  }
+  
+  // 限制导出数量（防止内存溢出）
+  const limit = params.limit ? Math.min(parseInt(params.limit), 50000) : 50000;
 
   const solutions = await prisma.solution.findMany({
     where,
+    take: limit,
     select: {
       id: true,
       title: true,
@@ -222,6 +325,12 @@ async function exportSolutions(params: any = {}) {
       updatedAt: true, // Solution 使用 camelCase
       reviewedAt: true, // Solution 使用 camelCase
       reviewNotes: true, // Solution 使用 camelCase
+      creator: {
+        select: {
+          id: true,
+          displayName: true,
+        },
+      },
     },
     orderBy: { createdAt: 'desc' } // Solution 使用 camelCase
   });
@@ -232,12 +341,13 @@ async function exportSolutions(params: any = {}) {
     title: solution.title,
     description: solution.description,
     category: solution.category,
-    price: solution.price,
+    price: solution.price?.toString() || '0',
     status: solution.status,
-    createdAt: solution.createdAt,
-    updatedAt: solution.updatedAt,
-    reviewedAt: solution.reviewedAt,
-    reviewNotes: solution.reviewNotes
+    creator: solution.creator?.displayName || '未知',
+    createdAt: solution.createdAt?.toISOString() || '',
+    updatedAt: solution.updatedAt?.toISOString() || '',
+    reviewedAt: solution.reviewedAt?.toISOString() || '',
+    reviewNotes: solution.reviewNotes || '',
   }));
 
   return { count: exportData.length, data: exportData };
@@ -247,23 +357,60 @@ async function exportSolutions(params: any = {}) {
 async function exportUsers(params: any = {}) {
   const where: any = {};
   
+  // 角色筛选
   if (params.role) {
-    where.role = params.role;
+    // 支持多角色查询
+    if (Array.isArray(params.role)) {
+      where.OR = params.role.flatMap((r: string) => [
+        { role: r },
+        { roles: { has: r } }
+      ]);
+    } else {
+      where.OR = [
+        { role: params.role },
+        { roles: { has: params.role } }
+      ];
+    }
   }
   
+  // 状态筛选
+  if (params.status) {
+    if (Array.isArray(params.status)) {
+      where.status = { in: params.status };
+    } else {
+      where.status = params.status;
+    }
+  }
+  
+  // 日期范围筛选
   if (params.dateFrom) {
     where.created_at = { gte: new Date(params.dateFrom) };
   }
+  
+  if (params.dateTo) {
+    if (where.created_at) {
+      where.created_at.lte = new Date(params.dateTo);
+    } else {
+      where.created_at = { lte: new Date(params.dateTo) };
+    }
+  }
+  
+  // 限制导出数量
+  const limit = params.limit ? Math.min(parseInt(params.limit), 50000) : 50000;
 
   const users = await prisma.userProfile.findMany({
     where,
+    take: limit,
     select: {
       id: true,
       user_id: true, // UserProfile 使用 snake_case
       first_name: true,
       last_name: true,
       display_name: true,
+      email: true,
+      phone: true,
       role: true,
+      roles: true,
       status: true,
       created_at: true,
       updated_at: true
@@ -271,27 +418,21 @@ async function exportUsers(params: any = {}) {
     orderBy: { created_at: 'desc' }
   });
 
-  // 格式化导出数据（使用字段名转换工具）
-  const exportData = users.map(user => {
-    const converted = convertSnakeToCamel({
-      id: user.user_id,
-      user_id: user.user_id,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      display_name: user.display_name,
-      role: user.role,
-      status: user.status,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    });
-    return {
-      ...converted,
-      id: user.user_id,
-      email: '', // 需要从 Supabase Auth 获取
-      createdAt: user.created_at.toISOString(),
-      updatedAt: user.updated_at.toISOString(),
-    };
-  });
+  // 格式化导出数据
+  const exportData = users.map(user => ({
+    id: user.user_id,
+    userId: user.user_id,
+    firstName: user.first_name || '',
+    lastName: user.last_name || '',
+    displayName: user.display_name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    role: user.role || '',
+    roles: Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || ''),
+    status: user.status || '',
+    createdAt: user.created_at?.toISOString() || '',
+    updatedAt: user.updated_at?.toISOString() || '',
+  }));
 
   return { count: exportData.length, data: exportData };
 }
@@ -320,11 +461,18 @@ async function sendBulkNotification(params: any) {
   const targetRole = params.targetRole || 'CREATOR';
 
   const users = await prisma.userProfile.findMany({
-    where: { role: targetRole },
+    where: {
+      OR: [
+        { role: targetRole },
+        { roles: { has: targetRole } }
+      ]
+    },
     select: { 
       id: true,
       user_id: true,
       display_name: true,
+      role: true,
+      roles: true,
     }
   });
 

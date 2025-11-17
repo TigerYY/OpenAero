@@ -88,11 +88,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // 验证用户为 CREATOR 且为方案所有者
-    if (authResult.user.role !== 'CREATOR' && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    const userRoles = Array.isArray(authResult.user?.roles) 
+      ? authResult.user.roles 
+      : (authResult.user?.role ? [authResult.user.role] : []);
+    
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以管理 BOM', 403);
     }
 
-    if (solution.creatorId !== solution.creator?.id && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    if (solution.creatorId !== solution.creator?.id && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('无权修改此方案的 BOM', 403);
     }
 
@@ -257,8 +261,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // CREATOR 可访问自己创建的所有方案
     if (authResult.success && authResult.user) {
-      const isCreator = solution.creatorId && authResult.user.role === 'CREATOR';
-      const isAdmin = authResult.user.role === 'ADMIN' || authResult.user.role === 'SUPER_ADMIN';
+      const userRoles = Array.isArray(authResult.user?.roles) 
+        ? authResult.user.roles 
+        : (authResult.user?.role ? [authResult.user.role] : []);
+      
+      const isCreator = solution.creatorId && userRoles.includes('CREATOR');
+      const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
       
       if (!isPublicAccess && !isCreator && !isAdmin && solution.status !== 'PUBLISHED') {
         return createErrorResponse('无权访问此方案的 BOM', 403);

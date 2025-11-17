@@ -16,16 +16,21 @@ const statsQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const authResult = await checkAdminAuth(request);
+    if (authResult.error) {
       return NextResponse.json(
-        { success: false, error: '未授权访问' },
-        { status: 401 }
+        { success: false, error: authResult.error },
+        { status: authResult.status }
       );
     }
+    const session = authResult.session;
 
     // 检查管理员权限
-    if (session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return NextResponse.json(
         { success: false, error: '权限不足' },
         { status: 403 }

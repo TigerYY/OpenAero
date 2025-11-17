@@ -10,7 +10,7 @@ import { DefaultLayout } from '@/components/layout/DefaultLayout';
 export default function CreatorApplySuccessPage() {
   const params = useParams();
   const locale = params.locale as string;
-  const { route } = useRouting();
+  const { route, routes } = useRouting();
 
   return (
     <DefaultLayout>
@@ -81,12 +81,12 @@ export default function CreatorApplySuccessPage() {
             {/* 操作按钮 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link href={route('/solutions')}>
+                <Link href={route(routes.BUSINESS.SOLUTIONS)}>
                   浏览解决方案
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href={route('/creators')}>
+                <Link href={route(routes.CREATORS.HOME)}>
                   了解更多
                 </Link>
               </Button>

@@ -32,7 +32,7 @@ interface Application {
 
 export default function AdminApplicationsPage() {
   const router = useRouter();
-  const { route } = useRouting();
+  const { route, routes } = useRouting();
   const { profile } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,11 +42,17 @@ export default function AdminApplicationsPage() {
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [reviewNotes, setReviewNotes] = useState('');
 
-  // 检查管理员权限
+  // 检查管理员权限（使用 roles 数组）
   useEffect(() => {
-    if (profile && profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN' && profile.role !== 'REVIEWER') {
-      router.push(route('/'));
-      toast.error('您没有权限访问此页面');
+    if (profile) {
+      const userRoles = Array.isArray(profile.roles) 
+        ? profile.roles 
+        : (profile.role ? [profile.role] : []);
+      
+      if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN') && !userRoles.includes('REVIEWER')) {
+        router.push(route(routes.BUSINESS.HOME));
+        toast.error('您没有权限访问此页面');
+      }
     }
   }, [profile, router, route]);
 
@@ -76,8 +82,14 @@ export default function AdminApplicationsPage() {
   };
 
   useEffect(() => {
-    if (profile && (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN' || profile.role === 'REVIEWER')) {
-      fetchApplications();
+    if (profile) {
+      const userRoles = Array.isArray(profile.roles) 
+        ? profile.roles 
+        : (profile.role ? [profile.role] : []);
+      
+      if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN') || userRoles.includes('REVIEWER')) {
+        fetchApplications();
+      }
     }
   }, [filter, profile]);
 
@@ -140,7 +152,15 @@ export default function AdminApplicationsPage() {
     ? applications 
     : applications.filter(app => app.status === filter);
 
-  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN' && profile.role !== 'REVIEWER')) {
+  if (!profile) {
+    return null;
+  }
+  
+  const userRoles = Array.isArray(profile.roles) 
+    ? profile.roles 
+    : (profile.role ? [profile.role] : []);
+    
+  if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN') && !userRoles.includes('REVIEWER')) {
     return null;
   }
 

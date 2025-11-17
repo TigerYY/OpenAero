@@ -7,7 +7,7 @@ import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
-    const authResult = await checkAdminAuth(request);
+    const authResult = await checkCreatorAuth(request);
     if (authResult.error) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
@@ -16,14 +16,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: '未授权访问' },
         { status: 401 }
-      );
-    }
-
-    // 检查用户是否为创作者
-    if (session.user.role !== 'CREATOR') {
-      return NextResponse.json(
-        { error: '只有创作者可以访问此接口' },
-        { status: 403 }
       );
     }
 

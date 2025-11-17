@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   LogOut,
-  Home
+  Home,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouting } from '@/lib/routing';
@@ -46,19 +47,29 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: '仪表盘'
     },
     {
-      href: route(routes.ADMIN.SOLUTIONS),
-      icon: FileText,
-      label: '方案管理'
-    },
-    {
       href: route(routes.ADMIN.USERS),
       icon: Users,
       label: '用户管理'
     },
     {
+      href: route(routes.ADMIN.PERMISSIONS),
+      icon: UserCheck,
+      label: '权限管理'
+    },
+    {
+      href: route(routes.ADMIN.SOLUTIONS),
+      icon: FileText,
+      label: '方案管理'
+    },
+    {
       href: route(routes.ADMIN.APPLICATIONS),
       icon: UserCheck,
-      label: '申请管理'
+      label: '创作者申请'
+    },
+    {
+      href: route(routes.ADMIN.REVIEW_WORKBENCH),
+      icon: CheckCircle,
+      label: '审核工作台'
     },
     {
       href: route(routes.ADMIN.ANALYTICS),

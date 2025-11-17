@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { dashboardCache } from '@/lib/admin/dashboard-cache';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
-import { convertSnakeToCamel } from '@/lib/field-mapper';
 
 // GET /api/admin/dashboard/stats - 获取管理员仪表板统计数据
 export async function GET(request: NextRequest) {
@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 检查管理员权限（包括 ADMIN 和 SUPER_ADMIN）
-    if (authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    const userRoles = authResult.user.roles || [];
+    if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看仪表板统计',
@@ -37,6 +38,18 @@ export async function GET(request: NextRequest) {
     const days = parseInt(timeRangeParam || daysParam || '30');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+
+    // 检查缓存
+    const cacheKey = `stats:${days}`;
+    const cachedData = await dashboardCache.getStats(days);
+    if (cachedData) {
+      return NextResponse.json(cachedData, { 
+        status: 200,
+        headers: {
+          'X-Cache': 'HIT',
+        },
+      });
+    }
 
     // 并行获取各种统计数据
     const [
@@ -72,17 +85,25 @@ export async function GET(request: NextRequest) {
       prisma.solution.count({ where: { status: 'PENDING_REVIEW' } }),
       prisma.solution.count({ where: { status: 'APPROVED' } }),
       prisma.solution.count({ where: { status: 'REJECTED' } }),
-      prisma.solution.count({ where: { createdAt: { gte: startDate } } }), // Solution 使用 camelCase
+      prisma.solution.count({ where: { created_at: { gte: startDate } } }),
       
-      // 用户统计（使用 userProfile）
+      // 用户统计（使用 userProfile）- 支持多角色
       prisma.userProfile.count(),
-      prisma.userProfile.count({ where: { role: 'CREATOR' } }),
-      prisma.userProfile.count({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } }),
+      prisma.userProfile.count({ 
+        where: { 
+          roles: { has: 'CREATOR' }
+        } 
+      }),
+      prisma.userProfile.count({ 
+        where: { 
+          roles: { hasSome: ['ADMIN', 'SUPER_ADMIN'] }
+        } 
+      }),
       prisma.userProfile.count({ where: { created_at: { gte: startDate } } }),
       
       // 审核统计
       prisma.solutionReview.count(),
-      prisma.solutionReview.count({ where: { reviewedAt: { gte: startDate } } }), // SolutionReview 使用 camelCase
+      prisma.solutionReview.count({ where: { reviewed_at: { gte: startDate } } }),
       
       // 收入统计（Solution 使用 camelCase）
       prisma.solution.aggregate({
@@ -93,7 +114,7 @@ export async function GET(request: NextRequest) {
         _sum: { price: true },
         where: { 
           status: 'APPROVED',
-          reviewedAt: { gte: startDate }
+          reviewed_at: { gte: startDate }
         }
       }),
       
@@ -104,11 +125,11 @@ export async function GET(request: NextRequest) {
         orderBy: { _count: { category: 'desc' } }
       }),
       
-      // 状态趋势（最近7天，Solution 使用 camelCase）
+      // 状态趋势（最近7天）
       prisma.solution.groupBy({
         by: ['status'],
         _count: { status: true },
-        where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
+        where: { updated_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
       })
     ]);
 
@@ -120,7 +141,7 @@ export async function GET(request: NextRequest) {
     const [previousSolutions, previousUsers, previousReviews] = await Promise.all([
       prisma.solution.count({
         where: {
-          createdAt: { // Solution 使用 camelCase
+          created_at: {
             gte: previousPeriodStart,
             lt: startDate
           }
@@ -136,7 +157,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.solutionReview.count({
         where: {
-          reviewedAt: { // SolutionReview 使用 camelCase
+          reviewed_at: {
             gte: previousPeriodStart,
             lt: startDate
           }
@@ -157,28 +178,74 @@ export async function GET(request: NextRequest) {
       ? ((recentReviews - previousReviews) / previousReviews * 100)
       : recentReviews > 0 ? 100 : 0;
 
-    // 获取最近活动（SolutionReview 使用 camelCase 字段名）
+    // 计算平均审核时间
+    // 查询已完成审核的方案，使用 SolutionReview 表来获取准确的审核时间
+    const completedReviewRecords = await prisma.solutionReview.findMany({
+      where: {
+        status: 'COMPLETED',
+        reviewed_at: { not: null },
+        reviewed_at: { gte: startDate },
+        decision: { in: ['APPROVED', 'REJECTED'] },
+      },
+      select: {
+        solution_id: true,
+        reviewed_at: true,
+        solution: {
+          select: {
+            id: true,
+            submitted_at: true,
+            created_at: true,
+          },
+        },
+      },
+    });
+
+    // 计算平均审核时间（小时）
+    let avgReviewTime = 0;
+    const reviewTimes: number[] = [];
+    
+    for (const record of completedReviewRecords) {
+      const reviewedAt = record.reviewed_at;
+      // 优先使用 submitted_at，如果没有则使用 created_at
+      const submittedAt = record.solution.submitted_at || record.solution.created_at;
+      
+      if (reviewedAt && submittedAt) {
+        const submitted = submittedAt.getTime();
+        const reviewed = reviewedAt.getTime();
+        const hours = (reviewed - submitted) / (1000 * 60 * 60);
+        if (hours > 0) { // 只计算有效的时间差
+          reviewTimes.push(hours);
+        }
+      }
+    }
+
+    if (reviewTimes.length > 0) {
+      const totalTime = reviewTimes.reduce((a, b) => a + b, 0);
+      avgReviewTime = Math.round((totalTime / reviewTimes.length) * 10) / 10; // 保留一位小数
+    }
+
+    // 获取最近活动
     const recentActivities = await prisma.solutionReview.findMany({
       take: 10,
-      orderBy: { reviewedAt: 'desc' }, // SolutionReview 使用 camelCase
+      orderBy: { reviewed_at: 'desc' },
       select: {
         id: true,
-        solutionId: true, // SolutionReview 使用 camelCase
-        reviewerId: true, // SolutionReview 使用 camelCase
+        solution_id: true,
+        reviewer_id: true,
         decision: true,
-        reviewedAt: true, // SolutionReview 使用 camelCase
+        reviewed_at: true,
       }
     });
 
-    // 格式化活动数据（SolutionReview 字段已经是 camelCase）
+    // 格式化活动数据
     const formattedActivities = recentActivities.map(activity => ({
       id: activity.id,
       type: 'review',
       action: activity.decision,
       description: `审核了方案`,
-      timestamp: activity.reviewedAt,
-      solutionId: activity.solutionId,
-      reviewerId: activity.reviewerId,
+      timestamp: activity.reviewed_at,
+      solutionId: activity.solution_id,
+      reviewerId: activity.reviewer_id,
     }));
 
     // 格式化响应数据以匹配前端期望的格式
@@ -195,7 +262,7 @@ export async function GET(request: NextRequest) {
       },
       reviews: {
         totalReviews,
-        avgReviewTime: 0, // TODO: 计算平均审核时间
+        avgReviewTime, // 平均审核时间（小时）
       },
       recentActivity: {
         newSolutions: recentSolutions,
@@ -226,7 +293,15 @@ export async function GET(request: NextRequest) {
       message: '统计数据获取成功'
     };
 
-    return NextResponse.json(response, { status: 200 });
+    // 缓存响应数据
+    dashboardCache.setStats(days, response);
+
+    return NextResponse.json(response, { 
+      status: 200,
+      headers: {
+        'X-Cache': 'MISS',
+      },
+    });
 
   } catch (error) {
     console.error('获取仪表板统计失败:', error);

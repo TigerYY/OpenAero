@@ -27,7 +27,7 @@ export default function SettingsPage() {
 
 function SettingsContent() {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth();
-  const { route } = useRouting();
+  const { route, routes } = useRouting();
   const [activeTab, setActiveTab] = useState('general');
   const [initializing, setInitializing] = useState(false);
 
@@ -606,6 +606,7 @@ function PrivacySettings() {
 function DeleteAccountButton() {
   const { signOut } = useAuth();
   const router = useRouter();
+  const { route, routes } = useRouting();
   const [showConfirm, setShowConfirm] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
@@ -638,7 +639,7 @@ function DeleteAccountButton() {
       if (data.success) {
         // 登出并跳转到首页
         await signOut();
-        router.push('/');
+        router.push(route(routes.BUSINESS.HOME));
       } else {
         setError(data.error || '删除失败');
       }

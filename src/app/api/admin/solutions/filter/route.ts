@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 检查管理员权限
-    if (authResult.user.role !== 'ADMIN') {
+    const userRoles = authResult.user.roles || [];
+    if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以筛选方案',

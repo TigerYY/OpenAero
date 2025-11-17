@@ -18,13 +18,18 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('未授权访问', 401);
     }
 
-    // 检查用户是否为创作者
+    // 检查用户是否为创作者（使用 roles 数组）
     const userProfile = await prisma.userProfile.findUnique({
       where: { user_id: user.id },
-      select: { role: true },
+      select: { roles: true, role: true },
     });
 
-    if (userProfile?.role !== 'CREATOR') {
+    // 统一使用 roles 数组进行权限检查
+    const userRoles = Array.isArray(userProfile?.roles) 
+      ? userProfile.roles 
+      : (userProfile?.role ? [userProfile.role] : []);
+
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以访问此接口', 403);
     }
 

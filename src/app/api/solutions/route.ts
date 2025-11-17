@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
     // 验证用户身份（可选）
     const authResult = await authenticateRequest(request);
     const isAuthenticated = authResult.success && authResult.user;
-    const isAdmin = isAuthenticated && (authResult.user.role === 'ADMIN' || authResult.user.role === 'SUPER_ADMIN');
-    const isCreator = isAuthenticated && authResult.user.role === 'CREATOR';
+    const userRoles = authResult.user?.roles || [];
+    const isAdmin = isAuthenticated && (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN'));
+    const isCreator = isAuthenticated && userRoles.includes('CREATOR');
 
     // 构建查询条件
     const where: any = {};
@@ -212,7 +213,8 @@ export async function POST(request: NextRequest) {
     const validatedData = createSolutionSchema.parse(body);
     
     // 验证用户为 CREATOR 角色
-    if (authResult.user.role !== 'CREATOR' && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    const userRoles = authResult.user.roles || [];
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以创建方案', 403);
     }
 

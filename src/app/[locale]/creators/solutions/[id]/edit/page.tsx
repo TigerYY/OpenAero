@@ -123,7 +123,7 @@ function CreatorSolutionEditContent() {
         : (profile.role ? [profile.role] : []);
       
       if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
-        router.push(route('/'));
+        router.push(route(routes.BUSINESS.HOME));
         toast.error('只有创作者可以编辑方案');
       }
     }

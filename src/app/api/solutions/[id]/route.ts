@@ -218,12 +218,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('方案不存在', 404);
     }
 
+    // 使用 roles 数组进行权限检查
+    const userRoles = authResult.user.roles || [];
+    const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+    const isCreator = userRoles.includes('CREATOR') || isAdmin;
+
     // 验证用户为 CREATOR 且为方案所有者
-    if (authResult.user.role !== 'CREATOR' && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    if (!isCreator) {
       return createErrorResponse('只有创作者可以更新方案', 403);
     }
 
-    if ((oldSolution as any).creatorId !== (oldSolution as any).creator?.id && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    if ((oldSolution as any).creatorId !== (oldSolution as any).creator?.id && !isAdmin) {
       return createErrorResponse('无权修改此方案', 403);
     }
 

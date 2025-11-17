@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户为 CREATOR 角色
-    if (authResult.user.role !== 'CREATOR' && authResult.user.role !== 'ADMIN' && authResult.user.role !== 'SUPER_ADMIN') {
+    const userRoles = authResult.user.roles || [];
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以查看自己的方案', 403);
     }
 

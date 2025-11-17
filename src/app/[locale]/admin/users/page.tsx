@@ -72,6 +72,7 @@ export default function AdminUsersPage() {
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
   
   // 表单状态
   const [editForm, setEditForm] = useState({
@@ -205,6 +206,7 @@ export default function AdminUsersPage() {
       return;
     }
 
+    setSaving(true);
     try {
       let infoUpdated = false;
       let rolesUpdated = false;
@@ -328,11 +330,14 @@ export default function AdminUsersPage() {
 
       toast.success(successMessage);
       setShowEditDialog(false);
-      loadUsers();
+      await loadUsers();
 
     } catch (error) {
       console.error('更新用户信息错误:', error);
-      toast.error(error instanceof Error ? error.message : '更新操作失败');
+      const errorMessage = error instanceof Error ? error.message : '更新操作失败';
+      toast.error(errorMessage);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -923,11 +928,18 @@ export default function AdminUsersPage() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setShowEditDialog(false)} variant="outline">
+            <Button 
+              onClick={() => setShowEditDialog(false)} 
+              variant="outline"
+              disabled={saving}
+            >
               取消
             </Button>
-            <Button onClick={handleSaveEdit}>
-              保存更改
+            <Button 
+              onClick={handleSaveEdit}
+              disabled={saving}
+            >
+              {saving ? '保存中...' : '保存更改'}
             </Button>
           </DialogFooter>
         </DialogContent>

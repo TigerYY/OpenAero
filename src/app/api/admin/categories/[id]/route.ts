@@ -34,7 +34,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
@@ -85,7 +89,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 
@@ -188,7 +196,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    
+    if (!userRoles.includes('ADMIN')) {
       return NextResponse.json({ error: '权限不足' }, { status: 403 });
     }
 

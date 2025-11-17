@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
-import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { checkAdminAuth } from '@/lib/api-auth-helpers';
 import { compareVersions } from '@/lib/solution-version';
 
 // GET /api/solutions/[id]/versions/compare?v1=1&v2=2 - 比较两个版本
@@ -47,7 +47,10 @@ export async function GET(
     }
 
     const isOwner = solution.userId === session.user.id;
-    const isAdmin = session.user.role === 'ADMIN';
+    const userRoles = Array.isArray(session?.user?.roles) 
+      ? session.user.roles 
+      : (session?.user?.role ? [session.user.role] : []);
+    const isAdmin = userRoles.includes('ADMIN');
     
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: '无权限访问' }, { status: 403 });

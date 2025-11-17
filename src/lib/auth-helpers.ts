@@ -8,6 +8,7 @@ export interface AuthResult {
     id: string;
     email: string;
     role: string;
+    roles: string[];
   };
   error?: NextResponse;
 }
@@ -81,10 +82,19 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         };
       }
       
+      // 从 roles 数组中获取主要角色，保持向后兼容
+      const userRoles = Array.isArray(retryExtendedUser.profile.roles) 
+        ? retryExtendedUser.profile.roles 
+        : (retryExtendedUser.profile.role ? [retryExtendedUser.profile.role] : []);
+      const primaryRole = userRoles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : 
+                        userRoles.includes('ADMIN') ? 'ADMIN' : 
+                        userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
+
       console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
         userId: retryExtendedUser.id,
         email: retryExtendedUser.email,
-        role: retryExtendedUser.profile.role,
+        roles: userRoles,
+        primaryRole: primaryRole,
       });
       
       return {
@@ -92,7 +102,8 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         user: {
           id: retryExtendedUser.id,
           email: retryExtendedUser.email || '',
-          role: retryExtendedUser.profile.role,
+          role: primaryRole,
+          roles: userRoles,
         }
       };
     }
@@ -135,10 +146,19 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         };
       }
       
+      // 从 roles 数组中获取主要角色，保持向后兼容
+      const userRoles = Array.isArray(retryExtendedUser.profile.roles) 
+        ? retryExtendedUser.profile.roles 
+        : (retryExtendedUser.profile.role ? [retryExtendedUser.profile.role] : []);
+      const primaryRole = userRoles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : 
+                        userRoles.includes('ADMIN') ? 'ADMIN' : 
+                        userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
+
       console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
         userId: retryExtendedUser.id,
         email: retryExtendedUser.email,
-        role: retryExtendedUser.profile.role,
+        roles: userRoles,
+        primaryRole: primaryRole,
       });
       
       return {
@@ -146,15 +166,25 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
         user: {
           id: retryExtendedUser.id,
           email: retryExtendedUser.email || '',
-          role: retryExtendedUser.profile.role,
+          role: primaryRole,
+          roles: userRoles,
         }
       };
     }
     
+    // 从 roles 数组中获取主要角色，保持向后兼容
+    const userRoles = Array.isArray(extendedUser.profile.roles) 
+      ? extendedUser.profile.roles 
+      : (extendedUser.profile.role ? [extendedUser.profile.role] : []);
+    const primaryRole = userRoles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : 
+                      userRoles.includes('ADMIN') ? 'ADMIN' : 
+                      userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
+
     console.log('[authenticateRequest] 认证成功:', {
       userId: extendedUser.id,
       email: extendedUser.email,
-      role: extendedUser.profile.role,
+      roles: userRoles,
+      primaryRole: primaryRole,
     });
     
     return {
@@ -162,7 +192,8 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       user: {
         id: extendedUser.id,
         email: extendedUser.email || '',
-        role: extendedUser.profile.role,
+        role: primaryRole,
+        roles: userRoles,
       }
     };
   } catch (error) {

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function ContactPageClient() {
   const t = useTranslations();
-  const { route } = useRouting();
+  const { route, routes } = useRouting();
 
   const handleContactSubmit = async (data: any) => {
     // 这里可以添加额外的处理逻辑
@@ -137,7 +137,7 @@ export default function ContactPageClient() {
                       帮助文档
                     </Button>
                   </Link>
-                  <Link href={route('/creators/apply')}>
+                  <Link href={route(routes.CREATORS.APPLY)}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -145,7 +145,7 @@ export default function ContactPageClient() {
                       成为创作者
                     </Button>
                   </Link>
-                  <Link href={route('/about')}>
+                  <Link href={route(routes.BUSINESS.ABOUT)}>
                     <Button variant="outline" className="w-full justify-start">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

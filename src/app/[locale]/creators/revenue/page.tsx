@@ -346,7 +346,6 @@ export default function RevenuePage() {
           </Card>
         </TabsContent>
       </Tabs>
-        </div>
       </div>
     </DefaultLayout>
   );
