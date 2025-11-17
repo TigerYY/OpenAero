@@ -1,0 +1,20 @@
+[OK] Environment/NEXT_PUBLIC_SUPABASE_URL: 已配置
+[OK] Environment/SUPABASE_SERVICE_ROLE_KEY: 已配置
+[OK] Environment/DATABASE_URL: 已配置
+[WARNING] Database/user_profiles: 查询出错: permission denied for schema public
+[WARNING] Database/creator_profiles: 访问出错: permission denied for schema public
+[WARNING] Database/solutions: 访问出错: permission denied for schema public
+[WARNING] Database/orders: 访问出错: permission denied for schema public
+[WARNING] Database/products: 访问出错: permission denied for schema public
+[OK] Prisma/UserProfile: 模型可用 (0 条记录)
+[WARNING] API/auth: 目录存在但缺少 route.ts
+[WARNING] API/users: 目录存在但缺少 route.ts
+[OK] API/solutions: API 路由存在
+[OK] API/orders: API 路由存在
+[WARNING] API/orders (Prisma): 使用 Prisma Client | 建议: 考虑统一使用 Supabase 客户端
+[OK] API/admin/users: API 路由存在
+[OK] API/admin/solutions: API 路由存在
+[WARNING] API/admin/solutions (Prisma): 使用 Prisma Client | 建议: 考虑统一使用 Supabase 客户端
+[WARNING] Frontend/user.ts: 类型文件不存在
+[WARNING] Frontend/solution.ts: 类型文件不存在
+[WARNING] Frontend/order.ts: 类型文件不存在

@@ -37,6 +37,10 @@ const errorMessagesZh: Record<string, string> = {
   'Request timeout': '请求超时，请稍后重试',
   'Service unavailable': '服务暂时不可用，请稍后重试',
   
+  // 数据库相关错误
+  'Database error': '数据库错误',
+  'Database error saving new user': '注册失败，数据库错误',
+  
   // 通用错误
   'An unexpected error occurred': '发生意外错误，请稍后重试',
   'Internal server error': '服务器内部错误，请稍后重试',

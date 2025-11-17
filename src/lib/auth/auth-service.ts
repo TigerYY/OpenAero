@@ -154,12 +154,17 @@ export class AuthService {
     try {
       const supabaseAdmin = createSupabaseAdmin();
       
+      console.log('[getExtendedUser] 开始获取用户信息:', userId);
+      
       // 获取 auth.users 信息
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (userError || !userData.user) {
+        console.error('[getExtendedUser] 获取 auth.users 失败:', userError);
         return null;
       }
+      
+      console.log('[getExtendedUser] 成功获取 auth.users');
 
       // 获取 user_profiles 信息
       const { data: profileData, error: profileError } = await supabaseAdmin
@@ -169,7 +174,15 @@ export class AuthService {
         .single();
 
       if (profileError) {
-        console.error('Failed to fetch user profile:', profileError);
+        console.error('[getExtendedUser] 获取 user_profiles 失败:', {
+          error: profileError,
+          code: profileError.code,
+          message: profileError.message,
+          details: profileError.details,
+          hint: profileError.hint,
+        });
+      } else {
+        console.log('[getExtendedUser] 成功获取 user_profiles:', profileData ? 'exists' : 'null');
       }
 
       // 如果是创作者，获取创作者资料（支持多角色）
@@ -212,13 +225,27 @@ export class AuthService {
   static async updateProfile(userId: string, data: Partial<UserProfile>): Promise<{ error: Error | null }> {
     try {
       const supabaseAdmin = createSupabaseAdmin();
-      const { error } = await supabaseAdmin
+      
+      // 添加 updated_at 字段
+      const updateData = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+      
+      console.log('[AuthService.updateProfile] 更新数据:', { userId, updateData });
+      
+      const { data: result, error } = await supabaseAdmin
         .from('user_profiles')
-        .update(data)
-        .eq('user_id', userId);
+        .update(updateData)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      console.log('[AuthService.updateProfile] 更新结果:', { result, error });
 
       return { error };
     } catch (error) {
+      console.error('[AuthService.updateProfile] 异常:', error);
       return { error: error as Error };
     }
   }

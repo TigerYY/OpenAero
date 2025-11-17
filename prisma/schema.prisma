@@ -110,16 +110,16 @@ model Solution {
   updated_at DateTime @updatedAt @map("updated_at")
 
   // 关联关系
-  creator        CreatorProfile    @relation(fields: [creator_id], references: [id], onDelete: Cascade)
-  versions       SolutionVersion[]
-  files          SolutionFile[]
+  creator         CreatorProfile    @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  versions        SolutionVersion[]
+  files           SolutionFile[]
   solutionReviews SolutionReview[]
-  orderSolutions OrderSolution[]
-  revenueShares  RevenueShare[]
-  reviews        Review[]
-  favorites      Favorite[]
-  sampleOrders   SampleOrder[]
-  products       Product[]
+  orderSolutions  OrderSolution[]
+  revenueShares   RevenueShare[]
+  reviews         Review[]
+  favorites       Favorite[]
+  sampleOrders    SampleOrder[]
+  products        Product[]
 
   @@map("solutions")
 }
@@ -148,23 +148,23 @@ model SolutionVersion {
 }
 
 model SolutionFile {
-  id             String           @id @default(cuid())
-  solution_id    String?          @map("solution_id")
-  filename       String
-  original_name  String           @map("original_name")
-  file_type      SolutionFileType @map("file_type")
-  mime_type      String           @map("mime_type")
-  size           Int
-  path           String
-  url            String
-  thumbnail_url  String?          @map("thumbnail_url")
-  checksum       String
-  metadata       Json?
-  description    String?
-  status         FileStatus       @default(ACTIVE)
-  uploaded_by    String           @map("uploaded_by")
-  created_at     DateTime         @default(now()) @map("created_at")
-  updated_at     DateTime         @updatedAt @map("updated_at")
+  id            String           @id @default(cuid())
+  solution_id   String?          @map("solution_id")
+  filename      String
+  original_name String           @map("original_name")
+  file_type     SolutionFileType @map("file_type")
+  mime_type     String           @map("mime_type")
+  size          Int
+  path          String
+  url           String
+  thumbnail_url String?          @map("thumbnail_url")
+  checksum      String
+  metadata      Json?
+  description   String?
+  status        FileStatus       @default(ACTIVE)
+  uploaded_by   String           @map("uploaded_by")
+  created_at    DateTime         @default(now()) @map("created_at")
+  updated_at    DateTime         @updatedAt @map("updated_at")
 
   solution Solution? @relation(fields: [solution_id], references: [id], onDelete: Cascade)
 
@@ -172,23 +172,23 @@ model SolutionFile {
 }
 
 model SolutionReview {
-  id                 String         @id @default(cuid())
-  solution_id        String         @map("solution_id")
-  reviewer_id        String         @map("reviewer_id")
-  status             ReviewStatus
-  score              Int?
-  comments           String?
-  quality_score      Int?           @map("quality_score")
-  completeness       Int?
-  innovation         Int?
-  market_potential   Int?           @map("market_potential")
-  decision           ReviewDecision
-  decision_notes     String?        @map("decision_notes")
-  suggestions        String[]
-  review_started_at  DateTime?      @map("review_started_at")
-  reviewed_at        DateTime?      @map("reviewed_at")
-  created_at         DateTime       @default(now()) @map("created_at")
-  updated_at         DateTime       @updatedAt @map("updated_at")
+  id                String         @id @default(cuid())
+  solution_id       String         @map("solution_id")
+  reviewer_id       String         @map("reviewer_id")
+  status            ReviewStatus
+  score             Int?
+  comments          String?
+  quality_score     Int?           @map("quality_score")
+  completeness      Int?
+  innovation        Int?
+  market_potential  Int?           @map("market_potential")
+  decision          ReviewDecision
+  decision_notes    String?        @map("decision_notes")
+  suggestions       String[]
+  review_started_at DateTime?      @map("review_started_at")
+  reviewed_at       DateTime?      @map("reviewed_at")
+  created_at        DateTime       @default(now()) @map("created_at")
+  updated_at        DateTime       @updatedAt @map("updated_at")
 
   solution Solution @relation(fields: [solution_id], references: [id], onDelete: Cascade)
 
@@ -211,12 +211,12 @@ model Order {
   created_at       DateTime    @default(now()) @map("created_at")
   updated_at       DateTime    @updatedAt @map("updated_at")
 
-  user               UserProfile          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  orderSolutions     OrderSolution[]
-  orderItems         OrderItem[]
+  user                UserProfile          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  orderSolutions      OrderSolution[]
+  orderItems          OrderItem[]
   paymentTransactions PaymentTransaction[]
-  revenueShares      RevenueShare[]
-  productReviews     ProductReview[]
+  revenueShares       RevenueShare[]
+  productReviews      ProductReview[]
 
   @@map("orders")
 }
@@ -237,24 +237,24 @@ model OrderSolution {
 }
 
 model PaymentTransaction {
-  id                String            @id @default(cuid())
-  order_id          String            @map("order_id")
-  payment_method    PaymentMethod     @map("payment_method")
-  payment_provider  String            @map("payment_provider")
-  amount            Decimal           @db.Decimal(10, 2)
-  currency          String            @default("CNY")
-  status            PaymentStatus     @default(PENDING)
-  external_id       String?           @map("external_id")
-  external_status   String?           @map("external_status")
-  paid_at           DateTime?         @map("paid_at")
-  failure_reason    String?           @map("failure_reason")
-  refund_amount     Decimal?          @db.Decimal(10, 2) @map("refund_amount")
-  refunded_at       DateTime?         @map("refunded_at")
-  metadata          Json?
-  created_at        DateTime          @default(now()) @map("created_at")
-  updated_at        DateTime          @updatedAt @map("updated_at")
+  id               String        @id @default(cuid())
+  order_id         String        @map("order_id")
+  payment_method   PaymentMethod @map("payment_method")
+  payment_provider String        @map("payment_provider")
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("CNY")
+  status           PaymentStatus @default(PENDING)
+  external_id      String?       @map("external_id")
+  external_status  String?       @map("external_status")
+  paid_at          DateTime?     @map("paid_at")
+  failure_reason   String?       @map("failure_reason")
+  refund_amount    Decimal?      @map("refund_amount") @db.Decimal(10, 2)
+  refunded_at      DateTime?     @map("refunded_at")
+  metadata         Json?
+  created_at       DateTime      @default(now()) @map("created_at")
+  updated_at       DateTime      @updatedAt @map("updated_at")
 
-  order         Order           @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  order         Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
   paymentEvents PaymentEvent[]
 
   @@map("payment_transactions")
@@ -276,20 +276,20 @@ model PaymentEvent {
 }
 
 model RevenueShare {
-  id              String        @id @default(cuid())
-  order_id        String        @map("order_id")
-  solution_id     String        @map("solution_id")
-  creator_id      String        @map("creator_id")
-  total_amount    Decimal       @db.Decimal(10, 2) @map("total_amount")
-  platform_fee    Decimal       @db.Decimal(10, 2) @map("platform_fee")
-  creator_revenue Decimal       @db.Decimal(10, 2) @map("creator_revenue")
-  status          RevenueStatus @default(PENDING)
-  settled_at      DateTime?     @map("settled_at")
-  withdrawn_at    DateTime?     @map("withdrawn_at")
-  withdraw_method String?       @map("withdraw_method")
-  withdraw_account String?      @map("withdraw_account")
-  created_at      DateTime      @default(now()) @map("created_at")
-  updated_at      DateTime      @updatedAt @map("updated_at")
+  id               String        @id @default(cuid())
+  order_id         String        @map("order_id")
+  solution_id      String        @map("solution_id")
+  creator_id       String        @map("creator_id")
+  total_amount     Decimal       @map("total_amount") @db.Decimal(10, 2)
+  platform_fee     Decimal       @map("platform_fee") @db.Decimal(10, 2)
+  creator_revenue  Decimal       @map("creator_revenue") @db.Decimal(10, 2)
+  status           RevenueStatus @default(PENDING)
+  settled_at       DateTime?     @map("settled_at")
+  withdrawn_at     DateTime?     @map("withdrawn_at")
+  withdraw_method  String?       @map("withdraw_method")
+  withdraw_account String?       @map("withdraw_account")
+  created_at       DateTime      @default(now()) @map("created_at")
+  updated_at       DateTime      @updatedAt @map("updated_at")
 
   order    Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
   solution Solution       @relation(fields: [solution_id], references: [id], onDelete: Cascade)
@@ -358,25 +358,25 @@ model Factory {
 }
 
 model SampleOrder {
-  id             String             @id @default(cuid())
-  factory_id     String             @map("factory_id")
-  solution_id    String             @map("solution_id")
-  order_number   String             @unique @map("order_number")
+  id             String            @id @default(cuid())
+  factory_id     String            @map("factory_id")
+  solution_id    String            @map("solution_id")
+  order_number   String            @unique @map("order_number")
   quantity       Int
   deadline       DateTime
-  status         SampleOrderStatus  @default(PENDING)
+  status         SampleOrderStatus @default(PENDING)
   notes          String?
   requirements   Json?
-  confirmed_at   DateTime?          @map("confirmed_at")
-  started_at     DateTime?          @map("started_at")
-  completed_at   DateTime?          @map("completed_at")
-  delivered_at   DateTime?          @map("delivered_at")
-  spec_files     String[]           @map("spec_files")
-  result_files   String[]           @map("result_files")
-  estimated_cost Decimal?           @db.Decimal(10, 2) @map("estimated_cost")
-  actual_cost    Decimal?           @db.Decimal(10, 2) @map("actual_cost")
-  created_at     DateTime           @default(now()) @map("created_at")
-  updated_at     DateTime           @updatedAt @map("updated_at")
+  confirmed_at   DateTime?         @map("confirmed_at")
+  started_at     DateTime?         @map("started_at")
+  completed_at   DateTime?         @map("completed_at")
+  delivered_at   DateTime?         @map("delivered_at")
+  spec_files     String[]          @map("spec_files")
+  result_files   String[]          @map("result_files")
+  estimated_cost Decimal?          @map("estimated_cost") @db.Decimal(10, 2)
+  actual_cost    Decimal?          @map("actual_cost") @db.Decimal(10, 2)
+  created_at     DateTime          @default(now()) @map("created_at")
+  updated_at     DateTime          @updatedAt @map("updated_at")
 
   factory  Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   solution Solution @relation(fields: [solution_id], references: [id], onDelete: Cascade)
@@ -389,21 +389,21 @@ model SampleOrder {
 // ============================================
 
 model ProductCategory {
-  id               String            @id @default(cuid())
+  id               String   @id @default(cuid())
   name             String
-  slug             String            @unique
+  slug             String   @unique
   description      String?
   image            String?
-  parent_id        String?           @map("parent_id")
-  level            Int               @default(0)
-  sort_order       Int               @default(0) @map("sort_order")
-  is_active        Boolean           @default(true) @map("is_active")
-  is_visible       Boolean           @default(true) @map("is_visible")
-  meta_title       String?           @map("meta_title")
-  meta_description String?           @map("meta_description")
-  meta_keywords    String?           @map("meta_keywords")
-  created_at       DateTime          @default(now()) @map("created_at")
-  updated_at       DateTime          @updatedAt @map("updated_at")
+  parent_id        String?  @map("parent_id")
+  level            Int      @default(0)
+  sort_order       Int      @default(0) @map("sort_order")
+  is_active        Boolean  @default(true) @map("is_active")
+  is_visible       Boolean  @default(true) @map("is_visible")
+  meta_title       String?  @map("meta_title")
+  meta_description String?  @map("meta_description")
+  meta_keywords    String?  @map("meta_keywords")
+  created_at       DateTime @default(now()) @map("created_at")
+  updated_at       DateTime @updatedAt @map("updated_at")
 
   parent   ProductCategory?  @relation("CategoryHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
   children ProductCategory[] @relation("CategoryHierarchy")
@@ -423,8 +423,8 @@ model Product {
   brand            String?
   model            String?
   price            Decimal       @db.Decimal(10, 2)
-  original_price   Decimal?      @db.Decimal(10, 2) @map("original_price")
-  cost_price       Decimal?      @db.Decimal(10, 2) @map("cost_price")
+  original_price   Decimal?      @map("original_price") @db.Decimal(10, 2)
+  cost_price       Decimal?      @map("cost_price") @db.Decimal(10, 2)
   category_id      String        @map("category_id")
   weight           Decimal?      @db.Decimal(8, 3)
   dimensions       Json?
@@ -447,8 +447,8 @@ model Product {
   created_at       DateTime      @default(now()) @map("created_at")
   updated_at       DateTime      @updatedAt @map("updated_at")
 
-  category       ProductCategory  @relation(fields: [category_id], references: [id], onDelete: Restrict)
-  solution       Solution?        @relation(fields: [solution_id], references: [id], onDelete: SetNull)
+  category       ProductCategory   @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  solution       Solution?         @relation(fields: [solution_id], references: [id], onDelete: SetNull)
   inventory      ProductInventory?
   cartItems      CartItem[]
   orderItems     OrderItem[]
@@ -468,8 +468,8 @@ model ProductInventory {
   reorder_point  Int?            @map("reorder_point")
   reorder_qty    Int?            @map("reorder_qty")
   status         InventoryStatus @default(IN_STOCK)
-  avg_cost       Decimal?        @db.Decimal(10, 2) @map("avg_cost")
-  last_cost      Decimal?        @db.Decimal(10, 2) @map("last_cost")
+  avg_cost       Decimal?        @map("avg_cost") @db.Decimal(10, 2)
+  last_cost      Decimal?        @map("last_cost") @db.Decimal(10, 2)
   last_stock_in  DateTime?       @map("last_stock_in")
   last_stock_out DateTime?       @map("last_stock_out")
   created_at     DateTime        @default(now()) @map("created_at")
@@ -504,7 +504,7 @@ model CartItem {
   cart_id    String   @map("cart_id")
   product_id String   @map("product_id")
   quantity   Int
-  unit_price Decimal  @db.Decimal(10, 2) @map("unit_price")
+  unit_price Decimal  @map("unit_price") @db.Decimal(10, 2)
   created_at DateTime @default(now()) @map("created_at")
   updated_at DateTime @updatedAt @map("updated_at")
 
@@ -520,8 +520,8 @@ model OrderItem {
   order_id    String   @map("order_id")
   product_id  String   @map("product_id")
   quantity    Int
-  unit_price  Decimal  @db.Decimal(10, 2) @map("unit_price")
-  total_price Decimal  @db.Decimal(10, 2) @map("total_price")
+  unit_price  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  total_price Decimal  @map("total_price") @db.Decimal(10, 2)
   created_at  DateTime @default(now()) @map("created_at")
   updated_at  DateTime @updatedAt @map("updated_at")
 
@@ -532,20 +532,20 @@ model OrderItem {
 }
 
 model ProductReview {
-  id             String       @id @default(cuid())
-  product_id     String       @map("product_id")
-  user_id        String       @map("user_id")
-  order_id       String?      @map("order_id")
-  rating         Int
-  title          String?
-  content        String?
-  images         String[]
-  videos         String[]
-  status         ReviewStatus @default(PENDING)
-  is_verified    Boolean      @default(false) @map("is_verified")
-  helpful_count  Int          @default(0) @map("helpful_count")
-  created_at     DateTime     @default(now()) @map("created_at")
-  updated_at     DateTime     @updatedAt @map("updated_at")
+  id            String       @id @default(cuid())
+  product_id    String       @map("product_id")
+  user_id       String       @map("user_id")
+  order_id      String?      @map("order_id")
+  rating        Int
+  title         String?
+  content       String?
+  images        String[]
+  videos        String[]
+  status        ReviewStatus @default(PENDING)
+  is_verified   Boolean      @default(false) @map("is_verified")
+  helpful_count Int          @default(0) @map("helpful_count")
+  created_at    DateTime     @default(now()) @map("created_at")
+  updated_at    DateTime     @updatedAt @map("updated_at")
 
   product Product     @relation(fields: [product_id], references: [id], onDelete: Cascade)
   user    UserProfile @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -560,23 +560,23 @@ model ProductReview {
 // ============================================
 
 model Notification {
-  id             String               @id @default(cuid())
-  type           NotificationType
-  title          String
-  message        String
-  user_id        String               @map("user_id")
-  action_url     String?              @map("action_url")
-  metadata       Json?                @default("{}")
-  priority       NotificationPriority @default(MEDIUM)
-  channels       String[]
-  scheduled_at   DateTime?            @map("scheduled_at")
-  expires_at     DateTime?            @map("expires_at")
-  read           Boolean              @default(false)
-  read_at        DateTime?            @map("read_at")
-  delivered      Boolean              @default(true)
-  delivery_status Json?               @default("{}") @map("delivery_status")
-  created_at     DateTime             @default(now()) @map("created_at")
-  updated_at     DateTime             @updatedAt @map("updated_at")
+  id              String               @id @default(cuid())
+  type            NotificationType
+  title           String
+  message         String
+  user_id         String               @map("user_id")
+  action_url      String?              @map("action_url")
+  metadata        Json?                @default("{}")
+  priority        NotificationPriority @default(MEDIUM)
+  channels        String[]
+  scheduled_at    DateTime?            @map("scheduled_at")
+  expires_at      DateTime?            @map("expires_at")
+  read            Boolean              @default(false)
+  read_at         DateTime?            @map("read_at")
+  delivered       Boolean              @default(true)
+  delivery_status Json?                @default("{}") @map("delivery_status")
+  created_at      DateTime             @default(now()) @map("created_at")
+  updated_at      DateTime             @updatedAt @map("updated_at")
 
   user UserProfile @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 

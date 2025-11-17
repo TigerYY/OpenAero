@@ -27,9 +27,9 @@ function ProfileContent() {
   const { route } = useRouting();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    display_name: '',
+    firstName: '',
+    lastName: '',
+    displayName: '',
     bio: '',
     phone: '',
   });
@@ -43,6 +43,17 @@ function ProfileContent() {
     reviewNotes: string | null;
   } | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
+
+  // 自动初始化 profile（如果不存在）
+  useEffect(() => {
+    if (!authLoading && user && !profile) {
+      console.log('[ProfilePage] 检测到 profile 不存在，自动尝试初始化...');
+      const initProfile = async () => {
+        await refreshProfile();
+      };
+      initProfile();
+    }
+  }, [authLoading, user, profile, refreshProfile]);
 
   // 调试日志
   useEffect(() => {
@@ -99,9 +110,9 @@ function ProfileContent() {
   useEffect(() => {
     if (profile && user) {
       setFormData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        display_name: profile.display_name || '',
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        displayName: profile.displayName || '',
         bio: profile.bio || '',
         phone: user.phone || '',
       });
@@ -112,6 +123,50 @@ function ProfileContent() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+    setFieldErrors({});
+
+    // 前端验证
+    const errors: Record<string, string> = {};
+    
+    // firstName 和 lastName 可以为空，只验证长度
+    if (formData.firstName && formData.firstName.length > 50) {
+      errors.firstName = '名字不能超过50个字符';
+    }
+    
+    if (formData.lastName && formData.lastName.length > 50) {
+      errors.lastName = '姓氏不能超过50个字符';
+    }
+    
+    // displayName 如果填写了，就不能为空
+    if (formData.displayName !== undefined && formData.displayName.trim().length === 0) {
+      errors.displayName = '显示名称不能为空';
+    }
+    
+    if (formData.displayName && formData.displayName.length > 100) {
+      errors.displayName = '显示名称不能超过100个字符';
+    }
+    
+    if (formData.bio && formData.bio.length > 500) {
+      errors.bio = '个人简介不能超过500个字符';
+    }
+    
+    if (formData.phone && formData.phone.trim() !== '') {
+      const cleaned = formData.phone.replace(/[\s\-().]/g, '');
+      const phoneRegex = /^(\+[1-9]\d{0,14}|\d{7,15})$/;
+      if (!phoneRegex.test(cleaned)) {
+        errors.phone = '手机号格式不正确（支持国际格式如 +86 13800138000 或纯数字如 13800138000）';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstError = Object.values(errors)[0];
+      setMessage({ type: 'error', text: firstError });
+      setLoading(false);
+      return;
+    }
+
+    console.log('[ProfilePage] 提交数据:', formData);
 
     try {
       const response = await fetch('/api/users/me', {
@@ -125,22 +180,45 @@ function ProfileContent() {
 
       const data = await response.json();
 
+      console.log('[ProfilePage] 更新响应:', data);
+
       if (data.success) {
+        console.log('[ProfilePage] 更新成功，开始刷新 profile');
         setMessage({ type: 'success', text: data.message || '资料更新成功!' });
         setFieldErrors({});
         setIsEditing(false);
+        
+        // 刷新 profile
         await refreshProfile();
+        
+        // 强制重新加载页面数据
+        window.location.reload();
       } else {
         // 处理验证错误
         if (data.details && typeof data.details === 'object') {
+          console.log('[ProfilePage] 验证错误详情:', data.details);
           const errors: Record<string, string> = {};
-          Object.entries(data.details).forEach(([key, value]) => {
-            if (Array.isArray(value) && value.length > 0) {
-              errors[key] = value[0];
-            }
-          });
+          
+          // 处理两种可能的格式
+          if (data.details.validationErrors && Array.isArray(data.details.validationErrors)) {
+            // 格式 1: { validationErrors: [{field: "name", message: "error"}] }
+            data.details.validationErrors.forEach((err: { field: string; message: string }) => {
+              errors[err.field] = err.message;
+            });
+          } else {
+            // 格式 2: { field_name: ["error1", "error2"] }
+            Object.entries(data.details).forEach(([key, value]) => {
+              if (Array.isArray(value) && value.length > 0) {
+                errors[key] = value[0];
+              }
+            });
+          }
+          
           setFieldErrors(errors);
-          setMessage({ type: 'error', text: '请检查表单错误' });
+          
+          // 显示第一个错误信息
+          const firstError = Object.values(errors)[0];
+          setMessage({ type: 'error', text: firstError || '请检查表单错误' });
         } else {
           setMessage({ type: 'error', text: data.error || '更新失败' });
           setFieldErrors({});
@@ -281,13 +359,13 @@ function ProfileContent() {
                   {profile.avatar ? (
                     <img
                       src={profile.avatar}
-                      alt={profile.display_name || '用户'}
+                      alt={profile.displayName || '用户'}
                       className="h-32 w-32 rounded-full border-4 border-white object-cover"
                     />
                   ) : (
                     <div className="h-32 w-32 rounded-full border-4 border-white bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
                       <span className="text-5xl font-bold text-white">
-                        {profile.display_name?.[0] || user?.email?.[0] || 'U'}
+                        {profile.displayName?.[0] || user?.email?.[0] || 'U'}
                       </span>
                     </div>
                   )}
@@ -308,8 +386,8 @@ function ProfileContent() {
 
             {/* 用户基本信息 */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">{profile.display_name || '未设置名称'}</h2>
-              <p className="text-gray-600">@{profile.display_name || user.email?.split('@')[0]}</p>
+              <h2 className="text-2xl font-bold text-gray-900">{profile.displayName || '未设置名称'}</h2>
+              <p className="text-gray-600">@{profile.displayName || user.email?.split('@')[0]}</p>
               <div className="mt-2 flex items-center space-x-4">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
                   {/* 显示所有角色 */}
@@ -428,6 +506,7 @@ function ProfileContent() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       手机号码
+                      <span className="text-xs text-gray-500 ml-2">（可选）</span>
                     </label>
                     {isEditing ? (
                       <>
@@ -435,6 +514,7 @@ function ProfileContent() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="例如：+86 13800138000 或 13800138000"
                           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                             fieldErrors.phone ? 'border-red-300' : 'border-gray-300'
                           }`}

@@ -126,6 +126,12 @@ export default function RegisterPage() {
     }
 
     try {
+      console.log('[注册] 开始注册:', {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+
       const { error: signUpError } = await signUp(
         formData.email,
         formData.password,
@@ -137,17 +143,42 @@ export default function RegisterPage() {
       );
 
       if (signUpError) {
+        console.error('[注册] Supabase 返回错误:', {
+          message: signUpError.message,
+          name: signUpError.name,
+          stack: signUpError.stack,
+          error: signUpError,
+        });
+        
         // 使用统一的错误消息处理
         const localizedError = getLocalizedErrorMessage(signUpError, 'zh-CN');
+        console.log('[注册] 本地化错误:', localizedError);
         setError(localizedError);
         setLoading(false);
         return;
       }
 
+      console.log('[注册] 注册成功！');
+      
+      // 立即尝试创建 profile（即使邮箱未验证）
+      try {
+        console.log('[注册] 尝试预创建 profile...');
+        await fetch('/api/users/me', { 
+          method: 'GET',
+          credentials: 'include',
+        });
+        console.log('[注册] Profile 预创建完成');
+      } catch (profileErr) {
+        console.log('[注册] Profile 预创建失败（正常，因为未登录）:', profileErr);
+      }
+      
       setSuccess(true);
     } catch (err: unknown) {
+      console.error('[注册] 捕获异常:', err);
+      
       // 使用统一的错误消息处理
       const localizedError = getLocalizedErrorMessage(err, 'zh-CN');
+      console.log('[注册] 本地化错误:', localizedError);
       setError(localizedError);
     } finally {
       setLoading(false);

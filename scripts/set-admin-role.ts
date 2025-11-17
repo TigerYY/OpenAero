@@ -66,33 +66,35 @@ async function setAdminRole(email: string, role: 'ADMIN' | 'SUPER_ADMIN' = 'ADMI
       const newProfile = await prisma.userProfile.create({
         data: {
           user_id: authUser.id,
-          role: role,
+          roles: [role],
           status: 'ACTIVE',
         },
       });
       
       console.log('✅ user_profiles 创建成功');
-      console.log(`   角色已设置为: ${newProfile.role}`);
+      console.log(`   角色已设置为: ${newProfile.roles}`);
       return;
     }
 
     // 3. 更新角色
-    console.log(`\n📝 当前角色: ${profile.role}`);
+    const currentRoles = Array.isArray(profile.roles) ? profile.roles : [];
+    console.log(`\n📝 当前角色: ${currentRoles.join(', ')}`);
     console.log(`📝 目标角色: ${role}`);
 
-    if (profile.role === role) {
+    if (currentRoles.includes(role)) {
       console.log(`\n✅ 用户已经是 ${role}，无需修改`);
       return;
     }
 
     const updatedProfile = await prisma.userProfile.update({
       where: { user_id: authUser.id },
-      data: { role: role },
+      data: { roles: [role] },
     });
 
+    const newRoles = Array.isArray(updatedProfile.roles) ? updatedProfile.roles : [];
     console.log('\n✅ 角色更新成功！');
-    console.log(`   旧角色: ${profile.role}`);
-    console.log(`   新角色: ${updatedProfile.role}`);
+    console.log(`   旧角色: ${currentRoles.join(', ')}`);
+    console.log(`   新角色: ${newRoles.join(', ')}`);
     console.log(`   状态: ${updatedProfile.status}`);
     
     console.log('\n' + '='.repeat(50));

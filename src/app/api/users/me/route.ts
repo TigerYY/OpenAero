@@ -16,11 +16,11 @@ import {
 
 // 更新用户信息验证 schema
 const updateProfileSchema = z.object({
-  first_name: z.string().min(1, '名字不能为空').max(50, '名字过长').optional(),
-  last_name: z.string().min(1, '姓氏不能为空').max(50, '姓氏过长').optional(),
-  display_name: z.string().min(1, '显示名称不能为空').max(100, '显示名称过长').optional(),
-  bio: z.string().max(500, '个人简介不能超过500字符').optional(),
-  avatar: z.string().url('无效的头像URL').optional(),
+  firstName: z.string().max(50, '名字过长').optional().nullable(),
+  lastName: z.string().max(50, '姓氏过长').optional().nullable(),
+  displayName: z.string().min(1, '显示名称不能为空').max(100, '显示名称过长').optional(),
+  bio: z.string().max(500, '个人简介不能超过500字符').optional().nullable(),
+  avatar: z.string().url('无效的头像URL').optional().nullable(),
   phone: z.string()
     .refine((val) => {
       if (!val || val.trim() === '') return true; // 允许空值
@@ -43,19 +43,30 @@ const updateProfileSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
+    console.log('[API /users/me] 开始处理请求');
+    
     // 获取当前用户
     const user = await getServerUserFromRequest(request);
 
     if (!user) {
+      console.log('[API /users/me] 未授权访问');
       return createErrorResponse('未授权访问', 401);
     }
 
+    console.log('[API /users/me] 用户已认证:', user.id);
+
     // 获取扩展用户信息
     let extendedUser = await getServerExtendedUserFromRequest(request);
+    
+    console.log('[API /users/me] extendedUser 结果:', {
+      exists: !!extendedUser,
+      hasProfile: !!extendedUser?.profile,
+      extendedUser: extendedUser ? JSON.stringify(extendedUser, null, 2) : 'null',
+    });
 
     // 如果 profile 不存在，尝试创建
     if (!extendedUser?.profile) {
-      console.log('Profile 不存在，尝试创建...');
+      console.log('[API /users/me] Profile 不存在，尝试创建...');
       try {
         const { error: createError } = await AuthService.createProfileIfNotExists(user.id, {
           roles: ['USER'],
@@ -63,8 +74,10 @@ export async function GET(request: NextRequest) {
         });
 
         if (!createError) {
+          console.log('[API /users/me] Profile 创建成功，重新获取...');
           // 重新获取用户信息
           extendedUser = await getServerExtendedUserFromRequest(request);
+          console.log('[API /users/me] 重新获取后 hasProfile:', !!extendedUser?.profile);
           
           // 记录审计日志
           if (extendedUser?.profile) {
@@ -76,20 +89,22 @@ export async function GET(request: NextRequest) {
             });
           }
         } else {
-          console.error('创建 profile 失败:', createError);
+          console.error('[API /users/me] 创建 profile 失败:', createError);
         }
       } catch (createErr) {
-        console.error('创建 profile 异常:', createErr);
+        console.error('[API /users/me] 创建 profile 异常:', createErr);
       }
     }
 
     if (!extendedUser) {
+      console.log('[API /users/me] extendedUser 为 null');
       return createErrorResponse('用户信息不存在', 404);
     }
 
+    console.log('[API /users/me] 返回用户信息');
     return createSuccessResponse(extendedUser, '获取用户信息成功');
   } catch (error: unknown) {
-    console.error('Get user error:', error);
+    console.error('[API /users/me] 异常:', error);
     return createErrorResponse(
       '获取用户信息失败',
       500,
@@ -112,45 +127,58 @@ export async function PATCH(request: NextRequest) {
 
     // 解析请求体
     const body = await request.json();
+    console.log('[API /users/me PATCH] 收到请求体:', body);
 
     // 验证输入
     const validationResult = updateProfileSchema.safeParse(body);
+    console.log('[API /users/me PATCH] 验证结果:', {
+      success: validationResult.success,
+      errors: validationResult.success ? null : validationResult.error.format(),
+    });
+    
     if (!validationResult.success) {
       return createValidationErrorResponse(validationResult.error);
     }
 
     const updates = validationResult.data;
 
+    // 转换 camelCase 到 snake_case（数据库字段）
+    const { phone, firstName, lastName, displayName, ...otherUpdates } = updates;
+    const profileUpdates = {
+      ...otherUpdates,
+      ...(firstName !== undefined && { first_name: firstName }),
+      ...(lastName !== undefined && { last_name: lastName }),
+      ...(displayName !== undefined && { display_name: displayName }),
+    };
+
     // 获取当前用户信息用于对比
     const extendedUser = await getServerExtendedUserFromRequest(request);
     const currentProfile = extendedUser?.profile;
     const currentPhone = user.phone;
 
-    // 更新用户资料（phone 字段需要单独处理，因为它存储在 auth.users 中）
-    const { phone, ...profileUpdates } = updates;
-    
     // 记录修改的字段和值变化
     const changedFields: Record<string, { old: unknown; new: unknown }> = {};
     
     // 检查 profile 字段的变化
-    if (profileUpdates.first_name !== undefined && profileUpdates.first_name !== currentProfile?.first_name) {
-      changedFields.first_name = {
-        old: currentProfile?.first_name || null,
+    if (profileUpdates.first_name !== undefined && profileUpdates.first_name !== currentProfile?.firstName) {
+      changedFields.firstName = {
+        old: currentProfile?.firstName || null,
         new: profileUpdates.first_name,
       };
     }
-    if (profileUpdates.last_name !== undefined && profileUpdates.last_name !== currentProfile?.last_name) {
-      changedFields.last_name = {
-        old: currentProfile?.last_name || null,
+    if (profileUpdates.last_name !== undefined && profileUpdates.last_name !== currentProfile?.lastName) {
+      changedFields.lastName = {
+        old: currentProfile?.lastName || null,
         new: profileUpdates.last_name,
       };
     }
-    if (profileUpdates.display_name !== undefined && profileUpdates.display_name !== currentProfile?.display_name) {
-      changedFields.display_name = {
-        old: currentProfile?.display_name || null,
+    if (profileUpdates.display_name !== undefined && profileUpdates.display_name !== currentProfile?.displayName) {
+      changedFields.displayName = {
+        old: currentProfile?.displayName || null,
         new: profileUpdates.display_name,
       };
     }
+    
     if (profileUpdates.bio !== undefined && profileUpdates.bio !== currentProfile?.bio) {
       changedFields.bio = {
         old: currentProfile?.bio || null,
@@ -166,7 +194,18 @@ export async function PATCH(request: NextRequest) {
     
     // 更新 user_profiles 表
     if (Object.keys(profileUpdates).length > 0) {
+      console.log('[API /users/me PATCH] 准备更新 profile:', {
+        userId: user.id,
+        updates: profileUpdates,
+      });
+      
       const { error } = await AuthService.updateProfile(user.id, profileUpdates);
+      
+      console.log('[API /users/me PATCH] 更新结果:', {
+        success: !error,
+        error: error?.message,
+      });
+      
       if (error) {
         await logAuditAction(request, {
           action: 'UPDATE_PROFILE_FAILED',
@@ -181,6 +220,10 @@ export async function PATCH(request: NextRequest) {
         });
         return createErrorResponse(error.message, 400);
       }
+      
+      console.log('[API /users/me PATCH] Profile 更新成功');
+    } else {
+      console.log('[API /users/me PATCH] 没有 profile 字段需要更新');
     }
 
     // 更新 auth.users 的 phone（如果提供）

@@ -131,12 +131,12 @@ export function UserMenu() {
                 <img
                   className="h-8 w-8 rounded-full object-cover ring-2 ring-white"
                   src={profile.avatar}
-                  alt={profile.display_name || user.email || ''}
+                  alt={profile.displayName || user.email || ''}
                 />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center ring-2 ring-white">
                   <span className="text-sm font-medium text-white">
-                    {profile?.display_name?.[0] || user.email?.[0] || 'U'}
+                    {profile?.displayName?.[0] || user.email?.[0] || 'U'}
                   </span>
                 </div>
               )}
@@ -147,7 +147,7 @@ export function UserMenu() {
             {/* 用户名 (桌面端显示) */}
             <div className="hidden md:block text-left">
               <p className="text-sm font-medium text-gray-700">
-                {profile?.display_name || user.email?.split('@')[0]}
+                {profile?.displayName || user.email?.split('@')[0]}
               </p>
               <p className="text-xs text-gray-500">
                 {profile?.role === 'ADMIN' && '管理员'}
@@ -188,7 +188,7 @@ export function UserMenu() {
             {/* 用户信息头部 */}
             <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {profile?.display_name || user.email?.split('@')[0]}
+                {profile?.displayName || user.email?.split('@')[0]}
               </p>
               <p className="text-sm text-gray-500 truncate">{user.email}</p>
             </div>

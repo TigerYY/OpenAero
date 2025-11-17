@@ -9,22 +9,22 @@ import { supabaseBrowser as supabase } from '@/lib/auth/supabase-client';
  */
 export interface UserProfile {
   id: string;
-  user_id: string;
-  first_name?: string;
-  last_name?: string;
-  display_name?: string;
+  userId: string;  // camelCase
+  firstName?: string;  // camelCase
+  lastName?: string;  // camelCase
+  displayName?: string;  // camelCase
   avatar?: string;
   bio?: string;
   roles: ('USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN')[]; // 多角色数组
   role?: 'USER' | 'CREATOR' | 'REVIEWER' | 'FACTORY_MANAGER' | 'ADMIN' | 'SUPER_ADMIN'; // 向后兼容：单一角色（已废弃）
   permissions: string[];
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'DELETED';
-  is_blocked: boolean;
-  blocked_reason?: string;
-  blocked_at?: string;
-  created_at: string;
-  updated_at: string;
-  last_login_at?: string;
+  isBlocked: boolean;  // camelCase
+  blockedReason?: string;  // camelCase
+  blockedAt?: string;  // camelCase
+  createdAt: string;  // camelCase
+  updatedAt: string;  // camelCase
+  lastLoginAt?: string;  // camelCase
 }
 
 /**
@@ -145,24 +145,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * 优先使用 API 端点获取完整用户信息
    */
   const refreshProfile = async () => {
-    if (!user) return;
+    console.log('[AuthContext.refreshProfile] 开始刷新 profile, user:', user?.id);
+    
+    if (!user) {
+      console.log('[AuthContext.refreshProfile] 无用户，跳过');
+      return;
+    }
     
     try {
+      console.log('[AuthContext.refreshProfile] 调用 /api/users/me...');
+      
       // 优先使用 API 端点获取完整用户信息（包含 phone 等字段）
       const response = await fetch('/api/users/me', {
         credentials: 'include', // 确保发送 cookies
       });
+      
+      console.log('[AuthContext.refreshProfile] 响应状态:', response.status, response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('[AuthContext.refreshProfile] 响应数据:', data);
+        
         if (data.success && data.data) {
           // 更新 user 和 profile
           if (data.data.profile) {
+            console.log('[AuthContext.refreshProfile] 更新 profile:', data.data.profile);
             setProfile(data.data.profile as UserProfile);
+          } else {
+            console.log('[AuthContext.refreshProfile] 响应中没有 profile');
           }
           // 注意: user 对象来自 Supabase Auth，不能直接更新
           // phone 等信息需要从 data.data.phone 获取，但这里我们主要更新 profile
         }
       } else {
+        console.log('[AuthContext.refreshProfile] API 失败，回退到直接查询');
         // API 失败，回退到直接查询
         await fetchUserProfile(user.id);
       }
@@ -232,6 +248,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   ) => {
     try {
+      console.log('[AuthContext.signUp] 开始调用 Supabase Auth:', {
+        email,
+        metadata,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/welcome`,
+      });
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -241,20 +263,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
+      console.log('[AuthContext.signUp] Supabase 响应:', {
+        hasData: !!data,
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        hasError: !!error,
+        error: error,
+      });
+
       if (error) {
-        console.error('注册错误:', error);
+        console.error('[AuthContext.signUp] 注册错误:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          error: error,
+        });
         return { error };
       }
 
       // 检查是否成功发送验证邮件
       if (data.user && !data.session) {
         // 用户已创建但未验证，说明验证邮件应该已发送
-        console.log('用户注册成功，验证邮件应已发送到:', email);
+        console.log('[AuthContext.signUp] 用户注册成功，验证邮件应已发送到:', email);
       }
 
       return { error: null };
     } catch (error) {
-      console.error('注册异常:', error);
+      console.error('[AuthContext.signUp] 注册异常:', error);
       return { error: error as Error };
     }
   };

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>清理认证 Cookies - OpenAero</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    .button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .button:hover {
+      background: #1d4ed8;
+    }
+    .button.danger {
+      background: #dc2626;
+    }
+    .button.danger:hover {
+      background: #b91c1c;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      display: block;
+    }
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      display: block;
+    }
+    .cookie-list {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 清理认证 Cookies</h1>
+    
+    <p>当前检测到的 cookies：</p>
+    <div class="cookie-list" id="cookieList">加载中...</div>
+    
+    <div>
+      <button class="button danger" onclick="clearAuthCookies()">
+        清除所有认证 Cookies
+      </button>
+      <button class="button" onclick="clearAllCookies()">
+        清除所有 Cookies
+      </button>
+      <button class="button" onclick="reloadPage()">
+        刷新页面
+      </button>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+      ⚠️ 注意：清理 cookies 后需要重新登录
+    </p>
+  </div>
+
+  <script>
+    // 显示当前 cookies
+    function displayCookies() {
+      const cookies = document.cookie.split(';').map(c => c.trim()).filter(c => c);
+      const cookieList = document.getElementById('cookieList');
+      
+      if (cookies.length === 0) {
+        cookieList.innerHTML = '<em style="color: #9ca3af;">无 cookies</em>';
+      } else {
+        cookieList.innerHTML = cookies.map(c => {
+          const [name] = c.split('=');
+          return `• ${name}`;
+        }).join('<br>');
+      }
+    }
+    
+    // 清除认证相关的 cookies
+    function clearAuthCookies() {
+      const authCookies = [
+        'sb-cardynuoazvaytvinxvm-auth-token',
+        'openaero-auth'
+      ];
+      
+      authCookies.forEach(name => {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      
+      showStatus('success', '✅ 认证 Cookies 已清除！请刷新页面。');
+      displayCookies();
+    }
+    
+    // 清除所有 cookies
+    function clearAllCookies() {
+      const cookies = document.cookie.split(';');
+      cookies.forEach(cookie => {
+        const name = cookie.split('=')[0].trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      
+      // 同时清除 localStorage 和 sessionStorage
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('清除 storage 失败:', e);
+      }
+      
+      showStatus('success', '✅ 所有 Cookies 和存储已清除！请刷新页面。');
+      displayCookies();
+    }
+    
+    // 刷新页面
+    function reloadPage() {
+      window.location.reload();
+    }
+    
+    // 显示状态消息
+    function showStatus(type, message) {
+      const status = document.getElementById('status');
+      status.className = `status ${type}`;
+      status.textContent = message;
+    }
+    
+    // 页面加载时显示 cookies
+    displayCookies();
+  </script>
+</body>
+</html>
