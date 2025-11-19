@@ -478,19 +478,19 @@ export async function getServerUserFromRequest(request: NextRequest): Promise<Us
     
     // 调试：检查 cookies
     const cookies = request.cookies.getAll();
-    const authCookies = cookies.filter(c => 
-      c.name.includes('auth') || 
-      c.name.includes('supabase') || 
-      c.name.includes('sb-')
-    );
+    console.log('[getServerUserFromRequest] 所有 cookies:', cookies.map(c => ({ name: c.name, hasValue: !!c.value })));
     
-    if (authCookies.length === 0) {
-      console.warn('[getServerUserFromRequest] 未找到认证相关的 cookies');
-      console.warn('[getServerUserFromRequest] 所有 cookies:', cookies.map(c => c.name));
-    } else {
-      console.log('[getServerUserFromRequest] 找到认证 cookies:', authCookies.map(c => c.name));
+    // 首先尝试获取 session（从 cookies 中读取）
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('[getServerUserFromRequest] 获取 session 失败:', sessionError.message);
+    } else if (sessionData?.session?.user) {
+      console.log('[getServerUserFromRequest] 通过 session 成功获取用户:', sessionData.session.user.id);
+      return sessionData.session.user;
     }
     
+    // 如果 session 不存在，尝试使用 getUser（需要 access token）
     const { data, error } = await supabase.auth.getUser();
     
     if (error) {

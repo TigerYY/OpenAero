@@ -1,17 +1,19 @@
 import { NextRequest } from 'next/server';
+import { RevenueStatus } from '@prisma/client';
 import { getServerUser } from '@/lib/auth/auth-service';
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/creators/dashboard/stats - 获取创作者仪表盘统计数据
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getServerUser();
     if (!user) {
@@ -21,13 +23,11 @@ export async function GET(request: NextRequest) {
     // 检查用户是否为创作者（使用 roles 数组）
     const userProfile = await prisma.userProfile.findUnique({
       where: { user_id: user.id },
-      select: { roles: true, role: true },
+      select: { roles: true },
     });
 
     // 统一使用 roles 数组进行权限检查
-    const userRoles = Array.isArray(userProfile?.roles) 
-      ? userProfile.roles 
-      : (userProfile?.role ? [userProfile.role] : []);
+    const userRoles = Array.isArray(userProfile?.roles) ? userProfile.roles : [];
 
     if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以访问此接口', 403);
@@ -35,23 +35,19 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { user_id: userId },
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(userId);
 
     if (!creatorProfile) {
       return createErrorResponse('创作者档案不存在', 404);
     }
 
     // 获取方案统计
-    // 注意：Solution 模型使用 creatorId，需要关联到 CreatorProfile
-    // 由于 schema 中 Solution 没有直接关联 CreatorProfile，我们需要通过其他方式查询
-    // 暂时使用 creatorId = creatorProfile.id 的假设
+    // Solution 模型使用 creator_id 字段（snake_case）
     const solutionStats = await prisma.solution.groupBy({
       by: ['status'],
       where: {
-        creatorId: creatorProfile.id,
+        creator_id: creatorProfile.id,
       },
       _count: {
         id: true,
@@ -65,15 +61,16 @@ export async function GET(request: NextRequest) {
     const pendingSolutions = solutionStats.find((s) => s.status === 'PENDING_REVIEW')?._count.id || 0;
 
     // 获取收益统计（通过收益分成表）
-    // 注意：RevenueShare 模型使用 creatorId，需要关联到 CreatorProfile
+    // RevenueShare 模型使用 creator_id 字段（snake_case）
+    // 使用 RevenueStatus.AVAILABLE 表示已结算可提现的收益
     const revenueShares = await prisma.revenueShare.findMany({
       where: {
-        creatorId: creatorProfile.id,
-        status: 'SETTLED',
+        creator_id: creatorProfile.id,
+        status: RevenueStatus.AVAILABLE,
       },
       select: {
-        creatorRevenue: true,
-        createdAt: true,
+        creator_revenue: true,
+        created_at: true,
       },
     });
 
@@ -83,12 +80,12 @@ export async function GET(request: NextRequest) {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const totalRevenue = revenueShares
-      .filter((r) => r.createdAt >= yearStart)
-      .reduce((sum, r) => sum + Number(r.creatorRevenue), 0);
+      .filter((r) => r.created_at >= yearStart)
+      .reduce((sum, r) => sum + Number(r.creator_revenue), 0);
 
     const monthlyRevenue = revenueShares
-      .filter((r) => r.createdAt >= monthStart)
-      .reduce((sum, r) => sum + Number(r.creatorRevenue), 0);
+      .filter((r) => r.created_at >= monthStart)
+      .reduce((sum, r) => sum + Number(r.creator_revenue), 0);
 
     // 获取订单统计
     const orderStats = await prisma.order.count({
@@ -96,7 +93,7 @@ export async function GET(request: NextRequest) {
         orderSolutions: {
           some: {
             solution: {
-              creatorId: creatorProfile.id,
+              creator_id: creatorProfile.id,
             },
           },
         },
@@ -108,7 +105,7 @@ export async function GET(request: NextRequest) {
         orderSolutions: {
           some: {
             solution: {
-              creatorId: creatorProfile.id,
+              creator_id: creatorProfile.id,
             },
           },
         },
@@ -121,7 +118,7 @@ export async function GET(request: NextRequest) {
     // 获取浏览量和下载量统计
     const solutionCount = await prisma.solution.count({
       where: {
-        creatorId: creatorProfile.id,
+        creator_id: creatorProfile.id,
       },
     });
 
@@ -129,7 +126,7 @@ export async function GET(request: NextRequest) {
     const solutionReviews = await prisma.review.findMany({
       where: {
         solution: {
-          creatorId: creatorProfile.id,
+          creator_id: creatorProfile.id,
         },
       },
       select: {

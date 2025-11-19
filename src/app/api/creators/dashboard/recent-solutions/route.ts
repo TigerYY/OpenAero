@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,10 +22,8 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId }
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(userId);
 
     if (!creatorProfile) {
       return NextResponse.json(
@@ -36,18 +35,18 @@ export async function GET(request: NextRequest) {
     // 获取最近的方案
     const recentSolutions = await prisma.solution.findMany({
       where: {
-        creatorId: creatorProfile.id
+        creator_id: creatorProfile.id
       },
       select: {
         id: true,
         title: true,
         status: true,
         price: true,
-        createdAt: true,
-        updatedAt: true
+        created_at: true,
+        updated_at: true
       },
       orderBy: {
-        updatedAt: 'desc'
+        updated_at: 'desc'
       },
       take: 10
     });
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
       title: solution.title,
       status: solution.status,
       price: Number(solution.price),
-      createdAt: solution.createdAt.toISOString(),
+      createdAt: solution.created_at.toISOString(),
       viewCount: Math.floor(Math.random() * 1000), // 模拟数据
       downloadCount: Math.floor(Math.random() * 100) // 模拟数据
     }));

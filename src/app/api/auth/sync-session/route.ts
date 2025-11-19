@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { access_token, refresh_token } = body;
 
+    console.log('[sync-session] 收到同步请求，access_token 长度:', access_token?.length || 0);
+
     if (!access_token) {
       return NextResponse.json(
         { error: '缺少 access_token' },
@@ -29,18 +31,22 @@ export async function POST(request: NextRequest) {
     const supabase = createSupabaseServerFromRequest(request, response);
 
     // 设置 session（这会自动设置 cookies 到 response）
-    const { data, error } = await supabase.auth.setSession({
+    const { error } = await supabase.auth.setSession({
       access_token,
       refresh_token: refresh_token || '',
     });
 
     if (error) {
-      console.error('设置 session 失败:', error);
+      console.error('[sync-session] 设置 session 失败:', error);
       return NextResponse.json(
         { error: '设置 session 失败' },
         { status: 500 }
       );
     }
+
+    // 检查 cookies 是否被设置
+    const setCookies = response.cookies.getAll();
+    console.log('[sync-session] 设置的 cookies:', setCookies.map(c => c.name));
 
     return response;
   } catch (error) {

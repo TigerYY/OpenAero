@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
-import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { CheckCircle, XCircle, Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/Textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouting } from '@/lib/routing';
+import { AlertCircle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Application {
@@ -22,6 +22,12 @@ interface Application {
   submittedAt: string;
   reviewedAt: string | null;
   reviewNotes: string | null;
+  bio?: string;
+  website?: string | null;
+  experience?: string;
+  specialties?: string[];
+  portfolio?: string[];
+  documents?: string[];
   user: {
     id: string;
     email: string;
@@ -41,6 +47,8 @@ export default function AdminApplicationsPage() {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [reviewNotes, setReviewNotes] = useState('');
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDetailApplication, setSelectedDetailApplication] = useState<Application | null>(null);
 
   // 检查管理员权限（使用 roles 数组）
   useEffect(() => {
@@ -220,26 +228,38 @@ export default function AdminApplicationsPage() {
                             )}
                           </div>
                         </div>
-                        {app.status === 'PENDING' && (
-                          <div className="flex gap-2">
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={() => openReviewDialog(app, 'approve')}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              批准
-                            </Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => openReviewDialog(app, 'reject')}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              拒绝
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedDetailApplication(app);
+                              setDetailDialogOpen(true);
+                            }}
+                          >
+                            详情
+                          </Button>
+                          {app.status === 'PENDING' && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => openReviewDialog(app, 'approve')}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                批准
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => openReviewDialog(app, 'reject')}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                拒绝
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -248,6 +268,233 @@ export default function AdminApplicationsPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* 详情对话框 */}
+        <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>申请详情</DialogTitle>
+              <DialogDescription>
+                查看创作者申请的详细信息
+              </DialogDescription>
+            </DialogHeader>
+            {selectedDetailApplication && (
+              <div className="space-y-6">
+                {/* 用户信息 */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">用户信息</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <p><span className="font-medium">姓名:</span> {
+                      selectedDetailApplication.user.firstName || selectedDetailApplication.user.lastName
+                        ? `${selectedDetailApplication.user.firstName || ''} ${selectedDetailApplication.user.lastName || ''}`.trim()
+                        : '未填写'
+                    }</p>
+                    <p><span className="font-medium">邮箱:</span> {selectedDetailApplication.user.email}</p>
+                    <p><span className="font-medium">用户ID:</span> {selectedDetailApplication.userId}</p>
+                    <p><span className="font-medium">提交时间:</span> {new Date(selectedDetailApplication.submittedAt).toLocaleString('zh-CN')}</p>
+                    {selectedDetailApplication.reviewedAt && (
+                      <p><span className="font-medium">审核时间:</span> {new Date(selectedDetailApplication.reviewedAt).toLocaleString('zh-CN')}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 个人简介 */}
+                {selectedDetailApplication.bio && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">个人简介</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="whitespace-pre-wrap">{selectedDetailApplication.bio}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 相关经验 */}
+                {selectedDetailApplication.experience && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">相关经验</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                      {(() => {
+                        // 解析经验文本，提取结构化信息
+                        const experienceText = selectedDetailApplication.experience;
+                        const lines = experienceText.split('\n\n').filter(line => line.trim());
+                        
+                        const experienceData: {
+                          yearsOfExperience?: string;
+                          education?: string;
+                          previousWork?: string;
+                          skills?: string[];
+                        } = {};
+                        
+                        lines.forEach(line => {
+                          if (line.startsWith('工作经验：')) {
+                            experienceData.yearsOfExperience = line.replace('工作经验：', '').trim();
+                          } else if (line.startsWith('教育背景：')) {
+                            experienceData.education = line.replace('教育背景：', '').trim();
+                          } else if (line.startsWith('项目经验：')) {
+                            experienceData.previousWork = line.replace('项目经验：', '').trim();
+                          } else if (line.startsWith('技能标签：')) {
+                            const skillsText = line.replace('技能标签：', '').trim();
+                            experienceData.skills = skillsText.split('、').filter(s => s.trim());
+                          }
+                        });
+                        
+                        return (
+                          <>
+                            {experienceData.yearsOfExperience && (
+                              <div>
+                                <p className="font-medium text-gray-700 mb-1">工作经验</p>
+                                <p className="text-gray-600">{experienceData.yearsOfExperience}</p>
+                              </div>
+                            )}
+                            {experienceData.education && (
+                              <div>
+                                <p className="font-medium text-gray-700 mb-1">教育背景</p>
+                                <p className="text-gray-600">{experienceData.education}</p>
+                              </div>
+                            )}
+                            {experienceData.previousWork && (
+                              <div>
+                                <p className="font-medium text-gray-700 mb-1">项目经验</p>
+                                <p className="text-gray-600 whitespace-pre-wrap">{experienceData.previousWork}</p>
+                              </div>
+                            )}
+                            {experienceData.skills && experienceData.skills.length > 0 && (
+                              <div>
+                                <p className="font-medium text-gray-700 mb-2">技能标签</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {experienceData.skills.map((skill, index) => (
+                                    <Badge key={index} variant="secondary">{skill}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {/* 如果没有解析到结构化信息，显示原始文本 */}
+                            {!experienceData.yearsOfExperience && 
+                             !experienceData.education && 
+                             !experienceData.previousWork && 
+                             (!experienceData.skills || experienceData.skills.length === 0) && (
+                              <p className="whitespace-pre-wrap">{experienceText}</p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* 专长领域 */}
+                {selectedDetailApplication.specialties && selectedDetailApplication.specialties.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">专长领域</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex flex-wrap gap-2">
+                        {selectedDetailApplication.specialties.map((specialty, index) => (
+                          <Badge key={index} variant="secondary">{specialty}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 网站 */}
+                {selectedDetailApplication.website && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">个人网站</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <a 
+                        href={selectedDetailApplication.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {selectedDetailApplication.website}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* 作品集 */}
+                {selectedDetailApplication.portfolio && selectedDetailApplication.portfolio.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">作品集链接</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                      {selectedDetailApplication.portfolio.map((url, index) => (
+                        <a 
+                          key={index}
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block text-blue-600 hover:underline break-all"
+                        >
+                          {url}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 文档 */}
+                {selectedDetailApplication.documents && selectedDetailApplication.documents.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">相关文档</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                      {selectedDetailApplication.documents.map((url, index) => (
+                        <a 
+                          key={index}
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block text-blue-600 hover:underline break-all"
+                        >
+                          {url}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 审核意见 */}
+                {selectedDetailApplication.reviewNotes && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">审核意见</h3>
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <p className="text-red-800">{selectedDetailApplication.reviewNotes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+                关闭
+              </Button>
+              {selectedDetailApplication?.status === 'PENDING' && (
+                <>
+                  <Button
+                    variant="success"
+                    onClick={() => {
+                      setDetailDialogOpen(false);
+                      openReviewDialog(selectedDetailApplication, 'approve');
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    批准
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setDetailDialogOpen(false);
+                      openReviewDialog(selectedDetailApplication, 'reject');
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    拒绝
+                  </Button>
+                </>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* 审核对话框 */}
         <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>

@@ -13,7 +13,9 @@ import {
   RefreshCw,
   Search,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Info,
+  ChevronUp
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -99,6 +101,9 @@ export default function AdminPermissionsPage() {
     resource: 'all',
     level: 'all'
   });
+  
+  // 说明文档展开/折叠状态
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -416,6 +421,19 @@ export default function AdminPermissionsPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button
+            onClick={() => setShowDocumentation(!showDocumentation)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Info className="w-4 h-4" />
+            角色与权限说明
+            {showDocumentation ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </Button>
+          <Button
             onClick={() => setShowFilters(!showFilters)}
             variant="outline"
             className="flex items-center gap-2"
@@ -434,6 +452,251 @@ export default function AdminPermissionsPage() {
           </Button>
         </div>
       </div>
+
+      {/* 角色与权限说明文档 */}
+      {showDocumentation && (
+        <Card className="mb-6 border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <Info className="w-5 h-5" />
+              角色与权限系统说明
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* 角色说明 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">系统角色定义</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300 bg-white rounded-lg">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">角色名称</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">代码</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">说明</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">主要权限</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">权限级别</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-gray-300 px-4 py-3 font-medium">普通用户</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">USER</code></td>
+                      <td className="border border-gray-300 px-4 py-3">基础用户，可浏览和购买方案</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">浏览方案</Badge>
+                          <Badge variant="outline" className="text-xs">创建订单</Badge>
+                          <Badge variant="outline" className="text-xs">查看订单</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-gray-100 text-gray-800">1-20</Badge>
+                      </td>
+                    </tr>
+                    <tr className="bg-green-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium">创作者</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">CREATOR</code></td>
+                      <td className="border border-gray-300 px-4 py-3">可创建和管理自己的方案，查看收益</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">创建方案</Badge>
+                          <Badge variant="outline" className="text-xs">编辑方案</Badge>
+                          <Badge variant="outline" className="text-xs">删除方案</Badge>
+                          <Badge variant="outline" className="text-xs">查看收益</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-blue-100 text-blue-800">30-50</Badge>
+                      </td>
+                    </tr>
+                    <tr className="bg-yellow-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium">审核员</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">REVIEWER</code></td>
+                      <td className="border border-gray-300 px-4 py-3">可审核方案和创作者申请，发布方案</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">审核方案</Badge>
+                          <Badge variant="outline" className="text-xs">发布方案</Badge>
+                          <Badge variant="outline" className="text-xs">审核申请</Badge>
+                          <Badge variant="outline" className="text-xs">查看用户</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-yellow-100 text-yellow-800">50-70</Badge>
+                      </td>
+                    </tr>
+                    <tr className="bg-purple-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium">工厂管理员</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">FACTORY_MANAGER</code></td>
+                      <td className="border border-gray-300 px-4 py-3">管理工厂和试产，更新订单状态</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">管理工厂</Badge>
+                          <Badge variant="outline" className="text-xs">创建工厂</Badge>
+                          <Badge variant="outline" className="text-xs">更新订单</Badge>
+                          <Badge variant="outline" className="text-xs">查看订单</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-purple-100 text-purple-800">50-70</Badge>
+                      </td>
+                    </tr>
+                    <tr className="bg-orange-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium">管理员</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">ADMIN</code></td>
+                      <td className="border border-gray-300 px-4 py-3">拥有系统所有功能权限（除系统设置和角色管理）</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">用户管理</Badge>
+                          <Badge variant="outline" className="text-xs">方案管理</Badge>
+                          <Badge variant="outline" className="text-xs">订单管理</Badge>
+                          <Badge variant="outline" className="text-xs">财务管理</Badge>
+                          <Badge variant="outline" className="text-xs">审核管理</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-orange-100 text-orange-800">70-90</Badge>
+                      </td>
+                    </tr>
+                    <tr className="bg-red-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium">超级管理员</td>
+                      <td className="border border-gray-300 px-4 py-3"><code className="bg-gray-100 px-2 py-1 rounded">SUPER_ADMIN</code></td>
+                      <td className="border border-gray-300 px-4 py-3">系统最高权限，包括系统设置和角色管理</td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className="text-xs">所有权限</Badge>
+                          <Badge variant="outline" className="text-xs">系统设置</Badge>
+                          <Badge variant="outline" className="text-xs">角色管理</Badge>
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
+                        <Badge className="bg-red-100 text-red-800">90-100</Badge>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 权限级别说明 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">权限级别说明</h3>
+              <div className="bg-white p-4 rounded-lg border border-gray-300">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-red-100 text-red-800">90-100</Badge>
+                    <span className="text-sm text-gray-700">最高权限级别，仅超级管理员使用</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-orange-100 text-orange-800">70-90</Badge>
+                    <span className="text-sm text-gray-700">高级管理权限，管理员使用</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-yellow-100 text-yellow-800">50-70</Badge>
+                    <span className="text-sm text-gray-700">专业角色权限，审核员和工厂管理员使用</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-blue-100 text-blue-800">30-50</Badge>
+                    <span className="text-sm text-gray-700">创作者权限，可创建和管理内容</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-gray-100 text-gray-800">1-20</Badge>
+                    <span className="text-sm text-gray-700">基础用户权限，仅浏览和购买</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 权限定义说明 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">权限定义说明</h3>
+              <div className="bg-white p-4 rounded-lg border border-gray-300">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2 text-gray-800">权限命名规范</h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      权限采用 <code className="bg-gray-100 px-2 py-1 rounded">资源:操作</code> 的格式，例如：
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
+                      <li><code className="bg-gray-100 px-2 py-1 rounded">users:read</code> - 读取用户信息</li>
+                      <li><code className="bg-gray-100 px-2 py-1 rounded">solutions:create</code> - 创建方案</li>
+                      <li><code className="bg-gray-100 px-2 py-1 rounded">orders:update</code> - 更新订单</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium mb-2 text-gray-800">资源类型</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-purple-100 text-purple-800">user</Badge>
+                      <Badge className="bg-green-100 text-green-800">solution</Badge>
+                      <Badge className="bg-blue-100 text-blue-800">order</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800">factory</Badge>
+                      <Badge className="bg-pink-100 text-pink-800">finance</Badge>
+                      <Badge className="bg-gray-100 text-gray-800">admin</Badge>
+                      <Badge className="bg-gray-100 text-gray-800">system</Badge>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-2 text-gray-800">操作类型</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">read</Badge>
+                      <Badge variant="outline">create</Badge>
+                      <Badge variant="outline">update</Badge>
+                      <Badge variant="outline">delete</Badge>
+                      <Badge variant="outline">review</Badge>
+                      <Badge variant="outline">publish</Badge>
+                      <Badge variant="outline">manage</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 使用指南 */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">使用指南</h3>
+              <div className="bg-white p-4 rounded-lg border border-gray-300">
+                <div className="space-y-3 text-sm text-gray-700">
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-800">1. 角色管理</h4>
+                    <p className="text-gray-600">
+                      系统角色（标记为"系统角色"）是预定义角色，不能删除。您可以创建自定义角色，但建议谨慎操作。
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-800">2. 权限分配</h4>
+                    <p className="text-gray-600">
+                      每个角色可以拥有多个权限。权限级别越高，表示该权限的重要性越大。建议根据实际业务需求设置权限级别。
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-800">3. 用户角色分配</h4>
+                    <p className="text-gray-600">
+                      用户可以被分配一个或多个角色。多个角色的权限会自动合并（取并集）。系统会检查用户是否拥有所需角色或权限。
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-800">4. 权限检查</h4>
+                    <p className="text-gray-600">
+                      在 API 和前端组件中，系统会自动检查用户是否拥有执行操作所需的角色或权限。如果权限不足，操作将被拒绝。
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-800">5. 安全建议</h4>
+                    <p className="text-gray-600">
+                      • 不要随意删除系统角色和权限<br/>
+                      • 创建新角色时，建议从低权限级别开始<br/>
+                      • 定期审查用户角色分配，确保权限最小化原则<br/>
+                      • 超级管理员权限应仅分配给可信用户
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 筛选器面板 */}
       {showFilters && activeTab === 'permissions' && (

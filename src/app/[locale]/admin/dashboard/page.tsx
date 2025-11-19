@@ -4,19 +4,13 @@ import {
   Users, 
   FileText, 
   CheckCircle, 
-  XCircle, 
   Clock, 
-  DollarSign,
   TrendingUp,
   TrendingDown,
   RefreshCw,
   Download,
-  AlertCircle,
   Calendar,
-  BarChart3,
-  Activity,
   Settings,
-  Mail,
   Trash2,
   UserCheck
 } from 'lucide-react';
@@ -89,7 +83,7 @@ interface QuickActionResult {
 export default function AdminDashboard() {
   const router = useRouter();
   const { route, routes } = useRouting();
-  const { signOut } = useAuth();
+  const { session, loading: authLoading, isAuthenticated } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30');
@@ -103,29 +97,62 @@ export default function AdminDashboard() {
   // 申请管理状态
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30); // 秒
+  const [refreshInterval] = useState(30); // 秒
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportType, setExportType] = useState<'solutions' | 'users'>('solutions');
 
+  // 在页面加载时同步 session 到 cookies
   useEffect(() => {
-    loadDashboardStats();
-    loadPendingApplicationsCount();
-    setLastRefreshTime(new Date());
-  }, [timeRange]);
+    if (!authLoading && session?.access_token) {
+      // 同步 session 到 cookies，以便服务器端 API 可以读取
+      fetch('/api/auth/sync-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || '',
+        }),
+      }).catch((error) => {
+        console.warn('同步 session 到 cookies 失败:', error);
+      });
+    }
+  }, [authLoading, session]);
 
-  // 自动刷新机制
+  // 检查认证状态
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!authLoading && !isAuthenticated) {
+      // 用户未登录，重定向到登录页面
+      router.push('/zh-CN/auth/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
 
-    const interval = setInterval(() => {
+  useEffect(() => {
+    // 只有在用户已认证时才加载数据
+    if (!authLoading && isAuthenticated) {
       loadDashboardStats();
       loadPendingApplicationsCount();
       setLastRefreshTime(new Date());
+    }
+  }, [timeRange, authLoading, isAuthenticated]);
+
+  // 自动刷新机制
+  useEffect(() => {
+    if (!autoRefresh || authLoading || !isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      if (isAuthenticated) {
+        loadDashboardStats();
+        loadPendingApplicationsCount();
+        setLastRefreshTime(new Date());
+      }
     }, refreshInterval * 1000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, authLoading, isAuthenticated]);
 
   // 获取待审核申请数量
   const loadPendingApplicationsCount = async () => {
@@ -267,16 +294,6 @@ export default function AdminDashboard() {
     setBatchNotes('');
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY'
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN');
-  };
 
   const getGrowthIcon = (growth: number) => {
     if (growth > 0) {
@@ -305,6 +322,33 @@ export default function AdminDashboard() {
       </CardContent>
     </Card>
   );
+
+  // 如果正在加载认证状态，显示加载中
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">正在验证身份...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // 如果用户未认证，显示重定向提示（useEffect 会处理重定向）
+  if (!isAuthenticated) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">正在重定向到登录页面...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

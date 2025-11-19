@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // 检查用户是否为创作者
     const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: user.userId },
+      where: { user_id: user.userId },
     });
 
     if (!creatorProfile) {
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
 
     // 检查用户是否为创作者
     const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: user.userId },
+      where: { user_id: user.userId },
     });
 
     if (!creatorProfile) {

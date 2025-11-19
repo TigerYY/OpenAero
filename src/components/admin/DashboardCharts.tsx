@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, Suspense, lazy } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Loader2 } from 'lucide-react';
 import {
   LineChart,
@@ -63,7 +62,9 @@ export function DashboardCharts({ timeRange = 30, className = '' }: DashboardCha
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/admin/dashboard/charts?days=${timeRange}`);
+      const response = await fetch(`/api/admin/dashboard/charts?days=${timeRange}`, {
+        credentials: 'include', // 确保发送 cookies
+      });
       const result = await response.json();
 
       if (result.success && result.data) {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,10 +22,8 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId }
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(userId);
 
     if (!creatorProfile) {
       return NextResponse.json(
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
         orderSolutions: {
           some: {
             solution: {
-              creatorId: creatorProfile.id
+              creator_id: creatorProfile.id
             }
           }
         }
@@ -57,13 +56,13 @@ export async function GET(request: NextRequest) {
           },
           where: {
             solution: {
-              creatorId: creatorProfile.id
+              creator_id: creatorProfile.id
             }
           }
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        created_at: 'desc'
       },
       take: 10
     });
@@ -77,7 +76,7 @@ export async function GET(request: NextRequest) {
         id: order.id,
         solutionTitle,
         amount,
-        createdAt: order.createdAt.toISOString(),
+        createdAt: order.created_at.toISOString(),
         status: order.status
       };
     });

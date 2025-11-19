@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
+import { createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
+import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 // GET /api/solutions/mine - 获取当前创作者的所有方案
 export async function GET(request: NextRequest) {
@@ -19,10 +19,8 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('只有创作者可以查看自己的方案', 403);
     }
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { user_id: authResult.user.id }
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(authResult.user.id);
 
     if (!creatorProfile) {
       return createErrorResponse('创作者档案不存在', 404);

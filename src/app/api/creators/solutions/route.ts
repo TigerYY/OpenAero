@@ -15,6 +15,7 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,20 +47,19 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('未授权访问', 401);
     }
 
-    // 检查用户是否为创作者
+    // 检查用户是否为创作者（使用 roles 数组）
     const userProfile = await prisma.userProfile.findUnique({
       where: { user_id: user.id },
-      select: { role: true },
+      select: { roles: true },
     });
 
-    if (userProfile?.role !== 'CREATOR') {
+    const userRoles = Array.isArray(userProfile?.roles) ? userProfile.roles : [];
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以访问此接口', 403);
     }
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { user_id: user.id },
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(user.id);
 
     if (!creatorProfile) {
       return createErrorResponse('创作者档案不存在', 404);
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     const where: any = {
-      creatorId: creatorProfile.id,
+      creator_id: creatorProfile.id,
     };
 
     if (status) {
@@ -166,20 +166,19 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('未授权访问', 401);
     }
 
-    // 检查用户是否为创作者
+    // 检查用户是否为创作者（使用 roles 数组）
     const userProfile = await prisma.userProfile.findUnique({
       where: { user_id: user.id },
-      select: { role: true },
+      select: { roles: true },
     });
 
-    if (userProfile?.role !== 'CREATOR') {
+    const userRoles = Array.isArray(userProfile?.roles) ? userProfile.roles : [];
+    if (!userRoles.includes('CREATOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       return createErrorResponse('只有创作者可以创建方案', 403);
     }
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { user_id: user.id },
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const creatorProfile = await ensureCreatorProfile(user.id);
 
     if (!creatorProfile) {
       return createErrorResponse('创作者档案不存在', 404);
@@ -205,7 +204,7 @@ export async function POST(request: NextRequest) {
         features: solutionData.features || [],
         specs: solutionData.specs ? JSON.stringify(solutionData.specs) : null,
         bom: solutionData.bom ? JSON.stringify(solutionData.bom) : null,
-        creatorId: creatorProfile.id,
+        creator_id: creatorProfile.id,
         status: 'DRAFT',
       },
     });

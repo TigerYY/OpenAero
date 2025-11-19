@@ -52,50 +52,111 @@ export async function createCreatorApplication(
   });
 
   if (existingCreator) {
-    // 如果已存在但状态不是 PENDING，说明已经处理过
-    if (existingCreator.verification_status !== VerificationStatus.PENDING) {
+    // 如果状态是 APPROVED，说明已经是创作者了
+    if (existingCreator.verification_status === VerificationStatus.APPROVED) {
       throw new Error('您已经是创作者了');
     }
-    // 如果状态是 PENDING，返回现有申请
-    const userProfile = await prisma.userProfile.findUnique({
-      where: { user_id: data.userId },
-      select: {
-        first_name: true,
-        last_name: true,
-      },
-    });
+    
+    // 如果状态是 PENDING，返回现有申请（不允许重复提交）
+    if (existingCreator.verification_status === VerificationStatus.PENDING) {
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { user_id: data.userId },
+        select: {
+          first_name: true,
+          last_name: true,
+        },
+      });
 
-    let userEmail = '';
-    try {
-      const { createSupabaseServerClient } = await import('./auth/supabase-client');
-      const supabase = createSupabaseServerClient();
-      const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
-      userEmail = authUser?.user?.email || '';
-    } catch (error) {
-      console.warn('获取用户邮箱失败:', error);
+      let userEmail = '';
+      try {
+        const { createSupabaseServerClient } = await import('./auth/supabase-client');
+        const supabase = createSupabaseServerClient();
+        const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
+        userEmail = authUser?.user?.email || '';
+      } catch (error) {
+        console.warn('获取用户邮箱失败:', error);
+      }
+
+      return {
+        id: existingCreator.id,
+        userId: data.userId,
+        bio: existingCreator.bio || data.bio,
+        website: existingCreator.website || data.website || null,
+        experience: existingCreator.experience || data.experience,
+        specialties: existingCreator.specialties.length > 0 ? existingCreator.specialties : data.specialties,
+        portfolio: data.portfolio || [],
+        documents: data.documents || [],
+        status: existingCreator.verification_status,
+        submittedAt: existingCreator.created_at,
+        reviewedAt: existingCreator.verified_at,
+        reviewedBy: null,
+        reviewNotes: existingCreator.rejection_reason,
+        user: {
+          id: data.userId,
+          email: userEmail,
+          firstName: userProfile?.first_name || null,
+          lastName: userProfile?.last_name || null,
+        },
+      };
     }
+    
+    // 如果状态是 REJECTED 或 EXPIRED，允许重新申请（更新现有记录）
+    if (existingCreator.verification_status === VerificationStatus.REJECTED || 
+        existingCreator.verification_status === VerificationStatus.EXPIRED) {
+      // 更新现有记录，重置为 PENDING 状态
+      const updatedCreator = await prisma.creatorProfile.update({
+        where: { user_id: data.userId },
+        data: {
+          verification_status: VerificationStatus.PENDING,
+          bio: data.bio,
+          website: data.website || null,
+          experience: data.experience,
+          specialties: data.specialties,
+          verified_at: null,
+          rejection_reason: null,
+        },
+      });
 
-    return {
-      id: existingCreator.id,
-      userId: data.userId,
-      bio: data.bio,
-      website: data.website || null,
-      experience: data.experience,
-      specialties: data.specialties,
-      portfolio: data.portfolio || [],
-      documents: data.documents || [],
-      status: existingCreator.verification_status,
-      submittedAt: existingCreator.created_at,
-      reviewedAt: existingCreator.verified_at,
-      reviewedBy: null,
-      reviewNotes: existingCreator.rejection_reason,
-      user: {
-        id: data.userId,
-        email: userEmail,
-        firstName: userProfile?.first_name || null,
-        lastName: userProfile?.last_name || null,
-      },
-    };
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { user_id: data.userId },
+        select: {
+          first_name: true,
+          last_name: true,
+        },
+      });
+
+      let userEmail = '';
+      try {
+        const { createSupabaseServerClient } = await import('./auth/supabase-client');
+        const supabase = createSupabaseServerClient();
+        const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
+        userEmail = authUser?.user?.email || '';
+      } catch (error) {
+        console.warn('获取用户邮箱失败:', error);
+      }
+
+      return {
+        id: updatedCreator.id,
+        userId: data.userId,
+        bio: updatedCreator.bio || '',
+        website: updatedCreator.website || null,
+        experience: updatedCreator.experience || '',
+        specialties: updatedCreator.specialties || [],
+        portfolio: data.portfolio || [],
+        documents: data.documents || [],
+        status: updatedCreator.verification_status,
+        submittedAt: updatedCreator.created_at,
+        reviewedAt: updatedCreator.verified_at,
+        reviewedBy: null,
+        reviewNotes: updatedCreator.rejection_reason,
+        user: {
+          id: data.userId,
+          email: userEmail,
+          firstName: userProfile?.first_name || null,
+          lastName: userProfile?.last_name || null,
+        },
+      };
+    }
   }
 
   // 检查用户资料是否存在
@@ -114,13 +175,15 @@ export async function createCreatorApplication(
   }
 
   // 创建 CreatorProfile 记录（使用 verification_status = PENDING 表示待审核）
+  // 保存申请详细信息到 CreatorProfile 表
   const creatorProfile = await prisma.creatorProfile.create({
     data: {
       user_id: data.userId,
       verification_status: VerificationStatus.PENDING,
-      // 注意：CreatorProfile 中没有存储 bio、experience 等字段
-      // 这些信息可能需要存储在单独的 CreatorApplication 表中
-      // 目前先创建 CreatorProfile，状态为 PENDING
+      bio: data.bio,
+      website: data.website || null,
+      experience: data.experience,
+      specialties: data.specialties,
     },
   });
 
@@ -241,7 +304,7 @@ export async function getApplications(
     prisma.creatorProfile.findMany({
       where,
       include: {
-        userProfile: {
+        user: {
           select: {
             user_id: true,
             first_name: true,
@@ -285,11 +348,11 @@ export async function getApplications(
   const applications: ApplicationWithDetails[] = profiles.map((profile) => ({
     id: profile.id,
     userId: profile.user_id,
-    bio: '', // CreatorProfile 中没有这些字段
-    website: null,
-    experience: '',
-    specialties: [],
-    portfolio: [],
+    bio: profile.bio || '',
+    website: profile.website || null,
+    experience: profile.experience || '',
+    specialties: profile.specialties || [],
+    portfolio: [], // portfolio 和 documents 字段在 CreatorProfile 中不存在，暂时返回空数组
     documents: [],
     status: profile.verification_status,
     submittedAt: profile.created_at,
@@ -299,8 +362,8 @@ export async function getApplications(
     user: {
       id: profile.user_id,
       email: emailMap.get(profile.user_id) || '',
-      firstName: profile.userProfile?.first_name || null,
-      lastName: profile.userProfile?.last_name || null,
+      firstName: profile.user?.first_name || null,
+      lastName: profile.user?.last_name || null,
     },
   }));
 
@@ -334,7 +397,7 @@ export async function reviewApplication(
   const creatorProfile = await prisma.creatorProfile.findUnique({
     where: { id: applicationId },
     include: {
-      userProfile: {
+      user: {
         select: {
           user_id: true,
           first_name: true,
@@ -361,7 +424,7 @@ export async function reviewApplication(
       rejection_reason: approved ? null : (notes || '申请未通过审核'),
     },
     include: {
-      userProfile: {
+      user: {
         select: {
           user_id: true,
           first_name: true,
@@ -373,10 +436,22 @@ export async function reviewApplication(
 
   // 如果批准，更新用户角色为 CREATOR
   if (approved) {
-    await prisma.userProfile.update({
+    // 获取当前用户角色
+    const currentUser = await prisma.userProfile.findUnique({
       where: { user_id: creatorProfile.user_id },
-      data: { role: 'CREATOR' },
+      select: { roles: true },
     });
+    
+    // 添加 CREATOR 角色（如果还没有）
+    const currentRoles = currentUser?.roles || [];
+    if (!currentRoles.includes('CREATOR')) {
+      await prisma.userProfile.update({
+        where: { user_id: creatorProfile.user_id },
+        data: { 
+          roles: [...currentRoles, 'CREATOR'],
+        },
+      });
+    }
   }
 
   // 获取用户邮箱（从 Supabase Auth）
@@ -407,8 +482,8 @@ export async function reviewApplication(
     user: {
       id: updatedProfile.user_id,
       email: userEmail,
-      firstName: updatedProfile.userProfile?.first_name || null,
-      lastName: updatedProfile.userProfile?.last_name || null,
+      firstName: updatedProfile.user?.first_name || null,
+      lastName: updatedProfile.user?.last_name || null,
     },
   };
 }

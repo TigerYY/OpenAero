@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useThrottle } from '@/lib/hooks/useThrottle';
 import { 
   UserPlus, 
   FileText, 
   CheckCircle, 
   ShoppingCart,
   Loader2,
-  RefreshCw,
-  Filter
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -82,7 +80,9 @@ export function ActivityFeed({
         params.append('type', filterType);
       }
 
-      const response = await fetch(`/api/admin/dashboard/activities?${params}`);
+      const response = await fetch(`/api/admin/dashboard/activities?${params}`, {
+        credentials: 'include', // 确保发送 cookies
+      });
       const result = await response.json();
 
       if (result.success && result.data) {

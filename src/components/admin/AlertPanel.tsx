@@ -73,7 +73,9 @@ export function AlertPanel({
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/admin/dashboard/alerts');
+      const response = await fetch('/api/admin/dashboard/alerts', {
+        credentials: 'include', // 确保发送 cookies
+      });
       const result = await response.json();
 
       if (result.success && result.data) {

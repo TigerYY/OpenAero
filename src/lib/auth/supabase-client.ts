@@ -70,10 +70,24 @@ export function createSupabaseServerFromRequest(
   request: NextRequest,
   response?: NextResponse
 ) {
+  // 调试：记录所有 cookies（仅在开发环境）
+  if (process.env.NODE_ENV === 'development') {
+    const allCookies = request.cookies.getAll();
+    console.log('[createSupabaseServerFromRequest] 请求中的所有 cookies:', 
+      allCookies.length > 0 
+        ? allCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length || 0 }))
+        : '无 cookies'
+    );
+  }
+  
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
-        const value = request.cookies.get(name)?.value;
+        const cookie = request.cookies.get(name);
+        const value = cookie?.value;
+        if (process.env.NODE_ENV === 'development' && value) {
+          console.log(`[createSupabaseServerFromRequest] 读取 cookie: ${name}, 长度: ${value.length}`);
+        }
         return value;
       },
       set(name: string, value: string, options: CookieOptions) {

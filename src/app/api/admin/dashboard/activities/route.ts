@@ -8,9 +8,19 @@ import { dashboardCache } from '@/lib/admin/dashboard-cache';
 // GET /api/admin/dashboard/activities - 获取实时活动流
 export async function GET(request: NextRequest) {
   try {
+    console.log('[API /admin/dashboard/activities] 开始处理请求');
+    
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
+    console.log('[API /admin/dashboard/activities] 认证结果:', {
+      success: authResult.success,
+      hasUser: !!authResult.user,
+      userId: authResult.user?.id,
+      userRoles: authResult.user?.roles,
+    });
+    
     if (!authResult.success || !authResult.user) {
+      console.error('[API /admin/dashboard/activities] 认证失败');
       return authResult.error || NextResponse.json(
         {
           success: false,
@@ -23,7 +33,10 @@ export async function GET(request: NextRequest) {
 
     // 检查管理员权限
     const userRoles = authResult.user.roles || [];
+    console.log('[API /admin/dashboard/activities] 用户角色:', userRoles);
+    
     if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
+      console.warn('[API /admin/dashboard/activities] 权限不足，当前角色:', userRoles);
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看活动流',

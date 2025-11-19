@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { authenticateRequest } from '@/lib/auth-helpers';
@@ -218,10 +218,9 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('只有创作者可以创建方案', 403);
     }
 
-    // 获取创作者档案
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { user_id: authResult.user.id }
-    });
+    // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
+    const { ensureCreatorProfile } = await import('@/lib/creator-profile-utils');
+    const creatorProfile = await ensureCreatorProfile(authResult.user.id);
 
     if (!creatorProfile) {
       return createErrorResponse('创作者档案不存在，请先申请成为创作者', 404);
