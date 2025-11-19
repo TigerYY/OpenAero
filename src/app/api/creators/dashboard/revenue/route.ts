@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
         order: {
           select: {
             id: true,
-            orderNumber: true,
-            createdAt: true,
+            order_number: true,
+            created_at: true,
           },
         },
         solution: {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
         })),
         recentTransactions: revenueShares.slice(0, 10).map((share) => ({
           id: share.id,
-          orderNumber: share.order.orderNumber,
+          orderNumber: share.order.order_number,
           solutionTitle: share.solution.title,
           revenue: Number(share.creator_revenue),
           platformFee: Number(share.platform_fee),

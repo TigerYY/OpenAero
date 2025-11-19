@@ -109,7 +109,7 @@ export async function GET(_request: NextRequest) {
             },
           },
         },
-        createdAt: {
+        created_at: {
           gte: monthStart,
         },
       },

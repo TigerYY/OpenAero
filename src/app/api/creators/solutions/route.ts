@@ -106,8 +106,8 @@ export async function GET(request: NextRequest) {
           price: true,
           status: true,
           images: true,
-          createdAt: true,
-          updatedAt: true,
+          created_at: true,
+          updated_at: true,
           _count: {
             select: {
               orders: true,
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip,
         take: limit,
       }),
@@ -132,8 +132,8 @@ export async function GET(request: NextRequest) {
       images: solution.images,
       orderCount: solution._count.orders,
       reviewCount: solution._count.reviews,
-      createdAt: solution.createdAt,
-      updatedAt: solution.updatedAt,
+      createdAt: solution.created_at,
+      updatedAt: solution.updated_at,
     }));
 
     return createPaginatedResponse(
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
         id: solution.id,
         title: solution.title,
         status: solution.status,
-        createdAt: solution.createdAt,
+        createdAt: solution.created_at,
       },
       '方案创建成功',
       201
