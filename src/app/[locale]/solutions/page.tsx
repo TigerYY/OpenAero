@@ -35,7 +35,7 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
       setLoading(true);
       const params = new URLSearchParams();
       
-      if (filters.search) params.append('q', filters.search);
+      if (filters.search) params.append('search', filters.search);
       if (filters.category) params.append('category', filters.category);
       if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());

@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 const querySchema = z.object({
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('10'),
-  status: z.enum(['DRAFT','PENDING_REVIEW','APPROVED','REJECTED','PUBLISHED','ARCHIVED','all']).optional().default('all'),
+  status: z.enum(['DRAFT','PENDING_REVIEW','APPROVED','READY_TO_PUBLISH','REJECTED','PUBLISHED','SUSPENDED','ARCHIVED','all']).optional().default('all'),
   category: z.string().optional(),
   search: z.string().optional(),
   sortBy: z.enum(['createdAt', 'title', 'price', 'status']).optional().default('createdAt'),
@@ -116,6 +116,21 @@ export async function GET(request: NextRequest) {
               file_type: true,
               url: true,
               created_at: true,
+            }
+          },
+          publishing: {
+            select: {
+              id: true,
+              publish_description: true,
+              media_links: true,
+              product_links: true,
+              meta_title: true,
+              meta_description: true,
+              meta_keywords: true,
+              featured_tags: true,
+              featured_order: true,
+              is_featured: true,
+              optimized_at: true,
             }
           },
           solutionReviews: {

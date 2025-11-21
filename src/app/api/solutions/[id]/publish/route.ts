@@ -12,8 +12,8 @@ interface RouteParams {
 }
 
 const publishSchema = z.object({
-  action: z.enum(['PUBLISH', 'ARCHIVE'], {
-    errorMap: () => ({ message: 'action 必须是 PUBLISH 或 ARCHIVE' })
+  action: z.enum(['PUBLISH', 'ARCHIVE', 'SUSPEND', 'RESTORE'], {
+    errorMap: () => ({ message: 'action 必须是 PUBLISH、ARCHIVE、SUSPEND 或 RESTORE' })
   }),
 });
 
@@ -45,49 +45,77 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     let newStatus: SolutionStatus;
-    let timestampField: 'publishedAt' | 'archivedAt';
+    let timestampField: 'published_at' | 'archived_at' | null = null;
     let actionMessage: string;
 
     if (validatedData.action === 'PUBLISH') {
-      // 发布：验证状态为 APPROVED
-      if (solution.status !== 'APPROVED') {
-        return createErrorResponse('只有已审核通过的方案可以发布', 400);
+      // 发布：验证状态为 READY_TO_PUBLISH
+      if (solution.status !== 'READY_TO_PUBLISH') {
+        return createErrorResponse('只有准备发布的方案可以发布，请先进行上架优化', 400);
       }
       newStatus = 'PUBLISHED';
-      timestampField = 'publishedAt';
+      timestampField = 'published_at';
       actionMessage = '发布';
-    } else {
-      // 下架：验证状态为 PUBLISHED
+    } else if (validatedData.action === 'SUSPEND') {
+      // 临时下架：验证状态为 PUBLISHED
       if (solution.status !== 'PUBLISHED') {
-        return createErrorResponse('只有已发布的方案可以下架', 400);
+        return createErrorResponse('只有已发布的方案可以临时下架', 400);
+      }
+      newStatus = 'SUSPENDED';
+      timestampField = null; // SUSPENDED 不改变 published_at
+      actionMessage = '临时下架';
+    } else if (validatedData.action === 'RESTORE') {
+      // 恢复：验证状态为 SUSPENDED
+      if (solution.status !== 'SUSPENDED') {
+        return createErrorResponse('只有临时下架的方案可以恢复', 400);
+      }
+      newStatus = 'PUBLISHED';
+      timestampField = null; // RESTORE 不改变 published_at
+      actionMessage = '恢复';
+    } else {
+      // 永久下架：验证状态为 PUBLISHED
+      if (solution.status !== 'PUBLISHED') {
+        return createErrorResponse('只有已发布的方案可以永久下架', 400);
       }
       newStatus = 'ARCHIVED';
-      timestampField = 'archivedAt';
-      actionMessage = '下架';
+      timestampField = 'archived_at';
+      actionMessage = '永久下架';
     }
 
     // 使用事务更新方案状态并创建审核记录
     const result = await prisma.$transaction(async (tx) => {
+      // 构建更新数据
+      const updateData: any = {
+        status: newStatus,
+      };
+      
+      // 只在需要时更新时间戳字段
+      if (timestampField) {
+        updateData[timestampField] = new Date();
+      }
+
       // 更新方案状态
       const updatedSolution = await tx.solution.update({
         where: { id },
-        data: {
-          status: newStatus,
-          [timestampField]: new Date(),
-        }
+        data: updateData
       });
 
       // 创建审核记录（记录状态转换）
+      let reviewDecision: 'APPROVED' | 'REJECTED' = 'APPROVED';
+      if (validatedData.action === 'ARCHIVE') {
+        reviewDecision = 'REJECTED';
+      }
+
       await tx.solutionReview.create({
         data: {
-          solutionId: id,
-          reviewerId: authResult.user.id,
-          fromStatus: solution.status,
-          toStatus: newStatus,
+          solution_id: id,
+          reviewer_id: authResult.user.id,
+          from_status: solution.status,
+          to_status: newStatus,
           status: 'COMPLETED',
-          decision: validatedData.action === 'PUBLISH' ? 'APPROVED' : 'REJECTED',
+          decision: reviewDecision,
           comments: `${actionMessage}方案`,
-          reviewedAt: new Date(),
+          reviewed_at: new Date(),
         }
       });
 
@@ -97,7 +125,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // 记录审计日志
     await logAuditAction(request, {
       userId: authResult.user.id,
-      action: validatedData.action === 'PUBLISH' ? 'SOLUTION_PUBLISHED' : 'SOLUTION_ARCHIVED',
+      action: validatedData.action === 'PUBLISH' ? 'SOLUTION_PUBLISHED' :
+              validatedData.action === 'SUSPEND' ? 'SOLUTION_SUSPENDED' :
+              validatedData.action === 'RESTORE' ? 'SOLUTION_RESTORED' :
+              'SOLUTION_ARCHIVED',
       resource: 'solution',
       resourceId: id,
       oldValue: {
@@ -113,8 +144,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       {
         id: result.id,
         status: result.status,
-        publishedAt: result.publishedAt?.toISOString() || null,
-        archivedAt: result.archivedAt?.toISOString() || null,
+        publishedAt: (result as any).published_at?.toISOString() || null,
+        archivedAt: (result as any).archived_at?.toISOString() || null,
       },
       `方案${actionMessage}成功`
     );

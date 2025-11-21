@@ -1,16 +1,17 @@
 'use client';
 
 import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Download,
-  Eye,
-  FileText,
-  Filter,
-  MessageSquare,
-  Search,
-  User
+    AlertCircle,
+    CheckCircle,
+    Clock,
+    Download,
+    Eye,
+    FileText,
+    Filter,
+    MessageSquare,
+    Search,
+    Send,
+    User
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -35,7 +36,7 @@ interface Solution {
     lastName: string;
     email: string;
   };
-  status: 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVISION';
+  status: 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'READY_TO_PUBLISH' | 'REJECTED' | 'NEEDS_REVISION' | 'PUBLISHED' | 'SUSPENDED' | 'ARCHIVED';
   priority: 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW';
   category: string;
   submittedAt: string;
@@ -80,6 +81,9 @@ interface ReviewStats {
   inReview: number;
   needsRevision: number;
   completed: number;
+  published: number;
+  readyToPublish?: number;
+  suspended?: number;
   averageTime: string;
   myTasks: number;
   overdue: number;
@@ -93,6 +97,7 @@ export default function ReviewWorkbenchPage() {
     inReview: 0,
     needsRevision: 0,
     completed: 0,
+    published: 0,
     averageTime: '0h',
     myTasks: 0,
     overdue: 0
@@ -186,14 +191,18 @@ export default function ReviewWorkbenchPage() {
           mappedStatus = 'NEEDS_REVISION';
         } else if (originalStatus === 'DRAFT') {
           mappedStatus = 'PENDING'; // 草稿状态也显示为待审核
+        } else if (originalStatus === 'PUBLISHED') {
+          mappedStatus = 'PUBLISHED';
+        } else if (originalStatus === 'ARCHIVED') {
+          mappedStatus = 'ARCHIVED';
         } else {
           // 对于未知状态，默认显示为待审核
           console.warn(`[ReviewWorkbench] 未知状态: ${sol.status} (原始值)，方案ID: ${sol.id}，标题: ${sol.title?.substring(0, 30)}`);
           mappedStatus = 'PENDING';
         }
         
-        // 调试：记录所有 PENDING_REVIEW 状态的状态映射
-        if (originalStatus === 'PENDING_REVIEW' || sol.status === 'PENDING_REVIEW') {
+        // 调试：记录状态映射（特别是审核后的状态）
+        if (originalStatus === 'APPROVED' || originalStatus === 'REJECTED' || originalStatus === 'NEEDS_REVISION' || originalStatus === 'PUBLISHED') {
           console.log(`[ReviewWorkbench] ✅ 状态映射: ${sol.status} (原始) -> ${mappedStatus}，方案: ${sol.title?.substring(0, 40)}`);
         }
         
@@ -263,12 +272,16 @@ export default function ReviewWorkbenchPage() {
       const inReviewCount = formattedSolutions.filter(s => s.status === 'IN_REVIEW').length;
       const needsRevisionCount = formattedSolutions.filter(s => s.status === 'NEEDS_REVISION').length;
       const completedCount = formattedSolutions.filter(s => ['APPROVED', 'REJECTED'].includes(s.status)).length;
+      const readyToPublishCount = formattedSolutions.filter(s => s.status === 'READY_TO_PUBLISH').length;
+      const publishedCount = formattedSolutions.filter(s => s.status === 'PUBLISHED').length;
+      const suspendedCount = formattedSolutions.filter(s => s.status === 'SUSPENDED').length;
       
       const stats: ReviewStats = {
         pending: pendingCount,
         inReview: inReviewCount,
         needsRevision: needsRevisionCount,
         completed: completedCount,
+        published: publishedCount,
         averageTime: '2.5h', // 可以从审核记录中计算
         myTasks: 0, // 需要根据当前用户ID筛选
         overdue: formattedSolutions.filter(s => {
@@ -278,6 +291,8 @@ export default function ReviewWorkbenchPage() {
           threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
           return submitted < threeDaysAgo;
         }).length,
+        readyToPublish: readyToPublishCount,
+        suspended: suspendedCount,
       };
       
       setSolutions(formattedSolutions);
@@ -297,6 +312,7 @@ export default function ReviewWorkbenchPage() {
         inReview: 0,
         needsRevision: 0,
         completed: 0,
+        published: 0,
         averageTime: '0h',
         myTasks: 0,
         overdue: 0
@@ -315,42 +331,88 @@ export default function ReviewWorkbenchPage() {
     }
 
     try {
-      // 这里应该调用API提交审核结果
-      console.log('Submitting review:', {
+      console.log('[ReviewWorkbench] 提交审核:', {
         solutionId: selectedSolution.id,
         decision: reviewDecision,
-        notes: reviewNotes
+        currentStatus: selectedSolution.status,
       });
 
-      // 更新本地状态
-      setSolutions(prev => prev.map(solution => 
-        solution.id === selectedSolution.id 
-          ? {
-              ...solution,
-              status: reviewDecision as any,
-              reviewHistory: [
-                ...solution.reviewHistory,
-                {
-                  id: Date.now().toString(),
-                  reviewer: { firstName: '当前', lastName: '用户' },
-                  decision: reviewDecision as any,
-                  notes: reviewNotes,
-                  createdAt: new Date().toISOString()
-                }
-              ]
-            }
-          : solution
-      ));
+      // 调用审核 API
+      const response = await fetch(`/api/admin/solutions/${selectedSolution.id}/review`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          decision: reviewDecision,
+          comments: reviewNotes,
+        }),
+      });
 
-      // 重置表单
-      setReviewNotes('');
-      setReviewDecision('');
-      setSelectedSolution(null);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[ReviewWorkbench] 审核 API 返回错误:', errorData);
+        throw new Error(errorData.error || '审核提交失败');
+      }
+
+      const result = await response.json();
+      console.log('[ReviewWorkbench] 审核 API 返回结果:', result);
       
-      alert('审核提交成功！');
+      if (result.success) {
+        // 重置表单
+        setReviewNotes('');
+        setReviewDecision('');
+        setSelectedSolution(null);
+        
+        // 重新加载数据
+        console.log('[ReviewWorkbench] 重新加载数据...');
+        await loadData();
+        
+        alert('审核提交成功！');
+      } else {
+        throw new Error(result.error || '审核提交失败');
+      }
     } catch (error) {
-      console.error('Failed to submit review:', error);
-      alert('审核提交失败，请重试');
+      console.error('[ReviewWorkbench] 审核提交失败:', error);
+      alert(`审核提交失败：${error instanceof Error ? error.message : '请重试'}`);
+    }
+  };
+
+  const handlePublish = async (solutionId: string) => {
+    if (!confirm('确定要发布这个方案吗？发布后方案将在公共页面显示。')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/solutions/${solutionId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'PUBLISH',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '发布失败');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        // 重新加载数据
+        await loadData();
+        
+        alert('方案发布成功！');
+      } else {
+        throw new Error(result.error || '发布失败');
+      }
+    } catch (error) {
+      console.error('Failed to publish solution:', error);
+      alert(`发布失败：${error instanceof Error ? error.message : '请重试'}`);
     }
   };
 
@@ -359,11 +421,18 @@ export default function ReviewWorkbenchPage() {
       PENDING: { label: '待审核', variant: 'secondary' as const },
       IN_REVIEW: { label: '审核中', variant: 'default' as const },
       APPROVED: { label: '已通过', variant: 'default' as const },
+      READY_TO_PUBLISH: { label: '准备发布', variant: 'default' as const, className: 'bg-purple-100 text-purple-800' },
       REJECTED: { label: '已拒绝', variant: 'destructive' as const },
-      NEEDS_REVISION: { label: '需修改', variant: 'secondary' as const }
+      NEEDS_REVISION: { label: '需修改', variant: 'secondary' as const },
+      PUBLISHED: { label: '已发布', variant: 'default' as const },
+      SUSPENDED: { label: '临时下架', variant: 'secondary' as const, className: 'bg-orange-100 text-orange-800' },
+      ARCHIVED: { label: '已归档', variant: 'secondary' as const }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
+    if (config.className) {
+      return <Badge className={config.className}>{config.label}</Badge>;
+    }
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -399,8 +468,14 @@ export default function ReviewWorkbenchPage() {
         return filteredSolutions.filter(s => s.status === 'NEEDS_REVISION');
       case 'my-tasks':
         return filteredSolutions.filter(s => s.assignedReviewer?.id === 'current-user-id');
+      case 'ready-to-publish':
+        return filteredSolutions.filter(s => s.status === 'READY_TO_PUBLISH');
       case 'completed':
         return filteredSolutions.filter(s => ['APPROVED', 'REJECTED'].includes(s.status));
+      case 'published':
+        return filteredSolutions.filter(s => s.status === 'PUBLISHED');
+      case 'suspended':
+        return filteredSolutions.filter(s => s.status === 'SUSPENDED');
       default:
         return filteredSolutions;
     }
@@ -426,7 +501,7 @@ export default function ReviewWorkbenchPage() {
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -470,6 +545,18 @@ export default function ReviewWorkbenchPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">已完成</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Send className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">已发布</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.published}</p>
               </div>
             </div>
           </CardContent>
@@ -540,8 +627,12 @@ export default function ReviewWorkbenchPage() {
               <option value="PENDING">待审核</option>
               <option value="IN_REVIEW">审核中</option>
               <option value="APPROVED">已通过</option>
+              <option value="READY_TO_PUBLISH">准备发布</option>
               <option value="REJECTED">已拒绝</option>
               <option value="NEEDS_REVISION">需修改</option>
+              <option value="PUBLISHED">已发布</option>
+              <option value="SUSPENDED">临时下架</option>
+              <option value="ARCHIVED">已归档</option>
             </select>
             <select 
               value={filterPriority} 
@@ -565,15 +656,17 @@ export default function ReviewWorkbenchPage() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="pending">待审核 ({getTabSolutions('pending').length})</TabsTrigger>
               <TabsTrigger value="reviewing">审核中 ({getTabSolutions('reviewing').length})</TabsTrigger>
               <TabsTrigger value="needs-revision">需修改 ({getTabSolutions('needs-revision').length})</TabsTrigger>
+              <TabsTrigger value="ready-to-publish">准备发布 ({getTabSolutions('ready-to-publish').length})</TabsTrigger>
               <TabsTrigger value="my-tasks">我的任务 ({getTabSolutions('my-tasks').length})</TabsTrigger>
               <TabsTrigger value="completed">已完成 ({getTabSolutions('completed').length})</TabsTrigger>
+              <TabsTrigger value="published">已发布 ({getTabSolutions('published').length})</TabsTrigger>
             </TabsList>
 
-            {['pending', 'reviewing', 'needs-revision', 'my-tasks', 'completed'].map(tab => (
+            {['pending', 'reviewing', 'needs-revision', 'ready-to-publish', 'my-tasks', 'completed', 'published', 'suspended'].map(tab => (
               <TabsContent key={tab} value={tab} className="mt-6">
                 {getTabSolutions(tab).length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
@@ -582,7 +675,10 @@ export default function ReviewWorkbenchPage() {
                       {tab === 'pending' ? '暂无待审核方案' :
                        tab === 'reviewing' ? '暂无审核中的方案' :
                        tab === 'needs-revision' ? '暂无需修改的方案' :
+                       tab === 'ready-to-publish' ? '暂无准备发布的方案' :
                        tab === 'my-tasks' ? '暂无分配给您的任务' :
+                       tab === 'published' ? '暂无已发布的方案' :
+                       tab === 'suspended' ? '暂无临时下架的方案' :
                        '暂无已完成的审核'}
                     </p>
                     <p className="text-sm">
@@ -623,6 +719,61 @@ export default function ReviewWorkbenchPage() {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
+                          {solution.status === 'APPROVED' && (
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => {
+                                // 跳转到上架优化页面
+                                window.location.href = `/zh-CN/admin/solutions/${solution.id}/optimize`;
+                              }}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              优化
+                            </Button>
+                          )}
+                          {solution.status === 'READY_TO_PUBLISH' && (
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={() => handlePublish(solution.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              发布
+                            </Button>
+                          )}
+                          {solution.status === 'SUSPENDED' && (
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/solutions/${solution.id}/publish`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ action: 'RESTORE' }),
+                                  });
+                                  const result = await response.json();
+                                  if (result.success) {
+                                    await loadData();
+                                    alert('方案已恢复发布');
+                                  } else {
+                                    throw new Error(result.error || '恢复失败');
+                                  }
+                                } catch (error) {
+                                  console.error('恢复方案失败:', error);
+                                  alert(`恢复失败：${error instanceof Error ? error.message : '请重试'}`);
+                                }
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              恢复
+                            </Button>
+                          )}
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button 
@@ -964,6 +1115,139 @@ export default function ReviewWorkbenchPage() {
                                         >
                                           重置
                                         </Button>
+                                      </div>
+                                    </div>
+                                  ) : selectedSolution.status === 'APPROVED' ? (
+                                    <div className="space-y-4">
+                                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                        <p className="text-sm text-purple-800 mb-3">
+                                          该方案已通过审核，请先进行上架优化后再发布。
+                                        </p>
+                                        <Button 
+                                          onClick={() => handleOptimize(selectedSolution.id)}
+                                          className="w-full bg-purple-600 hover:bg-purple-700"
+                                        >
+                                          上架优化
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : selectedSolution.status === 'READY_TO_PUBLISH' ? (
+                                    <div className="space-y-4">
+                                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <p className="text-sm text-green-800 mb-3">
+                                          该方案已完成上架优化，可以发布到公共页面。
+                                        </p>
+                                        <Button 
+                                          onClick={() => handlePublish(selectedSolution.id)}
+                                          className="w-full bg-green-600 hover:bg-green-700"
+                                        >
+                                          发布方案
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : selectedSolution.status === 'PUBLISHED' ? (
+                                    <div className="space-y-4">
+                                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <p className="text-sm text-blue-800 mb-3">
+                                          该方案已发布，正在公共页面显示。
+                                        </p>
+                                        <div className="flex gap-2">
+                                          <Button 
+                                            onClick={async () => {
+                                              if (!confirm('确定要临时下架这个方案吗？')) return;
+                                              try {
+                                                const response = await fetch(`/api/solutions/${selectedSolution.id}/publish`, {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  credentials: 'include',
+                                                  body: JSON.stringify({ action: 'SUSPEND' }),
+                                                });
+                                                const result = await response.json();
+                                                if (result.success) {
+                                                  await loadData();
+                                                  setSelectedSolution(null);
+                                                  alert('方案已临时下架');
+                                                } else {
+                                                  throw new Error(result.error || '操作失败');
+                                                }
+                                              } catch (error) {
+                                                alert(`操作失败：${error instanceof Error ? error.message : '请重试'}`);
+                                              }
+                                            }}
+                                            variant="outline"
+                                            className="flex-1"
+                                          >
+                                            临时下架
+                                          </Button>
+                                          <Button 
+                                            onClick={async () => {
+                                              if (!confirm('确定要永久下架这个方案吗？此操作不可恢复。')) return;
+                                              try {
+                                                const response = await fetch(`/api/solutions/${selectedSolution.id}/publish`, {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  credentials: 'include',
+                                                  body: JSON.stringify({ action: 'ARCHIVE' }),
+                                                });
+                                                const result = await response.json();
+                                                if (result.success) {
+                                                  await loadData();
+                                                  setSelectedSolution(null);
+                                                  alert('方案已永久下架');
+                                                } else {
+                                                  throw new Error(result.error || '操作失败');
+                                                }
+                                              } catch (error) {
+                                                alert(`操作失败：${error instanceof Error ? error.message : '请重试'}`);
+                                              }
+                                            }}
+                                            variant="outline"
+                                            className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                                          >
+                                            永久下架
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : selectedSolution.status === 'SUSPENDED' ? (
+                                    <div className="space-y-4">
+                                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                        <p className="text-sm text-orange-800 mb-3">
+                                          该方案已临时下架，可以快速恢复发布。
+                                        </p>
+                                        <Button 
+                                          onClick={async () => {
+                                            try {
+                                              const response = await fetch(`/api/solutions/${selectedSolution.id}/publish`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                credentials: 'include',
+                                                body: JSON.stringify({ action: 'RESTORE' }),
+                                              });
+                                              const result = await response.json();
+                                              if (result.success) {
+                                                await loadData();
+                                                setSelectedSolution(null);
+                                                alert('方案已恢复发布');
+                                              } else {
+                                                throw new Error(result.error || '恢复失败');
+                                              }
+                                            } catch (error) {
+                                              alert(`恢复失败：${error instanceof Error ? error.message : '请重试'}`);
+                                            }
+                                          }}
+                                          className="w-full bg-blue-600 hover:bg-blue-700"
+                                        >
+                                          恢复发布
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : selectedSolution.status === 'ARCHIVED' ? (
+                                    <div className="space-y-4">
+                                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                        <p className="text-sm text-gray-800">
+                                          该方案已归档，已从公共页面下架。
+                                        </p>
                                       </div>
                                     </div>
                                   ) : (

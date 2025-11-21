@@ -257,9 +257,28 @@ export async function completeReview(
     },
   });
 
+  // 获取审核员ID（可能在不同字段中）
+  // Prisma 会自动将 snake_case 字段名转换为 camelCase
+  const reviewerId = 
+    (review as any).reviewerId ||          // Prisma 转换后的字段名
+    (review as any).reviewer_id ||         // 原始数据库字段名（备用）
+    (updatedReviewRecord as any).reviewerId ||  // 更新后的记录
+    (updatedReviewRecord as any).reviewer_id || // 更新后的记录（备用）
+    data.reviewerId;                       // 从参数传入的（最可靠）
+  
+  if (!reviewerId) {
+    console.error('[completeReview] ❌ 无法获取审核员ID');
+    console.error('[completeReview] review对象:', JSON.stringify(review, null, 2));
+    console.error('[completeReview] updatedReviewRecord对象:', JSON.stringify(updatedReviewRecord, null, 2));
+    console.error('[completeReview] data.reviewerId:', data.reviewerId);
+    throw new Error('无法获取审核员ID，请确保提供了 reviewerId');
+  }
+  
+  console.log('[completeReview] ✅ 获取到审核员ID:', reviewerId);
+
   // 获取审核员信息
   const reviewer = await prisma.userProfile.findUnique({
-    where: { user_id: review.reviewerId },
+    where: { user_id: reviewerId },
     select: {
       id: true,
       first_name: true,
@@ -275,7 +294,7 @@ export async function completeReview(
       status: newStatus,
     },
     reviewer: {
-      id: review.reviewerId,
+      id: reviewerId,
       firstName: reviewer?.first_name || null,
       lastName: reviewer?.last_name || null,
     },

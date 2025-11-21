@@ -1,14 +1,15 @@
 'use client';
 
+import { ArrowUpRight, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { useRouting } from '@/lib/routing';
+import { getStatusColor, getStatusText } from '@/lib/solution-status-workflow';
 import { formatCurrency } from '@/lib/utils';
 import { SolutionStatus } from '@/shared/types/solutions';
 import { Solution } from '@/types';
-import { useRouting } from '@/lib/routing';
 
 interface SolutionCardProps {
   solution: Solution;
@@ -44,10 +45,22 @@ export function SolutionCard({ solution }: SolutionCardProps) {
                 )}
         
         {/* 状态标签 */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(solution.status as SolutionStatus)}`}>
-          {getStatusText(solution.status as SolutionStatus)}
+            {getStatusText(solution.status as SolutionStatus)}
           </span>
+          {solution.isFeatured && (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 flex items-center gap-1">
+              <Star className="w-3 h-3" />
+              推荐
+            </span>
+          )}
+          {solution.isUpgrade && (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3" />
+              升级版
+            </span>
+          )}
         </div>
 
         {/* 收藏按钮 */}

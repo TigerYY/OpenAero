@@ -54,18 +54,18 @@ model UserProfile {
 
 // 创作者档案
 model CreatorProfile {
-  id                 String             @id @default(cuid())
-  user_id            String             @unique @map("user_id")
-  bio                String?
-  website            String?
-  experience         String?
-  specialties        String[]
+  id                  String             @id @default(cuid())
+  user_id             String             @unique @map("user_id")
+  bio                 String?
+  website             String?
+  experience          String?
+  specialties         String[]
   verification_status VerificationStatus @default(PENDING) @map("verification_status")
-  verified_at        DateTime?          @map("verified_at")
-  rejection_reason   String?            @map("rejection_reason")
-  revenue            Decimal            @default(0) @db.Decimal(10, 2)
-  created_at         DateTime           @default(now()) @map("created_at")
-  updated_at         DateTime           @updatedAt @map("updated_at")
+  verified_at         DateTime?          @map("verified_at")
+  rejection_reason    String?            @map("rejection_reason")
+  revenue             Decimal            @default(0) @db.Decimal(10, 2)
+  created_at          DateTime           @default(now()) @map("created_at")
+  updated_at          DateTime           @updatedAt @map("updated_at")
 
   // 关联关系
   user          UserProfile    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
@@ -108,11 +108,17 @@ model Solution {
   published_at DateTime? @map("published_at")
   archived_at  DateTime? @map("archived_at")
 
+  // 升级相关
+  upgraded_from_id      String? @map("upgraded_from_id") // 源方案ID
+  upgraded_from_version Int?    @map("upgraded_from_version") // 源方案版本
+  upgrade_notes         String? @map("upgrade_notes") // 升级说明
+  is_upgrade            Boolean @default(false) @map("is_upgrade") // 是否为升级方案
+
   created_at DateTime @default(now()) @map("created_at")
   updated_at DateTime @updatedAt @map("updated_at")
 
   // 关联关系
-  creator         CreatorProfile    @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  creator         CreatorProfile      @relation(fields: [creator_id], references: [id], onDelete: Cascade)
   versions        SolutionVersion[]
   files           SolutionFile[]
   solutionReviews SolutionReview[]
@@ -122,6 +128,7 @@ model Solution {
   favorites       Favorite[]
   sampleOrders    SampleOrder[]
   products        Product[]
+  publishing      SolutionPublishing? // 上架优化数据（一对一关系）
 
   @@map("solutions")
 }
@@ -173,13 +180,51 @@ model SolutionFile {
   @@map("solution_files")
 }
 
+// 方案上架优化数据（管理员商品化）
+model SolutionPublishing {
+  id          String @id @default(cuid())
+  solution_id String @unique @map("solution_id")
+
+  // 商品化内容
+  publish_description String? @map("publish_description") // 上架说明
+  media_links         Json?   @map("media_links") // 媒体链接数组
+  product_links       Json?   @map("product_links") // 商品链接数组
+
+  // SEO 优化
+  meta_title       String?  @map("meta_title")
+  meta_description String?  @map("meta_description")
+  meta_keywords    String[] @map("meta_keywords")
+
+  // 推荐设置
+  featured_tags  String[] @map("featured_tags")
+  featured_order Int?     @map("featured_order")
+  is_featured    Boolean  @default(false) @map("is_featured")
+
+  // 统计信息（发布后更新）
+  view_count     Int @default(0) @map("view_count")
+  download_count Int @default(0) @map("download_count")
+  like_count     Int @default(0) @map("like_count")
+
+  // 优化记录
+  optimized_at       DateTime? @map("optimized_at")
+  optimized_by       String?   @map("optimized_by")
+  optimization_notes String?   @map("optimization_notes") // 优化说明
+
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+
+  solution Solution @relation(fields: [solution_id], references: [id], onDelete: Cascade)
+
+  @@map("solution_publishing")
+}
+
 model SolutionReview {
   id                String         @id @default(cuid())
   solution_id       String         @map("solution_id")
   reviewer_id       String         @map("reviewer_id")
   status            ReviewStatus
-  from_status       SolutionStatus @map("from_status")  // 审核前的方案状态
-  to_status         SolutionStatus @map("to_status")    // 审核后的方案状态
+  from_status       SolutionStatus @map("from_status") // 审核前的方案状态
+  to_status         SolutionStatus @map("to_status") // 审核后的方案状态
   score             Int?
   comments          String?
   quality_score     Int?           @map("quality_score")
@@ -625,8 +670,10 @@ enum SolutionStatus {
   DRAFT
   PENDING_REVIEW
   APPROVED
+  READY_TO_PUBLISH
   REJECTED
   PUBLISHED
+  SUSPENDED
   ARCHIVED
 }
 

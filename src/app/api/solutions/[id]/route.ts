@@ -48,6 +48,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         },
         files: true,
+        publishing: true, // 包含发布优化数据
         solutionReviews: {
           orderBy: { created_at: 'desc' },
           take: 10
@@ -102,6 +103,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // ADMIN/REVIEWER 可以访问所有方案（无需额外检查）
     }
 
+    // 合并 Solution 和 SolutionPublishing 数据
+    const publishing = (solution as any).publishing;
+    
     return createSuccessResponse({
       id: solution.id,
       title: solution.title,
@@ -120,9 +124,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
          `${(solution as any).creator.user.first_name ?? ''} ${(solution as any).creator.user.last_name ?? ''}`.trim() || 
          'Unknown') : 'Unknown',
       reviewCount: (solution as any)._count?.solutionReviews || 0,
-      downloadCount: (solution as any)._count?.orderSolutions || 0,
+      downloadCount: publishing?.download_count || (solution as any)._count?.orderSolutions || 0,
       assetCount: (solution as any)._count?.files || 0,
       specs: (solution as any).technicalSpecs || solution.specs || {},
+      // 发布优化数据（优先使用 SolutionPublishing，如果不存在则使用 Solution 默认值）
+      publishDescription: publishing?.publish_description || null,
+      mediaLinks: publishing?.media_links || [],
+      productLinks: publishing?.product_links || [],
+      metaTitle: publishing?.meta_title || solution.title,
+      metaDescription: publishing?.meta_description || solution.description.substring(0, 200),
+      metaKeywords: publishing?.meta_keywords || solution.features || [],
+      featuredTags: publishing?.featured_tags || [],
+      featuredOrder: publishing?.featured_order || null,
+      isFeatured: publishing?.is_featured || false,
+      viewCount: publishing?.view_count || 0,
+      likeCount: publishing?.like_count || 0,
       // 解析 BOM JSON 字段
       bom: (() => {
         try {
@@ -275,9 +291,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('无权修改此方案', 403);
     }
 
-    // 验证方案状态允许编辑（DRAFT 或 REJECTED）
-    if (oldSolution.status !== 'DRAFT' && oldSolution.status !== 'REJECTED') {
-      return createErrorResponse('只有草稿或已驳回的方案可以编辑', 400);
+    // 验证方案状态允许编辑（DRAFT、REJECTED 或 PENDING_REVIEW）
+    // 注意：PENDING_REVIEW 状态可能包含 NEEDS_REVISION 的方案，允许编辑
+    if (oldSolution.status !== 'DRAFT' && 
+        oldSolution.status !== 'REJECTED' && 
+        oldSolution.status !== 'PENDING_REVIEW') {
+      return createErrorResponse('只有草稿、已驳回或需修改状态的方案可以编辑', 400);
     }
     
     // 验证输入数据

@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
     // **新增**：公共访问时仅返回 PUBLISHED 状态的方案
     if (!isAuthenticated || (!isAdmin && !isCreator)) {
       where.status = 'PUBLISHED';
+      // 确保 published_at 不为 null（已发布的方案必须有发布时间）
+      where.published_at = { not: null } as any;
     } else {
       // **新增**：管理员/创作者可以筛选状态
       if (status && status !== 'all') {
@@ -49,10 +51,12 @@ export async function GET(request: NextRequest) {
 
     // 获取总数 - 使用正确的枚举值
     const total = await prisma.solution.count({ 
-      where: {
-        ...where
-      }
+      where
     });
+    
+    // 调试日志：记录查询条件
+    console.log('[API /solutions] 查询条件:', JSON.stringify(where, null, 2));
+    console.log('[API /solutions] 查询总数:', total);
 
     // 获取方案列表
     const solutions = await prisma.solution.findMany({
@@ -77,7 +81,10 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: { created_at: 'desc' },
+      orderBy: [
+        { published_at: 'desc' }, // 按发布时间降序排列
+        { created_at: 'desc' } // 如果 published_at 相同，按创建时间排序
+      ],
       skip: (page - 1) * limit,
       take: limit
     });

@@ -1,37 +1,55 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
 import {
   ArrowLeft,
+  ArrowUpRight,
+  Calendar,
   Download,
   ExternalLink,
-  Image as ImageIcon,
   FileText,
-  Video,
-  Calendar,
-  User,
-  Tag as TagIcon,
+  Image as ImageIcon,
+  Link as LinkIcon,
   Package,
+  Star,
+  Tag as TagIcon,
+  User,
+  Video,
 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
+import { UpgradeSolutionDialog } from '@/components/creators/UpgradeSolutionDialog';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { BomList, BomListItem } from '@/components/solutions';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
-import { BomList, BomListItem } from '@/components/solutions';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useRouting } from '@/lib/routing';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface SolutionAsset {
   id: string;
   type: 'IMAGE' | 'PDF' | 'CAD' | 'VIDEO' | 'OTHER';
   url: string;
   title?: string;
+  description?: string;
+}
+
+interface MediaLink {
+  type: 'VIDEO' | 'DEMO' | 'TUTORIAL' | 'DOCUMENTATION' | 'OTHER';
+  title: string;
+  url: string;
+  thumbnail?: string;
+}
+
+interface ProductLink {
+  productId: string;
+  productName: string;
+  productSku: string;
+  productUrl: string;
+  relationType: 'REQUIRED' | 'RECOMMENDED' | 'OPTIONAL';
   description?: string;
 }
 
@@ -54,6 +72,16 @@ interface Solution {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  // 优化数据
+  mediaLinks?: MediaLink[];
+  productLinks?: ProductLink[];
+  featuredTags?: string[];
+  isFeatured?: boolean;
+  // 升级关系
+  upgradedFromId?: string;
+  upgradedFromVersion?: number;
+  upgradeNotes?: string;
+  isUpgrade?: boolean;
 }
 
 export default function PublicSolutionDetailPage() {
@@ -67,6 +95,9 @@ export default function PublicSolutionDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImagePreview, setShowImagePreview] = useState(false);
+  const [upgradeHistory, setUpgradeHistory] = useState<Solution[]>([]);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     fetchSolution();
@@ -93,6 +124,13 @@ export default function PublicSolutionDetailPage() {
           return;
         }
         setSolution(result.data);
+        
+        // 如果有升级关系，获取升级历史
+        if (result.data.upgradedFromId) {
+          fetchUpgradeHistory(result.data.upgradedFromId);
+        }
+        // 如果这个方案被升级过，也获取升级历史
+        fetchUpgradeHistory(solutionId);
       } else {
         setError(result.error || '获取方案详情失败');
       }
@@ -101,6 +139,22 @@ export default function PublicSolutionDetailPage() {
       setError('获取方案详情失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUpgradeHistory = async (solutionId: string) => {
+    try {
+      const response = await fetch(`/api/solutions/${solutionId}/upgrade-history`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setUpgradeHistory(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('获取升级历史失败:', error);
     }
   };
 
@@ -186,13 +240,34 @@ export default function PublicSolutionDetailPage() {
 
         {/* 头部信息 */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
             <Badge variant="secondary">{getCategoryName(solution.category)}</Badge>
+            {solution.isFeatured && (
+              <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+                <Star className="w-3 h-3" />
+                推荐方案
+              </Badge>
+            )}
+            {solution.isUpgrade && solution.upgradedFromId && (
+              <Badge variant="outline" className="flex items-center gap-1 border-purple-300 text-purple-700">
+                <ArrowUpRight className="w-3 h-3" />
+                升级版本
+              </Badge>
+            )}
             {solution.tags && solution.tags.length > 0 && (
               <>
                 {solution.tags.slice(0, 3).map((tag, index) => (
                   <Badge key={index} variant="outline" className="flex items-center gap-1">
                     <TagIcon className="w-3 h-3" />
+                    {tag}
+                  </Badge>
+                ))}
+              </>
+            )}
+            {solution.featuredTags && solution.featuredTags.length > 0 && (
+              <>
+                {solution.featuredTags.map((tag, index) => (
+                  <Badge key={`featured-${index}`} className="bg-purple-100 text-purple-800">
                     {tag}
                   </Badge>
                 ))}
@@ -246,12 +321,152 @@ export default function PublicSolutionDetailPage() {
                       {formatCurrency(solution.price)}
                     </p>
                   </div>
-                  <Button size="lg" className="px-8">
-                    立即购买
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="lg" className="px-8">
+                      <Download className="w-5 h-5 mr-2" />
+                      立即购买
+                    </Button>
+                    {isCreator && (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={() => setShowUpgradeDialog(true)}
+                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                      >
+                        <ArrowUpRight className="w-5 h-5 mr-2" />
+                        升级方案
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* 升级关系信息 */}
+            {solution.upgradedFromId && solution.upgradeNotes && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ArrowUpRight className="w-5 h-5 text-purple-600" />
+                    升级说明
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-700 mb-2">{solution.upgradeNotes}</p>
+                  <p className="text-sm text-gray-500">
+                    基于版本 v{solution.upgradedFromVersion} 升级
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 升级历史 */}
+            {upgradeHistory.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>升级历史</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {upgradeHistory.map((upgraded) => (
+                      <div key={upgraded.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">{upgraded.title}</h4>
+                            {upgraded.upgradeNotes && (
+                              <p className="text-sm text-gray-600 mt-1">{upgraded.upgradeNotes}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                              版本 v{upgraded.version} · {formatDate(upgraded.createdAt)}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/zh-CN/solutions/${upgraded.id}`)}
+                          >
+                            查看
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 媒体链接 */}
+            {solution.mediaLinks && solution.mediaLinks.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>相关媒体</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {solution.mediaLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        {link.type === 'VIDEO' && <Video className="w-5 h-5 text-red-600" />}
+                        {link.type === 'DEMO' && <ImageIcon className="w-5 h-5 text-blue-600" />}
+                        {link.type === 'TUTORIAL' && <FileText className="w-5 h-5 text-green-600" />}
+                        <div className="flex-1">
+                          <p className="font-medium">{link.title}</p>
+                          <p className="text-sm text-gray-500 truncate">{link.url}</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400" />
+                      </a>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 商品链接 */}
+            {solution.productLinks && solution.productLinks.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>相关商品</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {solution.productLinks.map((link, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium">{link.productName}</p>
+                          <p className="text-sm text-gray-500">SKU: {link.productSku}</p>
+                          {link.description && (
+                            <p className="text-sm text-gray-600 mt-1">{link.description}</p>
+                          )}
+                          <Badge
+                            variant="outline"
+                            className="mt-2"
+                          >
+                            {link.relationType === 'REQUIRED' ? '必需' :
+                             link.relationType === 'RECOMMENDED' ? '推荐' : '可选'}
+                          </Badge>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(link.productUrl, '_blank')}
+                        >
+                          <LinkIcon className="w-4 h-4 mr-1" />
+                          查看商品
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 方案结构图 */}
             {architectureAssets.length > 0 && (
@@ -497,6 +712,16 @@ export default function PublicSolutionDetailPage() {
               )}
             </DialogContent>
           </Dialog>
+        )}
+
+        {/* 升级方案对话框 */}
+        {solution && isCreator && (
+          <UpgradeSolutionDialog
+            open={showUpgradeDialog}
+            onOpenChange={setShowUpgradeDialog}
+            solutionId={solution.id}
+            solutionTitle={solution.title}
+          />
         )}
       </div>
     </DefaultLayout>

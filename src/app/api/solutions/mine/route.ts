@@ -38,19 +38,36 @@ export async function GET(request: NextRequest) {
     };
 
     if (status && status !== 'all') {
+      const statusUpper = status.toUpperCase();
+      
+      // 处理新状态：READY_TO_PUBLISH, SUSPENDED
+      if (statusUpper === 'READY_TO_PUBLISH' || statusUpper === 'SUSPENDED') {
+        where.status = statusUpper as any;
+      }
       // 处理 NEEDS_REVISION 状态：需要通过审核记录来判断
-      if (status.toUpperCase() === 'NEEDS_REVISION') {
-        // 查询有 NEEDS_REVISION 审核决定的方案
+      else if (statusUpper === 'NEEDS_REVISION') {
+        // 查询有 NEEDS_REVISION 或 PENDING 审核决定的方案（已完成状态）
         // 不限制方案状态，因为"需修改"的方案可能处于不同状态
         where.solutionReviews = {
           some: {
-            decision: 'NEEDS_REVISION'
+            OR: [
+              { 
+                decision: 'NEEDS_REVISION',
+                status: 'COMPLETED'
+              },
+              { 
+                decision: 'PENDING',
+                status: 'COMPLETED'
+              }
+            ]
           }
         };
       } else {
         where.status = status.toUpperCase();
       }
     }
+    
+    // 注意：无论是否过滤 NEEDS_REVISION，我们都需要获取审核记录来判断状态
 
     // 获取总数
     const total = await prisma.solution.count({ where });
@@ -118,23 +135,27 @@ export async function GET(request: NextRequest) {
       const bom = solution.bom ? (typeof solution.bom === 'string' ? JSON.parse(solution.bom) : solution.bom) : [];
       const bomItemCount = Array.isArray(bom) ? bom.length : 0;
       
-      // 检查审核记录，找出 NEEDS_REVISION 决定
+      // 检查审核记录，找出 NEEDS_REVISION 或 PENDING 决定
       const reviews = (solution as any).solutionReviews || [];
-      // 找到最新的 NEEDS_REVISION 审核记录
-      const needsRevisionReview = reviews.find((r: any) => r.decision === 'NEEDS_REVISION');
+      // 找到最新的 NEEDS_REVISION 或 PENDING 审核记录（已完成状态）
+      const needsRevisionReview = reviews.find((r: any) => 
+        (r.decision === 'NEEDS_REVISION' || r.decision === 'PENDING') && 
+        r.status === 'COMPLETED'
+      );
       // 获取最新的审核记录（按时间排序的第一条）
       const latestReview = reviews.length > 0 ? reviews[0] : null;
       const isNeedsRevision = needsRevisionReview !== undefined;
       
-      // 如果存在 NEEDS_REVISION 审核决定，且没有后续的 APPROVED 审核，则显示为 NEEDS_REVISION 状态
+      // 如果存在 NEEDS_REVISION 或 PENDING 审核决定（已完成），且没有后续的 APPROVED 审核，则显示为 NEEDS_REVISION 状态
       let displayStatus = solution.status;
       if (isNeedsRevision) {
-        // 检查是否有比 NEEDS_REVISION 更新的审核记录（按时间排序）
+        // 检查是否有比 NEEDS_REVISION/PENDING 更新的审核记录（按时间排序）
         const needsRevisionIndex = reviews.findIndex((r: any) => r.id === needsRevisionReview.id);
         // 如果有更新的审核记录，检查是否已经通过审核
         const hasNewerApproved = needsRevisionIndex > 0 && 
           reviews.slice(0, needsRevisionIndex).some((r: any) => r.decision === 'APPROVED');
         // 如果没有更新的通过审核，则显示为 NEEDS_REVISION
+        // 注意：即使方案状态是 PENDING_REVIEW 或 DRAFT，只要有 NEEDS_REVISION/PENDING 审核决定，就应该显示为 NEEDS_REVISION
         if (!hasNewerApproved) {
           displayStatus = 'NEEDS_REVISION' as any;
         }

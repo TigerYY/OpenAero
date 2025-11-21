@@ -173,10 +173,17 @@ function CreatorSolutionEditContent() {
 
       const solutionData = result.data;
 
-      // 检查权限：仅允许编辑 DRAFT 或 REJECTED 状态的方案
-      if (solutionData.status !== SolutionStatus.DRAFT && 
-          solutionData.status !== SolutionStatus.REJECTED) {
-        toast.error('只能编辑草稿或已拒绝状态的方案');
+      // 检查权限：允许编辑 DRAFT、REJECTED 或 NEEDS_REVISION 状态的方案
+      // 注意：NEEDS_REVISION 在数据库中可能存储为 PENDING_REVIEW，但前端显示为 NEEDS_REVISION
+      const editableStatuses = [
+        SolutionStatus.DRAFT, 
+        SolutionStatus.REJECTED,
+        SolutionStatus.PENDING_REVIEW, // 可能包含 NEEDS_REVISION 的方案
+        'NEEDS_REVISION' as any // 前端显示状态
+      ];
+      
+      if (!editableStatuses.includes(solutionData.status as any)) {
+        toast.error('只能编辑草稿、已拒绝或需修改状态的方案');
         router.push(route(routes.CREATORS.SOLUTIONS));
         return;
       }
@@ -339,7 +346,8 @@ function CreatorSolutionEditContent() {
     if (!data.title.trim() || !solutionId) return;
 
     try {
-      // 更新方案
+      // 自动保存：保存所有步骤的数据（包括基本信息、技术规格、应用场景、架构、BOM）
+      // 注意：BOM 和资产通过单独的 API 保存，这里只保存基本信息
       const response = await fetch(`/api/solutions/${solutionId}`, {
         method: 'PUT',
         headers: {
@@ -356,14 +364,17 @@ function CreatorSolutionEditContent() {
           technicalSpecs: data.technicalSpecs,
           useCases: data.useCases,
           architecture: data.architecture,
+          bom: data.bom, // 包含 BOM 数据（作为 JSON 备份）
         }),
       });
 
       if (!response.ok) {
-        console.warn('自动保存失败');
+        console.warn('[EditSolution] 自动保存失败');
+      } else {
+        console.log('[EditSolution] 自动保存成功（基本信息、技术规格、应用场景、架构、BOM）');
       }
     } catch (error) {
-      console.error('保存草稿失败:', error);
+      console.error('[EditSolution] 自动保存失败:', error);
     }
   }, [solutionId]);
 
@@ -606,7 +617,21 @@ function CreatorSolutionEditContent() {
         return;
       }
 
-      // 更新方案基本信息
+      // 更新方案基本信息（包含所有步骤的数据）
+      console.log('[EditSolution] 开始保存方案，包含数据:', {
+        title: formData.title,
+        hasSummary: !!formData.summary,
+        hasDescription: !!formData.description,
+        category: formData.category,
+        price: formData.price,
+        tagsCount: formData.tags.length,
+        technicalSpecsKeys: Object.keys(formData.technicalSpecs || {}).length,
+        useCasesCount: Object.keys(formData.useCases || {}).length,
+        architectureSections: Object.keys(formData.architecture || {}).length,
+        bomCount: formData.bom.length,
+        assetsCount: formData.assets.length,
+      });
+
       const response = await fetch(`/api/solutions/${solutionId}`, {
         method: 'PUT',
         headers: {
@@ -623,7 +648,7 @@ function CreatorSolutionEditContent() {
           technicalSpecs: formData.technicalSpecs,
           useCases: formData.useCases,
           architecture: formData.architecture,
-          bom: formData.bom, // 包含 BOM 数据
+          bom: formData.bom, // 包含 BOM 数据（作为 JSON 备份）
         }),
       });
 
@@ -633,59 +658,100 @@ function CreatorSolutionEditContent() {
         throw new Error(result.error || result.message || '更新方案失败');
       }
 
+      console.log('[EditSolution] 方案基本信息已保存');
+
       // 更新 BOM（即使为空数组也发送，用于清空 BOM）
-      const bomResponse = await fetch(`/api/solutions/${solutionId}/bom`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          items: formData.bom.map(item => ({
-            name: item.name || '',
-            model: item.model || undefined,
-            quantity: item.quantity || 1, // 确保至少为 1
-            unit: item.unit || '个',
-            notes: item.notes || undefined,
-            unitPrice: item.unitPrice || undefined,
-            supplier: item.supplier || undefined,
-            partNumber: item.partNumber || undefined,
-            manufacturer: item.manufacturer || undefined,
-            category: item.category || undefined,
-            position: item.position || undefined,
-            weight: item.weight || undefined,
-            specifications: item.specifications || undefined,
-            productId: item.productId || undefined,
-          })),
-        }),
-      });
-
-      if (!bomResponse.ok) {
-        const errorData = await bomResponse.json();
-        console.warn('更新 BOM 失败:', errorData);
-        // 如果是验证错误，显示更详细的错误信息
-        if (errorData.details) {
-          toast.warning('BOM 更新失败：' + JSON.stringify(errorData.details));
-        }
-      }
-
-      // 添加新资产（已存在的资产不需要重新添加）
-      const newAssets = formData.assets.filter(a => !a.id);
-      if (newAssets.length > 0) {
-        const assetsResponse = await fetch(`/api/solutions/${solutionId}/assets`, {
-          method: 'POST',
+      // 保存草稿时也要保存 BOM，确保所有步骤的数据都被保存
+      console.log('[EditSolution] 开始保存 BOM，项目数量:', formData.bom.length);
+      try {
+        const bomResponse = await fetch(`/api/solutions/${solutionId}/bom`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
           body: JSON.stringify({
-            assets: newAssets,
+            items: formData.bom.map(item => ({
+              name: item.name || '',
+              model: item.model || undefined,
+              quantity: item.quantity || 1, // 确保至少为 1
+              unit: item.unit || '个',
+              notes: item.notes || undefined,
+              unitPrice: item.unitPrice || undefined,
+              supplier: item.supplier || undefined,
+              partNumber: item.partNumber || undefined,
+              manufacturer: item.manufacturer || undefined,
+              category: item.category || undefined,
+              position: item.position || undefined,
+              weight: item.weight || undefined,
+              specifications: item.specifications || undefined,
+              productId: item.productId || undefined,
+            })),
           }),
         });
 
-        if (!assetsResponse.ok) {
-          console.warn('添加资产失败:', await assetsResponse.json());
+        if (!bomResponse.ok) {
+          const errorData = await bomResponse.json();
+          console.warn('[EditSolution] 更新 BOM 失败:', errorData);
+          // 保存草稿时，BOM 更新失败不应该阻止保存，只显示警告
+          if (isDraft) {
+            toast.warning('BOM 清单保存失败，但其他内容已保存');
+          } else {
+            // 提交审核时，BOM 更新失败应该阻止提交
+            throw new Error(errorData.error || 'BOM 更新失败');
+          }
+        } else {
+          console.log('[EditSolution] BOM 已保存，项目数量:', formData.bom.length);
         }
+      } catch (error) {
+        if (!isDraft) {
+          throw error; // 提交审核时，BOM 更新失败应该阻止提交
+        }
+        console.warn('[EditSolution] 更新 BOM 时出错:', error);
+        toast.warning('BOM 清单保存失败，但其他内容已保存');
+      }
+
+      // 添加新资产（已存在的资产不需要重新添加）
+      // 保存草稿时也要保存资产，确保所有步骤的数据都被保存
+      const newAssets = formData.assets.filter(a => !a.id);
+      const existingAssets = formData.assets.filter(a => a.id);
+      console.log('[EditSolution] 开始保存资产，新资产数量:', newAssets.length, '已存在资产数量:', existingAssets.length);
+      
+      if (newAssets.length > 0) {
+        try {
+          const assetsResponse = await fetch(`/api/solutions/${solutionId}/assets`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              assets: newAssets,
+            }),
+          });
+
+          if (!assetsResponse.ok) {
+            const errorData = await assetsResponse.json();
+            console.warn('[EditSolution] 添加资产失败:', errorData);
+            // 保存草稿时，资产添加失败不应该阻止保存，只显示警告
+            if (isDraft) {
+              toast.warning('部分资产保存失败，但其他内容已保存');
+            } else {
+              // 提交审核时，资产添加失败应该阻止提交
+              throw new Error(errorData.error || '资产添加失败');
+            }
+          } else {
+            console.log('[EditSolution] 新资产已保存，数量:', newAssets.length);
+          }
+        } catch (error) {
+          if (!isDraft) {
+            throw error; // 提交审核时，资产添加失败应该阻止提交
+          }
+          console.warn('[EditSolution] 添加资产时出错:', error);
+          toast.warning('部分资产保存失败，但其他内容已保存');
+        }
+      } else {
+        console.log('[EditSolution] 没有新资产需要保存');
       }
 
       // 如果不是草稿，提交审核
@@ -707,7 +773,8 @@ function CreatorSolutionEditContent() {
           return;
         }
       } else {
-        toast.success('草稿已保存');
+        console.log('[EditSolution] 草稿保存完成，所有步骤的数据已保存');
+        toast.success('草稿已保存，所有内容已保存');
         // 保存草稿时不跳转，让用户继续编辑
       }
     } catch (error) {

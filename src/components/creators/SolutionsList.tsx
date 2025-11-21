@@ -22,6 +22,7 @@ import {
   FileText,
   Search,
   X,
+  ArrowUpRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
@@ -32,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
+import { UpgradeSolutionDialog } from './UpgradeSolutionDialog';
 
 interface Solution {
   id: string;
@@ -84,6 +86,9 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
   const [selectedSolutionId, setSelectedSolutionId] = useState<string | null>(null);
   const [reviewHistory, setReviewHistory] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeSolutionId, setUpgradeSolutionId] = useState<string | null>(null);
+  const [upgradeSolutionTitle, setUpgradeSolutionTitle] = useState<string>('');
 
   // 获取方案列表
   const fetchSolutions = async () => {
@@ -422,6 +427,23 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
                       </Button>
                     )}
 
+                    {/* 升级按钮：已发布或已通过的方案可以升级 */}
+                    {(solution.status === 'PUBLISHED' || solution.status === 'APPROVED') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setUpgradeSolutionId(solution.id);
+                          setUpgradeSolutionTitle(solution.title);
+                          setShowUpgradeDialog(true);
+                        }}
+                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                      >
+                        <ArrowUpRight className="w-4 h-4 mr-1" />
+                        升级
+                      </Button>
+                    )}
+
                     {solution.reviewCount > 0 && (
                       <Button
                         variant="outline"
@@ -588,6 +610,20 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
           )}
         </DialogContent>
       </Dialog>
+
+      {/* 升级方案对话框 */}
+      {upgradeSolutionId && (
+        <UpgradeSolutionDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          solutionId={upgradeSolutionId}
+          solutionTitle={upgradeSolutionTitle}
+          onSuccess={(upgradedSolutionId) => {
+            // 刷新列表
+            fetchSolutions();
+          }}
+        />
+      )}
     </div>
   );
 }

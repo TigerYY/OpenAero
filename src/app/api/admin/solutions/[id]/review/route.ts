@@ -106,7 +106,22 @@ export async function PUT(
       return createValidationErrorResponse(validationResult.error);
     }
 
-    const review = await completeReview(solutionId, validationResult.data);
+    // 从认证信息中获取 UserProfile.id 作为 reviewerId
+    // 如果没有提供 reviewerId 且没有找到审核记录，需要创建新的审核记录
+    let reviewerId = validationResult.data.reviewerId;
+    if (!reviewerId) {
+      // 获取当前用户的 UserProfile
+      const { getServerExtendedUserFromRequest } = await import('@/lib/auth/auth-service');
+      const extendedUser = await getServerExtendedUserFromRequest(request);
+      if (extendedUser?.profile?.id) {
+        reviewerId = extendedUser.profile.id;
+      }
+    }
+
+    const review = await completeReview(solutionId, {
+      ...validationResult.data,
+      reviewerId: reviewerId || validationResult.data.reviewerId,
+    });
 
     // 记录审计日志
     await logAuditAction(request, {

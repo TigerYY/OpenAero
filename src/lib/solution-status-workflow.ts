@@ -50,14 +50,29 @@ export const STATUS_TRANSITIONS: StatusTransition[] = [
   // 已通过状态可以转换的状态
   {
     from: SolutionStatus.APPROVED,
-    to: SolutionStatus.PUBLISHED,
-    description: '发布方案'
+    to: SolutionStatus.READY_TO_PUBLISH,
+    requiredRole: ['admin'],
+    description: '上架优化'
   },
   {
     from: SolutionStatus.APPROVED,
     to: SolutionStatus.REJECTED,
     requiredRole: ['admin'],
     description: '撤销通过'
+  },
+  
+  // 准备发布状态可以转换的状态
+  {
+    from: SolutionStatus.READY_TO_PUBLISH,
+    to: SolutionStatus.PUBLISHED,
+    requiredRole: ['admin'],
+    description: '发布方案'
+  },
+  {
+    from: SolutionStatus.READY_TO_PUBLISH,
+    to: SolutionStatus.APPROVED,
+    requiredRole: ['admin'],
+    description: '取消优化'
   },
 
   // 已拒绝状态可以转换的状态
@@ -75,9 +90,23 @@ export const STATUS_TRANSITIONS: StatusTransition[] = [
   // 已发布状态可以转换的状态
   {
     from: SolutionStatus.PUBLISHED,
+    to: SolutionStatus.SUSPENDED,
+    requiredRole: ['admin'],
+    description: '临时下架'
+  },
+  {
+    from: SolutionStatus.PUBLISHED,
     to: SolutionStatus.ARCHIVED,
-    requiredRole: ['admin', 'creator'],
-    description: '下架方案'
+    requiredRole: ['admin'],
+    description: '永久下架'
+  },
+  
+  // 临时下架状态可以转换的状态
+  {
+    from: SolutionStatus.SUSPENDED,
+    to: SolutionStatus.PUBLISHED,
+    requiredRole: ['admin'],
+    description: '恢复发布'
   },
 
   // 已归档状态可以转换的状态
@@ -165,8 +194,10 @@ export function getStatusText(status: SolutionStatus): string {
     [SolutionStatus.DRAFT]: '草稿',
     [SolutionStatus.PENDING_REVIEW]: '待审核',
     [SolutionStatus.APPROVED]: '已通过',
+    [SolutionStatus.READY_TO_PUBLISH]: '准备发布',
     [SolutionStatus.REJECTED]: '已拒绝',
     [SolutionStatus.PUBLISHED]: '已发布',
+    [SolutionStatus.SUSPENDED]: '临时下架',
     [SolutionStatus.ARCHIVED]: '已归档'
   };
   
@@ -181,8 +212,10 @@ export function getStatusColor(status: SolutionStatus): string {
     [SolutionStatus.DRAFT]: 'bg-gray-100 text-gray-800',
     [SolutionStatus.PENDING_REVIEW]: 'bg-yellow-100 text-yellow-800',
     [SolutionStatus.APPROVED]: 'bg-blue-100 text-blue-800',
+    [SolutionStatus.READY_TO_PUBLISH]: 'bg-purple-100 text-purple-800',
     [SolutionStatus.REJECTED]: 'bg-red-100 text-red-800',
     [SolutionStatus.PUBLISHED]: 'bg-green-100 text-green-800',
+    [SolutionStatus.SUSPENDED]: 'bg-orange-100 text-orange-800',
     [SolutionStatus.ARCHIVED]: 'bg-gray-100 text-gray-600'
   };
   
@@ -308,7 +341,8 @@ export function canEditSolution(solution: SolutionInfo, user: UserInfo | null): 
     // 注意：NEEDS_REVISION 在数据库中可能存储为 PENDING_REVIEW，需要通过审核记录判断
     const canEditStatus = solution.status === SolutionStatus.DRAFT || 
                           solution.status === SolutionStatus.REJECTED ||
-                          solution.status === SolutionStatus.PENDING_REVIEW; // PENDING_REVIEW 可能包含需修改的方案
+                          solution.status === SolutionStatus.PENDING_REVIEW || // PENDING_REVIEW 可能包含需修改的方案
+                          (solution.status as any) === 'NEEDS_REVISION'; // 支持 NEEDS_REVISION 状态（前端显示状态）
     
     return canEditStatus; // creatorId 比较需要在调用时进行
   }

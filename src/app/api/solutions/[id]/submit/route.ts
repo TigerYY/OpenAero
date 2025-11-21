@@ -52,9 +52,40 @@ export async function POST(
       return createErrorResponse('无权提交此方案', 403);
     }
 
-    // 验证方案状态为 DRAFT 或 REJECTED
-    if (solution.status !== 'DRAFT' && solution.status !== 'REJECTED') {
-      return createErrorResponse('只有草稿或已驳回的方案可以提交审核', 400);
+    // 验证方案状态为 DRAFT、REJECTED 或 PENDING_REVIEW（需修改的情况）
+    // 如果是 PENDING_REVIEW，需要检查是否有 NEEDS_REVISION 的审核记录
+    if (solution.status !== 'DRAFT' && solution.status !== 'REJECTED' && solution.status !== 'PENDING_REVIEW') {
+      return createErrorResponse('只有草稿、已驳回或需修改状态的方案可以提交审核', 400);
+    }
+    
+    // 如果是 PENDING_REVIEW 状态，检查是否有 NEEDS_REVISION 的审核记录
+    if (solution.status === 'PENDING_REVIEW') {
+      const needsRevisionReview = await prisma.solutionReview.findFirst({
+        where: {
+          solution_id: solutionId,
+          decision: { in: ['NEEDS_REVISION', 'PENDING'] },
+          status: 'COMPLETED',
+        },
+        orderBy: { created_at: 'desc' },
+      });
+      
+      if (!needsRevisionReview) {
+        return createErrorResponse('该方案正在审核中，无法重新提交', 400);
+      }
+      
+      // 检查是否有更新的 APPROVED 审核记录
+      const latestApprovedReview = await prisma.solutionReview.findFirst({
+        where: {
+          solution_id: solutionId,
+          decision: 'APPROVED',
+          status: 'COMPLETED',
+          created_at: { gt: needsRevisionReview.created_at },
+        },
+      });
+      
+      if (latestApprovedReview) {
+        return createErrorResponse('该方案已通过审核，无需重新提交', 400);
+      }
     }
 
     // 验证必填字段完整性
