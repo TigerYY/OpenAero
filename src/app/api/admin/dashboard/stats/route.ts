@@ -304,11 +304,29 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取仪表板统计失败:', error);
+    console.error('[Admin Dashboard Stats] 获取仪表板统计失败:', error);
+    
+    // 提供更详细的错误信息
+    let errorMessage = '获取统计数据失败';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // 如果是数据库连接错误，提供更详细的诊断信息
+      if (error.message.includes('Can\'t reach database server') || 
+          error.message.includes('Connection') ||
+          error.message.includes('timeout')) {
+        errorMessage = '数据库连接失败，请检查数据库服务器配置';
+        console.error('[Admin Dashboard Stats] 数据库连接诊断:');
+        console.error('1. 检查 DATABASE_URL 环境变量是否正确配置');
+        console.error('2. 确认数据库服务器是否运行');
+        console.error('3. 检查网络连接是否正常');
+        console.error('4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串');
+      }
+    }
 
     const response: ApiResponse<null> = {
       success: false,
-      error: error instanceof Error ? error.message : '获取统计数据失败',
+      error: errorMessage,
       data: null
     };
 

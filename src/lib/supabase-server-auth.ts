@@ -76,7 +76,20 @@ export async function requireCreator(request?: NextRequest) {
     return { error: '未认证', status: 401 };
   }
   
-  if (!['CREATOR', 'ADMIN'].includes(session.user.role)) {
+  // 支持多角色检查：从 userProfile 获取 roles 数组
+  let userRoles: string[] = [];
+  if ((session.user as any).roles && Array.isArray((session.user as any).roles)) {
+    userRoles = (session.user as any).roles;
+  } else if (session.user.role) {
+    userRoles = [session.user.role];
+  }
+  
+  // 检查是否包含 CREATOR、ADMIN 或 SUPER_ADMIN 角色
+  const hasCreatorRole = userRoles.includes('CREATOR') || 
+                        userRoles.includes('ADMIN') || 
+                        userRoles.includes('SUPER_ADMIN');
+  
+  if (!hasCreatorRole) {
     return { error: '权限不足', status: 403 };
   }
   

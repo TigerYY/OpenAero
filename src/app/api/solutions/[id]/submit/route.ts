@@ -23,10 +23,10 @@ export async function POST(
       where: { id: solutionId },
       include: {
         creator: true,
-        assets: true,
+        files: true,
         _count: {
           select: {
-            assets: true
+            files: true
           }
         }
       }
@@ -42,7 +42,13 @@ export async function POST(
       : (authResult.user?.role ? [authResult.user.role] : []);
     const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
     
-    if (!isAdmin && solution.creatorId !== solution.creator?.id) {
+    // 获取当前用户的 CreatorProfile ID
+    const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+      where: { user_id: authResult.user.id },
+      select: { id: true },
+    });
+    
+    if (!isAdmin && (!currentUserCreatorProfile || solution.creator_id !== currentUserCreatorProfile.id)) {
       return createErrorResponse('无权提交此方案', 403);
     }
 
@@ -57,7 +63,7 @@ export async function POST(
     }
 
     // 验证至少一个 asset
-    if (solution._count.assets === 0) {
+    if (solution._count.files === 0) {
       return createErrorResponse('至少需要上传一个资产（图片、文档或视频）', 400);
     }
 
@@ -70,17 +76,17 @@ export async function POST(
         where: { id: solutionId },
         data: {
           status: 'PENDING_REVIEW',
-          submittedAt: new Date(),
+          submitted_at: new Date(),
         }
       });
 
       // 创建 SolutionReview 记录（fromStatus → toStatus）
       await tx.solutionReview.create({
         data: {
-          solutionId: solutionId,
-          reviewerId: authResult.user.id, // 提交者ID（虽然还不是审核者，但记录提交操作）
-          fromStatus: oldStatus,
-          toStatus: 'PENDING_REVIEW',
+          solution_id: solutionId,
+          reviewer_id: authResult.user.id, // 提交者ID（虽然还不是审核者，但记录提交操作）
+          from_status: oldStatus,
+          to_status: 'PENDING_REVIEW',
           status: 'PENDING',
           decision: 'PENDING',
           comments: '方案已提交审核',
@@ -101,7 +107,7 @@ export async function POST(
       },
       newValue: {
         status: 'PENDING_REVIEW',
-        submittedAt: result.submittedAt?.toISOString(),
+        submittedAt: result.submitted_at?.toISOString(),
       },
     });
 
@@ -109,7 +115,7 @@ export async function POST(
       {
         id: result.id,
         status: result.status,
-        submittedAt: result.submittedAt?.toISOString(),
+        submittedAt: result.submitted_at?.toISOString(),
       },
       '方案已成功提交审核'
     );

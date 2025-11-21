@@ -2,25 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 
-import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { requireCreatorAuth } from '@/lib/api-helpers';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
 
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份
-    const authResult = await checkCreatorAuth(request);
-    if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
-    }
-    const session = authResult.session;
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
+    const authResult = await requireCreatorAuth(request);
+    if (!authResult.success) {
+      return authResult.response || NextResponse.json(
+        { success: false, error: authResult.error || '未授权访问' },
+        { status: 403 }
       );
     }
 
-    const userId = session.user.id;
+    const userId = authResult.user.id;
 
     // 确保用户有 CreatorProfile（如果用户有 CREATOR 角色但没有档案，自动创建）
     const creatorProfile = await ensureCreatorProfile(userId);
@@ -76,7 +72,7 @@ export async function GET(request: NextRequest) {
         id: order.id,
         solutionTitle,
         amount,
-        createdAt: order.created_at.toISOString(),
+        createdAt: order.created_at?.toISOString() || new Date().toISOString(),
         status: order.status
       };
     });

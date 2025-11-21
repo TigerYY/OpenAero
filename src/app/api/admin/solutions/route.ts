@@ -69,9 +69,16 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // 构建排序条件
+    // 构建排序条件（将 camelCase 转换为 snake_case）
     const orderBy: any = {};
-    orderBy[params.sortBy] = params.sortOrder;
+    const sortByMap: Record<string, string> = {
+      'createdAt': 'created_at',
+      'title': 'title',
+      'price': 'price',
+      'status': 'status',
+    };
+    const dbSortBy = sortByMap[params.sortBy] || 'created_at';
+    orderBy[dbSortBy] = params.sortOrder;
 
     // 查询方案列表
     const [solutions, total] = await Promise.all([
@@ -88,70 +95,27 @@ export async function GET(request: NextRequest) {
               website: true,
               experience: true,
               specialties: true,
-              status: true,
+              verification_status: true,
               user: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
+                  user_id: true, // 需要 user_id 来从 Supabase Auth 获取 email
+                  display_name: true,
+                  first_name: true,
+                  last_name: true,
+                  // 注意：UserProfile 模型中没有 email 字段，email 存储在 Supabase Auth 中
                 }
               }
-            }
-          },
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
             }
           },
           files: {
             select: {
               id: true,
               filename: true,
-              fileType: true,
+              original_name: true,
+              file_type: true,
               url: true,
-              createdAt: true,
-            }
-          },
-          assets: {
-            select: {
-              id: true,
-              type: true,
-              url: true,
-              title: true,
-              description: true,
-              createdAt: true,
-            }
-          },
-          bomItems: {
-            select: {
-              id: true,
-              name: true,
-              model: true,
-              quantity: true,
-              unit: true,
-              notes: true,
-              unitPrice: true,
-              supplier: true,
-              partNumber: true,
-              manufacturer: true,
-              category: true,
-              position: true,
-              weight: true,
-              specifications: true,
-              productId: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  sku: true,
-                  price: true,
-                }
-              },
-              createdAt: true,
+              created_at: true,
             }
           },
           solutionReviews: {
@@ -159,23 +123,19 @@ export async function GET(request: NextRequest) {
               id: true,
               score: true,
               comments: true,
-              fromStatus: true,
-              toStatus: true,
-              createdAt: true,
-              reviewer: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                }
-              }
-            }
+              from_status: true,
+              to_status: true,
+              created_at: true,
+              reviewed_at: true,
+              reviewer_id: true,
+            },
+            orderBy: { created_at: 'desc' },
+            take: 10,
           },
           _count: {
             select: {
               solutionReviews: true,
-              assets: true,
-              bomItems: true,
+              files: true,
             }
           }
         }
@@ -183,99 +143,151 @@ export async function GET(request: NextRequest) {
       prisma.solution.count({ where })
     ]);
 
+    // 批量获取用户邮箱（从 Supabase Auth）
+    // 暂时简化：如果获取邮箱失败，不影响主要功能
+    const emailMap = new Map<string, string | null>();
+    try {
+      const userIds = [...new Set(solutions
+        .map((s: any) => s.creator?.user?.user_id)
+        .filter(Boolean))] as string[];
+      
+      if (userIds.length > 0) {
+        const supabaseAdmin = createSupabaseAdmin();
+        // 批量获取用户邮箱
+        await Promise.all(
+          userIds.map(async (userId) => {
+            try {
+              const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+              if (error) {
+                console.warn(`[Admin Solutions API] 获取用户邮箱失败 (userId: ${userId}):`, error.message);
+                emailMap.set(userId, null);
+              } else {
+                emailMap.set(userId, authUser?.user?.email || null);
+              }
+            } catch (error: any) {
+              console.warn(`[Admin Solutions API] 获取用户邮箱异常 (userId: ${userId}):`, error?.message || error);
+              emailMap.set(userId, null);
+            }
+          })
+        );
+      }
+    } catch (error: any) {
+      console.warn('[Admin Solutions API] 批量获取用户邮箱失败:', error?.message || error);
+      // 继续执行，不中断主流程
+    }
+
     // 格式化返回数据
-    const formattedSolutions = solutions.map(solution => ({
-      id: solution.id,
-      title: solution.title,
-      description: solution.description,
-      category: solution.category,
-      price: solution.price,
-      status: solution.status,
-      images: solution.images,
-      features: solution.features,
-      specs: solution.specs,
-      bom: solution.bom,
-      version: solution.version,
-      submittedAt: solution.submittedAt,
-      reviewedAt: solution.reviewedAt,
-      reviewNotes: solution.reviewNotes,
-      creator: (solution as any).creator ? {
-        id: (solution as any).creator.id,
-        name: (solution as any).creator.user ? `${(solution as any).creator.user.firstName ?? ''} ${(solution as any).creator.user.lastName ?? ''}`.trim() : '',
-        email: (solution as any).creator.user?.email,
-        bio: (solution as any).creator.bio,
-        website: (solution as any).creator.website,
-        experience: (solution as any).creator.experience,
-        specialties: (solution as any).creator.specialties,
-        status: (solution as any).creator.verification_status,
-      } : null,
-      user: (solution as any).user ? {
-        id: (solution as any).user.id,
-        name: `${(solution as any).user.firstName ?? ''} ${(solution as any).user.lastName ?? ''}`.trim(),
-        email: (solution as any).user.email,
-      } : null,
-      files: (solution as any).files?.map((file: any) => {
-        const converted = convertSnakeToCamel(file);
-        return {
-          id: converted.id,
-          fileName: converted.filename || converted.fileName,
-          fileType: converted.fileType,
-          fileUrl: converted.url || converted.fileUrl,
-          createdAt: converted.createdAt,
-        };
-      }) || [],
-      assets: ((solution as any).assets || []).map((asset: any) => ({
-        id: asset.id,
-        type: asset.type,
-        url: asset.url,
-        title: asset.title || null,
-        description: asset.description || null,
-        createdAt: asset.createdAt,
-      })),
-      bomItems: ((solution as any).bomItems || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        model: item.model || null,
-        quantity: item.quantity,
-        unit: item.unit || '个',
-        notes: item.notes || null,
-        unitPrice: item.unitPrice ? Number(item.unitPrice) : null,
-        supplier: item.supplier || null,
-        partNumber: item.partNumber || null,
-        manufacturer: item.manufacturer || null,
-        category: item.category || null,
-        position: item.position || null,
-        weight: item.weight ? Number(item.weight) : null,
-        specifications: item.specifications || null,
-        productId: item.productId || null,
-        product: item.product ? {
-          id: item.product.id,
-          name: item.product.name,
-          sku: item.product.sku,
-          price: Number(item.product.price),
+    const formattedSolutions = solutions.map(solution => {
+      // 解析 BOM JSON 字段
+      let bomItems: any[] = [];
+      if (solution.bom) {
+        const bomJson = solution.bom as any;
+        if (bomJson.components && Array.isArray(bomJson.components)) {
+          bomItems = bomJson.components.map((item: any, index: number) => ({
+            id: `bom-${index}`,
+            name: item.name || '未知物料',
+            model: item.model || null,
+            quantity: item.quantity || 1,
+            unit: item.unit || '个',
+            notes: item.notes || null,
+            unitPrice: item.unitPrice !== undefined ? Number(item.unitPrice) : null,
+            supplier: item.supplier || null,
+            partNumber: item.partNumber || null,
+            manufacturer: item.manufacturer || null,
+            category: item.category || null,
+            position: item.position || null,
+            weight: item.weight !== undefined ? Number(item.weight) : null,
+            specifications: item.specifications || null,
+            productId: item.productId || null,
+            product: null,
+            createdAt: new Date().toISOString(),
+          }));
+        } else if (Array.isArray(bomJson)) {
+          bomItems = bomJson.map((item: any, index: number) => ({
+            id: `bom-${index}`,
+            name: item.name || '未知物料',
+            model: item.model || null,
+            quantity: item.quantity || 1,
+            unit: item.unit || '个',
+            notes: item.notes || null,
+            unitPrice: item.unitPrice !== undefined ? Number(item.unitPrice) : null,
+            supplier: item.supplier || null,
+            partNumber: item.partNumber || null,
+            manufacturer: item.manufacturer || null,
+            category: item.category || null,
+            position: item.position || null,
+            weight: item.weight !== undefined ? Number(item.weight) : null,
+            specifications: item.specifications || null,
+            productId: item.productId || null,
+            product: null,
+            createdAt: new Date().toISOString(),
+          }));
+        }
+      }
+
+      return {
+        id: solution.id,
+        title: solution.title,
+        description: solution.description,
+        category: solution.category,
+        price: Number(solution.price),
+        status: solution.status,
+        images: solution.images || [],
+        features: solution.features || [],
+        specs: solution.specs || {},
+        bom: solution.bom || null,
+        version: solution.version,
+        submittedAt: solution.submitted_at?.toISOString() || null,
+        reviewedAt: solution.reviewed_at?.toISOString() || null,
+        reviewNotes: solution.review_notes || null,
+        createdAt: solution.created_at?.toISOString() || new Date().toISOString(),
+        updatedAt: solution.updated_at?.toISOString() || new Date().toISOString(),
+        creator: (solution as any).creator ? {
+          id: (solution as any).creator.id,
+          name: (solution as any).creator.user 
+            ? ((solution as any).creator.user.display_name || 
+               `${(solution as any).creator.user.first_name ?? ''} ${(solution as any).creator.user.last_name ?? ''}`.trim() || 
+               'Unknown')
+            : 'Unknown',
+          email: (solution as any).creator?.user?.user_id 
+            ? (emailMap.get((solution as any).creator.user.user_id) || null)
+            : null,
+          bio: (solution as any).creator.bio || null,
+          website: (solution as any).creator.website || null,
+          experience: (solution as any).creator.experience || null,
+          specialties: (solution as any).creator.specialties || [],
+          status: (solution as any).creator.verification_status || null,
         } : null,
-        createdAt: item.createdAt,
-      })),
-      reviews: (solution as any).solutionReviews?.map((review: any) => {
-        const converted = convertSnakeToCamel(review);
-        return {
-          id: converted.id,
-          rating: converted.score ?? converted.rating ?? null,
-          comment: converted.comments ?? converted.comment ?? null,
-          fromStatus: converted.fromStatus || null,
-          toStatus: converted.toStatus || null,
-          createdAt: converted.reviewedAt || converted.createdAt,
-          reviewer: review.reviewer ? convertSnakeToCamel({
-            firstName: review.reviewer.firstName || review.reviewer.first_name,
-            lastName: review.reviewer.lastName || review.reviewer.last_name,
-            email: review.reviewer.email,
-          }) : null,
-        };
-      }) || [],
-      reviewCount: (solution as any)._count?.solutionReviews || 0,
-      assetCount: (solution as any)._count?.assets || 0,
-      bomItemCount: (solution as any)._count?.bomItems || 0,
-    }));
+        files: ((solution as any).files || []).map((file: any) => ({
+          id: file.id,
+          fileName: file.filename,
+          fileType: file.file_type,
+          fileUrl: file.url,
+          createdAt: file.created_at?.toISOString() || new Date().toISOString(),
+        })),
+        assets: ((solution as any).files || []).map((file: any) => ({
+          id: file.id,
+          type: file.file_type,
+          url: file.url,
+          title: file.original_name || file.filename || null,
+          description: file.description || null,
+          createdAt: file.created_at?.toISOString() || new Date().toISOString(),
+        })),
+        bomItems: bomItems,
+        reviews: ((solution as any).solutionReviews || []).map((review: any) => ({
+          id: review.id,
+          rating: review.score ?? null,
+          comment: review.comments ?? null,
+          fromStatus: review.from_status || null,
+          toStatus: review.to_status || null,
+          createdAt: review.reviewed_at?.toISOString() || review.created_at?.toISOString() || new Date().toISOString(),
+          reviewer: null, // reviewer 信息需要单独查询 UserProfile
+        })),
+        reviewCount: (solution as any)._count?.solutionReviews || 0,
+        assetCount: (solution as any)._count?.files || 0,
+        bomItemCount: bomItems.length,
+      };
+    });
 
     return createPaginatedResponse(
       formattedSolutions,
@@ -288,11 +300,54 @@ export async function GET(request: NextRequest) {
       '获取方案列表成功'
     );
   } catch (error) {
-    console.error('获取方案列表失败:', error);
+    console.error('[Admin Solutions API] 获取方案列表失败:', error);
+    
+    // 提供更详细的错误信息
+    let errorMessage = '获取方案列表失败';
+    let errorDetails: any = undefined;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = {
+        name: error.name,
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      };
+      
+      // 打印完整的错误堆栈（仅在开发环境）
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Admin Solutions API] 错误堆栈:', error.stack);
+      }
+      
+      // 如果是数据库连接错误，提供更详细的诊断信息
+      if (error.message.includes('Can\'t reach database server') || 
+          error.message.includes('Connection') ||
+          error.message.includes('timeout') ||
+          error.message.includes('prepared statement')) {
+        errorMessage = '数据库连接失败，请检查数据库服务器是否可访问';
+        errorDetails.diagnosis = [
+          '1. 检查 DATABASE_URL 环境变量是否正确配置',
+          '2. 确认数据库服务器是否运行',
+          '3. 检查网络连接是否正常',
+          '4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串',
+        ];
+      }
+      
+      // 如果是 Prisma 查询错误
+      if (error.message.includes('Unknown field') || 
+          error.message.includes('Invalid `prisma') ||
+          error.message.includes('does not exist')) {
+        errorMessage = `数据库查询错误: ${error.message}`;
+        errorDetails.suggestion = '请检查 Prisma schema 和数据库结构是否一致';
+      }
+    } else {
+      console.error('[Admin Solutions API] 未知错误类型:', typeof error, error);
+    }
+    
     return createErrorResponse(
-      '获取方案列表失败',
+      errorMessage,
       500,
-      error instanceof Error ? { name: error.name, message: error.message } : undefined
+      errorDetails
     );
   }
 }

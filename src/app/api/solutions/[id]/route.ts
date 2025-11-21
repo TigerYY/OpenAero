@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 
-import { solutionService } from '@/backend/solution/solution.service';
 import { createErrorResponse, createSuccessResponse, logAuditAction } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
@@ -45,33 +44,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       include: {
         creator: {
           include: {
-            userProfile: true
+            user: true
           }
         },
         files: true,
-        assets: true,
-        bomItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                price: true
-              }
-            }
-          }
-        },
         solutionReviews: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { created_at: 'desc' },
           take: 10
         },
         _count: {
           select: {
             solutionReviews: true,
-            orders: true,
-            assets: true,
-            bomItems: true
+            orderSolutions: true,
+            files: true
           }
         }
       } as any
@@ -90,7 +75,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     } else {
       // **新增**：CREATOR 可访问自己创建的所有方案
       if (isCreator && !isAdmin && !isReviewer) {
-        const solutionCreatorId = (solution as any).creatorId;
+        const solutionCreatorId = (solution as any).creator_id || (solution as any).creatorId;
         if (solutionCreatorId) {
           // 获取当前用户的 CreatorProfile
           const creatorProfile = await prisma.creatorProfile.findUnique({
@@ -100,6 +85,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           
           if (creatorProfile && creatorProfile.id !== solutionCreatorId) {
             // 不是自己的方案，且状态不是 PUBLISHED，则拒绝访问
+            if (solution.status !== 'PUBLISHED') {
+              return createErrorResponse('无权访问此方案', 403);
+            }
+          } else if (!creatorProfile) {
+            // 用户没有 CreatorProfile，拒绝访问非公开方案
             if (solution.status !== 'PUBLISHED') {
               return createErrorResponse('无权访问此方案', 403);
             }
@@ -122,71 +112,112 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       version: solution.version,
       tags: solution.features || [],
       images: solution.images || [],
-      createdAt: solution.createdAt,
-      updatedAt: solution.updatedAt,
-      creatorId: (solution as any).creatorId,
-      creatorName: (solution as any).creator?.userProfile ? 
-        ((solution as any).creator.userProfile.display_name || 
-         `${(solution as any).creator.userProfile.first_name ?? ''} ${(solution as any).creator.userProfile.last_name ?? ''}`.trim() || 
+      createdAt: (solution as any).created_at || solution.createdAt,
+      updatedAt: (solution as any).updated_at || solution.updatedAt,
+      creatorId: (solution as any).creator_id || (solution as any).creatorId,
+      creatorName: (solution as any).creator?.user ? 
+        ((solution as any).creator.user.display_name || 
+         `${(solution as any).creator.user.first_name ?? ''} ${(solution as any).creator.user.last_name ?? ''}`.trim() || 
          'Unknown') : 'Unknown',
       reviewCount: (solution as any)._count?.solutionReviews || 0,
-      downloadCount: (solution as any)._count?.orders || 0,
-      assetCount: (solution as any)._count?.assets || 0,
-      bomItemCount: (solution as any)._count?.bomItems || 0,
+      downloadCount: (solution as any)._count?.orderSolutions || 0,
+      assetCount: (solution as any)._count?.files || 0,
       specs: (solution as any).technicalSpecs || solution.specs || {},
-      bom: solution.bom || [],
-      files: (solution as any).files || [],
-      assets: ((solution as any).assets || []).map((asset: any) => ({
-        id: asset.id,
-        type: asset.type,
-        url: asset.url,
-        title: asset.title,
-        description: asset.description
+      // 解析 BOM JSON 字段
+      bom: (() => {
+        try {
+          if (!solution.bom) return [];
+          if (typeof solution.bom === 'string') {
+            return JSON.parse(solution.bom);
+          }
+          return Array.isArray(solution.bom) ? solution.bom : [];
+        } catch (error) {
+          console.error('解析 BOM 数据失败:', error);
+          return [];
+        }
+      })(),
+      files: ((solution as any).files || []).map((file: any) => ({
+        id: file.id,
+        type: file.file_type || file.type,
+        url: file.url,
+        title: file.original_name || file.filename || file.title,
+        description: file.description,
+        filename: file.filename,
+        originalName: file.original_name,
       })),
-      bomItems: ((solution as any).bomItems || []).map((item: any) => ({
-        id: item.id,
-        // 基础信息
-        name: item.name,
-        model: item.model,
-        quantity: item.quantity,
-        unit: item.unit || '个',
-        notes: item.notes,
-        // 价格和成本
-        unitPrice: item.unitPrice ? Number(item.unitPrice) : null,
-        // 供应商信息
-        supplier: item.supplier || null,
-        // 零件标识
-        partNumber: item.partNumber || null,
-        manufacturer: item.manufacturer || null,
-        // 分类和位置
-        category: item.category || null,
-        position: item.position || null,
-        // 物理属性
-        weight: item.weight ? Number(item.weight) : null,
-        // 技术规格
-        specifications: item.specifications || null,
-        // 关联商城商品
-        productId: item.productId,
-        product: item.product ? {
-          id: item.product.id,
-          name: item.product.name,
-          sku: item.product.sku,
-          price: Number(item.product.price)
-        } : null
+      assets: ((solution as any).files || []).map((file: any) => ({
+        id: file.id,
+        type: file.file_type || file.type,
+        url: file.url,
+        title: file.original_name || file.filename || file.title,
+        description: file.description
       })),
+      // 计算 BOM 项目数量
+      bomItemCount: (() => {
+        try {
+          if (!solution.bom) return 0;
+          const bomData = typeof solution.bom === 'string' 
+            ? JSON.parse(solution.bom) 
+            : solution.bom;
+          return Array.isArray(bomData) ? bomData.length : 0;
+        } catch (error) {
+          return 0;
+        }
+      })(),
+      // bomItems 从 bom JSON 字段中解析
+      bomItems: (() => {
+        try {
+          if (!solution.bom) return [];
+          const bomData = typeof solution.bom === 'string' 
+            ? JSON.parse(solution.bom) 
+            : solution.bom;
+          if (!Array.isArray(bomData)) return [];
+          return bomData.map((item: any, index: number) => ({
+            id: item.id || `bom-item-${index}`,
+            // 基础信息
+            name: item.name || '',
+            model: item.model || null,
+            quantity: item.quantity || 1,
+            unit: item.unit || '个',
+            notes: item.notes || null,
+            // 价格和成本
+            unitPrice: item.unitPrice ? Number(item.unitPrice) : null,
+            // 供应商信息
+            supplier: item.supplier || null,
+            // 零件标识
+            partNumber: item.partNumber || null,
+            manufacturer: item.manufacturer || null,
+            // 分类和位置
+            category: item.category || null,
+            position: item.position || null,
+            // 物理属性
+            weight: item.weight ? Number(item.weight) : null,
+            // 技术规格
+            specifications: item.specifications || null,
+            // 关联商城商品
+            productId: item.productId || null,
+            product: null // BOM JSON 中不包含 product 关系数据
+          }));
+        } catch (error) {
+          console.error('解析 BOM Items 失败:', error);
+          return [];
+        }
+      })(),
       reviews: ((solution as any).solutionReviews || []).map((review: any) => ({
         id: review.id,
-        fromStatus: review.fromStatus,
-        toStatus: review.toStatus,
+        fromStatus: review.from_status || review.fromStatus,
+        toStatus: review.to_status || review.toStatus,
         status: review.status,
         decision: review.decision,
         comments: review.comments,
-        reviewedAt: review.reviewedAt?.toISOString() || null
+        reviewedAt: (review.reviewed_at || review.reviewedAt)?.toISOString() || null
       }))
     }, '获取方案详情成功');
   } catch (error) {
     console.error('获取方案详情失败:', error);
-    return createErrorResponse('获取方案详情失败', 500);
+    const errorMessage = error instanceof Error ? error.message : '获取方案详情失败';
+    const errorDetails = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : undefined;
+    return createErrorResponse(errorMessage, 500, errorDetails);
   }
 }
 
@@ -208,7 +239,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       include: {
         creator: {
           include: {
-            userProfile: true
+            user: true
           }
         }
       } as any
@@ -228,7 +259,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('只有创作者可以更新方案', 403);
     }
 
-    if ((oldSolution as any).creatorId !== (oldSolution as any).creator?.id && !isAdmin) {
+    const solutionCreatorId = (oldSolution as any).creator_id || (oldSolution as any).creatorId;
+    const creatorRelationId = (oldSolution as any).creator?.id;
+    
+    // 获取当前用户的 CreatorProfile
+    const { ensureCreatorProfile } = await import('@/lib/creator-profile-utils');
+    const creatorProfile = await ensureCreatorProfile(authResult.user.id);
+    
+    if (!creatorProfile) {
+      return createErrorResponse('创作者档案不存在', 404);
+    }
+
+    // 验证方案所有者：比较方案的 creator_id 和当前用户的 CreatorProfile.id
+    if (solutionCreatorId !== creatorProfile.id && !isAdmin) {
       return createErrorResponse('无权修改此方案', 403);
     }
 
@@ -247,27 +290,83 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (validatedData.price !== undefined) updateData.price = validatedData.price;
     if (validatedData.features !== undefined) updateData.features = validatedData.features;
     if (validatedData.images !== undefined) updateData.images = validatedData.images;
+    let parsedSpecsInput: Record<string, any> | undefined;
     if (validatedData.specs !== undefined) {
-      updateData.specs = typeof validatedData.specs === 'string' ? validatedData.specs : JSON.stringify(validatedData.specs);
-      updateData.technicalSpecs = typeof validatedData.specs === 'string' ? JSON.parse(validatedData.specs) : validatedData.specs;
-    }
-    if (validatedData.bom !== undefined) {
-      updateData.bom = typeof validatedData.bom === 'string' ? validatedData.bom : JSON.stringify(validatedData.bom);
+      parsedSpecsInput =
+        typeof validatedData.specs === 'string'
+          ? JSON.parse(validatedData.specs)
+          : validatedData.specs || {};
     }
 
-    // 使用 solutionService 更新（保持兼容性）
-    const solution = await solutionService.updateSolution(id, validatedData, authResult.user.id);
-    
-    // 重新获取完整数据（包含 creator）
-    const updatedSolution = await prisma.solution.findUnique({
+    // 合并 specs（summary、technicalSpecs、useCases、architecture 等都存储在 specs JSON 中）
+    const currentSpecs =
+      typeof oldSolution.specs === 'string'
+        ? JSON.parse(oldSolution.specs)
+        : oldSolution.specs || {};
+
+    let specsUpdated = false;
+    let mergedSpecs = { ...currentSpecs };
+
+    if (parsedSpecsInput !== undefined) {
+      mergedSpecs = { ...mergedSpecs, ...parsedSpecsInput };
+      specsUpdated = true;
+    }
+
+    if (validatedData.technicalSpecs !== undefined) {
+      mergedSpecs = { ...mergedSpecs, technicalSpecs: validatedData.technicalSpecs };
+      specsUpdated = true;
+    }
+
+    if (validatedData.useCases !== undefined) {
+      mergedSpecs = { ...mergedSpecs, useCases: validatedData.useCases };
+      specsUpdated = true;
+    }
+
+    if (validatedData.architecture !== undefined) {
+      mergedSpecs = { ...mergedSpecs, architecture: validatedData.architecture };
+      specsUpdated = true;
+    }
+
+    if (validatedData.summary !== undefined) {
+      mergedSpecs = { ...mergedSpecs, summary: validatedData.summary };
+      specsUpdated = true;
+    }
+
+    if (specsUpdated) {
+      updateData.specs = mergedSpecs;
+    }
+
+    // 处理 BOM
+    let bomPayload = oldSolution.bom;
+    if (validatedData.bom !== undefined) {
+      if (typeof validatedData.bom === 'string') {
+        try {
+          bomPayload = JSON.parse(validatedData.bom);
+        } catch (error) {
+          console.warn('解析 BOM 失败，使用原始值:', error);
+          bomPayload = validatedData.bom;
+        }
+      } else {
+        bomPayload = validatedData.bom;
+      }
+    }
+
+    // 更新方案（直接使用 Prisma，避免旧版 service 带来的字段差异）
+    const updatedSolution = await prisma.solution.update({
       where: { id },
+      data: {
+        ...updateData,
+        ...(specsUpdated ? { specs: mergedSpecs } : {}),
+        ...(validatedData.bom !== undefined ? { bom: bomPayload } : {}),
+        updated_at: new Date(),
+      },
       include: {
         creator: {
           include: {
-            userProfile: true
-          }
-        }
-      } as any
+            user: true,
+          },
+        },
+      } as any,
     });
 
     // 记录审计日志
@@ -275,18 +374,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       userId: authResult.user.id,
       action: 'SOLUTION_UPDATED',
       resource: 'solution',
-      resourceId: solution.id,
-      oldValue: oldSolution ? {
-        title: oldSolution.title,
-        category: oldSolution.category,
-        price: oldSolution.price,
-        status: oldSolution.status,
-      } : undefined,
+      resourceId: updatedSolution.id,
+      oldValue: oldSolution
+        ? {
+            title: oldSolution.title,
+            category: oldSolution.category,
+            price: oldSolution.price,
+            status: oldSolution.status,
+          }
+        : undefined,
       newValue: {
-        title: solution.title,
-        category: solution.category,
-        price: solution.price,
-        status: solution.status,
+        title: updatedSolution.title,
+        category: updatedSolution.category,
+        price: updatedSolution.price,
+        status: updatedSolution.status,
       },
     });
 
@@ -304,12 +405,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       version: updatedSolution.version,
       tags: (updatedSolution as any).tags || updatedSolution.features || [],
       images: updatedSolution.images || [],
-      createdAt: updatedSolution.createdAt,
-      updatedAt: updatedSolution.updatedAt,
-      creatorId: (updatedSolution as any).creatorId,
-      creatorName: (updatedSolution as any).creator?.userProfile ? 
-        ((updatedSolution as any).creator.userProfile.display_name || 
-         `${(updatedSolution as any).creator.userProfile.first_name ?? ''} ${(updatedSolution as any).creator.userProfile.last_name ?? ''}`.trim() || 
+      createdAt: (updatedSolution as any).created_at || updatedSolution.createdAt,
+      updatedAt: (updatedSolution as any).updated_at || updatedSolution.updatedAt,
+      creatorId: (updatedSolution as any).creator_id || (updatedSolution as any).creatorId,
+      creatorName: (updatedSolution as any).creator?.user ? 
+        ((updatedSolution as any).creator.user.display_name || 
+         `${(updatedSolution as any).creator.user.first_name ?? ''} ${(updatedSolution as any).creator.user.last_name ?? ''}`.trim() || 
          'Unknown') : 'Unknown',
       specs: (updatedSolution as any).technicalSpecs || updatedSolution.specs || {},
       bom: updatedSolution.bom || []

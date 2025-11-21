@@ -298,15 +298,17 @@ export function canEditSolution(solution: SolutionInfo, user: UserInfo | null): 
     return true;
   }
 
-  // CREATOR 只能编辑自己创建的 DRAFT 或 REJECTED 状态的方案
+  // CREATOR 只能编辑自己创建的 DRAFT、REJECTED 或 NEEDS_REVISION 状态的方案
   if (userRoles.includes('CREATOR')) {
     if (!solution.creatorId) return false;
     
     // 需要获取用户的 CreatorProfile ID 来比较
     // 这里假设通过 creatorId 字段可以直接比较
     // 实际使用时可能需要查询 CreatorProfile
+    // 注意：NEEDS_REVISION 在数据库中可能存储为 PENDING_REVIEW，需要通过审核记录判断
     const canEditStatus = solution.status === SolutionStatus.DRAFT || 
-                          solution.status === SolutionStatus.REJECTED;
+                          solution.status === SolutionStatus.REJECTED ||
+                          solution.status === SolutionStatus.PENDING_REVIEW; // PENDING_REVIEW 可能包含需修改的方案
     
     return canEditStatus; // creatorId 比较需要在调用时进行
   }

@@ -113,7 +113,6 @@ export class SolutionService {
     }
 
     // 如果更新了标题，需要检查是否重复
-    const updateData: any = { ...validatedData };
     if (validatedData.title && validatedData.title !== solution.title) {
       // 检查新标题是否已存在
       const existingSolution = await db.solution.findFirst({
@@ -128,12 +127,46 @@ export class SolutionService {
       }
     }
 
+    // 构建更新数据，只包含 Prisma schema 中存在的字段
+    const updateData: any = {};
+    
+    // 直接映射的字段
+    if (validatedData.title !== undefined) updateData.title = validatedData.title;
+    if (validatedData.description !== undefined) updateData.description = validatedData.description;
+    if (validatedData.price !== undefined) updateData.price = validatedData.price;
+    if (validatedData.category !== undefined) updateData.category = validatedData.category;
+    if (validatedData.features !== undefined) updateData.features = validatedData.features;
+    if (validatedData.tags !== undefined) updateData.tags = validatedData.tags;
+    if (validatedData.images !== undefined) updateData.images = validatedData.images;
+    
+    // 处理 specs JSON 字段：合并 technicalSpecs, useCases, architecture, summary
+    if (validatedData.technicalSpecs !== undefined || 
+        validatedData.useCases !== undefined || 
+        validatedData.architecture !== undefined ||
+        validatedData.summary !== undefined) {
+      const currentSpecs = solution.specs ? (typeof solution.specs === 'string' ? JSON.parse(solution.specs) : solution.specs) : {};
+      updateData.specs = {
+        ...currentSpecs,
+        ...(validatedData.technicalSpecs !== undefined && { technicalSpecs: validatedData.technicalSpecs }),
+        ...(validatedData.useCases !== undefined && { useCases: validatedData.useCases }),
+        ...(validatedData.architecture !== undefined && { architecture: validatedData.architecture }),
+        ...(validatedData.summary !== undefined && { summary: validatedData.summary }),
+      };
+    }
+    
+    // 处理 BOM JSON 字段
+    if (validatedData.bom !== undefined) {
+      updateData.bom = typeof validatedData.bom === 'string' 
+        ? validatedData.bom 
+        : JSON.stringify(validatedData.bom);
+    }
+
     // 更新方案
     const updatedSolution = await db.solution.update({
       where: { id: solutionId },
       data: {
         ...updateData,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       },
       include: {
         creator: {
@@ -227,8 +260,8 @@ export class SolutionService {
       where: { id: solutionId },
       data: {
         status: 'PENDING_REVIEW',
-        submittedAt: new Date(),
-        updatedAt: new Date(),
+        submitted_at: new Date(),
+        updated_at: new Date(),
       },
       include: {
         creator: {
@@ -255,7 +288,7 @@ export class SolutionService {
             user_id: creatorId
           }
         },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updated_at: 'desc' },
         skip,
         take: limit,
         include: {
@@ -441,7 +474,7 @@ export class SolutionService {
       where: { id: solutionId },
       data: {
         // 不修改status，保持PENDING_REVIEW
-        updatedAt: new Date()
+        updated_at: new Date()
       },
       include: {
         creator: {

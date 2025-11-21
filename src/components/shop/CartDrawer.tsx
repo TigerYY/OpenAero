@@ -52,7 +52,7 @@ export function CartDrawer({ children, isOpen, onClose }: CartDrawerProps) {
     <>
       {/* 背景遮罩 */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="fixed inset-0 z-40"
         onClick={onClose}
       />
       

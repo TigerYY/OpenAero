@@ -85,8 +85,41 @@ export const createSolutionSchema = z.object({
   images: z.array(z.string().url('请输入有效的图片地址')).max(10, '最多上传10张图片').optional(),
 });
 
-// 更新方案验证
-export const updateSolutionSchema = createSolutionSchema.partial();
+// 更新方案验证（草稿保存用 - 宽松验证）
+// 草稿保存时，所有字段都是可选的，允许空值
+export const updateSolutionSchema = z.object({
+  title: z.string().min(5, '标题至少需要5个字符').max(100, '标题不能超过100个字符').optional().or(z.literal('')),
+  description: z.string().min(20, '描述至少需要20个字符').max(2000, '描述不能超过2000个字符').optional().or(z.literal('')),
+  summary: z.string().max(500, '摘要不能超过500个字符').optional().or(z.literal('')), // 草稿时摘要完全可选，无最小长度要求
+  longDescription: z.string().min(20, '详细描述至少需要20个字符').max(5000, '详细描述不能超过5000个字符').optional().or(z.literal('')),
+  price: z.number().min(0, '价格不能为负数').max(100000, '价格不能超过100000').optional(),
+  category: z.string().min(1, '请选择分类').optional().or(z.literal('')),
+  categoryId: z.string().min(1, '请选择分类').optional().or(z.literal('')),
+  specs: z.record(z.any()).optional(),
+  technicalSpecs: z.record(z.any()).optional(),
+  useCases: z.record(z.any()).optional(),
+  architecture: z.record(z.any()).optional(),
+  bom: z.union([z.array(z.any()), z.record(z.any())]).optional(), // 支持数组或对象格式
+  features: z.array(z.string()).min(1, '请至少添加一个功能特性').max(10, '最多添加10个功能特性').optional(),
+  tags: z.array(z.string()).optional(),
+  images: z.array(z.string().url('请输入有效的图片地址')).max(10, '最多上传10张图片').optional(),
+});
+
+// 提交审核验证（严格验证）
+export const submitSolutionSchema = z.object({
+  title: z.string().min(5, '标题至少需要5个字符').max(100, '标题不能超过100个字符'),
+  description: z.string().min(20, '描述至少需要20个字符').max(2000, '描述不能超过2000个字符'),
+  summary: z.string().max(500, '摘要不能超过500个字符').optional(), // 提交时摘要仍可选
+  price: z.number().min(0, '价格不能为负数').max(100000, '价格不能超过100000'),
+  category: z.string().min(1, '请选择分类'),
+  features: z.array(z.string()).min(1, '请至少添加一个功能特性').max(10, '最多添加10个功能特性').optional(),
+  tags: z.array(z.string()).optional(),
+  technicalSpecs: z.record(z.any()).optional(),
+  useCases: z.record(z.any()).optional(),
+  architecture: z.record(z.any()).optional(),
+  bom: z.union([z.array(z.any()).min(1, '请至少添加一个BOM项'), z.record(z.any())]).optional(), // 提交时 BOM 可以是数组或对象
+  images: z.array(z.string().url('请输入有效的图片地址')).min(1, '请至少上传一张图片').max(10, '最多上传10张图片'),
+});
 
 // 评价验证
 export const reviewSchema = z.object({

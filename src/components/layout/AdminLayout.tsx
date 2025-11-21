@@ -57,11 +57,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: '权限管理'
     },
     {
-      href: route(routes.ADMIN.SOLUTIONS),
-      icon: FileText,
-      label: '方案管理'
-    },
-    {
       href: route(routes.ADMIN.APPLICATIONS),
       icon: UserCheck,
       label: '创作者申请'
@@ -190,7 +185,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
           <div
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="lg:hidden fixed inset-0 z-40"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}

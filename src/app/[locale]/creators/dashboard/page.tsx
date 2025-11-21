@@ -12,7 +12,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 
@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import RevenueChart from '@/components/creators/RevenueChart';
-import SolutionsManagement from '@/components/creators/SolutionsManagement';
+import SolutionsList from '@/components/creators/SolutionsList';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -73,6 +73,7 @@ interface RecentOrder {
 export default function CreatorDashboardPage() {
   const router = useRouter();
   const { route } = useRouting();
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<CreatorStats | null>(null);
   const [recentSolutions, setRecentSolutions] = useState<RecentSolution[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
@@ -254,7 +255,7 @@ export default function CreatorDashboardPage() {
         )}
 
         {/* 标签页内容 */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue={searchParams?.get('tab') || 'overview'} className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">概览</TabsTrigger>
             <TabsTrigger value="revenue">收益</TabsTrigger>
@@ -337,7 +338,7 @@ export default function CreatorDashboardPage() {
           </TabsContent>
 
           <TabsContent value="solutions" className="space-y-6">
-            {stats && <SolutionsManagement creatorId={stats.totalSolutions.toString()} />}
+            <SolutionsList showHeader={false} />
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-6">

@@ -178,6 +178,8 @@ model SolutionReview {
   solution_id       String         @map("solution_id")
   reviewer_id       String         @map("reviewer_id")
   status            ReviewStatus
+  from_status       SolutionStatus @map("from_status")  // 审核前的方案状态
+  to_status         SolutionStatus @map("to_status")    // 审核后的方案状态
   score             Int?
   comments          String?
   quality_score     Int?           @map("quality_score")

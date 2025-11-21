@@ -177,20 +177,26 @@ function AdminSolutionsPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/solutions', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        credentials: 'include',
       });
       
       if (!response.ok) {
         throw new Error('获取方案列表失败');
       }
       
-      const data = await response.json();
-      setSolutions(data.solutions || []);
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || '获取方案列表失败');
+      }
+      
+      // API返回格式：{ success: true, data: { items: [...], pagination: {...} } }
+      const solutions = result.data?.items || result.data || [];
+      setSolutions(Array.isArray(solutions) ? solutions : []);
     } catch (error) {
       console.error('获取方案列表错误:', error);
       toast.error('获取方案列表失败');
+      setSolutions([]);
     } finally {
       setLoading(false);
     }
@@ -200,9 +206,7 @@ function AdminSolutionsPage() {
   const fetchReviewHistory = async (solutionId: string) => {
     try {
       const response = await fetch(`/api/admin/solutions/${solutionId}/review`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -330,8 +334,8 @@ function AdminSolutionsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include',
         body: JSON.stringify({
           decision: reviewAction,
           comments: reviewNotes

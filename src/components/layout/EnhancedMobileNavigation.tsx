@@ -172,7 +172,7 @@ export default function EnhancedMobileNavigation({ isOpen, onClose }: EnhancedMo
     <>
       {/* 背景遮罩 */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
+        className="fixed inset-0 z-40 lg:hidden transition-all duration-300"
         onClick={onClose}
         aria-hidden="true"
       />

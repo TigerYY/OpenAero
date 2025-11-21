@@ -12,12 +12,26 @@ export function formatCurrency(amount: number, currency = 'CNY'): string {
   }).format(amount);
 }
 
-export function formatDate(date: Date | string | number): string {
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(date));
+export function formatDate(date: Date | string | number | null | undefined): string {
+  if (!date) {
+    return '未知日期';
+  }
+  
+  try {
+    const dateObj = new Date(date);
+    // 检查日期是否有效
+    if (isNaN(dateObj.getTime())) {
+      return '无效日期';
+    }
+    return new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(dateObj);
+  } catch (error) {
+    console.error('日期格式化失败:', error, date);
+    return '无效日期';
+  }
 }
 
 export function formatNumber(num: number): string {

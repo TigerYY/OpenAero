@@ -47,7 +47,7 @@ const ALERT_COLORS = {
 export function AlertPanel({ 
   className = '',
   autoRefresh = true,
-  refreshInterval = 60 
+  refreshInterval = 120 // 预警数据更新频率较低，120秒刷新一次 
 }: AlertPanelProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [summary, setSummary] = useState<AlertSummary | null>(null);

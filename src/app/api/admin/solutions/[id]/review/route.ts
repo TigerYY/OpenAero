@@ -157,11 +157,20 @@ export async function GET(
         const { prisma } = await import('@/lib/prisma');
         const solution = await prisma.solution.findUnique({
           where: { id: params.id },
-          select: { creatorId: true }
+          select: { creator_id: true }
         });
 
-        if (solution && (solution as any).creatorId === creatorAuth.user.id) {
-          isAuthorized = true;
+        if (solution) {
+          // 获取当前用户的 CreatorProfile
+          const creatorProfile = await prisma.creatorProfile.findUnique({
+            where: { user_id: creatorAuth.user.id },
+            select: { id: true }
+          });
+
+          // 比较方案的 creator_id 和用户的 CreatorProfile.id
+          if (creatorProfile && (solution as any).creator_id === creatorProfile.id) {
+            isAuthorized = true;
+          }
         }
       }
     }
@@ -190,10 +199,10 @@ export async function GET(
       decision: review.decision,
       decisionNotes: review.decisionNotes,
       suggestions: review.suggestions,
-      reviewStartedAt: review.reviewStartedAt?.toISOString() || null,
-      reviewedAt: review.reviewedAt?.toISOString() || null,
-      createdAt: review.createdAt.toISOString(),
-      updatedAt: review.updatedAt.toISOString(),
+      reviewStartedAt: (review.review_started_at || review.reviewStartedAt)?.toISOString() || null,
+      reviewedAt: (review.reviewed_at || review.reviewedAt)?.toISOString() || null,
+      createdAt: (review.created_at || review.createdAt).toISOString(),
+      updatedAt: (review.updated_at || review.updatedAt).toISOString(),
       reviewer: review.reviewer,
       solution: review.solution,
     }));
@@ -201,11 +210,9 @@ export async function GET(
     return createSuccessResponse(formattedHistory, '获取审核历史成功');
   } catch (error) {
     console.error('获取审核历史失败:', error);
-    return createErrorResponse(
-      '获取审核历史失败',
-      500,
-      error instanceof Error ? { name: error.name, message: error.message } : undefined
-    );
+    const errorMessage = error instanceof Error ? error.message : '获取审核历史失败';
+    const errorDetails = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : undefined;
+    return createErrorResponse(errorMessage, 500, errorDetails);
   }
 }
 

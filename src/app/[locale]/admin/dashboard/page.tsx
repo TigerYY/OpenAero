@@ -97,7 +97,7 @@ export default function AdminDashboard() {
   // 申请管理状态
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval] = useState(30); // 秒
+  const [refreshInterval] = useState(60); // 秒 - 调整为60秒，减少刷新频率
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportType, setExportType] = useState<'solutions' | 'users'>('solutions');

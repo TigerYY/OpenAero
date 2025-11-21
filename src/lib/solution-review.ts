@@ -74,7 +74,7 @@ export async function startReview(
   // 检查是否已有进行中的审核
   const existingReview = await prisma.solutionReview.findFirst({
     where: {
-      solutionId,
+      solution_id: solutionId,
       status: ReviewStatus.IN_PROGRESS,
     },
   });
@@ -86,12 +86,12 @@ export async function startReview(
   // 创建审核记录（记录 fromStatus）
   const review = await prisma.solutionReview.create({
     data: {
-      solutionId,
-      reviewerId,
+      solution_id: solutionId,
+      reviewer_id: reviewerId,
       status: ReviewStatus.IN_PROGRESS,
       decision: ReviewDecision.PENDING,
-      fromStatus: solution.status, // **新增**：记录审核前的状态
-      toStatus: solution.status, // 初始值设为当前状态，完成审核时会更新
+      from_status: solution.status, // **新增**：记录审核前的状态
+      to_status: solution.status, // 初始值设为当前状态，完成审核时会更新
       reviewStartedAt: new Date(),
     },
     include: {
@@ -152,7 +152,7 @@ export async function completeReview(
       })
     : await prisma.solutionReview.findFirst({
         where: {
-          solutionId,
+          solution_id: solutionId,
           status: ReviewStatus.IN_PROGRESS,
         },
       });
@@ -175,13 +175,13 @@ export async function completeReview(
     // 创建新的审核记录（记录 fromStatus）
     review = await prisma.solutionReview.create({
       data: {
-        solutionId,
-        reviewerId: data.reviewerId,
+        solution_id: solutionId,
+        reviewer_id: data.reviewerId,
         status: ReviewStatus.IN_PROGRESS,
         decision: ReviewDecision.PENDING,
-        fromStatus: solution.status, // **新增**：记录审核前的状态
-        toStatus: solution.status, // 初始值设为当前状态，完成审核时会更新
-        reviewStartedAt: new Date(),
+        from_status: solution.status, // **新增**：记录审核前的状态
+        to_status: solution.status, // 初始值设为当前状态，完成审核时会更新
+        review_started_at: new Date(),
       },
     });
   }
@@ -214,17 +214,17 @@ export async function completeReview(
       data: {
         status: ReviewStatus.COMPLETED,
         decision: data.decision,
-        fromStatus: fromStatus, // **新增**：记录审核前的状态
-        toStatus: newStatus, // **新增**：记录审核后的状态
+        from_status: fromStatus, // **新增**：记录审核前的状态
+        to_status: newStatus, // **新增**：记录审核后的状态
         score: data.score,
         comments: data.comments,
-        qualityScore: data.qualityScore,
+        quality_score: data.qualityScore,
         completeness: data.completeness,
         innovation: data.innovation,
-        marketPotential: data.marketPotential,
-        decisionNotes: data.decisionNotes,
+        market_potential: data.marketPotential,
+        decision_notes: data.decisionNotes,
         suggestions: data.suggestions || [],
-        reviewedAt: new Date(),
+        reviewed_at: new Date(),
       },
       include: {
         solution: {
@@ -241,9 +241,8 @@ export async function completeReview(
       where: { id: solutionId },
       data: {
         status: newStatus,
-        reviewedAt: new Date(),
-        lastReviewedAt: new Date(), // **新增**：更新最后审核时间
-        reviewNotes: data.decisionNotes || data.comments || null,
+        reviewed_at: new Date(),
+        review_notes: data.decisionNotes || data.comments || null,
       },
     }),
   ]);
@@ -290,7 +289,7 @@ export async function getSolutionReviewHistory(
   solutionId: string
 ): Promise<ReviewWithDetails[]> {
   const reviews = await prisma.solutionReview.findMany({
-    where: { solutionId },
+    where: { solution_id: solutionId },
     include: {
       solution: {
         select: {
@@ -300,7 +299,7 @@ export async function getSolutionReviewHistory(
         },
       },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   });
 
   // 获取所有审核员信息
@@ -350,15 +349,15 @@ export async function getReviewStatistics(
 }> {
   const where: any = {};
   if (reviewerId) {
-    where.reviewerId = reviewerId;
+    where.reviewer_id = reviewerId;
   }
   if (startDate || endDate) {
-    where.createdAt = {};
+    where.created_at = {};
     if (startDate) {
-      where.createdAt.gte = startDate;
+      where.created_at.gte = startDate;
     }
     if (endDate) {
-      where.createdAt.lte = endDate;
+      where.created_at.lte = endDate;
     }
   }
 

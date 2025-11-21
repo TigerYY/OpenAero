@@ -80,6 +80,8 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
     unit: '个',
     unitPrice: 0,
   });
+  // 使用字符串状态来存储数量输入值，允许用户自由输入
+  const [quantityInput, setQuantityInput] = useState<string>('1');
   const [specKey, setSpecKey] = useState('');
   const [specValue, setSpecValue] = useState('');
 
@@ -97,10 +99,13 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
       return;
     }
 
+    // 验证数量，确保至少为1
+    const quantity = (newItem.quantity && newItem.quantity > 0) ? newItem.quantity : 1;
+
     const item: BomItem = {
       name: newItem.name.trim(),
       model: newItem.model?.trim(),
-      quantity: newItem.quantity || 1,
+      quantity: quantity,
       unit: newItem.unit || '个',
       notes: newItem.notes?.trim(),
       unitPrice: newItem.unitPrice,
@@ -121,6 +126,7 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
       unit: '个',
       unitPrice: 0,
     });
+    setQuantityInput('1');
     setShowAddForm(false);
   }, [newItem, items, onChange]);
 
@@ -258,6 +264,7 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
                               onClick={() => {
                                 setEditingIndex(index);
                                 setNewItem(item);
+                                setQuantityInput(item.quantity?.toString() || '1');
                                 setShowAddForm(true);
                                 handleDeleteItem(index);
                               }}
@@ -304,6 +311,7 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
                       unit: '个',
                       unitPrice: 0,
                     });
+                    setQuantityInput('1');
                   }}
                 >
                   <X className="h-4 w-4" />
@@ -352,14 +360,43 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
                         id="bom-quantity"
                         type="number"
                         min="1"
-                        value={newItem.quantity || 1}
-                        onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                        step="1"
+                        value={quantityInput}
+                        onChange={(e) => {
+                          // 允许用户输入任何内容（包括空字符串）
+                          const value = e.target.value;
+                          setQuantityInput(value);
+                          // 同时更新 newItem，如果值是有效数字
+                          if (value !== '') {
+                            const numValue = Number(value);
+                            if (!isNaN(numValue) && numValue > 0) {
+                              setNewItem({ ...newItem, quantity: Math.floor(numValue) });
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // 失去焦点时，验证并修正值
+                          const value = e.target.value.trim();
+                          const numValue = Number(value);
+                          if (!value || isNaN(numValue) || numValue <= 0) {
+                            // 如果值为空或无效，设置为默认值1
+                            setQuantityInput('1');
+                            setNewItem({ ...newItem, quantity: 1 });
+                          } else {
+                            // 确保是正整数
+                            const validQuantity = Math.max(1, Math.floor(numValue));
+                            setQuantityInput(validQuantity.toString());
+                            setNewItem({ ...newItem, quantity: validQuantity });
+                          }
+                        }}
                         className="flex-1"
                         required
+                        placeholder="请输入数量"
                       />
                       <Select
                         value={newItem.unit || '个'}
                         onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                        className="flex-1"
                       >
                         {BOM_UNITS.map(unit => (
                           <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -529,6 +566,7 @@ export function BomForm({ items, onChange, readonly = false, showAdvanced = true
                         unit: '个',
                         unitPrice: 0,
                       });
+                      setQuantityInput('1');
                     }}
                   >
                     取消

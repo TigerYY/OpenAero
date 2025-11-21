@@ -34,11 +34,22 @@ export async function GET(request: NextRequest) {
 
     // 构建查询条件
     const where: any = {
-      creatorId: creatorProfile.id
+      creator_id: creatorProfile.id
     };
 
     if (status && status !== 'all') {
-      where.status = status.toUpperCase();
+      // 处理 NEEDS_REVISION 状态：需要通过审核记录来判断
+      if (status.toUpperCase() === 'NEEDS_REVISION') {
+        // 查询有 NEEDS_REVISION 审核决定的方案
+        // 不限制方案状态，因为"需修改"的方案可能处于不同状态
+        where.solutionReviews = {
+          some: {
+            decision: 'NEEDS_REVISION'
+          }
+        };
+      } else {
+        where.status = status.toUpperCase();
+      }
     }
 
     // 获取总数
@@ -47,52 +58,121 @@ export async function GET(request: NextRequest) {
     // 获取方案列表
     const solutions = await prisma.solution.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        category: true,
+        status: true,
+        price: true,
+        version: true,
+        tags: true,
+        features: true,
+        images: true,
+        locale: true,
+        bom: true,
+        created_at: true,
+        updated_at: true,
+        submitted_at: true,
+        reviewed_at: true,
+        published_at: true,
         _count: {
           select: {
             solutionReviews: true,
-            assets: true,
-            bomItems: true
+            files: true,
           }
         },
-        assets: {
-          take: 3, // 只取前3个资产作为预览
-          orderBy: { createdAt: 'desc' }
+        solutionReviews: {
+          orderBy: {
+            reviewed_at: 'desc'
+          },
+          take: 10, // 获取最新的10条审核记录，以便找到 NEEDS_REVISION 决定
+          select: {
+            id: true,
+            decision: true,
+            comments: true,
+            reviewed_at: true,
+            status: true
+          }
+        },
+        files: {
+          take: 3, // 只取前3个文件作为预览
+          orderBy: { created_at: 'desc' },
+          select: {
+            id: true,
+            file_type: true,
+            url: true,
+            original_name: true,
+            filename: true,
+          }
         }
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updated_at: 'desc' },
       skip: (page - 1) * limit,
       take: limit
     });
 
     // 格式化响应数据
-    const formattedSolutions = solutions.map(solution => ({
-      id: solution.id,
-      title: solution.title,
-      description: solution.description,
-      summary: solution.summary,
-      category: solution.category,
-      status: solution.status,
-      price: Number(solution.price),
-      version: solution.version,
-      tags: solution.tags || solution.features || [],
-      images: solution.images || [],
-      locale: solution.locale,
-      createdAt: solution.createdAt.toISOString(),
-      updatedAt: solution.updatedAt.toISOString(),
-      submittedAt: solution.submittedAt?.toISOString() || null,
-      lastReviewedAt: solution.lastReviewedAt?.toISOString() || null,
-      publishedAt: solution.publishedAt?.toISOString() || null,
-      reviewCount: solution._count.solutionReviews || 0,
-      assetCount: solution._count.assets || 0,
-      bomItemCount: solution._count.bomItems || 0,
-      previewAssets: solution.assets.map(asset => ({
-        id: asset.id,
-        type: asset.type,
-        url: asset.url,
-        title: asset.title
-      }))
-    }));
+    const formattedSolutions = solutions.map(solution => {
+      // 解析 BOM（如果存在）
+      const bom = solution.bom ? (typeof solution.bom === 'string' ? JSON.parse(solution.bom) : solution.bom) : [];
+      const bomItemCount = Array.isArray(bom) ? bom.length : 0;
+      
+      // 检查审核记录，找出 NEEDS_REVISION 决定
+      const reviews = (solution as any).solutionReviews || [];
+      // 找到最新的 NEEDS_REVISION 审核记录
+      const needsRevisionReview = reviews.find((r: any) => r.decision === 'NEEDS_REVISION');
+      // 获取最新的审核记录（按时间排序的第一条）
+      const latestReview = reviews.length > 0 ? reviews[0] : null;
+      const isNeedsRevision = needsRevisionReview !== undefined;
+      
+      // 如果存在 NEEDS_REVISION 审核决定，且没有后续的 APPROVED 审核，则显示为 NEEDS_REVISION 状态
+      let displayStatus = solution.status;
+      if (isNeedsRevision) {
+        // 检查是否有比 NEEDS_REVISION 更新的审核记录（按时间排序）
+        const needsRevisionIndex = reviews.findIndex((r: any) => r.id === needsRevisionReview.id);
+        // 如果有更新的审核记录，检查是否已经通过审核
+        const hasNewerApproved = needsRevisionIndex > 0 && 
+          reviews.slice(0, needsRevisionIndex).some((r: any) => r.decision === 'APPROVED');
+        // 如果没有更新的通过审核，则显示为 NEEDS_REVISION
+        if (!hasNewerApproved) {
+          displayStatus = 'NEEDS_REVISION' as any;
+        }
+      }
+      
+      return {
+        id: solution.id,
+        title: solution.title,
+        description: solution.description,
+        summary: solution.description.substring(0, 200), // 从描述中提取摘要
+        category: solution.category,
+        status: displayStatus,
+        price: Number(solution.price),
+        version: solution.version,
+        tags: solution.tags || solution.features || [],
+        images: solution.images || [],
+        locale: solution.locale,
+        createdAt: solution.created_at.toISOString(),
+        updatedAt: solution.updated_at.toISOString(),
+        submittedAt: solution.submitted_at?.toISOString() || null,
+        lastReviewedAt: latestReview?.reviewed_at?.toISOString() || solution.reviewed_at?.toISOString() || null,
+        publishedAt: solution.published_at?.toISOString() || null,
+        reviewCount: solution._count.solutionReviews || 0,
+        assetCount: solution._count.files || 0,
+        bomItemCount: bomItemCount,
+        previewAssets: solution.files.map(file => ({
+          id: file.id,
+          type: file.file_type,
+          url: file.url,
+          title: file.original_name || file.filename
+        })),
+        // 添加审核反馈信息（如果是需修改状态）
+        reviewFeedback: isNeedsRevision && displayStatus === 'NEEDS_REVISION' ? {
+          comment: needsRevisionReview?.comments || null,
+          reviewedAt: needsRevisionReview?.reviewed_at?.toISOString() || null
+        } : null
+      };
+    });
 
     return createPaginatedResponse(
       formattedSolutions,

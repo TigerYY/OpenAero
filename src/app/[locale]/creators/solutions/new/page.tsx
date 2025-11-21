@@ -15,7 +15,15 @@ import { FileUpload } from '@/components/ui/FileUpload';
 import { BomForm, BomItem } from '@/components/solutions';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
 import { toast } from 'sonner';
-import { Save, ArrowRight, ArrowLeft, Upload, X } from 'lucide-react';
+import { Save, ArrowRight, ArrowLeft, Upload, X, Plus, Trash2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/Dialog';
 // 自定义 debounce 函数
 function debounce<T extends (...args: any[]) => any>(
   func: T,
@@ -83,11 +91,16 @@ export default function CreatorSolutionNewPage() {
 function CreatorSolutionNewContent() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { route, routes } = useRouting();
+  const { route, routes, routeWithDynamicParams } = useRouting();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [solutionId, setSolutionId] = useState<string | null>(null); // 当前编辑的方案ID
+  
+  // 提交确认对话框状态
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [formData, setFormData] = useState<SolutionFormData>({
     title: '',
     summary: '',
@@ -105,6 +118,12 @@ function CreatorSolutionNewContent() {
   const [newTag, setNewTag] = useState('');
   const [newSpecKey, setNewSpecKey] = useState('');
   const [newSpecValue, setNewSpecValue] = useState('');
+  
+  // 应用场景管理
+  const [useCases, setUseCases] = useState<Array<{ title: string; description: string }>>([{ title: '', description: '' }]);
+  
+  // 架构描述管理
+  const [architectureSections, setArchitectureSections] = useState<Array<{ title: string; content: string }>>([{ title: '', content: '' }]);
 
   // 检查用户是否为创作者
   useEffect(() => {
@@ -120,41 +139,198 @@ function CreatorSolutionNewContent() {
     }
   }, [authLoading, user, profile, router, route]);
 
-  // 草稿自动保存（防抖 2 秒）
-  const saveDraft = useCallback(
+  // 草稿自动保存到 localStorage（防抖 2 秒）
+  // 注意：每个方案都有独立的草稿，通过 solutionId 区分
+  const saveDraftToLocal = useCallback(
     debounce(async (data: SolutionFormData) => {
-      if (!data.title.trim()) return; // 至少需要标题才保存
+      if (!data.title.trim() && !solutionId) return; // 新方案至少需要标题才保存
 
       try {
-        // 这里可以调用 API 保存草稿
-        // 暂时只保存到 localStorage
-        localStorage.setItem('solution_draft', JSON.stringify(data));
+        // 使用 solutionId 作为 key，支持多个草稿
+        const draftKey = solutionId ? `solution_draft_${solutionId}` : 'solution_draft_new';
+        localStorage.setItem(draftKey, JSON.stringify({
+          ...data,
+          solutionId: solutionId,
+          timestamp: new Date().toISOString(), // 添加时间戳用于排序
+        }));
+        
+        // 同时保存草稿列表（用于显示所有草稿）
+        const draftList = JSON.parse(localStorage.getItem('solution_drafts_list') || '[]');
+        const draftInfo = {
+          id: solutionId || 'new',
+          title: data.title || '未命名方案',
+          timestamp: new Date().toISOString(),
+        };
+        
+        // 更新或添加草稿信息
+        const existingIndex = draftList.findIndex((d: any) => d.id === (solutionId || 'new'));
+        if (existingIndex >= 0) {
+          draftList[existingIndex] = draftInfo;
+        } else {
+          draftList.push(draftInfo);
+        }
+        
+        // 只保留最近20个草稿
+        draftList.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        const recentDrafts = draftList.slice(0, 20);
+        localStorage.setItem('solution_drafts_list', JSON.stringify(recentDrafts));
       } catch (error) {
-        console.error('保存草稿失败:', error);
+        console.error('保存草稿到本地失败:', error);
       }
     }, 2000),
-    []
+    [solutionId]
   );
 
-  // 监听表单变化，自动保存草稿
+  // 同步 useCases 和 architecture 到 formData
+  useEffect(() => {
+    const useCasesData = useCases.length > 0 && (useCases[0].title || useCases[0].description)
+      ? { scenarios: useCases.filter(uc => uc.title || uc.description) }
+      : {};
+    const architectureData = architectureSections.length > 0 && (architectureSections[0].title || architectureSections[0].content)
+      ? { sections: architectureSections.filter(arch => arch.title || arch.content) }
+      : {};
+    
+    setFormData(prev => ({
+      ...prev,
+      useCases: useCasesData,
+      architecture: architectureData,
+    }));
+  }, [useCases, architectureSections]);
+  
+  // 监听表单变化，自动保存草稿到 localStorage
   useEffect(() => {
     if (formData.title.trim()) {
-      saveDraft(formData);
+      saveDraftToLocal(formData);
     }
-  }, [formData, saveDraft]);
+  }, [formData, saveDraftToLocal]);
 
-  // 加载草稿
+  // 加载草稿（从 localStorage 或已有方案）
   useEffect(() => {
-    const draft = localStorage.getItem('solution_draft');
-    if (draft) {
-      try {
-        const parsed = JSON.parse(draft);
-        setFormData(parsed);
-      } catch (error) {
-        console.error('加载草稿失败:', error);
+    const loadDraft = async () => {
+      // 如果没有 solutionId，尝试加载最新的新方案草稿
+      if (!solutionId) {
+        const newDraft = localStorage.getItem('solution_draft_new');
+        if (newDraft) {
+          try {
+            const parsed = JSON.parse(newDraft);
+            // 如果草稿有 solutionId，说明已经保存到服务器，跳转到编辑页面
+            if (parsed.solutionId) {
+              router.push(routeWithDynamicParams(routes.CREATORS.SOLUTION_EDIT, { id: parsed.solutionId }));
+              return;
+            }
+            // 否则加载本地草稿
+            setFormData(parsed);
+            // 解析 useCases 和 architecture
+            if (parsed.useCases) {
+              const parsedUseCases = parsed.useCases;
+              let useCasesArray: Array<{ title: string; description: string }> = [];
+              if (Array.isArray(parsedUseCases)) {
+                useCasesArray = parsedUseCases;
+              } else if (typeof parsedUseCases === 'object' && parsedUseCases !== null) {
+                if (parsedUseCases.scenarios && Array.isArray(parsedUseCases.scenarios)) {
+                  useCasesArray = parsedUseCases.scenarios;
+                } else if (parsedUseCases.description) {
+                  useCasesArray = [{ title: '主要应用场景', description: parsedUseCases.description }];
+                }
+              }
+              setUseCases(useCasesArray.length > 0 ? useCasesArray : [{ title: '', description: '' }]);
+            }
+            if (parsed.architecture) {
+              const parsedArchitecture = parsed.architecture;
+              let architectureArray: Array<{ title: string; content: string }> = [];
+              if (Array.isArray(parsedArchitecture)) {
+                architectureArray = parsedArchitecture;
+              } else if (typeof parsedArchitecture === 'object' && parsedArchitecture !== null) {
+                if (parsedArchitecture.sections && Array.isArray(parsedArchitecture.sections)) {
+                  architectureArray = parsedArchitecture.sections;
+                } else if (parsedArchitecture.description) {
+                  architectureArray = [{ title: '架构概述', content: parsedArchitecture.description }];
+                }
+              }
+              setArchitectureSections(architectureArray.length > 0 ? architectureArray : [{ title: '', content: '' }]);
+            }
+            return;
+          } catch (error) {
+            console.warn('加载本地草稿失败:', error);
+          }
+        }
+      } else {
+        // 如果有 solutionId，尝试从服务器加载已有方案
+        try {
+          const response = await fetch(`/api/solutions/${solutionId}`, {
+            credentials: 'include',
+          });
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              const solution = result.data;
+              // 解析 useCases
+              const parsedUseCases = solution.specs?.useCases || solution.useCases || {};
+              let useCasesArray: Array<{ title: string; description: string }> = [];
+              if (Array.isArray(parsedUseCases)) {
+                useCasesArray = parsedUseCases;
+              } else if (typeof parsedUseCases === 'object' && parsedUseCases !== null) {
+                // 如果是对象，转换为数组
+                if (parsedUseCases.scenarios && Array.isArray(parsedUseCases.scenarios)) {
+                  useCasesArray = parsedUseCases.scenarios;
+                } else if (parsedUseCases.description) {
+                  // 如果只有 description，创建一个默认场景
+                  useCasesArray = [{ title: '主要应用场景', description: parsedUseCases.description }];
+                } else {
+                  // 尝试将对象的键值对转换为场景
+                  useCasesArray = Object.entries(parsedUseCases).map(([key, value]) => ({
+                    title: key,
+                    description: typeof value === 'string' ? value : JSON.stringify(value),
+                  }));
+                }
+              }
+              
+              // 解析 architecture
+              const parsedArchitecture = solution.specs?.architecture || solution.architecture || {};
+              let architectureArray: Array<{ title: string; content: string }> = [];
+              if (Array.isArray(parsedArchitecture)) {
+                architectureArray = parsedArchitecture;
+              } else if (typeof parsedArchitecture === 'object' && parsedArchitecture !== null) {
+                if (parsedArchitecture.sections && Array.isArray(parsedArchitecture.sections)) {
+                  architectureArray = parsedArchitecture.sections;
+                } else if (parsedArchitecture.description) {
+                  architectureArray = [{ title: '架构概述', content: parsedArchitecture.description }];
+                } else {
+                  architectureArray = Object.entries(parsedArchitecture).map(([key, value]) => ({
+                    title: key,
+                    content: typeof value === 'string' ? value : JSON.stringify(value),
+                  }));
+                }
+              }
+              
+              setFormData({
+                title: solution.title || '',
+                summary: solution.summary || solution.description?.substring(0, 200) || '',
+                description: solution.description || '',
+                category: solution.category as SolutionCategory || SolutionCategory.OTHER,
+                price: solution.price || 0,
+                tags: solution.tags || [],
+                technicalSpecs: solution.specs?.technicalSpecs || solution.technicalSpecs || {},
+                useCases: parsedUseCases,
+                architecture: parsedArchitecture,
+                bom: solution.bomItems || solution.bom || [],
+                assets: solution.assets || [],
+              });
+              setUseCases(useCasesArray.length > 0 ? useCasesArray : [{ title: '', description: '' }]);
+              setArchitectureSections(architectureArray.length > 0 ? architectureArray : [{ title: '', content: '' }]);
+              return;
+            }
+          }
+        } catch (error) {
+          console.warn('加载已有方案失败:', error);
+        }
       }
+    };
+    
+    if (user && !authLoading) {
+      loadDraft();
     }
-  }, []);
+  }, [user, authLoading]);
 
   const handleInputChange = (field: keyof SolutionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -225,60 +401,80 @@ function CreatorSolutionNewContent() {
     }));
   };
 
-  const handleSubmit = async (isDraft: boolean = false) => {
-    setLoading(true);
+  // 保存草稿（不提交审核）
+  const handleSaveDraft = async () => {
+    if (!formData.title.trim()) {
+      toast.error('请至少输入方案标题');
+      return;
+    }
+
+    setSaving(true);
     try {
-      // 验证必填字段
-      if (!formData.title.trim() || formData.title.length < 5) {
-        toast.error('方案标题至少需要5个字符');
-        setLoading(false);
-        return;
+      let currentSolutionId = solutionId;
+
+      // 如果已有 solutionId，更新方案；否则创建新方案
+      if (currentSolutionId) {
+        // 更新已有方案（使用独立字段格式，API 会合并到 specs 中）
+        const response = await fetch(`/api/solutions/${currentSolutionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: formData.title,
+            summary: formData.summary,
+            description: formData.description || formData.summary || '',
+            category: formData.category,
+            price: formData.price,
+            features: formData.tags,
+            technicalSpecs: formData.technicalSpecs,
+            useCases: formData.useCases,
+            architecture: formData.architecture,
+            bom: formData.bom,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || result.message || '保存草稿失败');
+        }
+      } else {
+        // 创建新方案（使用 specs 对象格式）
+        const response = await fetch('/api/solutions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description || formData.summary || '',
+            category: formData.category,
+            price: formData.price,
+            features: formData.tags,
+            specs: {
+              summary: formData.summary,
+              technicalSpecs: formData.technicalSpecs,
+              useCases: formData.useCases,
+              architecture: formData.architecture,
+            },
+            bom: formData.bom,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || result.message || '创建方案失败');
+        }
+
+        currentSolutionId = result.data.id;
+        setSolutionId(currentSolutionId);
       }
-
-      if (!formData.description.trim() || formData.description.length < 20) {
-        toast.error('方案描述至少需要20个字符');
-        setLoading(false);
-        return;
-      }
-
-      if (!formData.category) {
-        toast.error('请选择方案分类');
-        setLoading(false);
-        return;
-      }
-
-      // 创建方案
-      const response = await fetch('/api/solutions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: formData.title,
-          summary: formData.summary,
-          description: formData.description,
-          category: formData.category,
-          price: formData.price,
-          features: formData.tags,
-          technicalSpecs: formData.technicalSpecs,
-          useCases: formData.useCases,
-          architecture: formData.architecture,
-          status: isDraft ? SolutionStatus.DRAFT : SolutionStatus.PENDING_REVIEW,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || result.message || '创建方案失败');
-      }
-
-      const solutionId = result.data.id;
 
       // 保存 BOM
-      if (formData.bom.length > 0) {
-        const bomResponse = await fetch(`/api/solutions/${solutionId}/bom`, {
+      if (formData.bom.length > 0 && currentSolutionId) {
+        const bomResponse = await fetch(`/api/solutions/${currentSolutionId}/bom`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -310,8 +506,179 @@ function CreatorSolutionNewContent() {
       }
 
       // 保存资产
-      if (formData.assets.length > 0) {
-        const assetsResponse = await fetch(`/api/solutions/${solutionId}/assets`, {
+      if (formData.assets.length > 0 && currentSolutionId) {
+        const assetsResponse = await fetch(`/api/solutions/${currentSolutionId}/assets`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            assets: formData.assets,
+          }),
+        });
+
+        if (!assetsResponse.ok) {
+          console.warn('保存资产失败:', await assetsResponse.json());
+        }
+      }
+
+      // 更新 localStorage（使用 solutionId 作为 key）
+      if (currentSolutionId) {
+        const draftKey = `solution_draft_${currentSolutionId}`;
+        localStorage.setItem(draftKey, JSON.stringify({
+          ...formData,
+          solutionId: currentSolutionId,
+          timestamp: new Date().toISOString(),
+        }));
+        
+        // 更新草稿列表
+        const draftList = JSON.parse(localStorage.getItem('solution_drafts_list') || '[]');
+        const draftInfo = {
+          id: currentSolutionId,
+          title: formData.title || '未命名方案',
+          timestamp: new Date().toISOString(),
+        };
+        const existingIndex = draftList.findIndex((d: any) => d.id === currentSolutionId);
+        if (existingIndex >= 0) {
+          draftList[existingIndex] = draftInfo;
+        } else {
+          draftList.push(draftInfo);
+        }
+        draftList.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        localStorage.setItem('solution_drafts_list', JSON.stringify(draftList.slice(0, 20)));
+      }
+
+      toast.success('草稿已保存');
+    } catch (error) {
+      console.error('保存草稿失败:', error);
+      toast.error(error instanceof Error ? error.message : '保存草稿失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSubmit = async (isDraft: boolean = false) => {
+    setLoading(true);
+    try {
+      // 验证必填字段
+      if (!formData.title.trim() || formData.title.length < 5) {
+        toast.error('方案标题至少需要5个字符');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.description.trim() || formData.description.length < 20) {
+        toast.error('方案描述至少需要20个字符');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.category) {
+        toast.error('请选择方案分类');
+        setLoading(false);
+        return;
+      }
+
+      let currentSolutionId = solutionId;
+
+      // 如果已有 solutionId，更新方案；否则创建新方案
+      if (currentSolutionId) {
+        // 更新已有方案（使用独立字段格式，API 会合并到 specs 中）
+        const response = await fetch(`/api/solutions/${currentSolutionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: formData.title,
+            summary: formData.summary,
+            description: formData.description,
+            category: formData.category,
+            price: formData.price,
+            features: formData.tags,
+            technicalSpecs: formData.technicalSpecs,
+            useCases: formData.useCases,
+            architecture: formData.architecture,
+            bom: formData.bom,
+          }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || result.message || '更新方案失败');
+        }
+      } else {
+        // 创建新方案（使用 specs 对象格式）
+        const response = await fetch('/api/solutions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            price: formData.price,
+            features: formData.tags,
+            specs: {
+              summary: formData.summary,
+              technicalSpecs: formData.technicalSpecs,
+              useCases: formData.useCases,
+              architecture: formData.architecture,
+            },
+            bom: formData.bom,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || result.message || '创建方案失败');
+        }
+
+        currentSolutionId = result.data.id;
+        setSolutionId(currentSolutionId);
+      }
+
+      // 保存 BOM
+      if (formData.bom.length > 0) {
+        const bomResponse = await fetch(`/api/solutions/${currentSolutionId}/bom`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            items: formData.bom.map(item => ({
+              name: item.name,
+              model: item.model,
+              quantity: item.quantity,
+              unit: item.unit || '个',
+              notes: item.notes,
+              unitPrice: item.unitPrice,
+              supplier: item.supplier,
+              partNumber: item.partNumber,
+              manufacturer: item.manufacturer,
+              category: item.category,
+              position: item.position,
+              weight: item.weight,
+              specifications: item.specifications,
+              productId: item.productId,
+            })),
+          }),
+        });
+
+        if (!bomResponse.ok) {
+          console.warn('保存 BOM 失败:', await bomResponse.json());
+        }
+      }
+
+      // 保存资产
+      if (formData.assets.length > 0 && currentSolutionId) {
+        const assetsResponse = await fetch(`/api/solutions/${currentSolutionId}/assets`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -329,7 +696,7 @@ function CreatorSolutionNewContent() {
 
       // 如果不是草稿，提交审核
       if (!isDraft) {
-        const submitResponse = await fetch(`/api/solutions/${solutionId}/submit`, {
+        const submitResponse = await fetch(`/api/solutions/${currentSolutionId}/submit`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -344,11 +711,19 @@ function CreatorSolutionNewContent() {
         toast.success('草稿已保存');
       }
 
-      // 清除草稿
-      localStorage.removeItem('solution_draft');
+      // 清除草稿（使用新的多草稿系统）
+      if (currentSolutionId) {
+        localStorage.removeItem(`solution_draft_${currentSolutionId}`);
+        // 从草稿列表中移除
+        const draftList = JSON.parse(localStorage.getItem('solution_drafts_list') || '[]');
+        const filteredList = draftList.filter((d: any) => d.id !== currentSolutionId);
+        localStorage.setItem('solution_drafts_list', JSON.stringify(filteredList));
+      } else {
+        localStorage.removeItem('solution_draft_new');
+      }
 
       // 跳转到方案列表
-      router.push(route(routes.CREATORS.SOLUTIONS));
+      router.push(route(routes.CREATORS.DASHBOARD) + '?tab=solutions');
     } catch (error) {
       console.error('提交方案失败:', error);
       toast.error(error instanceof Error ? error.message : '提交方案失败，请稍后重试');
@@ -586,42 +961,140 @@ function CreatorSolutionNewContent() {
             {/* 步骤3: 应用场景 */}
             {currentStep === 3 && (
               <div className="space-y-6">
+                {/* 应用场景描述 */}
                 <div>
-                  <Label htmlFor="useCases">应用场景描述</Label>
-                  <Textarea
-                    id="useCases"
-                    value={typeof formData.useCases === 'object' ? JSON.stringify(formData.useCases, null, 2) : formData.useCases}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        handleInputChange('useCases', parsed);
-                      } catch {
-                        handleInputChange('useCases', { description: e.target.value });
-                      }
-                    }}
-                    placeholder="描述方案的应用场景（JSON 格式或纯文本）"
-                    rows={8}
-                    className="mt-1 font-mono text-sm"
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>应用场景描述</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUseCases([...useCases, { title: '', description: '' }])}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      添加场景
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">描述您的方案可以应用的具体场景和用途</p>
+                  
+                  <div className="space-y-4">
+                    {useCases.map((useCase, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <span className="text-sm font-medium text-gray-700">场景 {index + 1}</span>
+                          {useCases.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setUseCases(useCases.filter((_, i) => i !== index))}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor={`useCase-title-${index}`} className="text-sm">场景标题</Label>
+                            <Input
+                              id={`useCase-title-${index}`}
+                              value={useCase.title}
+                              onChange={(e) => {
+                                const updated = [...useCases];
+                                updated[index].title = e.target.value;
+                                setUseCases(updated);
+                              }}
+                              placeholder="例如：农业植保、巡检检测、物流配送等"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`useCase-desc-${index}`} className="text-sm">场景描述</Label>
+                            <Textarea
+                              id={`useCase-desc-${index}`}
+                              value={useCase.description}
+                              onChange={(e) => {
+                                const updated = [...useCases];
+                                updated[index].description = e.target.value;
+                                setUseCases(updated);
+                              }}
+                              placeholder="详细描述该应用场景的具体用途、优势和使用方法"
+                              rows={4}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
 
+                {/* 架构描述 */}
                 <div>
-                  <Label htmlFor="architecture">架构描述</Label>
-                  <Textarea
-                    id="architecture"
-                    value={typeof formData.architecture === 'object' ? JSON.stringify(formData.architecture, null, 2) : formData.architecture}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        handleInputChange('architecture', parsed);
-                      } catch {
-                        handleInputChange('architecture', { description: e.target.value });
-                      }
-                    }}
-                    placeholder="描述方案的架构设计（JSON 格式或纯文本）"
-                    rows={8}
-                    className="mt-1 font-mono text-sm"
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>架构描述</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setArchitectureSections([...architectureSections, { title: '', content: '' }])}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      添加部分
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">描述您的方案的技术架构、系统组成和工作流程</p>
+                  
+                  <div className="space-y-4">
+                    {architectureSections.map((section, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <span className="text-sm font-medium text-gray-700">部分 {index + 1}</span>
+                          {architectureSections.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setArchitectureSections(architectureSections.filter((_, i) => i !== index))}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor={`arch-title-${index}`} className="text-sm">部分标题</Label>
+                            <Input
+                              id={`arch-title-${index}`}
+                              value={section.title}
+                              onChange={(e) => {
+                                const updated = [...architectureSections];
+                                updated[index].title = e.target.value;
+                                setArchitectureSections(updated);
+                              }}
+                              placeholder="例如：系统架构、硬件组成、软件架构、工作流程等"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`arch-content-${index}`} className="text-sm">内容描述</Label>
+                            <Textarea
+                              id={`arch-content-${index}`}
+                              value={section.content}
+                              onChange={(e) => {
+                                const updated = [...architectureSections];
+                                updated[index].content = e.target.value;
+                                setArchitectureSections(updated);
+                              }}
+                              placeholder="详细描述该部分的组成、功能和技术特点"
+                              rows={5}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -691,27 +1164,27 @@ function CreatorSolutionNewContent() {
               </Button>
 
               <div className="flex gap-3">
+                {/* 保存草稿按钮 - 在所有步骤都显示 */}
+                <Button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={saving || !formData.title.trim()}
+                  variant="outline"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? '保存中...' : '保存草稿'}
+                </Button>
+
                 {currentStep === STEPS.length && (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={() => handleSubmit(true)}
-                      disabled={loading}
-                      variant="outline"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {loading ? '保存中...' : '保存草稿'}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => handleSubmit(false)}
-                      disabled={loading || !isStepValid(currentStep)}
-                      className="bg-primary-600 hover:bg-primary-700 text-white"
-                    >
-                      {loading ? '提交中...' : '提交审核'}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </>
+                  <Button
+                    type="button"
+                    onClick={() => setShowSubmitDialog(true)}
+                    disabled={loading || !isStepValid(currentStep)}
+                    className="bg-primary-600 hover:bg-primary-700 text-white"
+                  >
+                    {loading ? '提交中...' : '提交审核'}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 )}
 
                 {currentStep < STEPS.length && (
@@ -730,6 +1203,98 @@ function CreatorSolutionNewContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 提交确认对话框 */}
+      <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>提交方案审核确认</DialogTitle>
+            <DialogDescription>
+              请仔细阅读以下协议和条款，确认无误后提交审核
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">1. 内容真实性承诺</h4>
+              <p className="text-sm text-gray-600">
+                我承诺提交的方案信息真实、准确、完整，不存在虚假、误导性内容。如有不实信息，愿意承担相应责任。
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">2. 知识产权声明</h4>
+              <p className="text-sm text-gray-600">
+                我确认提交的方案及相关内容（包括但不限于技术规格、BOM清单、设计图纸等）为原创或已获得合法授权，不存在侵犯他人知识产权的情况。
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">3. 审核流程说明</h4>
+              <p className="text-sm text-gray-600">
+                提交后，方案将进入审核流程。审核时间通常为3-5个工作日。审核期间，方案状态为"待审核"，无法进行编辑。审核结果将通过系统通知告知。
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">4. 平台使用规范</h4>
+              <p className="text-sm text-gray-600">
+                我同意遵守平台的使用规范，包括但不限于：不发布违法违规内容、不进行恶意竞争、尊重其他用户权益等。
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">5. 数据使用授权</h4>
+              <p className="text-sm text-gray-600">
+                我授权平台在审核、展示、推广等合理范围内使用方案信息，并同意平台对方案进行必要的技术处理和优化。
+              </p>
+            </div>
+
+            <div className="flex items-start space-x-2 pt-4 border-t">
+              <input
+                type="checkbox"
+                id="agree-terms-new"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <label htmlFor="agree-terms-new" className="text-sm text-gray-700 cursor-pointer">
+                我已仔细阅读并同意以上所有协议和条款，确认提交方案进行审核
+              </label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowSubmitDialog(false);
+                setAgreedToTerms(false);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                if (!agreedToTerms) {
+                  toast.error('请先同意协议和条款');
+                  return;
+                }
+                setShowSubmitDialog(false);
+                setAgreedToTerms(false);
+                // 执行实际的提交操作
+                await handleSubmit(false);
+              }}
+              disabled={!agreedToTerms || loading}
+              className="bg-primary-600 hover:bg-primary-700 text-white"
+            >
+              {loading ? '提交中...' : '确认提交'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

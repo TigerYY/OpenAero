@@ -57,7 +57,7 @@ const ACTIVITY_COLORS = {
 export function ActivityFeed({ 
   limit = 20, 
   autoRefresh = true,
-  refreshInterval = 30,
+  refreshInterval = 60, // 默认60秒刷新一次
   className = '' 
 }: ActivityFeedProps) {
   const [activities, setActivities] = useState<Activity[]>([]);

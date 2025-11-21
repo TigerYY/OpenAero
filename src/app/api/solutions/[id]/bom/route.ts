@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
-import { bomItemsToJson, shouldDualWrite } from '@/lib/bom-dual-write';
+import { bomItemsToJson } from '@/lib/bom-dual-write';
 
 interface RouteParams {
   params: {
@@ -15,20 +15,20 @@ interface RouteParams {
 const bomItemSchema = z.object({
   // 基础信息
   name: z.string().min(1, '物料名称不能为空'),
-  model: z.string().optional(),
+  model: z.string().optional().nullable(),
   quantity: z.number().int().min(1, '数量必须大于0').default(1),
-  unit: z.string().optional().default('个'),
-  notes: z.string().optional(),
+  unit: z.string().optional().default('个').nullable(),
+  notes: z.string().optional().nullable(),
 
   // 价格和成本
-  unitPrice: z.number().min(0, '单价不能为负数').optional(),
+  unitPrice: z.number().min(0, '单价不能为负数').optional().nullable(),
 
   // 供应商信息
-  supplier: z.string().optional(),
+  supplier: z.string().optional().nullable(),
 
   // 零件标识
-  partNumber: z.string().optional(),
-  manufacturer: z.string().optional(),
+  partNumber: z.string().optional().nullable(),
+  manufacturer: z.string().optional().nullable(),
 
   // 分类和位置
   category: z.enum([
@@ -43,21 +43,21 @@ const bomItemSchema = z.object({
     'RECEIVER',
     'TRANSMITTER',
     'OTHER'
-  ]).optional(),
-  position: z.string().optional(),
+  ]).optional().nullable(),
+  position: z.string().optional().nullable(),
 
   // 物理属性
-  weight: z.number().min(0, '重量不能为负数').optional(),
+  weight: z.number().min(0, '重量不能为负数').optional().nullable(),
 
   // 技术规格
-  specifications: z.record(z.any()).optional(),
+  specifications: z.record(z.any()).optional().nullable(),
 
   // 关联商城商品
-  productId: z.string().optional(),
+  productId: z.string().optional().nullable(),
 });
 
 const bomUpdateSchema = z.object({
-  items: z.array(bomItemSchema).min(0, 'BOM 项列表不能为空'),
+  items: z.array(bomItemSchema),
 });
 
 // PUT /api/solutions/[id]/bom - 更新方案的 BOM 清单
@@ -72,8 +72,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = params;
     const body = await request.json();
 
-    // 验证输入数据
-    const validatedData = bomUpdateSchema.parse(body);
+    // 验证输入数据（允许空数组，用于草稿保存）
+    let validatedData;
+    try {
+      validatedData = bomUpdateSchema.parse(body);
+    } catch (error) {
+      console.error('BOM 验证失败:', error);
+      if (error instanceof z.ZodError) {
+        return createValidationErrorResponse(error);
+      }
+      throw error;
+    }
 
     // 获取方案
     const solution = await prisma.solution.findUnique({
@@ -96,7 +105,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('只有创作者可以管理 BOM', 403);
     }
 
-    if (solution.creatorId !== solution.creator?.id && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
+    // 获取当前用户的 CreatorProfile
+    const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+      where: { user_id: authResult.user.id },
+      select: { id: true },
+    });
+
+    const solutionCreatorId = (solution as any).creator_id || solution.creator?.id;
+    const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+    
+    if (!isAdmin && (!currentUserCreatorProfile || solutionCreatorId !== currentUserCreatorProfile.id)) {
       return createErrorResponse('无权修改此方案的 BOM', 403);
     }
 
@@ -122,58 +140,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // 使用事务：删除现有 BOM 项，批量创建新 BOM 项，并更新 JSON 字段（双写策略）
-    const result = await prisma.$transaction(async (tx) => {
-      // 删除现有 BOM 项
-      await tx.solutionBomItem.deleteMany({
-        where: { solutionId: id }
-      });
+    // 将 BOM 项转换为 JSON 格式并更新到 Solution.bom 字段
+    const bomJson = validatedData.items.length > 0 
+      ? bomItemsToJson(validatedData.items)
+      : null; // 空数组时设置为 null
 
-      // 批量创建新 BOM 项（支持方案 B 的所有字段）
-      const bomItems = await Promise.all(
-        validatedData.items.map(item =>
-          tx.solutionBomItem.create({
-            data: {
-              solutionId: id,
-              // 基础信息
-              name: item.name,
-              model: item.model,
-              quantity: item.quantity,
-              unit: item.unit || '个',
-              notes: item.notes,
-              // 价格和成本
-              unitPrice: item.unitPrice !== undefined ? item.unitPrice : null,
-              // 供应商信息
-              supplier: item.supplier,
-              // 零件标识
-              partNumber: item.partNumber,
-              manufacturer: item.manufacturer,
-              // 分类和位置
-              category: item.category,
-              position: item.position,
-              // 物理属性
-              weight: item.weight !== undefined ? item.weight : null,
-              // 技术规格
-              specifications: item.specifications ? item.specifications : null,
-              // 关联商城商品
-              productId: item.productId || null,
-            }
-          })
-        )
-      );
-
-      // 双写策略：同时更新 Solution.bom JSON 字段（如果启用）
-      if (shouldDualWrite()) {
-        const bomJson = bomItemsToJson(bomItems);
-        await tx.solution.update({
-          where: { id },
-          data: {
-            bom: bomJson,
-          },
-        });
-      }
-
-      return bomItems;
+    // 更新 Solution.bom JSON 字段
+    await prisma.solution.update({
+      where: { id },
+      data: {
+        bom: bomJson,
+      },
     });
 
     // 记录审计日志
@@ -183,8 +160,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       resource: 'solution',
       resourceId: id,
       newValue: {
-        itemCount: result.length,
-        items: result.map(item => ({
+        itemCount: validatedData.items.length,
+        items: validatedData.items.map(item => ({
           name: item.name,
           quantity: item.quantity
         }))
@@ -193,34 +170,34 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return createSuccessResponse(
       {
-        items: result.map(item => ({
-          id: item.id,
+        items: validatedData.items.map((item, index) => ({
+          id: `bom-${index}`, // 临时 ID，因为存储在 JSON 中
           // 基础信息
           name: item.name,
-          model: item.model,
+          model: item.model || null,
           quantity: item.quantity,
-          unit: (item as any).unit || '个',
-          notes: item.notes,
+          unit: item.unit || '个',
+          notes: item.notes || null,
           // 价格和成本
-          unitPrice: (item as any).unitPrice ? Number((item as any).unitPrice) : null,
+          unitPrice: item.unitPrice !== null && item.unitPrice !== undefined ? Number(item.unitPrice) : null,
           // 供应商信息
-          supplier: (item as any).supplier || null,
+          supplier: item.supplier || null,
           // 零件标识
-          partNumber: (item as any).partNumber || null,
-          manufacturer: (item as any).manufacturer || null,
+          partNumber: item.partNumber || null,
+          manufacturer: item.manufacturer || null,
           // 分类和位置
-          category: (item as any).category || null,
-          position: (item as any).position || null,
+          category: item.category || null,
+          position: item.position || null,
           // 物理属性
-          weight: (item as any).weight ? Number((item as any).weight) : null,
+          weight: item.weight !== null && item.weight !== undefined ? Number(item.weight) : null,
           // 技术规格
-          specifications: (item as any).specifications || null,
+          specifications: item.specifications || null,
           // 关联商城商品
-          productId: item.productId,
-          createdAt: item.createdAt.toISOString()
+          productId: item.productId || null,
+          createdAt: new Date().toISOString()
         }))
       },
-      'BOM 清单更新成功'
+      validatedData.items.length > 0 ? 'BOM 清单更新成功' : 'BOM 清单已清空（草稿保存）'
     );
   } catch (error) {
     console.error('更新 BOM 清单失败:', error);
@@ -244,7 +221,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // 获取方案（验证存在性）
     const solution = await prisma.solution.findUnique({
       where: { id },
-      select: { id: true, status: true, creatorId: true }
+      select: { id: true, status: true, creator_id: true, bom: true }
     });
 
     if (!solution) {
@@ -265,7 +242,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         ? authResult.user.roles 
         : (authResult.user?.role ? [authResult.user.role] : []);
       
-      const isCreator = solution.creatorId && userRoles.includes('CREATOR');
+      const solutionCreatorId = (solution as any).creator_id;
+      const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+        where: { user_id: authResult.user.id },
+        select: { id: true },
+      });
+      const isCreator = solutionCreatorId && currentUserCreatorProfile && solutionCreatorId === currentUserCreatorProfile.id && userRoles.includes('CREATOR');
       const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
       
       if (!isPublicAccess && !isCreator && !isAdmin && solution.status !== 'PUBLISHED') {
@@ -273,55 +255,50 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // 获取 BOM 项（优先使用 SolutionBomItem，fallback 到 JSON）
-    let bomItems = await prisma.solutionBomItem.findMany({
-      where: { solutionId: id },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            sku: true,
-            price: true,
-            images: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'asc' }
-    });
-
-    // Fallback：如果没有 BOM 项记录，尝试从 JSON 字段读取
-    if (bomItems.length === 0) {
-      const solution = await prisma.solution.findUnique({
-        where: { id },
-        select: { bom: true }
-      });
-
-      if (solution?.bom) {
-        // 解析 JSON BOM 数据
-        const bomJson = solution.bom as any;
-        if (bomJson.components && Array.isArray(bomJson.components)) {
-          bomItems = bomJson.components.map((item: any, index: number) => ({
-            id: `json-${index}`,
-            solutionId: id,
-            name: item.name || '未知物料',
-            model: item.model || null,
-            quantity: item.quantity || 1,
-            unit: item.unit || '个',
-            notes: item.notes || null,
-            unitPrice: item.unitPrice !== undefined ? item.unitPrice : null,
-            supplier: item.supplier || null,
-            partNumber: item.partNumber || null,
-            manufacturer: item.manufacturer || null,
-            category: item.category || null,
-            position: item.position || null,
-            weight: item.weight !== undefined ? item.weight : null,
-            specifications: item.specifications || null,
-            productId: item.productId || null,
-            createdAt: new Date(),
-            product: null,
-          })) as any;
-        }
+    // 从 JSON 字段读取 BOM 数据
+    let bomItems: any[] = [];
+    
+    if (solution.bom) {
+      const bomJson = solution.bom as any;
+      if (bomJson.components && Array.isArray(bomJson.components)) {
+        bomItems = bomJson.components.map((item: any, index: number) => ({
+          id: `bom-${index}`,
+          name: item.name || '未知物料',
+          model: item.model || null,
+          quantity: item.quantity || 1,
+          unit: item.unit || '个',
+          notes: item.notes || null,
+          unitPrice: item.unitPrice !== undefined ? item.unitPrice : null,
+          supplier: item.supplier || null,
+          partNumber: item.partNumber || null,
+          manufacturer: item.manufacturer || null,
+          category: item.category || null,
+          position: item.position || null,
+          weight: item.weight !== undefined ? item.weight : null,
+          specifications: item.specifications || null,
+          productId: item.productId || null,
+          product: null, // 如果需要产品信息，可以单独查询
+        }));
+      } else if (Array.isArray(bomJson)) {
+        // 兼容旧格式（直接是数组）
+        bomItems = bomJson.map((item: any, index: number) => ({
+          id: `bom-${index}`,
+          name: item.name || '未知物料',
+          model: item.model || null,
+          quantity: item.quantity || 1,
+          unit: item.unit || '个',
+          notes: item.notes || null,
+          unitPrice: item.unitPrice !== undefined ? item.unitPrice : null,
+          supplier: item.supplier || null,
+          partNumber: item.partNumber || null,
+          manufacturer: item.manufacturer || null,
+          category: item.category || null,
+          position: item.position || null,
+          weight: item.weight !== undefined ? item.weight : null,
+          specifications: item.specifications || null,
+          productId: item.productId || null,
+          product: null,
+        }));
       }
     }
 
@@ -333,32 +310,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           name: item.name,
           model: item.model,
           quantity: item.quantity,
-          unit: (item as any).unit || '个',
+          unit: item.unit || '个',
           notes: item.notes,
           // 价格和成本
-          unitPrice: (item as any).unitPrice ? Number((item as any).unitPrice) : null,
+          unitPrice: item.unitPrice !== null && item.unitPrice !== undefined ? Number(item.unitPrice) : null,
           // 供应商信息
-          supplier: (item as any).supplier || null,
+          supplier: item.supplier || null,
           // 零件标识
-          partNumber: (item as any).partNumber || null,
-          manufacturer: (item as any).manufacturer || null,
+          partNumber: item.partNumber || null,
+          manufacturer: item.manufacturer || null,
           // 分类和位置
-          category: (item as any).category || null,
-          position: (item as any).position || null,
+          category: item.category || null,
+          position: item.position || null,
           // 物理属性
-          weight: (item as any).weight ? Number((item as any).weight) : null,
+          weight: item.weight !== null && item.weight !== undefined ? Number(item.weight) : null,
           // 技术规格
-          specifications: (item as any).specifications || null,
+          specifications: item.specifications || null,
           // 关联商城商品
-          productId: item.productId,
-          product: item.product ? {
-            id: item.product.id,
-            name: item.product.name,
-            sku: item.product.sku,
-            price: Number(item.product.price),
-            images: item.product.images
-          } : null,
-          createdAt: item.createdAt.toISOString()
+          productId: item.productId || null,
+          product: item.product || null,
+          createdAt: new Date().toISOString()
         }))
       },
       '获取 BOM 清单成功'
@@ -371,4 +342,3 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
-

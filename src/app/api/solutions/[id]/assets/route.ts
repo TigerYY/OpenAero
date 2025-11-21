@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { createHash } from 'crypto';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
-import { AssetType } from '@prisma/client';
+import { SolutionFileType } from '@prisma/client';
 
 interface RouteParams {
   params: {
@@ -13,7 +14,7 @@ interface RouteParams {
 
 // 资产验证 schema
 const assetSchema = z.object({
-  type: z.nativeEnum(AssetType),
+  type: z.string(), // 接受字符串，后续映射到 SolutionFileType
   url: z.string().url('URL 格式不正确'),
   title: z.string().optional(),
   description: z.string().optional(),
@@ -59,7 +60,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('只有创作者可以管理资产', 403);
     }
 
-    if (solution.creatorId !== solution.creator?.id && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
+    // 获取当前用户的 CreatorProfile
+    const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+      where: { user_id: authResult.user.id },
+      select: { id: true },
+    });
+
+    const solutionCreatorId = (solution as any).creator_id || solution.creator?.id;
+    const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+    
+    if (!isAdmin && (!currentUserCreatorProfile || solutionCreatorId !== currentUserCreatorProfile.id)) {
       return createErrorResponse('无权修改此方案的资产', 403);
     }
 
@@ -70,17 +80,34 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // 批量创建资产
     const assets = await Promise.all(
-      validatedData.assets.map(asset =>
-        prisma.solutionAsset.create({
+      validatedData.assets.map(asset => {
+        // 简单的类型映射
+        let fileType: SolutionFileType = 'OTHER';
+        const typeUpper = asset.type.toUpperCase();
+        if (typeUpper === 'IMAGE') fileType = 'IMAGE';
+        else if (typeUpper === 'DOCUMENT') fileType = 'DOCUMENT';
+        else if (typeUpper === 'VIDEO') fileType = 'VIDEO';
+        else if (typeUpper === 'CAD') fileType = 'CAD';
+
+        // 生成 checksum（使用 URL 的 hash）
+        const checksum = createHash('md5').update(asset.url).digest('hex');
+
+        return prisma.solutionFile.create({
           data: {
-            solutionId: id,
-            type: asset.type,
+            solution_id: id,
+            file_type: fileType,
             url: asset.url,
-            title: asset.title,
+            original_name: asset.title || 'Untitled',
+            filename: asset.title || 'untitled',
+            mime_type: 'application/octet-stream', // 默认
+            size: 0, // 默认
+            path: asset.url,
+            checksum: checksum, // 必需的字段
             description: asset.description,
+            uploaded_by: authResult.user.id,
           }
-        })
-      )
+        });
+      })
     );
 
     // 记录审计日志
@@ -92,7 +119,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       newValue: {
         assetCount: assets.length,
         assets: assets.map(asset => ({
-          type: asset.type,
+          type: asset.file_type,
           url: asset.url
         }))
       },
@@ -102,11 +129,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       {
         assets: assets.map(asset => ({
           id: asset.id,
-          type: asset.type,
+          type: asset.file_type,
           url: asset.url,
-          title: asset.title,
+          title: asset.original_name,
           description: asset.description,
-          createdAt: asset.createdAt.toISOString()
+          createdAt: asset.created_at.toISOString()
         }))
       },
       '资产添加成功'
@@ -133,7 +160,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // 获取方案（验证存在性）
     const solution = await prisma.solution.findUnique({
       where: { id },
-      select: { id: true, status: true, creatorId: true }
+      select: { id: true, status: true, creator_id: true }
     });
 
     if (!solution) {
@@ -154,7 +181,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         ? authResult.user.roles 
         : (authResult.user?.role ? [authResult.user.role] : []);
       
-      const isCreator = solution.creatorId && userRoles.includes('CREATOR');
+      const solutionCreatorId = (solution as any).creator_id;
+      const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+        where: { user_id: authResult.user.id },
+        select: { id: true },
+      });
+      const isCreator = solutionCreatorId && currentUserCreatorProfile && solutionCreatorId === currentUserCreatorProfile.id && userRoles.includes('CREATOR');
       const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
       
       if (!isPublicAccess && !isCreator && !isAdmin && solution.status !== 'PUBLISHED') {
@@ -164,29 +196,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
-    const type = searchParams.get('type') as AssetType | null;
+    const type = searchParams.get('type');
 
     // 构建查询条件
-    const where: any = { solutionId: id };
-    if (type && Object.values(AssetType).includes(type)) {
-      where.type = type;
+    const where: any = { solution_id: id };
+    if (type) {
+      where.file_type = type as SolutionFileType;
     }
 
     // 获取资产列表
-    const assets = await prisma.solutionAsset.findMany({
+    const assets = await prisma.solutionFile.findMany({
       where,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { created_at: 'desc' }
     });
 
     return createSuccessResponse(
       {
         assets: assets.map(asset => ({
           id: asset.id,
-          type: asset.type,
+          type: asset.file_type,
           url: asset.url,
-          title: asset.title,
+          title: asset.original_name,
           description: asset.description,
-          createdAt: asset.createdAt.toISOString()
+          createdAt: asset.created_at.toISOString()
         }))
       },
       '获取资产列表成功'
@@ -218,7 +250,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // 获取资产
-    const asset = await prisma.solutionAsset.findUnique({
+    const asset = await prisma.solutionFile.findUnique({
       where: { id: assetId },
       include: {
         solution: {
@@ -229,7 +261,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    if (!asset || asset.solutionId !== id) {
+    if (!asset || asset.solution_id !== id) {
       return createErrorResponse('资产不存在或不属于此方案', 404);
     }
 
@@ -242,17 +274,24 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse('只有创作者可以删除资产', 403);
     }
 
-    if (asset.solution.creatorId !== asset.solution.creator?.id && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
+    const solutionCreatorId = (asset.solution as any).creator_id || asset.solution.creator?.id;
+    const currentUserCreatorProfile = await prisma.creatorProfile.findUnique({
+      where: { user_id: authResult.user.id },
+      select: { id: true },
+    });
+    const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+    
+    if (!isAdmin && (!currentUserCreatorProfile || solutionCreatorId !== currentUserCreatorProfile.id)) {
       return createErrorResponse('无权删除此方案的资产', 403);
     }
 
     // 验证方案状态允许编辑
-    if (asset.solution.status !== 'DRAFT' && asset.solution.status !== 'REJECTED') {
+    if (asset.solution!.status !== 'DRAFT' && asset.solution!.status !== 'REJECTED') {
       return createErrorResponse('只有草稿或已驳回的方案可以删除资产', 400);
     }
 
     // 删除资产
-    await prisma.solutionAsset.delete({
+    await prisma.solutionFile.delete({
       where: { id: assetId }
     });
 
@@ -264,7 +303,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       resourceId: id,
       oldValue: {
         assetId: asset.id,
-        type: asset.type,
+        type: asset.file_type,
         url: asset.url
       },
     });
