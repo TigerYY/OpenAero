@@ -19,7 +19,7 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -104,6 +104,8 @@ export default function ReviewWorkbenchPage() {
   });
   const [loading, setLoading] = useState(true);
   const [selectedSolution, setSelectedSolution] = useState<Solution | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [activeTab, setActiveTab] = useState('pending'); // 默认显示待审核标签页
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -416,20 +418,33 @@ export default function ReviewWorkbenchPage() {
     }
   };
 
+  const handleOptimize = (solutionId: string) => {
+    // 跳转到上架优化页面
+    window.location.href = `/zh-CN/admin/solutions/${solutionId}/optimize`;
+  };
+
+  const handleOptimizeInDialog = (solutionId: string) => {
+    setShowDetailDialog(false);
+    handleOptimize(solutionId);
+  };
+
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: { label: '待审核', variant: 'secondary' as const },
-      IN_REVIEW: { label: '审核中', variant: 'default' as const },
-      APPROVED: { label: '已通过', variant: 'default' as const },
-      READY_TO_PUBLISH: { label: '准备发布', variant: 'default' as const, className: 'bg-purple-100 text-purple-800' },
-      REJECTED: { label: '已拒绝', variant: 'destructive' as const },
-      NEEDS_REVISION: { label: '需修改', variant: 'secondary' as const },
-      PUBLISHED: { label: '已发布', variant: 'default' as const },
-      SUSPENDED: { label: '临时下架', variant: 'secondary' as const, className: 'bg-orange-100 text-orange-800' },
-      ARCHIVED: { label: '已归档', variant: 'secondary' as const }
+    const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive'; className?: string }> = {
+      PENDING: { label: '待审核', variant: 'secondary' },
+      IN_REVIEW: { label: '审核中', variant: 'default' },
+      APPROVED: { label: '已通过', variant: 'default' },
+      READY_TO_PUBLISH: { label: '准备发布', variant: 'default', className: 'bg-purple-100 text-purple-800' },
+      REJECTED: { label: '已拒绝', variant: 'destructive' },
+      NEEDS_REVISION: { label: '需修改', variant: 'secondary' },
+      PUBLISHED: { label: '已发布', variant: 'default' },
+      SUSPENDED: { label: '临时下架', variant: 'secondary', className: 'bg-orange-100 text-orange-800' },
+      ARCHIVED: { label: '已归档', variant: 'secondary' }
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
+    const config = statusConfig[status] || statusConfig.PENDING;
+    if (!config) {
+      return <Badge variant="secondary">未知状态</Badge>;
+    }
     if (config.className) {
       return <Badge className={config.className}>{config.label}</Badge>;
     }
@@ -495,10 +510,10 @@ export default function ReviewWorkbenchPage() {
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">审核工作台</h1>
-        <p className="text-gray-600">统一管理和审核方案提交</p>
-      </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">审核工作台</h1>
+          <p className="text-gray-600">统一管理和审核方案提交</p>
+        </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
@@ -774,65 +789,84 @@ export default function ReviewWorkbenchPage() {
                               恢复
                             </Button>
                           )}
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={async () => {
-                                  // 获取完整的方案信息
-                                  try {
-                                    const response = await fetch(`/api/solutions/${solution.id}`, {
-                                      credentials: 'include',
-                                    });
-                                    if (response.ok) {
-                                      const result = await response.json();
-                                      if (result.success && result.data) {
-                                        // 将 API 返回的完整数据映射到 Solution 接口
-                                        const fullSolution: Solution = {
-                                          ...solution,
-                                          price: result.data.price,
-                                          summary: result.data.summary,
-                                          specs: result.data.specs,
-                                          technicalSpecs: result.data.specs?.technicalSpecs || result.data.technicalSpecs,
-                                          useCases: result.data.specs?.useCases || result.data.useCases,
-                                          architecture: result.data.specs?.architecture || result.data.architecture,
-                                          bom: result.data.bom,
-                                          bomItems: result.data.bomItems || [],
-                                          features: result.data.features || [],
-                                          images: result.data.images || [],
-                                          version: result.data.version,
-                                          files: (result.data.files || result.data.assets || []).map((f: any) => ({
-                                            id: f.id,
-                                            name: f.fileName || f.title || f.filename || f.original_name || '未知文件',
-                                            url: f.fileUrl || f.url || '',
-                                            type: f.fileType || f.type || f.file_type || 'unknown',
-                                          })),
-                                        };
-                                        setSelectedSolution(fullSolution);
-                                      } else {
-                                        setSelectedSolution(solution);
-                                      }
-                                    } else {
-                                      setSelectedSolution(solution);
-                                    }
-                                  } catch (error) {
-                                    console.error('获取方案详情失败:', error);
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={async () => {
+                              // 先获取完整的方案信息，然后再打开对话框
+                              setLoadingDetail(true);
+                              try {
+                                const response = await fetch(`/api/solutions/${solution.id}`, {
+                                  credentials: 'include',
+                                });
+                                if (response.ok) {
+                                  const result = await response.json();
+                                  if (result.success && result.data) {
+                                    // 将 API 返回的完整数据映射到 Solution 接口
+                                    const fullSolution: Solution = {
+                                      ...solution,
+                                      price: result.data.price,
+                                      summary: result.data.summary,
+                                      specs: result.data.specs,
+                                      technicalSpecs: result.data.specs?.technicalSpecs || result.data.technicalSpecs,
+                                      useCases: result.data.specs?.useCases || result.data.useCases,
+                                      architecture: result.data.specs?.architecture || result.data.architecture,
+                                      bom: result.data.bom,
+                                      bomItems: result.data.bomItems || [],
+                                      features: result.data.features || [],
+                                      images: result.data.images || [],
+                                      version: result.data.version,
+                                      files: (result.data.files || result.data.assets || []).map((f: any) => ({
+                                        id: f.id,
+                                        name: f.fileName || f.title || f.filename || f.original_name || '未知文件',
+                                        url: f.fileUrl || f.url || '',
+                                        type: f.fileType || f.type || f.file_type || 'unknown',
+                                      })),
+                                    };
+                                    setSelectedSolution(fullSolution);
+                                    setShowDetailDialog(true);
+                                  } else {
                                     setSelectedSolution(solution);
+                                    setShowDetailDialog(true);
                                   }
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                查看详情
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>{solution.title}</DialogTitle>
-                              </DialogHeader>
-                              
-                              {selectedSolution && (
-                                <div className="space-y-6">
+                                } else {
+                                  setSelectedSolution(solution);
+                                  setShowDetailDialog(true);
+                                }
+                              } catch (error) {
+                                console.error('获取方案详情失败:', error);
+                                setSelectedSolution(solution);
+                                setShowDetailDialog(true);
+                              } finally {
+                                setLoadingDetail(false);
+                              }
+                            }}
+                            disabled={loadingDetail}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {loadingDetail ? '加载中...' : '查看详情'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* 方案详情对话框 - 移到外面，使用受控状态 */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedSolution?.title || '方案详情'}</DialogTitle>
+          </DialogHeader>
+          
+          {selectedSolution && (
+            <div className="space-y-6">
                                   {/* 基本信息 */}
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -1124,7 +1158,7 @@ export default function ReviewWorkbenchPage() {
                                           该方案已通过审核，请先进行上架优化后再发布。
                                         </p>
                                         <Button 
-                                          onClick={() => handleOptimize(selectedSolution.id)}
+                                          onClick={() => handleOptimizeInDialog(selectedSolution.id)}
                                           className="w-full bg-purple-600 hover:bg-purple-700"
                                         >
                                           上架优化
@@ -1165,6 +1199,7 @@ export default function ReviewWorkbenchPage() {
                                                 const result = await response.json();
                                                 if (result.success) {
                                                   await loadData();
+                                                  setShowDetailDialog(false);
                                                   setSelectedSolution(null);
                                                   alert('方案已临时下架');
                                                 } else {
@@ -1192,6 +1227,7 @@ export default function ReviewWorkbenchPage() {
                                                 const result = await response.json();
                                                 if (result.success) {
                                                   await loadData();
+                                                  setShowDetailDialog(false);
                                                   setSelectedSolution(null);
                                                   alert('方案已永久下架');
                                                 } else {
@@ -1227,6 +1263,7 @@ export default function ReviewWorkbenchPage() {
                                               const result = await response.json();
                                               if (result.success) {
                                                 await loadData();
+                                                setShowDetailDialog(false);
                                                 setSelectedSolution(null);
                                                 alert('方案已恢复发布');
                                               } else {
@@ -1257,20 +1294,9 @@ export default function ReviewWorkbenchPage() {
                                   )}
                                 </div>
                               )}
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+        </DialogContent>
+      </Dialog>
+      </div>
     </AdminLayout>
   );
 }
