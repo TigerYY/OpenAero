@@ -1,6 +1,5 @@
 'use client';
 
-import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -29,10 +28,10 @@ export function ClientLanguageSwitcher({
 
   const switchLanguage = (newLocale: Locale) => {
     saveLanguagePreference(newLocale);
-    
+
     // 使用 usePathname 获取当前路径
     const currentPath = pathname || '/';
-    
+
     // 移除任何语言前缀（支持 zh-CN 和 en-US）
     let pathWithoutLocale = currentPath;
     if (currentPath.startsWith('/zh-CN')) {
@@ -40,17 +39,16 @@ export function ClientLanguageSwitcher({
     } else if (currentPath.startsWith('/en-US')) {
       pathWithoutLocale = currentPath.replace(/^\/en-US/, '') || '/';
     }
-    
+
     // 确保路径以 / 开头
     if (!pathWithoutLocale.startsWith('/')) {
       pathWithoutLocale = '/' + pathWithoutLocale;
     }
-    
+
     // 构建新的路径（如果路径是 /，则不添加额外的 /）
-    const newPath = pathWithoutLocale === '/' 
-      ? `/${newLocale}` 
-      : `/${newLocale}${pathWithoutLocale}`;
-    
+    const newPath =
+      pathWithoutLocale === '/' ? `/${newLocale}` : `/${newLocale}${pathWithoutLocale}`;
+
     router.push(newPath);
   };
 

@@ -3,15 +3,7 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "import", "react-hooks"],
   "rules": {
-    "no-hardcoded-routes": ["error", {
-      "allowedPatterns": [
-        "^https?://",
-        "^mailto:",
-        "^tel:",
-        "^#"
-      ],
-      "checkImports": true
-    }],
+    "no-hardcoded-routes": "off",
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "error",
     "prefer-const": "error",

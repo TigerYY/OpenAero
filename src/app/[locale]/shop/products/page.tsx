@@ -12,16 +12,13 @@ import {
   SlidersHorizontal,
   Star,
   TrendingUp,
-  X
+  X,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-import { useRouting } from '@/lib/routing';
-
 
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Badge } from '@/components/ui/Badge';
@@ -29,6 +26,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import logger from '@/lib/logger';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency } from '@/lib/utils';
 
 interface Product {
@@ -78,7 +76,7 @@ export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { route, routes } = useRouting();
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +127,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filters]);
+  }, [currentPage, filters, t]);
 
   // 获取商品分类
   const fetchCategories = useCallback(async () => {
@@ -148,7 +146,7 @@ export default function ProductsPage() {
   // 更新URL参数
   const updateURL = useCallback(() => {
     const params = new URLSearchParams();
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value !== '' && value !== false) {
         params.set(key, value.toString());
@@ -194,25 +192,25 @@ export default function ProductsPage() {
   // 获取商品评分星星
   const renderStars = (rating?: number) => {
     if (!rating) return null;
-    
+
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />);
+      stars.push(<Star key={i} className='h-4 w-4 fill-yellow-400 text-yellow-400' />);
     }
 
     if (hasHalfStar) {
-      stars.push(<Star key="half" className="h-4 w-4 fill-yellow-400/50 text-yellow-400" />);
+      stars.push(<Star key='half' className='h-4 w-4 fill-yellow-400/50 text-yellow-400' />);
     }
 
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />);
+      stars.push(<Star key={`empty-${i}`} className='h-4 w-4 text-gray-300' />);
     }
 
-    return <div className="flex items-center gap-1">{stars}</div>;
+    return <div className='flex items-center gap-1'>{stars}</div>;
   };
 
   // 获取库存状态
@@ -230,84 +228,80 @@ export default function ProductsPage() {
   const renderProductCard = (product: Product) => {
     const stockStatus = getStockStatus(product.inventory);
     const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-    const discountPercent = hasDiscount 
+    const discountPercent = hasDiscount
       ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
       : 0;
 
     if (viewMode === 'list') {
       return (
-        <Card key={product.id} className="hover:shadow-lg transition-shadow duration-300">
-          <CardContent className="p-4">
-            <div className="flex gap-4">
-              <Link href={route(`/shop/products/${product.slug}`)} className="flex-shrink-0">
+        <Card key={product.id} className='hover:shadow-lg transition-shadow duration-300'>
+          <CardContent className='p-4'>
+            <div className='flex gap-4'>
+              <Link href={route(`/shop/products/${product.slug}`)} className='flex-shrink-0'>
                 {product.images.length > 0 && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={product.images[0]}
                     alt={product.name}
-                    className="w-24 h-24 object-cover rounded-lg"
+                    className='w-24 h-24 object-cover rounded-lg'
                   />
                 )}
               </Link>
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
+              <div className='flex-1'>
+                <div className='flex items-start justify-between mb-2'>
                   <div>
-                    <Badge variant="outline" className="text-xs mb-2">
+                    <Badge variant='outline' className='text-xs mb-2'>
                       {product.category.name}
                     </Badge>
                     <Link href={route(`/shop/products/${product.slug}`)}>
-                      <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                      <h3 className='font-semibold text-gray-900 hover:text-blue-600 transition-colors'>
                         {product.name}
                       </h3>
                     </Link>
                     {product.shortDesc && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {product.shortDesc}
-                      </p>
+                      <p className='text-sm text-gray-600 mt-1 line-clamp-2'>{product.shortDesc}</p>
                     )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-red-600">
+                  <div className='text-right'>
+                    <div className='text-lg font-bold text-red-600'>
                       {formatCurrency(product.price)}
                     </div>
                     {hasDiscount && (
-                      <div className="text-sm text-gray-500 line-through">
+                      <div className='text-sm text-gray-500 line-through'>
                         {formatCurrency(product.originalPrice!)}
                       </div>
                     )}
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
+
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-4 text-sm text-gray-500'>
                     {product.rating && (
-                      <div className="flex items-center gap-1">
+                      <div className='flex items-center gap-1'>
                         {renderStars(product.rating)}
                         <span>({product.reviewCount})</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
+                    <div className='flex items-center gap-1'>
+                      <TrendingUp className='h-3 w-3' />
                       {product.salesCount}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
+                    <div className='flex items-center gap-1'>
+                      <Eye className='h-3 w-3' />
                       {product.viewCount}
                     </div>
-                    <span className={stockStatus.color}>
-                      {stockStatus.label}
-                    </span>
+                    <span className={stockStatus.color}>{stockStatus.label}</span>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm"
-                      disabled={stockStatus.status === 'out-of-stock'}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-1" />
-                      {stockStatus.status === 'out-of-stock' ? t('actions.outOfStock') : t('actions.addToCart')}
+
+                  <div className='flex gap-2'>
+                    <Button size='sm' disabled={stockStatus.status === 'out-of-stock'}>
+                      <ShoppingCart className='h-4 w-4 mr-1' />
+                      {stockStatus.status === 'out-of-stock'
+                        ? t('actions.outOfStock')
+                        : t('actions.addToCart')}
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Heart className="h-4 w-4" />
+                    <Button variant='outline' size='sm'>
+                      <Heart className='h-4 w-4' />
                     </Button>
                   </div>
                 </div>
@@ -319,90 +313,87 @@ export default function ProductsPage() {
     }
 
     return (
-      <Link key={product.id} href={route(`/shop/products/${product.slug}`)} className="group">
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border hover:border-blue-200">
-          <div className="relative">
+      <Link key={product.id} href={route(`/shop/products/${product.slug}`)} className='group'>
+        <Card className='h-full hover:shadow-xl transition-all duration-300 border hover:border-blue-200'>
+          <div className='relative'>
             {product.images.length > 0 && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={product.images[0]}
                 alt={product.name}
-                className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+                className='w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300'
               />
             )}
             {hasDiscount && (
-              <Badge className="absolute top-2 left-2 bg-red-500 text-white">
+              <Badge className='absolute top-2 left-2 bg-red-500 text-white'>
                 -{discountPercent}%
               </Badge>
             )}
             {product.isFeatured && (
-              <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">
-                <Star className="h-3 w-3 mr-1" />
+              <Badge className='absolute top-2 right-2 bg-yellow-500 text-white'>
+                <Star className='h-3 w-3 mr-1' />
                 {t('featured')}
               </Badge>
             )}
           </div>
-          <CardContent className="p-4">
-            <div className="mb-2">
-              <Badge variant="outline" className="text-xs">
+          <CardContent className='p-4'>
+            <div className='mb-2'>
+              <Badge variant='outline' className='text-xs'>
                 {product.category.name}
               </Badge>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            <h3 className='font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors'>
               {product.name}
             </h3>
             {product.shortDesc && (
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {product.shortDesc}
-              </p>
+              <p className='text-sm text-gray-600 mb-3 line-clamp-2'>{product.shortDesc}</p>
             )}
-            
+
             {/* 评分和统计 */}
-            <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+            <div className='flex items-center gap-4 mb-3 text-sm text-gray-500'>
               {product.rating && (
-                <div className="flex items-center gap-1">
+                <div className='flex items-center gap-1'>
                   {renderStars(product.rating)}
                   <span>({product.reviewCount})</span>
                 </div>
               )}
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
+              <div className='flex items-center gap-1'>
+                <TrendingUp className='h-3 w-3' />
                 {product.salesCount}
               </div>
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
+              <div className='flex items-center gap-1'>
+                <Eye className='h-3 w-3' />
                 {product.viewCount}
               </div>
             </div>
 
             {/* 价格 */}
-            <div className="flex items-center justify-between mb-3">
+            <div className='flex items-center justify-between mb-3'>
               <div>
-                <span className="text-lg font-bold text-red-600">
+                <span className='text-lg font-bold text-red-600'>
                   {formatCurrency(product.price)}
                 </span>
                 {hasDiscount && (
-                  <span className="text-sm text-gray-500 line-through ml-2">
+                  <span className='text-sm text-gray-500 line-through ml-2'>
                     {formatCurrency(product.originalPrice!)}
                   </span>
                 )}
               </div>
-              <span className={`text-xs ${stockStatus.color}`}>
-                {stockStatus.label}
-              </span>
+              <span className={`text-xs ${stockStatus.color}`}>{stockStatus.label}</span>
             </div>
 
             {/* 操作按钮 */}
-            <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
+            <div className='flex gap-2'>
+              <Button
+                className='flex-1'
                 disabled={stockStatus.status === 'out-of-stock'}
-                onClick={(e) => e.preventDefault()}
+                onClick={e => e.preventDefault()}
               >
-                <ShoppingCart className="h-4 w-4 mr-1" />
+                <ShoppingCart className='h-4 w-4 mr-1' />
                 {stockStatus.status === 'out-of-stock' ? '缺货' : '加入购物车'}
               </Button>
-              <Button variant="outline" size="sm" onClick={(e) => e.preventDefault()}>
-                <Heart className="h-4 w-4" />
+              <Button variant='outline' size='sm' onClick={e => e.preventDefault()}>
+                <Heart className='h-4 w-4' />
               </Button>
             </div>
           </CardContent>
@@ -425,27 +416,27 @@ export default function ProductsPage() {
 
   return (
     <DefaultLayout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+      <div className='min-h-screen bg-gray-50'>
+        <div className='container mx-auto px-4 py-8'>
           {/* 页面标题和搜索 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('title')}</h1>
-            
+          <div className='mb-8'>
+            <h1 className='text-3xl font-bold text-gray-900 mb-4'>{t('title')}</h1>
+
             {/* 搜索栏 */}
-            <form onSubmit={handleSearch} className="max-w-2xl">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <form onSubmit={handleSearch} className='max-w-2xl'>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
                 <Input
-                  type="text"
+                  type='text'
                   placeholder={t('searchPlaceholder')}
                   value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="pl-10 pr-4"
+                  onChange={e => handleFilterChange('search', e.target.value)}
+                  className='pl-10 pr-4'
                 />
                 <Button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                  size="sm"
+                  type='submit'
+                  className='absolute right-2 top-1/2 transform -translate-y-1/2'
+                  size='sm'
                 >
                   {t('search')}
                 </Button>
@@ -453,46 +444,48 @@ export default function ProductsPage() {
             </form>
           </div>
 
-          <div className="flex gap-8">
+          <div className='flex gap-8'>
             {/* 侧边栏筛选器 */}
             <div className={`w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-              <Card className="sticky top-4">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">{t('filters.title')}</h3>
-                    <Button variant="ghost" size="sm" onClick={clearFilters}>
-                      <X className="h-4 w-4" />
+              <Card className='sticky top-4'>
+                <CardContent className='p-4'>
+                  <div className='flex items-center justify-between mb-4'>
+                    <h3 className='font-semibold text-gray-900'>{t('filters.title')}</h3>
+                    <Button variant='ghost' size='sm' onClick={clearFilters}>
+                      <X className='h-4 w-4' />
                       {t('filters.clear')}
                     </Button>
                   </div>
 
                   {/* 分类筛选 */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.category.title')}</h4>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
+                  <div className='mb-6'>
+                    <h4 className='font-medium text-gray-900 mb-3'>
+                      {t('filters.category.title')}
+                    </h4>
+                    <div className='space-y-2'>
+                      <label className='flex items-center'>
                         <input
-                          type="radio"
-                          name="category"
-                          value=""
+                          type='radio'
+                          name='category'
+                          value=''
                           checked={filters.category === ''}
-                          onChange={(e) => handleFilterChange('category', e.target.value)}
-                          className="mr-2"
+                          onChange={e => handleFilterChange('category', e.target.value)}
+                          className='mr-2'
                         />
-                        <span className="text-sm">{t('filters.category.all')}</span>
+                        <span className='text-sm'>{t('filters.category.all')}</span>
                       </label>
-                      {categories.map((category) => (
-                        <label key={category.id} className="flex items-center">
+                      {categories.map(category => (
+                        <label key={category.id} className='flex items-center'>
                           <input
-                            type="radio"
-                            name="category"
+                            type='radio'
+                            name='category'
                             value={category.slug}
                             checked={filters.category === category.slug}
-                            onChange={(e) => handleFilterChange('category', e.target.value)}
-                            className="mr-2"
+                            onChange={e => handleFilterChange('category', e.target.value)}
+                            className='mr-2'
                           />
-                          <span className="text-sm">{category.name}</span>
-                          <span className="text-xs text-gray-500 ml-auto">
+                          <span className='text-sm'>{category.name}</span>
+                          <span className='text-xs text-gray-500 ml-auto'>
                             ({category.productCount})
                           </span>
                         </label>
@@ -501,70 +494,70 @@ export default function ProductsPage() {
                   </div>
 
                   {/* 价格筛选 */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.price.title')}</h4>
-                    <div className="flex gap-2">
+                  <div className='mb-6'>
+                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.price.title')}</h4>
+                    <div className='flex gap-2'>
                       <Input
-                        type="number"
+                        type='number'
                         placeholder={t('filters.price.min')}
                         value={filters.minPrice}
-                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                        className="text-sm"
+                        onChange={e => handleFilterChange('minPrice', e.target.value)}
+                        className='text-sm'
                       />
-                      <span className="text-gray-500 self-center">-</span>
+                      <span className='text-gray-500 self-center'>-</span>
                       <Input
-                        type="number"
+                        type='number'
                         placeholder={t('filters.price.max')}
                         value={filters.maxPrice}
-                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                        className="text-sm"
+                        onChange={e => handleFilterChange('maxPrice', e.target.value)}
+                        className='text-sm'
                       />
                     </div>
                   </div>
 
                   {/* 其他筛选 */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.other.title')}</h4>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
+                  <div className='mb-6'>
+                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.other.title')}</h4>
+                    <div className='space-y-2'>
+                      <label className='flex items-center'>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           checked={filters.inStock}
-                          onChange={(e) => handleFilterChange('inStock', e.target.checked)}
-                          className="mr-2"
+                          onChange={e => handleFilterChange('inStock', e.target.checked)}
+                          className='mr-2'
                         />
-                        <span className="text-sm">{t('filters.other.inStock')}</span>
+                        <span className='text-sm'>{t('filters.other.inStock')}</span>
                       </label>
-                      <label className="flex items-center">
+                      <label className='flex items-center'>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           checked={filters.featured}
-                          onChange={(e) => handleFilterChange('featured', e.target.checked)}
-                          className="mr-2"
+                          onChange={e => handleFilterChange('featured', e.target.checked)}
+                          className='mr-2'
                         />
-                        <span className="text-sm">{t('filters.other.featured')}</span>
+                        <span className='text-sm'>{t('filters.other.featured')}</span>
                       </label>
                     </div>
                   </div>
 
                   {/* 排序 */}
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.sort.title')}</h4>
+                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.sort.title')}</h4>
                     <select
                       value={`${filters.sortBy}-${filters.sortOrder}`}
-                      onChange={(e) => {
+                      onChange={e => {
                         const [sortBy, sortOrder] = e.target.value.split('-');
                         handleFilterChange('sortBy', sortBy);
                         handleFilterChange('sortOrder', sortOrder);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >
-                      <option value="createdAt-desc">{t('filters.sort.newest')}</option>
-                      <option value="price-asc">{t('filters.sort.priceAsc')}</option>
-                      <option value="price-desc">{t('filters.sort.priceDesc')}</option>
-                      <option value="salesCount-desc">{t('filters.sort.sales')}</option>
-                      <option value="viewCount-desc">{t('filters.sort.views')}</option>
-                      <option value="rating-desc">{t('filters.sort.rating')}</option>
+                      <option value='createdAt-desc'>{t('filters.sort.newest')}</option>
+                      <option value='price-asc'>{t('filters.sort.priceAsc')}</option>
+                      <option value='price-desc'>{t('filters.sort.priceDesc')}</option>
+                      <option value='salesCount-desc'>{t('filters.sort.sales')}</option>
+                      <option value='viewCount-desc'>{t('filters.sort.views')}</option>
+                      <option value='rating-desc'>{t('filters.sort.rating')}</option>
                     </select>
                   </div>
                 </CardContent>
@@ -572,79 +565,83 @@ export default function ProductsPage() {
             </div>
 
             {/* 主内容区域 */}
-            <div className="flex-1">
+            <div className='flex-1'>
               {/* 工具栏 */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
+              <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center gap-4'>
                   <Button
-                    variant="outline"
+                    variant='outline'
                     onClick={() => setShowFilters(!showFilters)}
-                    className="lg:hidden"
+                    className='lg:hidden'
                   >
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    <SlidersHorizontal className='h-4 w-4 mr-2' />
                     {t('toolbar.filter')}
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className='text-sm text-gray-600'>
                     {t('toolbar.found', { count: totalProducts })}
                   </span>
                 </div>
-                
-                <div className="flex items-center gap-2">
+
+                <div className='flex items-center gap-2'>
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="sm"
+                    size='sm'
                     onClick={() => setViewMode('grid')}
                   >
-                    <Grid className="h-4 w-4" />
+                    <Grid className='h-4 w-4' />
                   </Button>
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
+                    size='sm'
                     onClick={() => setViewMode('list')}
                   >
-                    <List className="h-4 w-4" />
+                    <List className='h-4 w-4' />
                   </Button>
                 </div>
               </div>
 
               {/* 商品列表 */}
               {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-                  <span className="ml-3 text-gray-600">{t('toolbar.loading')}</span>
+                <div className='flex justify-center items-center py-12'>
+                  <RefreshCw className='h-8 w-8 animate-spin text-blue-600' />
+                  <span className='ml-3 text-gray-600'>{t('toolbar.loading')}</span>
                 </div>
               ) : products.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('toolbar.noResults.title')}</h3>
-                  <p className="text-gray-600 mb-4">{t('toolbar.noResults.description')}</p>
+                <div className='text-center py-12'>
+                  <Package className='h-16 w-16 text-gray-400 mx-auto mb-4' />
+                  <h3 className='text-lg font-medium text-gray-900 mb-2'>
+                    {t('toolbar.noResults.title')}
+                  </h3>
+                  <p className='text-gray-600 mb-4'>{t('toolbar.noResults.description')}</p>
                   <Button onClick={clearFilters}>{t('toolbar.noResults.clearFilters')}</Button>
                 </div>
               ) : (
                 <>
-                  <div className={
-                    viewMode === 'grid' 
-                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-                      : 'space-y-4'
-                  }>
+                  <div
+                    className={
+                      viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                        : 'space-y-4'
+                    }
+                  >
                     {products.map(renderProductCard)}
                   </div>
 
                   {/* 分页 */}
                   {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-8">
+                    <div className='flex justify-center items-center gap-2 mt-8'>
                       <Button
-                        variant="outline"
+                        variant='outline'
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                       >
                         {t('pagination.previous')}
                       </Button>
-                      <span className="text-sm text-gray-600">
+                      <span className='text-sm text-gray-600'>
                         {t('pagination.page', { current: currentPage, total: totalPages })}
                       </span>
                       <Button
-                        variant="outline"
+                        variant='outline'
                         onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                       >
