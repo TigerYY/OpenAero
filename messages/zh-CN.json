@@ -93,7 +93,63 @@
     "shortcutNew": "Ctrl+N",
     "shortcutDelete": "Delete",
     "shortcutEscape": "Esc",
-    "shortcutEnter": "Enter"
+    "shortcutEnter": "Enter",
+    "formValidation": {
+      "required": "是必填项",
+      "invalidEmail": "请输入有效的邮箱地址",
+      "invalidPhone": "请输入有效的手机号码",
+      "maxLength": "不能超过{maxLength}个字符",
+      "invalidFormat": "格式不正确",
+      "mustBeNumber": "必须是数字",
+      "minValue": "不能小于{min}",
+      "maxValue": "不能大于{max}",
+      "checkErrors": "请检查并修正表单中的错误",
+      "submitSuccess": "提交成功！",
+      "submitFailed": "提交失败，请重试",
+      "submitting": "提交中...",
+      "saving": "保存中...",
+      "autoSaving": "自动保存中...",
+      "resetForm": "重置表单",
+      "inputValid": "输入正确"
+    }
+  },
+  "about": {
+    "title": "关于开元空御",
+    "subtitle": "我们致力于构建一个社区驱动的开放式无人机解决方案平台，连接全球无人机创作者与专业客户，推动无人机技术的创新与应用。",
+    "mission": {
+      "title": "我们的使命",
+      "description1": "开元空御致力于打破传统无人机行业的壁垒，通过开放式平台让优秀的创新设计能够快速转化为商业价值。",
+      "description2": "我们相信，通过社区的力量和开放的合作，能够加速无人机技术的发展，为各行各业提供更好的解决方案。",
+      "tagline": "开放 · 创新 · 共赢",
+      "taglineDescription": "构建开放生态，推动技术创新，实现共同发展"
+    },
+    "values": {
+      "title": "我们的价值观",
+      "innovation": {
+        "title": "创新驱动",
+        "description": "持续推动技术创新，为用户提供前沿的无人机解决方案"
+      },
+      "openness": {
+        "title": "开放合作",
+        "description": "构建开放的生态系统，促进全球创作者和用户的协作"
+      },
+      "quality": {
+        "title": "品质保证",
+        "description": "严格的质量标准和认证流程，确保每个解决方案的可靠性"
+      }
+    },
+    "team": {
+      "title": "我们的团队",
+      "description": "开元空御团队由来自航空航天、软件工程、产品设计等领域的专业人士组成，我们拥有丰富的无人机技术和平台运营经验。",
+      "quote": "我们相信技术的力量能够改变世界，而开放的合作能够加速这一进程。开元空御不仅是一个平台，更是一个连接梦想与现实的桥梁。",
+      "quoteAuthor": "— 开元空御创始团队"
+    },
+    "contact": {
+      "title": "联系我们",
+      "description": "有任何问题或建议？我们很乐意听到您的声音",
+      "contactButton": "联系我们",
+      "becomeCreatorButton": "成为创作者"
+    }
   },
   "auth": {
     "login": "登录",
@@ -188,6 +244,13 @@
   "solutions": {
     "title": "认证解决方案",
     "subtitle": "经过专业认证的无人机核心套件，为不同应用场景提供完整解决方案",
+    "marketplace": "解决方案市场",
+    "marketplaceSubtitle": "发现和购买经过验证的无人机解决方案",
+    "searchPlaceholder": "搜索方案标题、描述...",
+    "solutionsCount": "个方案",
+    "noResults": "未找到匹配的解决方案",
+    "noResultsDesc": "尝试调整搜索条件或筛选选项，或者浏览所有可用的解决方案",
+    "clearFilters": "清除所有筛选",
     "creator": "创作者",
     "viewAll": "查看所有解决方案",
     "status": {
@@ -248,30 +311,42 @@
   },
   "footer": {
     "description": "连接全球无人机创作者与专业客户，将优秀的无人机创新设计进行专业验证、生产和销售，为创作者提供50%的利润分成。",
-    "company": {
-      "title": "公司",
-      "about": "关于我们",
-      "careers": "招聘",
-      "press": "新闻",
-      "contact": "联系我们"
-    },
     "solutions": {
       "title": "解决方案",
+      "fpv": "FPV验证机",
+      "security": "安防巡检套件",
+      "agriculture": "农业植保套件",
+      "logistics": "物流配送套件",
       "aerialPhotography": "航拍摄影",
       "mapping": "测绘",
       "inspection": "巡检",
-      "delivery": "配送",
-      "agriculture": "农业"
+      "delivery": "配送"
     },
     "creators": {
-      "title": "创作者"
+      "title": "创作者",
+      "plan": "创作者计划",
+      "apply": "申请流程",
+      "revenue": "收益分成",
+      "support": "技术支持"
     },
     "support": {
       "title": "支持",
+      "docs": "技术文档",
+      "api": "API接口",
+      "sdk": "SDK下载",
+      "community": "社区论坛",
       "helpCenter": "帮助中心",
       "documentation": "文档",
-      "community": "社区",
       "status": "服务状态"
+    },
+    "company": {
+      "title": "公司",
+      "about": "关于我们",
+      "contact": "联系我们",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "careers": "招聘",
+      "press": "新闻"
     },
     "legal": {
       "title": "法律",
@@ -401,9 +476,9 @@
         "address": "support@openaero.cn"
       },
       "phone": {
-        "title": "客服热线",
+        "title": "联系电话",
         "description": "专业客服团队为您提供实时支持",
-        "number": "400-123-4567"
+        "number": "+86 400-691-1891"
       },
       "workingHours": {
         "title": "工作时间",
@@ -414,7 +489,7 @@
       "address": {
         "title": "公司地址",
         "description": "欢迎预约参观我们的办公室",
-        "location": "深圳市南山区科技园",
+        "location": "广东省广州市黄埔区神舟路 9 号 4 栋 321 房",
         "note": "具体地址请联系我们获取"
       }
     },
@@ -427,7 +502,39 @@
     },
     "form": {
       "title": "发送消息",
-      "description": "填写下面的表单，我们会尽快与您取得联系"
+      "description": "填写下面的表单，我们会尽快与您取得联系",
+      "fields": {
+        "name": {
+          "label": "姓名",
+          "placeholder": "请输入您的姓名",
+          "validation": "姓名至少需要2个字符"
+        },
+        "email": {
+          "label": "邮箱",
+          "placeholder": "请输入您的邮箱地址"
+        },
+        "company": {
+          "label": "公司",
+          "placeholder": "请输入您的公司名称（可选）"
+        },
+        "phone": {
+          "label": "联系电话",
+          "placeholder": "请输入您的联系电话"
+        },
+        "subject": {
+          "label": "主题",
+          "placeholder": "请输入咨询主题",
+          "validation": "主题至少需要5个字符"
+        },
+        "message": {
+          "label": "留言内容",
+          "placeholder": "请详细描述您的需求或问题...",
+          "validation": "留言内容至少需要10个字符"
+        }
+      },
+      "submitText": "发送咨询",
+      "submitError": "提交失败，请重试",
+      "responseTime": "我们会在24小时内回复您的咨询"
     },
     "whyChooseUs": {
       "title": "为什么选择开元空御？",
@@ -518,5 +625,127 @@
     "creditCard": "信用卡",
     "bankTransfer": "银行转账",
     "paypal": "PayPal"
+  },
+  "shop": {
+    "title": "OpenAero 商城",
+    "subtitle": "发现优质航空产品，享受专业服务体验",
+    "searchPlaceholder": "搜索商品、品牌、型号...",
+    "search": "搜索",
+    "products": {
+      "title": "商品列表",
+      "searchPlaceholder": "搜索商品、品牌、型号...",
+      "search": "搜索",
+      "filters": {
+        "title": "筛选条件",
+        "clear": "清除",
+        "category": {
+          "title": "商品分类",
+          "all": "全部分类"
+        },
+        "price": {
+          "title": "价格范围",
+          "min": "最低价",
+          "max": "最高价"
+        },
+        "other": {
+          "title": "其他条件",
+          "inStock": "仅显示有库存",
+          "featured": "仅显示推荐商品"
+        },
+        "sort": {
+          "title": "排序方式",
+          "newest": "最新发布",
+          "priceAsc": "价格从低到高",
+          "priceDesc": "价格从高到低",
+          "sales": "销量最高",
+          "views": "浏览最多",
+          "rating": "评分最高"
+        }
+      },
+      "toolbar": {
+        "filter": "筛选",
+        "found": "共找到 {count} 个商品",
+        "loading": "加载中...",
+        "noResults": {
+          "title": "没有找到商品",
+          "description": "尝试调整筛选条件或搜索关键词",
+          "clearFilters": "清除筛选条件"
+        }
+      },
+      "stock": {
+        "outOfStock": "缺货",
+        "lowStock": "库存不足",
+        "inStock": "有库存"
+      },
+      "actions": {
+        "addToCart": "加入购物车",
+        "outOfStock": "缺货"
+      },
+      "pagination": {
+        "previous": "上一页",
+        "next": "下一页",
+        "page": "第 {current} 页，共 {total} 页"
+      },
+      "featured": "推荐",
+      "errors": {
+        "fetchFailed": "获取商品列表失败",
+        "categoriesFailed": "获取分类失败"
+      }
+    },
+    "features": {
+      "fastShipping": "快速发货",
+      "qualityGuarantee": "品质保证",
+      "globalDelivery": "全球配送",
+      "professionalService": "专业服务"
+    },
+    "categories": {
+      "title": "商品分类",
+      "subtitle": "浏览我们的产品类别，找到您需要的商品",
+      "viewAll": "查看所有分类",
+      "productsCount": "个商品"
+    },
+    "featured": {
+      "title": "推荐商品",
+      "subtitle": "精选优质商品，为您推荐最佳选择",
+      "viewMore": "查看更多商品",
+      "featured": "推荐",
+      "outOfStock": "缺货",
+      "lowStock": "库存不足",
+      "inStock": "有库存",
+      "addToCart": "加入购物车"
+    },
+    "services": {
+      "title": "服务保障",
+      "subtitle": "专业的服务团队，为您提供全方位保障",
+      "fastDelivery": {
+        "title": "快速配送",
+        "description": "全球快速配送，确保商品及时到达"
+      },
+      "qualityAssurance": {
+        "title": "品质保证",
+        "description": "严格质量控制，确保商品品质"
+      },
+      "professionalService": {
+        "title": "专业服务",
+        "description": "专业技术支持，贴心售后服务"
+      },
+      "quickResponse": {
+        "title": "快速响应",
+        "description": "24小时客服支持，快速响应需求"
+      }
+    }
+  },
+  "login": {
+    "title": "登录到 OpenAero",
+    "noAccount": "还没有账户？",
+    "registerNow": "立即注册",
+    "email": "邮箱地址",
+    "password": "密码",
+    "passwordPlaceholder": "您的密码",
+    "forgotPassword": "忘记密码？",
+    "emailVerified": "邮箱验证成功！现在可以登录了。",
+    "verificationSent": "验证邮件已发送，请查收您的邮箱。",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "enterEmailFirst": "请先输入邮箱地址"
   }
 }

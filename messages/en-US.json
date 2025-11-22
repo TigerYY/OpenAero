@@ -93,7 +93,63 @@
     "shortcutNew": "Ctrl+N",
     "shortcutDelete": "Delete",
     "shortcutEscape": "Esc",
-    "shortcutEnter": "Enter"
+    "shortcutEnter": "Enter",
+    "formValidation": {
+      "required": "is required",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidPhone": "Please enter a valid phone number",
+      "maxLength": "cannot exceed {maxLength} characters",
+      "invalidFormat": "format is incorrect",
+      "mustBeNumber": "must be a number",
+      "minValue": "cannot be less than {min}",
+      "maxValue": "cannot be greater than {max}",
+      "checkErrors": "Please check and correct errors in the form",
+      "submitSuccess": "Submitted successfully!",
+      "submitFailed": "Submission failed, please try again",
+      "submitting": "Submitting...",
+      "saving": "Saving...",
+      "autoSaving": "Auto-saving...",
+      "resetForm": "Reset Form",
+      "inputValid": "Input is valid"
+    }
+  },
+  "about": {
+    "title": "About OpenAero",
+    "subtitle": "We are committed to building a community-driven open drone solutions platform that connects global drone creators with professional customers, promoting innovation and application of drone technology.",
+    "mission": {
+      "title": "Our Mission",
+      "description1": "OpenAero is committed to breaking down barriers in the traditional drone industry, enabling excellent innovative designs to quickly transform into commercial value through an open platform.",
+      "description2": "We believe that through the power of community and open collaboration, we can accelerate the development of drone technology and provide better solutions for all industries.",
+      "tagline": "Open · Innovation · Win-Win",
+      "taglineDescription": "Building an open ecosystem, promoting technological innovation, and achieving common development"
+    },
+    "values": {
+      "title": "Our Values",
+      "innovation": {
+        "title": "Innovation-Driven",
+        "description": "Continuously driving technological innovation to provide cutting-edge drone solutions for users"
+      },
+      "openness": {
+        "title": "Open Collaboration",
+        "description": "Building an open ecosystem to promote collaboration among global creators and users"
+      },
+      "quality": {
+        "title": "Quality Assurance",
+        "description": "Strict quality standards and certification processes to ensure the reliability of every solution"
+      }
+    },
+    "team": {
+      "title": "Our Team",
+      "description": "The OpenAero team consists of professionals from aerospace, software engineering, product design, and other fields. We have rich experience in drone technology and platform operations.",
+      "quote": "We believe that the power of technology can change the world, and open collaboration can accelerate this process. OpenAero is not just a platform, but a bridge connecting dreams and reality.",
+      "quoteAuthor": "— OpenAero Founding Team"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Have any questions or suggestions? We would love to hear from you",
+      "contactButton": "Contact Us",
+      "becomeCreatorButton": "Become a Creator"
+    }
   },
   "auth": {
     "login": "Login",
@@ -188,6 +244,13 @@
   "solutions": {
     "title": "Certified Solutions",
     "subtitle": "Professionally certified drone core kits providing complete solutions for different application scenarios",
+    "marketplace": "Solutions Marketplace",
+    "marketplaceSubtitle": "Discover and purchase verified drone solutions",
+    "searchPlaceholder": "Search solution titles, descriptions...",
+    "solutionsCount": "solutions",
+    "noResults": "No matching solutions found",
+    "noResultsDesc": "Try adjusting your search criteria or filters, or browse all available solutions",
+    "clearFilters": "Clear All Filters",
     "creator": "Creator",
     "viewAll": "View All Solutions",
     "status": {
@@ -248,30 +311,42 @@
   },
   "footer": {
     "description": "Connecting global drone creators with professional clients, providing professional verification, production, and sales of excellent drone innovation designs, offering creators 50% profit sharing.",
-    "company": {
-      "title": "Company",
-      "about": "About Us",
-      "careers": "Careers",
-      "press": "Press",
-      "contact": "Contact Us"
-    },
     "solutions": {
       "title": "Solutions",
+      "fpv": "FPV Verification Machine",
+      "security": "Security Patrol Kit",
+      "agriculture": "Agricultural Plant Protection Kit",
+      "logistics": "Logistics Delivery Kit",
       "aerialPhotography": "Aerial Photography",
       "mapping": "Mapping",
       "inspection": "Inspection",
-      "delivery": "Delivery",
-      "agriculture": "Agriculture"
+      "delivery": "Delivery"
     },
     "creators": {
-      "title": "Creators"
+      "title": "Creators",
+      "plan": "Creator Program",
+      "apply": "Application Process",
+      "revenue": "Profit Sharing",
+      "support": "Technical Support"
     },
     "support": {
       "title": "Support",
+      "docs": "Technical Documentation",
+      "api": "API Interface",
+      "sdk": "SDK Download",
+      "community": "Community Forum",
       "helpCenter": "Help Center",
       "documentation": "Documentation",
-      "community": "Community",
       "status": "Service Status"
+    },
+    "company": {
+      "title": "Company",
+      "about": "About Us",
+      "contact": "Contact Us",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "careers": "Careers",
+      "press": "Press"
     },
     "legal": {
       "title": "Legal",
@@ -401,9 +476,9 @@
         "address": "support@openaero.cn"
       },
       "phone": {
-        "title": "Customer Service Hotline",
+        "title": "Contact Phone",
         "description": "Professional customer service team provides real-time support",
-        "number": "400-123-4567"
+        "number": "+86 400-691-1891"
       },
       "workingHours": {
         "title": "Working Hours",
@@ -414,7 +489,7 @@
       "address": {
         "title": "Company Address",
         "description": "Welcome to schedule a visit to our office",
-        "location": "Science and Technology Park, Nanshan District, Shenzhen",
+        "location": "Room 321, Building 4, No. 9 Shenzhou Road, Huangpu District, Guangzhou, Guangdong Province",
         "note": "Please contact us for specific address"
       }
     },
@@ -427,7 +502,39 @@
     },
     "form": {
       "title": "Send Message",
-      "description": "Fill out the form below and we will get in touch with you as soon as possible"
+      "description": "Fill out the form below and we will get in touch with you as soon as possible",
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Please enter your name",
+          "validation": "Name must be at least 2 characters"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "Please enter your email address"
+        },
+        "company": {
+          "label": "Company",
+          "placeholder": "Please enter your company name (optional)"
+        },
+        "phone": {
+          "label": "Contact Phone",
+          "placeholder": "Please enter your contact phone number"
+        },
+        "subject": {
+          "label": "Subject",
+          "placeholder": "Please enter the inquiry subject",
+          "validation": "Subject must be at least 5 characters"
+        },
+        "message": {
+          "label": "Message Content",
+          "placeholder": "Please describe your needs or questions in detail...",
+          "validation": "Message content must be at least 10 characters"
+        }
+      },
+      "submitText": "Send Inquiry",
+      "submitError": "Submission failed, please try again",
+      "responseTime": "We will reply to your inquiry within 24 hours"
     },
     "whyChooseUs": {
       "title": "Why Choose OpenAero?",
@@ -518,5 +625,127 @@
     "creditCard": "Credit Card",
     "bankTransfer": "Bank Transfer",
     "paypal": "PayPal"
+  },
+  "shop": {
+    "title": "OpenAero Shop",
+    "subtitle": "Discover quality aviation products and enjoy professional service experience",
+    "searchPlaceholder": "Search products, brands, models...",
+    "search": "Search",
+    "products": {
+      "title": "Product List",
+      "searchPlaceholder": "Search products, brands, models...",
+      "search": "Search",
+      "filters": {
+        "title": "Filters",
+        "clear": "Clear",
+        "category": {
+          "title": "Product Category",
+          "all": "All Categories"
+        },
+        "price": {
+          "title": "Price Range",
+          "min": "Min Price",
+          "max": "Max Price"
+        },
+        "other": {
+          "title": "Other Conditions",
+          "inStock": "Show in stock only",
+          "featured": "Show featured products only"
+        },
+        "sort": {
+          "title": "Sort By",
+          "newest": "Newest",
+          "priceAsc": "Price: Low to High",
+          "priceDesc": "Price: High to Low",
+          "sales": "Best Selling",
+          "views": "Most Viewed",
+          "rating": "Highest Rated"
+        }
+      },
+      "toolbar": {
+        "filter": "Filter",
+        "found": "Found {count} products",
+        "loading": "Loading...",
+        "noResults": {
+          "title": "No products found",
+          "description": "Try adjusting filters or search keywords",
+          "clearFilters": "Clear Filters"
+        }
+      },
+      "stock": {
+        "outOfStock": "Out of Stock",
+        "lowStock": "Low Stock",
+        "inStock": "In Stock"
+      },
+      "actions": {
+        "addToCart": "Add to Cart",
+        "outOfStock": "Out of Stock"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {current} of {total}"
+      },
+      "featured": "Featured",
+      "errors": {
+        "fetchFailed": "Failed to fetch products",
+        "categoriesFailed": "Failed to fetch categories"
+      }
+    },
+    "features": {
+      "fastShipping": "Fast Shipping",
+      "qualityGuarantee": "Quality Guarantee",
+      "globalDelivery": "Global Delivery",
+      "professionalService": "Professional Service"
+    },
+    "categories": {
+      "title": "Product Categories",
+      "subtitle": "Browse our product categories to find what you need",
+      "viewAll": "View All Categories",
+      "productsCount": "products"
+    },
+    "featured": {
+      "title": "Featured Products",
+      "subtitle": "Curated quality products, recommended for you",
+      "viewMore": "View More Products",
+      "featured": "Featured",
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "inStock": "In Stock",
+      "addToCart": "Add to Cart"
+    },
+    "services": {
+      "title": "Service Guarantee",
+      "subtitle": "Professional service team providing comprehensive support",
+      "fastDelivery": {
+        "title": "Fast Delivery",
+        "description": "Global fast delivery ensuring timely arrival"
+      },
+      "qualityAssurance": {
+        "title": "Quality Assurance",
+        "description": "Strict quality control ensuring product quality"
+      },
+      "professionalService": {
+        "title": "Professional Service",
+        "description": "Professional technical support and attentive after-sales service"
+      },
+      "quickResponse": {
+        "title": "Quick Response",
+        "description": "24-hour customer service support for quick response"
+      }
+    }
+  },
+  "login": {
+    "title": "Login to OpenAero",
+    "noAccount": "Don't have an account?",
+    "registerNow": "Register now",
+    "email": "Email Address",
+    "password": "Password",
+    "passwordPlaceholder": "Your password",
+    "forgotPassword": "Forgot password?",
+    "emailVerified": "Email verified successfully! You can now log in.",
+    "verificationSent": "Verification email sent, please check your inbox.",
+    "invalidEmail": "Please enter a valid email address",
+    "enterEmailFirst": "Please enter your email address first"
   }
 }

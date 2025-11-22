@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { saveLanguagePreference } from '@/lib/i18n-utils';
@@ -26,21 +26,30 @@ export function ClientLanguageSwitcher({
 }: ClientLanguageSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale();
 
   const switchLanguage = (newLocale: Locale) => {
     saveLanguagePreference(newLocale);
     
-    // 使用 usePathname 获取当前路径，避免服务端渲染问题
-    const currentPath = pathname;
+    // 使用 usePathname 获取当前路径
+    const currentPath = pathname || '/';
     
-    // 确保路径以当前locale开头
-    const pathWithoutLocale = currentPath.startsWith(`/${locale}`) 
-      ? currentPath.slice(`/${locale}`.length) 
-      : currentPath;
+    // 移除任何语言前缀（支持 zh-CN 和 en-US）
+    let pathWithoutLocale = currentPath;
+    if (currentPath.startsWith('/zh-CN')) {
+      pathWithoutLocale = currentPath.replace(/^\/zh-CN/, '') || '/';
+    } else if (currentPath.startsWith('/en-US')) {
+      pathWithoutLocale = currentPath.replace(/^\/en-US/, '') || '/';
+    }
     
-    // 构建新的路径
-    const newPath = `/${newLocale}${pathWithoutLocale}`;
+    // 确保路径以 / 开头
+    if (!pathWithoutLocale.startsWith('/')) {
+      pathWithoutLocale = '/' + pathWithoutLocale;
+    }
+    
+    // 构建新的路径（如果路径是 /，则不添加额外的 /）
+    const newPath = pathWithoutLocale === '/' 
+      ? `/${newLocale}` 
+      : `/${newLocale}${pathWithoutLocale}`;
     
     router.push(newPath);
   };

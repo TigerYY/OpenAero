@@ -1,33 +1,29 @@
 'use client';
 import { useRouting } from '@/lib/routing';
 
-import { 
-  Search, 
-  ShoppingCart, 
-  Star, 
-  TrendingUp, 
-  Package, 
-  Tag, 
-  Filter,
-  Grid,
-  List,
-  Heart,
-  Eye,
+import {
   ArrowRight,
-  Zap,
+  Eye,
   Gift,
-  Truck,
+  Heart,
+  Package,
+  RefreshCw,
+  Search,
   Shield,
-  RefreshCw
+  ShoppingCart,
+  Star,
+  TrendingUp,
+  Truck,
+  Zap
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { formatCurrency } from '@/lib/utils';
 
@@ -64,7 +60,8 @@ interface ProductCategory {
 }
 
 export default function ShopPage() {
-  const t = useTranslations();
+  const t = useTranslations('shop');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const { route, routes, routeWithParams, routeWithDynamicParams } = useRouting();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -135,11 +132,11 @@ export default function ShopPage() {
   // 获取库存状态
   const getStockStatus = (inventory?: Product['inventory']) => {
     if (!inventory || inventory.available === 0) {
-      return { status: 'out-of-stock', label: '缺货', color: 'text-red-600' };
+      return { status: 'out-of-stock', label: t('featured.outOfStock'), color: 'text-red-600' };
     } else if (inventory.available <= 10) {
-      return { status: 'low-stock', label: '库存不足', color: 'text-orange-600' };
+      return { status: 'low-stock', label: t('featured.lowStock'), color: 'text-orange-600' };
     } else {
-      return { status: 'in-stock', label: '有库存', color: 'text-green-600' };
+      return { status: 'in-stock', label: t('featured.inStock'), color: 'text-green-600' };
     }
   };
 
@@ -160,10 +157,10 @@ export default function ShopPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                OpenAero 商城
+                {t('title')}
               </h1>
               <p className="text-xl md:text-2xl mb-8 opacity-90">
-                发现优质航空产品，享受专业服务体验
+                {t('subtitle')}
               </p>
               
               {/* 搜索栏 */}
@@ -172,7 +169,7 @@ export default function ShopPage() {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <Input
                     type="text"
-                    placeholder="搜索商品、品牌、型号..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-12 pr-4 py-4 text-lg bg-white text-gray-900 border-0 rounded-full shadow-lg"
@@ -181,7 +178,7 @@ export default function ShopPage() {
                     type="submit"
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-6"
                   >
-                    搜索
+                    {t('search')}
                   </Button>
                 </div>
               </form>
@@ -190,19 +187,19 @@ export default function ShopPage() {
               <div className="flex flex-wrap justify-center gap-4 mt-8">
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                   <Zap className="h-4 w-4 mr-1" />
-                  快速发货
+                  {t('features.fastShipping')}
                 </Badge>
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                   <Shield className="h-4 w-4 mr-1" />
-                  品质保证
+                  {t('features.qualityGuarantee')}
                 </Badge>
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                   <Truck className="h-4 w-4 mr-1" />
-                  全球配送
+                  {t('features.globalDelivery')}
                 </Badge>
                 <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                   <Gift className="h-4 w-4 mr-1" />
-                  专业服务
+                  {t('features.professionalService')}
                 </Badge>
               </div>
             </div>
@@ -213,14 +210,14 @@ export default function ShopPage() {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">商品分类</h2>
-              <p className="text-gray-600 text-lg">浏览我们的产品类别，找到您需要的商品</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('categories.title')}</h2>
+              <p className="text-gray-600 text-lg">{t('categories.subtitle')}</p>
             </div>
 
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">加载中...</span>
+                <span className="ml-3 text-gray-600">{tCommon('loading')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
@@ -238,7 +235,7 @@ export default function ShopPage() {
                         <h3 className="font-semibold text-gray-900 mb-2">{category.name}</h3>
                         <p className="text-sm text-gray-600 mb-3">{category.description}</p>
                         <Badge variant="outline" className="text-xs">
-                          {category.productCount} 个商品
+                          {category.productCount} {t('categories.productsCount')}
                         </Badge>
                       </CardContent>
                     </Card>
@@ -250,7 +247,7 @@ export default function ShopPage() {
             <div className="text-center mt-8">
               <Link href={route(routes.BUSINESS.SHOP)}>
                 <Button variant="outline" className="flex items-center gap-2">
-                  查看所有分类
+                  {t('categories.viewAll')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -262,14 +259,14 @@ export default function ShopPage() {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">推荐商品</h2>
-              <p className="text-gray-600 text-lg">精选优质商品，为您推荐最佳选择</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('featured.title')}</h2>
+              <p className="text-gray-600 text-lg">{t('featured.subtitle')}</p>
             </div>
 
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-gray-600">加载中...</span>
+                <span className="ml-3 text-gray-600">{tCommon('loading')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -299,7 +296,7 @@ export default function ShopPage() {
                           {product.isFeatured && (
                             <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">
                               <Star className="h-3 w-3 mr-1" />
-                              推荐
+                              {t('featured.featured')}
                             </Badge>
                           )}
                         </div>
@@ -360,7 +357,7 @@ export default function ShopPage() {
                               disabled={stockStatus.status === 'out-of-stock'}
                             >
                               <ShoppingCart className="h-4 w-4 mr-1" />
-                              {stockStatus.status === 'out-of-stock' ? '缺货' : '加入购物车'}
+                              {stockStatus.status === 'out-of-stock' ? t('featured.outOfStock') : t('featured.addToCart')}
                             </Button>
                             <Button variant="outline" size="sm">
                               <Heart className="h-4 w-4" />
@@ -377,7 +374,7 @@ export default function ShopPage() {
             <div className="text-center mt-8">
               <Link href={route(routes.BUSINESS.SHOP)}>
                 <Button className="flex items-center gap-2">
-                  查看更多商品
+                  {t('featured.viewMore')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -389,8 +386,8 @@ export default function ShopPage() {
         <section className="py-16 bg-gray-100">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">服务保障</h2>
-              <p className="text-gray-600 text-lg">专业的服务团队，为您提供全方位保障</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('services.title')}</h2>
+              <p className="text-gray-600 text-lg">{t('services.subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -398,29 +395,29 @@ export default function ShopPage() {
                 <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
                   <Truck className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">快速配送</h3>
-                <p className="text-gray-600 text-sm">全球快速配送，确保商品及时到达</p>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('services.fastDelivery.title')}</h3>
+                <p className="text-gray-600 text-sm">{t('services.fastDelivery.description')}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
                   <Shield className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">品质保证</h3>
-                <p className="text-gray-600 text-sm">严格质量控制，确保商品品质</p>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('services.qualityAssurance.title')}</h3>
+                <p className="text-gray-600 text-sm">{t('services.qualityAssurance.description')}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                   <Gift className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">专业服务</h3>
-                <p className="text-gray-600 text-sm">专业技术支持，贴心售后服务</p>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('services.professionalService.title')}</h3>
+                <p className="text-gray-600 text-sm">{t('services.professionalService.description')}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
                   <Zap className="h-8 w-8 text-orange-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">快速响应</h3>
-                <p className="text-gray-600 text-sm">24小时客服支持，快速响应需求</p>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('services.quickResponse.title')}</h3>
+                <p className="text-gray-600 text-sm">{t('services.quickResponse.description')}</p>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import React from 'react';
 
 import MobileForm from '../MobileForm';
@@ -22,6 +23,8 @@ const ContactForm: React.FC<ContactFormProps> = ({
   onSubmit,
   className = ''
 }) => {
+  const t = useTranslations('contact.form');
+  
   const handleSubmit = async (data: Record<string, any>) => {
     if (onSubmit) {
       await onSubmit(data as ContactFormData);
@@ -36,7 +39,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('提交失败，请重试');
+        throw new Error(t('submitError'));
       }
     }
   };
@@ -44,67 +47,67 @@ const ContactForm: React.FC<ContactFormProps> = ({
   const formFields = [
     {
       name: 'name',
-      label: '姓名',
+      label: t('fields.name.label'),
       type: 'text' as const,
-      placeholder: '请输入您的姓名',
+      placeholder: t('fields.name.placeholder'),
       required: true,
       autoComplete: 'name',
       validation: (value: string) => {
         if (value.length < 2) {
-          return '姓名至少需要2个字符';
+          return t('fields.name.validation');
         }
         return null;
       }
     },
     {
       name: 'email',
-      label: '邮箱',
+      label: t('fields.email.label'),
       type: 'email' as const,
-      placeholder: '请输入您的邮箱地址',
+      placeholder: t('fields.email.placeholder'),
       required: true,
       autoComplete: 'email',
       inputMode: 'email' as const
     },
     {
       name: 'company',
-      label: '公司',
+      label: t('fields.company.label'),
       type: 'text' as const,
-      placeholder: '请输入您的公司名称（可选）',
+      placeholder: t('fields.company.placeholder'),
       autoComplete: 'organization'
     },
     {
       name: 'phone',
-      label: '联系电话',
+      label: t('fields.phone.label'),
       type: 'tel' as const,
-      placeholder: '请输入您的联系电话',
+      placeholder: t('fields.phone.placeholder'),
       autoComplete: 'tel',
       inputMode: 'tel' as const
     },
     {
       name: 'subject',
-      label: '主题',
+      label: t('fields.subject.label'),
       type: 'text' as const,
-      placeholder: '请输入咨询主题',
+      placeholder: t('fields.subject.placeholder'),
       required: true,
       maxLength: 100,
       validation: (value: string) => {
         if (value.length < 5) {
-          return '主题至少需要5个字符';
+          return t('fields.subject.validation');
         }
         return null;
       }
     },
     {
       name: 'message',
-      label: '留言内容',
+      label: t('fields.message.label'),
       type: 'textarea' as const,
-      placeholder: '请详细描述您的需求或问题...',
+      placeholder: t('fields.message.placeholder'),
       required: true,
       rows: 5,
       maxLength: 1000,
       validation: (value: string) => {
         if (value.length < 10) {
-          return '留言内容至少需要10个字符';
+          return t('fields.message.validation');
         }
         return null;
       }
@@ -113,11 +116,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
 
   return (
     <MobileForm
-      title="联系我们"
-      description="我们会在24小时内回复您的咨询"
+      title={t('title')}
+      description={t('responseTime')}
       fields={formFields}
       onSubmit={handleSubmit}
-      submitText="发送咨询"
+      submitText={t('submitText')}
       className={className}
       validateOnChange={true}
       resetOnSubmit={true}

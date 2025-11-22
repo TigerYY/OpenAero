@@ -1,23 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { isValidEmail } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { useRouting } from '@/lib/routing';
+import { isValidEmail } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslations();
+  const t = useTranslations('auth');
+  const tLogin = useTranslations('login');
   const { route, routes } = useRouting();
-  const { signIn, loading: authLoading } = useAuth();
+  const { signIn } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -38,9 +39,9 @@ export default function LoginPage() {
     setEmailNotVerified(false);
     
     if (email && !isValidEmail(email)) {
-      setFieldErrors({ ...fieldErrors, email: '请输入有效的邮箱地址' });
+      setFieldErrors({ ...fieldErrors, email: tLogin('invalidEmail') });
     } else {
-      const { email: _, ...rest } = fieldErrors;
+      const { email: _email, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
   };
@@ -48,7 +49,7 @@ export default function LoginPage() {
   // 重新发送验证邮件
   const handleResendVerification = async () => {
     if (!formData.email) {
-      setError('请先输入邮箱地址');
+      setError(tLogin('enterEmailFirst'));
       return;
     }
 
@@ -89,7 +90,7 @@ export default function LoginPage() {
 
     // 验证邮箱格式
     if (!isValidEmail(formData.email)) {
-      setFieldErrors({ email: '请输入有效的邮箱地址' });
+      setFieldErrors({ email: tLogin('invalidEmail') });
       setLoading(false);
       return;
     }
@@ -140,12 +141,12 @@ export default function LoginPage() {
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            登录到 OpenAero
+            {tLogin('title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            还没有账户？{' '}
+            {tLogin('noAccount')}{' '}
             <Link href={route(routes.AUTH.REGISTER)} className="font-medium text-blue-600 hover:text-blue-500">
-              立即注册
+              {tLogin('registerNow')}
             </Link>
           </p>
         </div>
@@ -157,7 +158,7 @@ export default function LoginPage() {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <div className="text-sm text-green-800">
-                邮箱验证成功！现在可以登录了。
+                {tLogin('emailVerified')}
               </div>
             </div>
           </div>
@@ -171,7 +172,7 @@ export default function LoginPage() {
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
               <div className="text-sm text-blue-800">
-                验证邮件已发送，请查收您的邮箱。
+                {tLogin('verificationSent')}
               </div>
             </div>
           </div>
@@ -203,7 +204,7 @@ export default function LoginPage() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                邮箱地址
+                {tLogin('email')}
               </label>
               <input
                 id="email"
@@ -224,7 +225,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                密码
+                {tLogin('password')}
               </label>
               <input
                 id="password"
@@ -234,7 +235,7 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="您的密码"
+                placeholder={tLogin('passwordPlaceholder')}
               />
             </div>
           </div>
@@ -245,7 +246,7 @@ export default function LoginPage() {
                 href={route(routes.AUTH.FORGOT_PASSWORD)}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
-                忘记密码？
+                {tLogin('forgotPassword')}
               </Link>
             </div>
           </div>

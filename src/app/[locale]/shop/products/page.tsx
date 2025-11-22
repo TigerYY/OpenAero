@@ -1,31 +1,33 @@
 'use client';
 
-import { 
-  Search, 
-  ShoppingCart, 
-  Star, 
-  TrendingUp, 
+import {
   Eye,
   Grid,
-  List,
   Heart,
-  SlidersHorizontal,
-  RefreshCw,
+  List,
   Package,
+  RefreshCw,
+  Search,
+  ShoppingCart,
+  SlidersHorizontal,
+  Star,
+  TrendingUp,
   X
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useRouting } from '@/lib/routing';
 
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import logger from '@/lib/logger';
 import { formatCurrency } from '@/lib/utils';
 
@@ -72,8 +74,10 @@ interface FilterState {
 }
 
 export default function ProductsPage() {
+  const t = useTranslations('shop.products');
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { route, routes } = useRouting();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -113,33 +117,33 @@ export default function ProductsPage() {
       });
 
       const response = await fetch(`/api/products?${params}`);
-      if (!response.ok) throw new Error('获取商品列表失败');
+      if (!response.ok) throw new Error(t('errors.fetchFailed'));
 
       const data = await response.json();
       setProducts(data.products);
       setTotalPages(data.pagination.pages);
       setTotalProducts(data.pagination.total);
     } catch (error) {
-      logger.error('获取商品列表失败:', error);
-      toast.error('获取商品列表失败');
+      logger.error(t('errors.fetchFailed'), error);
+      toast.error(t('errors.fetchFailed'));
     } finally {
       setLoading(false);
     }
   }, [currentPage, filters]);
 
   // 获取商品分类
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/categories');
-      if (!response.ok) throw new Error('获取分类失败');
+      if (!response.ok) throw new Error(t('errors.categoriesFailed'));
 
       const data = await response.json();
       setCategories(data.categories);
     } catch (error) {
-      logger.error('获取分类失败:', error);
-      toast.error('获取分类失败');
+      logger.error(t('errors.categoriesFailed'), error);
+      toast.error(t('errors.categoriesFailed'));
     }
-  };
+  }, [t]);
 
   // 更新URL参数
   const updateURL = useCallback(() => {
@@ -155,12 +159,13 @@ export default function ProductsPage() {
       params.set('page', currentPage.toString());
     }
 
-    const newURL = `/shop/products${params.toString() ? `?${params.toString()}` : ''}`;
+    const basePath = route(routes.BUSINESS.SHOP);
+    const newURL = `${basePath}${params.toString() ? `?${params.toString()}` : ''}`;
     router.replace(newURL, { scroll: false });
-  }, [filters, currentPage, router]);
+  }, [filters, currentPage, router, route, routes]);
 
   // 处理筛选器变化
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
+  const handleFilterChange = (key: keyof FilterState, value: string | number | boolean) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
@@ -213,11 +218,11 @@ export default function ProductsPage() {
   // 获取库存状态
   const getStockStatus = (inventory?: Product['inventory']) => {
     if (!inventory || inventory.available === 0) {
-      return { status: 'out-of-stock', label: '缺货', color: 'text-red-600' };
+      return { status: 'out-of-stock', label: t('stock.outOfStock'), color: 'text-red-600' };
     } else if (inventory.available <= 10) {
-      return { status: 'low-stock', label: '库存不足', color: 'text-orange-600' };
+      return { status: 'low-stock', label: t('stock.lowStock'), color: 'text-orange-600' };
     } else {
-      return { status: 'in-stock', label: '有库存', color: 'text-green-600' };
+      return { status: 'in-stock', label: t('stock.inStock'), color: 'text-green-600' };
     }
   };
 
@@ -234,7 +239,7 @@ export default function ProductsPage() {
         <Card key={product.id} className="hover:shadow-lg transition-shadow duration-300">
           <CardContent className="p-4">
             <div className="flex gap-4">
-              <Link href={`/shop/products/${product.slug}`} className="flex-shrink-0">
+              <Link href={route(`/shop/products/${product.slug}`)} className="flex-shrink-0">
                 {product.images.length > 0 && (
                   <img
                     src={product.images[0]}
@@ -249,7 +254,7 @@ export default function ProductsPage() {
                     <Badge variant="outline" className="text-xs mb-2">
                       {product.category.name}
                     </Badge>
-                    <Link href={`/shop/products/${product.slug}`}>
+                    <Link href={route(`/shop/products/${product.slug}`)}>
                       <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                         {product.name}
                       </h3>
@@ -299,7 +304,7 @@ export default function ProductsPage() {
                       disabled={stockStatus.status === 'out-of-stock'}
                     >
                       <ShoppingCart className="h-4 w-4 mr-1" />
-                      {stockStatus.status === 'out-of-stock' ? '缺货' : '加入购物车'}
+                      {stockStatus.status === 'out-of-stock' ? t('actions.outOfStock') : t('actions.addToCart')}
                     </Button>
                     <Button variant="outline" size="sm">
                       <Heart className="h-4 w-4" />
@@ -314,7 +319,7 @@ export default function ProductsPage() {
     }
 
     return (
-      <Link key={product.id} href={`/shop/products/${product.slug}`} className="group">
+      <Link key={product.id} href={route(`/shop/products/${product.slug}`)} className="group">
         <Card className="h-full hover:shadow-xl transition-all duration-300 border hover:border-blue-200">
           <div className="relative">
             {product.images.length > 0 && (
@@ -332,7 +337,7 @@ export default function ProductsPage() {
             {product.isFeatured && (
               <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">
                 <Star className="h-3 w-3 mr-1" />
-                推荐
+                {t('featured')}
               </Badge>
             )}
           </div>
@@ -412,7 +417,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   useEffect(() => {
     updateURL();
@@ -424,7 +429,7 @@ export default function ProductsPage() {
         <div className="container mx-auto px-4 py-8">
           {/* 页面标题和搜索 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">商品列表</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('title')}</h1>
             
             {/* 搜索栏 */}
             <form onSubmit={handleSearch} className="max-w-2xl">
@@ -432,7 +437,7 @@ export default function ProductsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   type="text"
-                  placeholder="搜索商品、品牌、型号..."
+                  placeholder={t('searchPlaceholder')}
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                   className="pl-10 pr-4"
@@ -442,7 +447,7 @@ export default function ProductsPage() {
                   className="absolute right-2 top-1/2 transform -translate-y-1/2"
                   size="sm"
                 >
-                  搜索
+                  {t('search')}
                 </Button>
               </div>
             </form>
@@ -454,16 +459,16 @@ export default function ProductsPage() {
               <Card className="sticky top-4">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">筛选条件</h3>
+                    <h3 className="font-semibold text-gray-900">{t('filters.title')}</h3>
                     <Button variant="ghost" size="sm" onClick={clearFilters}>
                       <X className="h-4 w-4" />
-                      清除
+                      {t('filters.clear')}
                     </Button>
                   </div>
 
                   {/* 分类筛选 */}
                   <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">商品分类</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.category.title')}</h4>
                     <div className="space-y-2">
                       <label className="flex items-center">
                         <input
@@ -474,7 +479,7 @@ export default function ProductsPage() {
                           onChange={(e) => handleFilterChange('category', e.target.value)}
                           className="mr-2"
                         />
-                        <span className="text-sm">全部分类</span>
+                        <span className="text-sm">{t('filters.category.all')}</span>
                       </label>
                       {categories.map((category) => (
                         <label key={category.id} className="flex items-center">
@@ -497,11 +502,11 @@ export default function ProductsPage() {
 
                   {/* 价格筛选 */}
                   <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">价格范围</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.price.title')}</h4>
                     <div className="flex gap-2">
                       <Input
                         type="number"
-                        placeholder="最低价"
+                        placeholder={t('filters.price.min')}
                         value={filters.minPrice}
                         onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                         className="text-sm"
@@ -509,7 +514,7 @@ export default function ProductsPage() {
                       <span className="text-gray-500 self-center">-</span>
                       <Input
                         type="number"
-                        placeholder="最高价"
+                        placeholder={t('filters.price.max')}
                         value={filters.maxPrice}
                         onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                         className="text-sm"
@@ -519,7 +524,7 @@ export default function ProductsPage() {
 
                   {/* 其他筛选 */}
                   <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">其他条件</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.other.title')}</h4>
                     <div className="space-y-2">
                       <label className="flex items-center">
                         <input
@@ -528,7 +533,7 @@ export default function ProductsPage() {
                           onChange={(e) => handleFilterChange('inStock', e.target.checked)}
                           className="mr-2"
                         />
-                        <span className="text-sm">仅显示有库存</span>
+                        <span className="text-sm">{t('filters.other.inStock')}</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -537,14 +542,14 @@ export default function ProductsPage() {
                           onChange={(e) => handleFilterChange('featured', e.target.checked)}
                           className="mr-2"
                         />
-                        <span className="text-sm">仅显示推荐商品</span>
+                        <span className="text-sm">{t('filters.other.featured')}</span>
                       </label>
                     </div>
                   </div>
 
                   {/* 排序 */}
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">排序方式</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t('filters.sort.title')}</h4>
                     <select
                       value={`${filters.sortBy}-${filters.sortOrder}`}
                       onChange={(e) => {
@@ -554,12 +559,12 @@ export default function ProductsPage() {
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="createdAt-desc">最新发布</option>
-                      <option value="price-asc">价格从低到高</option>
-                      <option value="price-desc">价格从高到低</option>
-                      <option value="salesCount-desc">销量最高</option>
-                      <option value="viewCount-desc">浏览最多</option>
-                      <option value="rating-desc">评分最高</option>
+                      <option value="createdAt-desc">{t('filters.sort.newest')}</option>
+                      <option value="price-asc">{t('filters.sort.priceAsc')}</option>
+                      <option value="price-desc">{t('filters.sort.priceDesc')}</option>
+                      <option value="salesCount-desc">{t('filters.sort.sales')}</option>
+                      <option value="viewCount-desc">{t('filters.sort.views')}</option>
+                      <option value="rating-desc">{t('filters.sort.rating')}</option>
                     </select>
                   </div>
                 </CardContent>
@@ -577,10 +582,10 @@ export default function ProductsPage() {
                     className="lg:hidden"
                   >
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    筛选
+                    {t('toolbar.filter')}
                   </Button>
                   <span className="text-sm text-gray-600">
-                    共找到 {totalProducts} 个商品
+                    {t('toolbar.found', { count: totalProducts })}
                   </span>
                 </div>
                 
@@ -606,14 +611,14 @@ export default function ProductsPage() {
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-                  <span className="ml-3 text-gray-600">加载中...</span>
+                  <span className="ml-3 text-gray-600">{t('toolbar.loading')}</span>
                 </div>
               ) : products.length === 0 ? (
                 <div className="text-center py-12">
                   <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到商品</h3>
-                  <p className="text-gray-600 mb-4">尝试调整筛选条件或搜索关键词</p>
-                  <Button onClick={clearFilters}>清除筛选条件</Button>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('toolbar.noResults.title')}</h3>
+                  <p className="text-gray-600 mb-4">{t('toolbar.noResults.description')}</p>
+                  <Button onClick={clearFilters}>{t('toolbar.noResults.clearFilters')}</Button>
                 </div>
               ) : (
                 <>
@@ -633,17 +638,17 @@ export default function ProductsPage() {
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                       >
-                        上一页
+                        {t('pagination.previous')}
                       </Button>
                       <span className="text-sm text-gray-600">
-                        第 {currentPage} 页，共 {totalPages} 页
+                        {t('pagination.page', { current: currentPage, total: totalPages })}
                       </span>
                       <Button
                         variant="outline"
                         onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                       >
-                        下一页
+                        {t('pagination.next')}
                       </Button>
                     </div>
                   )}

@@ -1,7 +1,8 @@
 'use client';
 
-import { AlertCircle, CheckCircle, Loader2, Send, Save } from 'lucide-react';
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { AlertCircle, CheckCircle, Loader2, Save, Send } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import MobileFormField from './MobileFormField';
 
@@ -49,8 +50,8 @@ const MobileForm: React.FC<MobileFormProps> = ({
   initialData = {},
   onSubmit,
   onSave,
-  submitText = '提交',
-  saveText = '保存',
+  submitText,
+  saveText,
   className = '',
   showSaveButton = false,
   autoSave = false,
@@ -59,6 +60,9 @@ const MobileForm: React.FC<MobileFormProps> = ({
   resetOnSubmit = false,
   disabled = false
 }) => {
+  const t = useTranslations('common.formValidation');
+  const tCommon = useTranslations('common');
+  
   const [formData, setFormData] = useState<Record<string, any>>(initialData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -69,6 +73,10 @@ const MobileForm: React.FC<MobileFormProps> = ({
   
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const formRef = useRef<HTMLFormElement>(null);
+  
+  // 默认文本
+  const defaultSubmitText = submitText || tCommon('submit');
+  const defaultSaveText = saveText || tCommon('save');
 
   // 自动保存
   useEffect(() => {
@@ -96,7 +104,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
 
     // 必填验证
     if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
-      return `${field.label}是必填项`;
+      return `${field.label} ${t('required')}`;
     }
 
     // 自定义验证
@@ -110,25 +118,25 @@ const MobileForm: React.FC<MobileFormProps> = ({
         case 'email':
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value)) {
-            return '请输入有效的邮箱地址';
+            return t('invalidEmail');
           }
           break;
         case 'tel':
           const phoneRegex = /^1[3-9]\d{9}$/;
           if (!phoneRegex.test(value.replace(/\s|-/g, ''))) {
-            return '请输入有效的手机号码';
+            return t('invalidPhone');
           }
           break;
       }
 
       // 长度验证
       if (field.maxLength && value.length > field.maxLength) {
-        return `${field.label}不能超过${field.maxLength}个字符`;
+        return `${field.label} ${t('maxLength', { maxLength: field.maxLength })}`;
       }
 
       // 正则验证
       if (field.pattern && !new RegExp(field.pattern).test(value)) {
-        return `${field.label}格式不正确`;
+        return `${field.label} ${t('invalidFormat')}`;
       }
     }
 
@@ -136,13 +144,13 @@ const MobileForm: React.FC<MobileFormProps> = ({
     if (field.type === 'number' && value !== undefined && value !== '') {
       const numValue = Number(value);
       if (isNaN(numValue)) {
-        return `${field.label}必须是数字`;
+        return `${field.label} ${t('mustBeNumber')}`;
       }
       if (field.min !== undefined && numValue < field.min) {
-        return `${field.label}不能小于${field.min}`;
+        return `${field.label} ${t('minValue', { min: field.min })}`;
       }
       if (field.max !== undefined && numValue > field.max) {
-        return `${field.label}不能大于${field.max}`;
+        return `${field.label} ${t('maxValue', { max: field.max })}`;
       }
     }
 
@@ -216,7 +224,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
     // 验证表单
     if (!validateForm()) {
       setSubmitStatus('error');
-      setSubmitMessage('请检查并修正表单中的错误');
+      setSubmitMessage(t('checkErrors'));
       return;
     }
 
@@ -227,7 +235,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
     try {
       await onSubmit(formData);
       setSubmitStatus('success');
-      setSubmitMessage('提交成功！');
+      setSubmitMessage(t('submitSuccess'));
       
       if (resetOnSubmit) {
         setFormData(initialData);
@@ -236,7 +244,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
       }
     } catch (error) {
       setSubmitStatus('error');
-      setSubmitMessage(error instanceof Error ? error.message : '提交失败，请重试');
+      setSubmitMessage(error instanceof Error ? error.message : t('submitFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -327,12 +335,12 @@ const MobileForm: React.FC<MobileFormProps> = ({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>提交中...</span>
+                <span>{t('submitting')}</span>
               </>
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>{submitText}</span>
+                <span>{defaultSubmitText}</span>
               </>
             )}
           </button>
@@ -355,12 +363,12 @@ const MobileForm: React.FC<MobileFormProps> = ({
               {isSaving ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>保存中...</span>
+                  <span>{t('saving')}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  <span>{saveText}</span>
+                  <span>{defaultSaveText}</span>
                 </>
               )}
             </button>
@@ -373,7 +381,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
             disabled={disabled}
             className="w-full px-6 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
-            重置表单
+            {t('resetForm')}
           </button>
         </div>
       </form>
@@ -382,7 +390,7 @@ const MobileForm: React.FC<MobileFormProps> = ({
       {autoSave && isSaving && (
         <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">自动保存中...</span>
+          <span className="text-sm">{t('autoSaving')}</span>
         </div>
       )}
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
-import { Eye, EyeOff, AlertCircle, Check, X } from 'lucide-react';
-import React, { useState, useRef, useEffect } from 'react';
+import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface MobileFormFieldProps {
   label: string;
@@ -56,6 +57,7 @@ const MobileFormField: React.FC<MobileFormFieldProps> = ({
   inputMode,
   enterKeyHint = 'done'
 }) => {
+  const t = useTranslations('common.formValidation');
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -251,7 +253,7 @@ const MobileFormField: React.FC<MobileFormFieldProps> = ({
         {success && touched && !error && (
           <div className="flex items-center gap-1 text-sm text-green-600">
             <Check className="w-4 h-4 flex-shrink-0" />
-            <span>输入正确</span>
+            <span>{t('inputValid')}</span>
           </div>
         )}
       </div>

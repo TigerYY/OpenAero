@@ -1,6 +1,7 @@
 /* eslint-disable no-hardcoded-routes */
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { SearchFilters } from '@/components/business/SearchFilters';
@@ -16,6 +17,7 @@ interface SolutionsPageProps {
 }
 
 export default function SolutionsPage({ params: { locale: _locale } }: SolutionsPageProps) {
+  const t = useTranslations('solutions');
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -114,10 +116,10 @@ export default function SolutionsPage({ params: { locale: _locale } }: Solutions
               <div className="flex items-center gap-4 flex-shrink-0">
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    解决方案市场
+                    {t('marketplace')}
                   </h1>
                   <p className="text-xs lg:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                    发现和购买经过验证的无人机解决方案
+                    {t('marketplaceSubtitle')}
                   </p>
                 </div>
               </div>
@@ -127,7 +129,7 @@ export default function SolutionsPage({ params: { locale: _locale } }: Solutions
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="搜索方案标题、描述..."
+                    placeholder={t('searchPlaceholder')}
                     value={filters.search || ''}
                     onChange={(e) => handleFiltersChange({ ...filters, search: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all placeholder:text-gray-400 text-sm"
@@ -156,7 +158,7 @@ export default function SolutionsPage({ params: { locale: _locale } }: Solutions
                   <span className="font-semibold text-gray-900 whitespace-nowrap">
                     {pagination.total}
                   </span>
-                  <span className="text-gray-400">个方案</span>
+                  <span className="text-gray-400">{t('solutionsCount')}</span>
                   {pagination.totalPages > 1 && (
                     <>
                       <span className="text-gray-300 mx-1">•</span>
@@ -239,16 +241,16 @@ export default function SolutionsPage({ params: { locale: _locale } }: Solutions
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  未找到匹配的解决方案
+                  {t('noResults')}
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  尝试调整搜索条件或筛选选项，或者浏览所有可用的解决方案
+                  {t('noResultsDesc')}
                 </p>
                 <button
                   onClick={clearFilters}
                   className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
-                  清除所有筛选
+                  {t('clearFilters')}
                 </button>
               </div>
             )}

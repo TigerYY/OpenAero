@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 import { useRouting } from '@/lib/routing';
-import { ROUTES } from '@/lib/routing';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 export function Footer() {
   const t = useTranslations('footer');
@@ -11,28 +10,28 @@ export function Footer() {
 
   const footerLinks = {
     solutions: [
-      { name: 'FPV验证机', href: route('/solutions/fpv') },
-      { name: '安防巡检套件', href: route('/solutions/security') },
-      { name: '农业植保套件', href: route('/solutions/agriculture') },
-      { name: '物流配送套件', href: route('/solutions/logistics') },
+      { name: t('solutions.fpv'), href: route('/solutions/fpv') },
+      { name: t('solutions.security'), href: route('/solutions/security') },
+      { name: t('solutions.agriculture'), href: route('/solutions/agriculture') },
+      { name: t('solutions.logistics'), href: route('/solutions/logistics') },
     ],
     creators: [
-      { name: '创作者计划', href: route('/creators/plan') },
-      { name: '申请流程', href: route(routes.CREATORS.APPLY) },
-      { name: '收益分成', href: route(routes.CREATORS.REVENUE) },
-      { name: '技术支持', href: route('/creators/support') },
+      { name: t('creators.plan'), href: route('/creators/plan') },
+      { name: t('creators.apply'), href: route(routes.CREATORS.APPLY) },
+      { name: t('creators.revenue'), href: route(routes.CREATORS.REVENUE) },
+      { name: t('creators.support'), href: route('/creators/support') },
     ],
     resources: [
-      { name: '技术文档', href: route('/developer/docs') },
-      { name: 'API接口', href: route('/developer/api') },
-      { name: 'SDK下载', href: route('/developer/sdk') },
-      { name: '社区论坛', href: route('/developer/community') },
+      { name: t('support.docs'), href: route('/developer/docs') },
+      { name: t('support.api'), href: route('/developer/api') },
+      { name: t('support.sdk'), href: route('/developer/sdk') },
+      { name: t('support.community'), href: route('/developer/community') },
     ],
     company: [
-      { name: '关于我们', href: route('/about') },
-      { name: '联系我们', href: route('/contact') },
-      { name: '隐私政策', href: route('/privacy') },
-      { name: '服务条款', href: route('/terms') },
+      { name: t('company.about'), href: route('/about') },
+      { name: t('company.contact'), href: route('/contact') },
+      { name: t('company.privacy'), href: route('/privacy') },
+      { name: t('company.terms'), href: route('/terms') },
     ],
   };
 
