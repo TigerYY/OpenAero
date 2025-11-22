@@ -110,14 +110,20 @@ export function SolutionCard({ solution }: SolutionCardProps) {
 
         {/* 功能特性 */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {solution.specs && Object.entries(solution.specs).slice(0, 3).map(([key, value], index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-md"
-            >
-              {key}: {value}
-            </span>
-          ))}
+          {solution.specs && Object.entries(solution.specs)
+            .filter(([key, value]) => {
+              // 只显示简单的字符串值，过滤掉对象和数组
+              return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+            })
+            .slice(0, 3)
+            .map(([key, value], index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-md"
+              >
+                {key}: {String(value)}
+              </span>
+            ))}
         </div>
 
         {/* 评分 */}

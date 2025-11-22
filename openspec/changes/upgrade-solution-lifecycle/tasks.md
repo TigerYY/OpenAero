@@ -120,14 +120,14 @@
 
 ## 12. Testing
 
-- [ ] 12.1 Write unit tests for status transition validation
-- [ ] 12.2 Write unit tests for upgrade logic
-- [ ] 12.3 Write unit tests for batch operations
-- [ ] 12.4 Write integration tests for optimization flow
-- [ ] 12.5 Write integration tests for upgrade flow
-- [ ] 12.6 Write E2E tests for admin optimization and publishing flow
-- [ ] 12.7 Write E2E tests for creator upgrade flow
-- [ ] 12.8 Write E2E tests for batch operations
+- [x] 12.1 Write unit tests for status transition validation
+- [x] 12.2 Write unit tests for upgrade logic
+- [x] 12.3 Write unit tests for batch operations
+- [x] 12.4 Write integration tests for optimization flow
+- [x] 12.5 Write integration tests for upgrade flow
+- [x] 12.6 Write E2E tests for admin optimization and publishing flow
+- [x] 12.7 Write E2E tests for creator upgrade flow
+- [x] 12.8 Write E2E tests for batch operations
 
 ## 13. Documentation
 

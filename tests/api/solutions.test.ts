@@ -1,3 +1,17 @@
+// Set environment variables BEFORE any imports
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+
+// Mock Supabase client BEFORE importing modules that use it
+jest.mock('@/lib/auth/supabase-client', () => ({
+  createSupabaseClient: jest.fn(() => ({
+    auth: {
+      getUser: jest.fn(),
+      getSession: jest.fn(),
+    },
+  })),
+}));
+
 // Mock Next.js Request and Response
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.Request = jest.fn().mockImplementation((url, options) => ({
@@ -45,6 +59,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+
 // Mock auth helpers
 jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
@@ -67,6 +82,11 @@ describe('/api/solutions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockLogAuditAction.mockResolvedValue(undefined)
+    // Default mock for unauthenticated requests
+    mockAuthenticateRequest.mockResolvedValue({
+      success: false,
+      user: undefined,
+    } as any)
   })
 
   describe('GET', () => {
@@ -108,6 +128,12 @@ describe('/api/solutions', () => {
 
       mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
       mockDb.solution.count = jest.fn().mockResolvedValue(2)
+      
+      // Mock authenticateRequest to return unauthenticated user
+      mockAuthenticateRequest.mockResolvedValue({
+        success: false,
+        user: undefined,
+      } as any)
 
       const request = new NextRequest('http://localhost:3000/api/solutions?page=1&limit=20')
       const response = await GET(request)
@@ -128,6 +154,12 @@ describe('/api/solutions', () => {
       const mockSolutions: any[] = []
       mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
       mockDb.solution.count = jest.fn().mockResolvedValue(0)
+      
+      // Mock authenticateRequest to return unauthenticated user
+      mockAuthenticateRequest.mockResolvedValue({
+        success: false,
+        user: undefined,
+      } as any)
 
       const request = new NextRequest('http://localhost:3000/api/solutions?category=cat1')
       await GET(request)
@@ -146,6 +178,12 @@ describe('/api/solutions', () => {
       const mockSolutions: any[] = []
       mockDb.solution.findMany = jest.fn().mockResolvedValue(mockSolutions)
       mockDb.solution.count = jest.fn().mockResolvedValue(0)
+      
+      // Mock authenticateRequest to return unauthenticated user
+      mockAuthenticateRequest.mockResolvedValue({
+        success: false,
+        user: undefined,
+      } as any)
 
       const request = new NextRequest('http://localhost:3000/api/solutions?search=drone')
       await GET(request)
@@ -167,6 +205,7 @@ describe('/api/solutions', () => {
 
     it('handles errors gracefully using unified error response', async () => {
       mockDb.solution.findMany = jest.fn().mockRejectedValue(new Error('Database error'))
+      // authenticateRequest already mocked in beforeEach
 
       const request = new NextRequest('http://localhost:3000/api/solutions')
       const response = await GET(request)
@@ -286,9 +325,14 @@ describe('/api/solutions', () => {
     })
 
     it('returns 401 for unauthenticated requests', async () => {
+      // Mock error response - use a simple response object
+      const errorResponse = {
+        json: async () => ({ success: false, error: '未授权访问' }),
+        status: 401,
+      } as any;
       mockAuthenticateRequest.mockResolvedValue({
         success: false,
-        error: NextResponse.json({ success: false, error: '未授权访问' }, { status: 401 }),
+        error: errorResponse,
       })
 
       const request = new NextRequest('http://localhost:3000/api/solutions', {

@@ -9,31 +9,54 @@ global.TransformStream = class TransformStream {
 };
 
 // Mock Request and Response for API tests
-global.Request = class Request {
-  constructor(url, options = {}) {
-    this.url = url;
-    this.method = options.method || 'GET';
-    this.headers = new Map();
-    this.body = options.body;
-  }
-  
-  async json() {
-    return JSON.parse(this.body || '{}');
-  }
-  
-  async text() {
-    return this.body || '';
-  }
-};
+// Note: Do not override global.Request if NextRequest is being used
+// NextRequest extends Request and has readonly url property
+// Only define if not already defined by Next.js
+if (typeof global.Request === 'undefined' || global.Request.name === 'Request') {
+  global.Request = class Request {
+    constructor(url, options = {}) {
+      // Use Object.defineProperty to set url as readonly
+      Object.defineProperty(this, 'url', {
+        value: typeof url === 'string' ? url : url.href,
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
+      this.method = options.method || 'GET';
+      this.headers = new Map();
+      this.body = options.body;
+    }
+    
+    async json() {
+      return JSON.parse(this.body || '{}');
+    }
+    
+    async text() {
+      return this.body || '';
+    }
+  };
+}
 
+// Mock Response with static json method
 global.Response = class Response {
   constructor(body, options = {}) {
     this.status = options.status || 200;
     this.body = body;
+    this.headers = new Headers(options.headers);
+  }
+  
+  static json(body, init) {
+    return new Response(JSON.stringify(body), {
+      status: init?.status || 200,
+      headers: {
+        'content-type': 'application/json',
+        ...init?.headers,
+      },
+    });
   }
   
   async json() {
-    return this.body;
+    return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
   }
   
   async text() {
@@ -75,22 +98,25 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-// Mock URL
-// Mock URL class with proper validation
-global.URL = class URL {
-  constructor(url, base) {
-    // Use Node.js built-in URL for proper validation
-    const nodeUrl = new (require('url').URL)(url, base);
-    this.href = nodeUrl.href;
-    this.pathname = nodeUrl.pathname;
-    this.searchParams = new URLSearchParams(nodeUrl.search);
-    this.protocol = nodeUrl.protocol;
-    this.hostname = nodeUrl.hostname;
-    this.port = nodeUrl.port;
-    this.host = nodeUrl.host;
-    this.origin = nodeUrl.origin;
-  }
-};
+// Mock URL - only if not already defined by Next.js
+if (!global.URL || global.URL.name === 'URL') {
+  global.URL = class URL {
+    constructor(url, base) {
+      // Handle both string and URL object inputs
+      const urlString = typeof url === 'string' ? url : (url?.href || String(url));
+      // Use Node.js built-in URL for proper validation
+      const nodeUrl = new (require('url').URL)(urlString, base);
+      this.href = nodeUrl.href;
+      this.pathname = nodeUrl.pathname;
+      this.searchParams = new URLSearchParams(nodeUrl.search);
+      this.protocol = nodeUrl.protocol;
+      this.hostname = nodeUrl.hostname;
+      this.port = nodeUrl.port;
+      this.host = nodeUrl.host;
+      this.origin = nodeUrl.origin;
+    }
+  };
+}
 
 // Mock URLSearchParams
 global.URLSearchParams = class URLSearchParams {

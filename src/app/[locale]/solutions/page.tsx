@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { SearchFilters } from '@/components/business/SearchFilters';
 import { SolutionCard } from '@/components/business/SolutionCard';
-import { Pagination } from '@/components/ui/Pagination';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { Pagination } from '@/components/ui/Pagination';
 import { Solution, SolutionFilters } from '@/types';
 
 interface SolutionsPageProps {
@@ -47,14 +47,21 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
       const response = await fetch(`/api/solutions?${params.toString()}`);
       const result = await response.json();
 
-      if (result.success) {
-        setSolutions(result.data.solutions);
+      if (result.success && result.data) {
+        // createPaginatedResponse 返回的数据结构是 { items, pagination }
+        const items = result.data.items || [];
+        const paginationData = result.data.pagination || {};
+        
+        setSolutions(items);
         setPagination({
-          page: result.data.page,
-          limit: result.data.limit,
-          total: result.data.total,
-          totalPages: result.data.totalPages,
+          page: paginationData.page || 1,
+          limit: paginationData.limit || 20,
+          total: paginationData.total || 0,
+          totalPages: paginationData.totalPages || 0,
         });
+      } else {
+        // 如果请求失败，确保 solutions 是空数组
+        setSolutions([]);
       }
     } catch (error) {
       console.error('Error fetching solutions:', error);
@@ -106,7 +113,7 @@ export default function SolutionsPage({ params: { locale } }: SolutionsPageProps
                     </div>
                   ))}
                 </div>
-              ) : solutions.length > 0 ? (
+              ) : solutions && solutions.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                     {solutions.map((solution) => (

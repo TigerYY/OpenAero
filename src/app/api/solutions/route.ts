@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
+import { createErrorResponse, createPaginatedResponse, createSuccessResponse, logAuditAction } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { ApiResponse } from '@/types';
-import { logAuditAction, createSuccessResponse, createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
 
 // GET /api/solutions - 获取方案列表
 export async function GET(request: NextRequest) {
@@ -16,26 +15,41 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    // 验证用户身份（可选）
-    const authResult = await authenticateRequest(request);
-    const isAuthenticated = authResult.success && authResult.user;
-    const userRoles = authResult.user?.roles || [];
-    const isAdmin = isAuthenticated && (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN'));
-    const isCreator = isAuthenticated && userRoles.includes('CREATOR');
+    // 解决方案市场完全公开，无需认证
+    // 尝试获取用户身份（仅用于管理员/创作者的特殊筛选，不影响公共访问）
+    let isAdmin = false;
+    let isCreator = false;
+    try {
+      const authResult = await authenticateRequest(request);
+      if (authResult.success && authResult.user) {
+        const userRoles = authResult.user?.roles || [];
+        isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+        isCreator = userRoles.includes('CREATOR');
+      }
+    } catch (error) {
+      // 忽略认证错误，继续公开访问
+      console.log('[API /solutions] 认证检查失败（忽略）:', error);
+    }
 
     // 构建查询条件
     const where: any = {};
 
-    // **新增**：公共访问时仅返回 PUBLISHED 状态的方案
-    if (!isAuthenticated || (!isAdmin && !isCreator)) {
+    // 默认：公共访问时仅返回 PUBLISHED 状态的方案
+    // 管理员/创作者可以通过 status 参数筛选其他状态
+    if (isAdmin || isCreator) {
+      // 管理员/创作者可以筛选状态
+      if (status && status !== 'all') {
+        where.status = status.toUpperCase() as any;
+      } else {
+        // 默认也显示 PUBLISHED
+        where.status = 'PUBLISHED';
+        where.published_at = { not: null } as any;
+      }
+    } else {
+      // 公共访问：只返回已发布的方案
       where.status = 'PUBLISHED';
       // 确保 published_at 不为 null（已发布的方案必须有发布时间）
       where.published_at = { not: null } as any;
-    } else {
-      // **新增**：管理员/创作者可以筛选状态
-      if (status && status !== 'all') {
-        where.status = status.toUpperCase() as any;
-      }
     }
 
     if (category && category !== 'all') {
@@ -54,9 +68,30 @@ export async function GET(request: NextRequest) {
       where
     });
     
-    // 调试日志：记录查询条件
+    // 调试日志：记录查询条件和认证状态
     console.log('[API /solutions] 查询条件:', JSON.stringify(where, null, 2));
     console.log('[API /solutions] 查询总数:', total);
+    
+    // 如果总数为0，检查是否有PUBLISHED状态的方案
+    if (total === 0) {
+      const allPublishedCount = await prisma.solution.count({
+        where: {
+          status: 'PUBLISHED',
+        }
+      });
+      const publishedWithDateCount = await prisma.solution.count({
+        where: {
+          status: 'PUBLISHED',
+          published_at: { not: null } as any,
+        }
+      });
+      console.log('[API /solutions] 调试信息:', {
+        allPublishedCount,
+        publishedWithDateCount,
+        queryStatus: where.status,
+        queryPublishedAt: where.published_at,
+      });
+    }
 
     // 获取方案列表
     const solutions = await prisma.solution.findMany({
@@ -91,49 +126,18 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
-        solutions: solutions.map(solution => {
-          // 安全地解析JSON字符串
-          const parseJsonSafely = (jsonString: any, fallback: any) => {
-            if (!jsonString) return fallback;
-            if (typeof jsonString === 'string') {
-              try {
-                return JSON.parse(jsonString);
-              } catch (e) {
-                console.warn('Failed to parse JSON:', jsonString, e);
-                return fallback;
-              }
-            }
-            return jsonString;
-          };
-
-          return {
-            id: solution.id,
-            title: solution.title,
-            description: solution.description,
-            category: solution.category,
-            status: solution.status,
-            price: solution.price,
-            version: solution.version,
-            tags: parseJsonSafely(solution.features, []),
-            images: parseJsonSafely(solution.images, []),
-            createdAt: solution.created_at,
-            updatedAt: solution.updated_at,
-            creatorId: solution.creator_id,
-            creatorName: 'Unknown', // TODO: 通过 creatorId 关联获取创作者信息
-            reviewCount: solution._count.solutionReviews || 0, // 使用 solutionReviews 计数
-            downloadCount: 0, // Temporarily set to 0 since orders relationship is problematic
-            specs: parseJsonSafely(solution.specs, {}),
-            bom: parseJsonSafely(solution.bom, [])
-          };
-        }),
-        total,
-        page,
-        limit,
-        totalPages
+    // 安全地解析JSON字符串（在外部定义，供多个地方使用）
+    const parseJsonSafely = (jsonString: any, fallback: any) => {
+      if (!jsonString) return fallback;
+      if (typeof jsonString === 'string') {
+        try {
+          return JSON.parse(jsonString);
+        } catch (e) {
+          console.warn('Failed to parse JSON:', jsonString, e);
+          return fallback;
+        }
       }
+      return jsonString;
     };
 
     return createPaginatedResponse(
