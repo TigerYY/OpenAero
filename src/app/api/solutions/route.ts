@@ -1,3 +1,4 @@
+/* eslint-disable no-hardcoded-routes, @typescript-eslint/no-explicit-any */
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -7,6 +8,12 @@ import { prisma } from '@/lib/prisma';
 
 // GET /api/solutions - 获取方案列表
 export async function GET(request: NextRequest) {
+  // 设置响应头，禁用缓存
+  const headers = new Headers();
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
@@ -32,24 +39,29 @@ export async function GET(request: NextRequest) {
     }
 
     // 构建查询条件
-    const where: any = {};
+    const where: {
+      status?: string;
+      published_at?: { not: null };
+      category?: string;
+      OR?: Array<{ title?: { contains: string; mode: string }; description?: { contains: string; mode: string } }>;
+    } = {};
 
     // 默认：公共访问时仅返回 PUBLISHED 状态的方案
     // 管理员/创作者可以通过 status 参数筛选其他状态
     if (isAdmin || isCreator) {
       // 管理员/创作者可以筛选状态
       if (status && status !== 'all') {
-        where.status = status.toUpperCase() as any;
+        where.status = status.toUpperCase();
       } else {
         // 默认也显示 PUBLISHED
         where.status = 'PUBLISHED';
-        where.published_at = { not: null } as any;
+        where.published_at = { not: null };
       }
     } else {
       // 公共访问：只返回已发布的方案
       where.status = 'PUBLISHED';
       // 确保 published_at 不为 null（已发布的方案必须有发布时间）
-      where.published_at = { not: null } as any;
+      where.published_at = { not: null };
     }
 
     if (category && category !== 'all') {
@@ -69,7 +81,9 @@ export async function GET(request: NextRequest) {
     });
     
     // 调试日志：记录查询条件和认证状态
+    // eslint-disable-next-line no-console
     console.log('[API /solutions] 查询条件:', JSON.stringify(where, null, 2));
+    // eslint-disable-next-line no-console
     console.log('[API /solutions] 查询总数:', total);
     
     // 如果总数为0，检查是否有PUBLISHED状态的方案
@@ -82,9 +96,10 @@ export async function GET(request: NextRequest) {
       const publishedWithDateCount = await prisma.solution.count({
         where: {
           status: 'PUBLISHED',
-          published_at: { not: null } as any,
+          published_at: { not: null },
         }
       });
+      // eslint-disable-next-line no-console
       console.log('[API /solutions] 调试信息:', {
         allPublishedCount,
         publishedWithDateCount,
@@ -124,10 +139,8 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
-    const totalPages = Math.ceil(total / limit);
-
     // 安全地解析JSON字符串（在外部定义，供多个地方使用）
-    const parseJsonSafely = (jsonString: any, fallback: any) => {
+    const parseJsonSafely = (jsonString: unknown, fallback: unknown) => {
       if (!jsonString) return fallback;
       if (typeof jsonString === 'string') {
         try {
@@ -140,8 +153,9 @@ export async function GET(request: NextRequest) {
       return jsonString;
     };
 
-    return createPaginatedResponse(
+    const response = createPaginatedResponse(
       solutions.map(solution => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const solutionAny = solution as any;
         return {
           id: solution.id,
@@ -170,6 +184,7 @@ export async function GET(request: NextRequest) {
           specs: solutionAny.technicalSpecs || parseJsonSafely(solution.specs, {}),
           bom: parseJsonSafely(solution.bom, []),
           // 包含资产和 BOM 项信息
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           assets: ((solution as any).assets || []).map((asset: any) => ({
             id: asset.id,
             type: asset.type,
@@ -177,6 +192,7 @@ export async function GET(request: NextRequest) {
             title: asset.title || null,
             description: asset.description || null,
           })),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           bomItems: ((solution as any).bomItems || []).map((item: any) => ({
             id: item.id,
             name: item.name,
@@ -193,6 +209,13 @@ export async function GET(request: NextRequest) {
       total,
       '获取方案列表成功'
     );
+    
+    // 添加无缓存响应头
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error('获取方案列表失败:', error);
     return createErrorResponse(error instanceof Error ? error : new Error('获取方案列表失败'), 500);

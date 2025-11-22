@@ -1,6 +1,5 @@
+/* eslint-disable no-hardcoded-routes */
 'use client';
-
-import { useState } from 'react';
 
 import { SolutionFilters } from '@/types';
 
@@ -28,11 +27,6 @@ const categories = [
 // ];
 
 export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
-  const [showFilters, setShowFilters] = useState(false);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFilterChange({ search: e.target.value });
-  };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -53,8 +47,8 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const [sortBy, sortOrder] = e.target.value.split('-');
     onFilterChange({
-      sortBy: sortBy as any,
-      sortOrder: sortOrder as any,
+      sortBy: sortBy as 'createdAt' | 'price' | 'rating' | 'name',
+      sortOrder: sortOrder as 'asc' | 'desc',
     });
   };
 
@@ -70,144 +64,109 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      {/* 搜索栏 */}
-      <div className="flex flex-col md:flex-row gap-4 mb-4">
-        <div className="flex-1">
-          <div className="relative">
+    <div className="flex flex-wrap items-center gap-2.5">
+      {/* 筛选选项 - 紧凑横向布局 */}
+      <div className="flex flex-wrap items-center gap-2.5 flex-1">
+        {/* 分类筛选 */}
+        <div className="flex-shrink-0">
+          <select
+            value={filters.category || ''}
+            onChange={handleCategoryChange}
+            className="px-3 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm min-w-[120px] text-gray-700 hover:border-gray-400"
+          >
+            {categories.map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 价格范围 */}
+        <div className="flex-shrink-0">
+          <div className="flex gap-1.5 items-center">
             <input
-              type="text"
-              placeholder="搜索解决方案..."
-              value={filters.search || ''}
-              onChange={handleSearchChange}
-              className="input w-full pl-10"
+              type="number"
+              placeholder="最低"
+              value={filters.minPrice || ''}
+              onChange={(e) => handlePriceChange('min', e.target.value)}
+              className="w-20 px-2.5 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm placeholder:text-gray-400"
+              min="0"
             />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-secondary-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+            <span className="text-gray-400 text-xs">-</span>
+            <input
+              type="number"
+              placeholder="最高"
+              value={filters.maxPrice || ''}
+              onChange={(e) => handlePriceChange('max', e.target.value)}
+              className="w-20 px-2.5 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm placeholder:text-gray-400"
+              min="0"
+            />
           </div>
         </div>
-        
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center gap-2"
+
+        {/* 排序方式 */}
+        <div className="flex-shrink-0">
+          <select
+            value={`${filters.sortBy}-${filters.sortOrder}`}
+            onChange={handleSortChange}
+            className="px-3 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm min-w-[120px] text-gray-700 hover:border-gray-400"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
-            </svg>
-            筛选
-          </button>
-          
-          <button
-            onClick={clearFilters}
-            className="btn-ghost text-secondary-600"
-          >
-            清除
-          </button>
+            <option value="createdAt-desc">最新发布</option>
+            <option value="price-asc">价格从低到高</option>
+            <option value="price-desc">价格从高到低</option>
+            <option value="rating-desc">评分最高</option>
+            <option value="name-asc">名称A-Z</option>
+            <option value="name-desc">名称Z-A</option>
+          </select>
+        </div>
+
+        {/* 快速筛选 */}
+        <div className="flex-shrink-0">
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => onFilterChange({ ...filters, minPrice: 0, maxPrice: 1000 })}
+              className={`px-2.5 py-1.5 text-xs font-medium border rounded-lg transition-all ${
+                filters.minPrice === 0 && filters.maxPrice === 1000
+                  ? 'bg-primary-500/10 border-primary-500/50 text-primary-700 shadow-sm'
+                  : 'bg-white/80 backdrop-blur-sm border-gray-300/80 text-gray-700 hover:bg-white hover:border-gray-400 shadow-sm'
+              }`}
+            >
+              1000元以下
+            </button>
+            <button
+              onClick={() => onFilterChange({ ...filters, minPrice: 1000, maxPrice: 5000 })}
+              className={`px-2.5 py-1.5 text-xs font-medium border rounded-lg transition-all ${
+                filters.minPrice === 1000 && filters.maxPrice === 5000
+                  ? 'bg-primary-500/10 border-primary-500/50 text-primary-700 shadow-sm'
+                  : 'bg-white/80 backdrop-blur-sm border-gray-300/80 text-gray-700 hover:bg-white hover:border-gray-400 shadow-sm'
+              }`}
+            >
+              1000-5000元
+            </button>
+            <button
+              onClick={() => onFilterChange({ ...filters, minPrice: 5000 })}
+              className={`px-2.5 py-1.5 text-xs font-medium border rounded-lg transition-all ${
+                filters.minPrice === 5000 && !filters.maxPrice
+                  ? 'bg-primary-500/10 border-primary-500/50 text-primary-700 shadow-sm'
+                  : 'bg-white/80 backdrop-blur-sm border-gray-300/80 text-gray-700 hover:bg-white hover:border-gray-400 shadow-sm'
+              }`}
+            >
+              5000元以上
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 筛选选项 */}
-      {showFilters && (
-        <div className="border-t pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 分类筛选 */}
-            <div>
-              <label className="label block mb-2">分类</label>
-              <select
-                value={filters.category || ''}
-                onChange={handleCategoryChange}
-                className="input"
-              >
-                {categories.map((category) => (
-                  <option key={category.value} value={category.value}>
-                    {category.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 价格范围 */}
-            <div>
-              <label className="label block mb-2">价格范围</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="最低价"
-                  value={filters.minPrice || ''}
-                  onChange={(e) => handlePriceChange('min', e.target.value)}
-                  className="input flex-1"
-                  min="0"
-                />
-                <span className="flex items-center text-secondary-500">-</span>
-                <input
-                  type="number"
-                  placeholder="最高价"
-                  value={filters.maxPrice || ''}
-                  onChange={(e) => handlePriceChange('max', e.target.value)}
-                  className="input flex-1"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            {/* 排序方式 */}
-            <div>
-              <label className="label block mb-2">排序方式</label>
-              <select
-                value={`${filters.sortBy}-${filters.sortOrder}`}
-                onChange={handleSortChange}
-                className="input"
-              >
-                <option value="createdAt-desc">最新发布</option>
-                <option value="price-asc">价格从低到高</option>
-                <option value="price-desc">价格从高到低</option>
-                <option value="rating-desc">评分最高</option>
-                <option value="name-asc">名称A-Z</option>
-                <option value="name-desc">名称Z-A</option>
-              </select>
-            </div>
-
-            {/* 快速筛选 */}
-            <div>
-              <label className="label block mb-2">快速筛选</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => onFilterChange({ minPrice: 0, maxPrice: 1000 })}
-                  className="px-3 py-1 text-xs bg-secondary-100 text-secondary-700 rounded-md hover:bg-secondary-200"
-                >
-                  1000元以下
-                </button>
-                <button
-                  onClick={() => onFilterChange({ minPrice: 1000, maxPrice: 5000 })}
-                  className="px-3 py-1 text-xs bg-secondary-100 text-secondary-700 rounded-md hover:bg-secondary-200"
-                >
-                  1000-5000元
-                </button>
-                <button
-                  onClick={() => onFilterChange({ minPrice: 5000 })}
-                  className="px-3 py-1 text-xs bg-secondary-100 text-secondary-700 rounded-md hover:bg-secondary-200"
-                >
-                  5000元以上
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 清除按钮 */}
+      <div className="flex-shrink-0">
+        <button
+          onClick={clearFilters}
+          className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap hover:bg-gray-100/50 rounded-lg"
+        >
+          清除筛选
+        </button>
+      </div>
     </div>
   );
 }
