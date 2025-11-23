@@ -265,12 +265,12 @@ jobs:
     
     strategy:
       matrix:
-        environment: 
+        include:
           - name: staging
-            url: ${{ secrets.STAGING_URL }}
+            url_env: STAGING_URL
             condition: ${{ needs.deploy-staging.result == 'success' }}
           - name: production
-            url: ${{ secrets.PRODUCTION_URL }}
+            url_env: PRODUCTION_URL
             condition: ${{ needs.deploy-production.result == 'success' }}
     
     steps:
@@ -303,7 +303,11 @@ jobs:
     - name: Run E2E tests
       run: |
         echo "Running E2E tests for ${{ matrix.name }}..."
-        BASE_URL=${{ secrets[matrix.url_env] }}
+        if [ "${{ matrix.name }}" == "staging" ]; then
+          BASE_URL="$STAGING_URL"
+        else
+          BASE_URL="$PRODUCTION_URL"
+        fi
         if [ -n "$BASE_URL" ]; then
           npm run test:e2e -- --base-url=$BASE_URL
         else
