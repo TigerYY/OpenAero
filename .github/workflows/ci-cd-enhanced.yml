@@ -186,7 +186,6 @@ jobs:
     if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     environment: 
       name: staging
-      url: ${{ secrets.STAGING_URL }}
     
     steps:
     - name: Checkout code
@@ -226,7 +225,6 @@ jobs:
     if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     environment: 
       name: production
-      url: ${{ secrets.PRODUCTION_URL }}
     
     steps:
     - name: Checkout code
@@ -290,21 +288,37 @@ jobs:
 
     - name: Run smoke tests
       run: |
-        echo "Running smoke tests for ${{ matrix.environment.name }}..."
-        npm run test:smoke -- --base-url=${{ matrix.environment.url }}
+        echo "Running smoke tests for ${{ matrix.name }}..."
+        BASE_URL=${{ secrets[matrix.url_env] }}
+        if [ -n "$BASE_URL" ]; then
+          npm run test:smoke -- --base-url=$BASE_URL
+        else
+          echo "⚠️  URL not configured, skipping tests"
+        fi
       continue-on-error: true
+      env:
+        STAGING_URL: ${{ secrets.STAGING_URL }}
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
 
     - name: Run E2E tests
       run: |
-        echo "Running E2E tests for ${{ matrix.environment.name }}..."
-        npm run test:e2e -- --base-url=${{ matrix.environment.url }}
+        echo "Running E2E tests for ${{ matrix.name }}..."
+        BASE_URL=${{ secrets[matrix.url_env] }}
+        if [ -n "$BASE_URL" ]; then
+          npm run test:e2e -- --base-url=$BASE_URL
+        else
+          echo "⚠️  URL not configured, skipping tests"
+        fi
       continue-on-error: true
+      env:
+        STAGING_URL: ${{ secrets.STAGING_URL }}
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
 
     - name: Upload test results
       uses: actions/upload-artifact@v3
       if: always()
       with:
-        name: test-results-${{ matrix.environment.name }}
+        name: test-results-${{ matrix.name }}
         path: test-results/
 
   # 性能测试
