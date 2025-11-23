@@ -285,11 +285,22 @@ jobs:
     - name: Run smoke tests
       run: |
         echo "Running smoke tests for ${{ matrix.name }}..."
-        BASE_URL=${{ secrets[matrix.url_env] }}
-        if [ -n "$BASE_URL" ]; then
-          npm run test:smoke -- --base-url=$BASE_URL
+        if [ "${{ matrix.name }}" == "staging" ] && [ "${{ needs.deploy-staging.result }}" == "success" ]; then
+          BASE_URL="$STAGING_URL"
+          if [ -n "$BASE_URL" ]; then
+            npm run test:smoke -- --base-url=$BASE_URL
+          else
+            echo "⚠️  STAGING_URL not configured, skipping tests"
+          fi
+        elif [ "${{ matrix.name }}" == "production" ] && [ "${{ needs.deploy-production.result }}" == "success" ]; then
+          BASE_URL="$PRODUCTION_URL"
+          if [ -n "$BASE_URL" ]; then
+            npm run test:smoke -- --base-url=$BASE_URL
+          else
+            echo "⚠️  PRODUCTION_URL not configured, skipping tests"
+          fi
         else
-          echo "⚠️  URL not configured, skipping tests"
+          echo "⚠️  Deployment not successful, skipping tests"
         fi
       continue-on-error: true
       env:
