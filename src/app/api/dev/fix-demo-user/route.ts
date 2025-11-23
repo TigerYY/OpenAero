@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabaseServerClient } from '@/lib/supabase';
 
 export async function POST() {
@@ -101,7 +102,8 @@ export async function POST() {
     });
     
   } catch (error) {
-    console.error('修复演示用户失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('修复演示用户失败:', error);}
     return NextResponse.json({
       success: false,
       error: '修复演示用户失败',

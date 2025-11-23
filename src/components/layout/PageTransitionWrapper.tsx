@@ -6,6 +6,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+
 import { PageTransition } from '@/lib/page-transitions';
 
 export interface PageTransitionWrapperProps {

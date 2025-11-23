@@ -37,7 +37,8 @@ export default function PWAInstaller() {
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          console.log('PWA: Registering Service Worker...');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('PWA: Registering Service Worker...');}
           const registration = await navigator.serviceWorker.register('/sw.js', {
             scope: '/',
             updateViaCache: 'none'
@@ -49,10 +50,12 @@ export default function PWAInstaller() {
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
-              console.log('PWA: New Service Worker found, installing...');
+              if (process.env.NODE_ENV === 'development') {
+                console.log('PWA: New Service Worker found, installing...');}
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('PWA: New Service Worker installed, prompting for update...');
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('PWA: New Service Worker installed, prompting for update...');}
                   // 可以在这里显示更新提示
                   showUpdateAvailable();
                 }
@@ -65,12 +68,14 @@ export default function PWAInstaller() {
             showUpdateAvailable();
           }
 
-          console.log('PWA: Service Worker registered successfully');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('PWA: Service Worker registered successfully');}
         } catch (error) {
           console.error('PWA: Service Worker registration failed:', error);
         }
       } else {
-        console.log('PWA: Service Worker not supported');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('PWA: Service Worker not supported');}
       }
     };
 
@@ -123,12 +128,15 @@ export default function PWAInstaller() {
       await installPrompt.prompt();
       
       const choiceResult = await installPrompt.userChoice;
-      console.log('PWA: User choice:', choiceResult.outcome);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PWA: User choice:', choiceResult.outcome);}
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('PWA: User accepted the install prompt');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('PWA: User accepted the install prompt');}
       } else {
-        console.log('PWA: User dismissed the install prompt');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('PWA: User dismissed the install prompt');}
       }
       
       setInstallPrompt(null);
@@ -142,7 +150,8 @@ export default function PWAInstaller() {
   const checkNotificationPermission = async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
-      console.log('PWA: Notification permission:', permission);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PWA: Notification permission:', permission);}
       return permission === 'granted';
     }
     return false;
@@ -158,7 +167,8 @@ export default function PWAInstaller() {
     try {
       const hasPermission = await checkNotificationPermission();
       if (!hasPermission) {
-        console.log('PWA: Notification permission denied');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('PWA: Notification permission denied');}
         return;
       }
 
@@ -167,7 +177,8 @@ export default function PWAInstaller() {
         applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       });
 
-      console.log('PWA: Push subscription:', subscription);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PWA: Push subscription:', subscription);}
       
       // 发送订阅信息到服务器
       await fetch('/api/push/subscribe', {
@@ -178,7 +189,8 @@ export default function PWAInstaller() {
         body: JSON.stringify(subscription),
       });
 
-      console.log('PWA: Push subscription sent to server');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PWA: Push subscription sent to server');}
     } catch (error) {
       console.error('PWA: Push subscription failed:', error);
     }

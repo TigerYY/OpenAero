@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
+
 import { emailService } from '@/lib/email-service';
 
 // 联系表单数据验证模式
@@ -40,7 +41,8 @@ export default async function handler(
     try {
       await sendContactEmail(validatedData);
     } catch (emailError) {
-      console.error('发送联系邮件失败:', emailError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送联系邮件失败:', emailError);}
       // 邮件发送失败不影响表单提交，只记录日志
     }
 
@@ -56,7 +58,8 @@ export default async function handler(
     });
 
   } catch (error) {
-    console.error('联系表单处理错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('联系表单处理错误:', error);}
 
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -234,11 +237,12 @@ ${data.message}
       text: userText,
     });
 
-    console.log('联系表单邮件发送成功:', {
-      to: data.email,
-      adminEmail,
-      subject: data.subject,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('联系表单邮件发送成功:', {
+        to: data.email,
+        adminEmail,
+        subject: data.subject,
+      });};
 
   } catch (error) {
     console.error('发送联系表单邮件失败:', error);

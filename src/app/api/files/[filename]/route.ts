@@ -28,7 +28,8 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('获取文件信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取文件信息失败:', error);}
     return NextResponse.json(
       { error: '获取文件信息失败' },
       { status: 500 }
@@ -66,7 +67,8 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('文件下载失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('文件下载失败:', error);}
     return NextResponse.json(
       { error: '文件下载失败' },
       { status: 500 }
@@ -104,7 +106,8 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('文件删除失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('文件删除失败:', error);}
     return NextResponse.json(
       { error: '文件删除失败' },
       { status: 500 }

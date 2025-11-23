@@ -123,7 +123,8 @@ export class SecurityMonitor {
     try {
       await this.saveSecurityEventToServer(securityEvent);
     } catch (error) {
-      console.error('保存安全事件失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存安全事件失败:', error);}
     }
   }
 
@@ -145,7 +146,8 @@ export class SecurityMonitor {
     try {
       await this.saveSecurityAlertToServer(securityAlert);
     } catch (error) {
-      console.error('保存安全警报失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存安全警报失败:', error);}
     }
   }
 
@@ -461,7 +463,8 @@ export class SecurityMonitor {
       try {
         await this.updateSecurityAlertOnServer(alert);
       } catch (error) {
-        console.error('更新警报状态失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('更新警报状态失败:', error);}
       }
     }
   }
@@ -546,7 +549,8 @@ export class SecurityMonitor {
         body: JSON.stringify(alert),
       });
     } catch (error) {
-      console.error('发送通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送通知失败:', error);}
     }
   }
 

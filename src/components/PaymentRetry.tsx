@@ -15,8 +15,8 @@ import {
   Smartphone,
   Building
 } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -165,7 +165,8 @@ export default function PaymentRetry({
       await onRetry(payment.id);
       setSuccess(t('payment.retryInitiated', { defaultValue: '支付重试已发起，请完成支付' }));
     } catch (error) {
-      console.error('支付重试失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('支付重试失败:', error);}
       setError(t('payment.retryFailed', { defaultValue: '支付重试失败，请稍后再试' }));
     } finally {
       setIsRetrying(false);
@@ -184,7 +185,8 @@ export default function PaymentRetry({
       await onStatusCheck(payment.id);
       setSuccess(t('payment.statusUpdated', { defaultValue: '支付状态已更新' }));
     } catch (error) {
-      console.error('状态检查失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('状态检查失败:', error);}
       setError(t('payment.statusCheckFailed', { defaultValue: '状态检查失败，请稍后再试' }));
     } finally {
       setIsChecking(false);

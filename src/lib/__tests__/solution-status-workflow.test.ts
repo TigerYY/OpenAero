@@ -4,6 +4,7 @@
  */
 
 import { SolutionStatus } from '@/shared/types/solutions';
+
 import {
   isValidStatusTransition,
   getAvailableTransitions,

@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useRouting } from '@/lib/routing';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useEffect } from 'react';
+
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useRouting } from '@/lib/routing';
 
 /**
  * 创作者方案页面

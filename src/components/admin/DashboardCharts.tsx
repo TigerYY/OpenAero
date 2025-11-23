@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   LineChart,
   Line,
@@ -18,6 +17,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 // 图表数据接口
 interface ChartData {

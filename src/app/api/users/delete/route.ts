@@ -4,15 +4,16 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
+import { createSupabaseServer } from '@/lib/auth/supabase-client';
 
 // 账户删除验证 schema
 const deleteAccountSchema = z.object({
@@ -106,7 +107,8 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(null, '账户已删除');
   } catch (error: unknown) {
-    console.error('删除账户异常:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除账户异常:', error);}
     return createErrorResponse(
       '删除账户失败',
       500,

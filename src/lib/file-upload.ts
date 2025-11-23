@@ -173,7 +173,8 @@ export async function uploadFile(
       try {
         processedFile = await compressImage(file, options);
       } catch (error) {
-        console.warn('图片压缩失败，使用原文件:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('图片压缩失败，使用原文件:', error);}
       }
     }
 
@@ -264,7 +265,8 @@ export function uploadFileWithProgress(
         try {
           processedFile = await compressImage(file, options);
         } catch (error) {
-          console.warn('图片压缩失败，使用原文件:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('图片压缩失败，使用原文件:', error);}
         }
       }
 

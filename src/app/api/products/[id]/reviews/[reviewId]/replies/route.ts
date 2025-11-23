@@ -4,15 +4,17 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { addReviewReply } from '@/lib/product-review';
-import { z } from 'zod';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +63,8 @@ export async function POST(
 
     return createSuccessResponse(reply, '回复添加成功');
   } catch (error) {
-    console.error('添加回复失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('添加回复失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '添加回复失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,

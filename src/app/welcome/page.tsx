@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 /**
  * /welcome 重定向页面
@@ -15,8 +20,10 @@ export default function WelcomeRedirect() {
     // 从 cookie 获取用户语言偏好
     const locale = document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] || 'zh-CN';
     
-    console.log('[Welcome Redirect] 检测到语言:', locale);
-    console.log('[Welcome Redirect] 重定向到:', `/${locale}/auth/welcome`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Welcome Redirect] 检测到语言:', locale);}
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Welcome Redirect] 重定向到:', `/${locale}/auth/welcome`);};
     
     // 重定向到带语言前缀的欢迎页面
     router.replace(`/${locale}/auth/welcome`);

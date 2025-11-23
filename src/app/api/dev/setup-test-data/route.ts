@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabaseServerClient } from '@/lib/supabase';
 
 export async function POST() {
   try {
-    console.log('开始创建测试数据...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('开始创建测试数据...');}
     
     const supabase = getSupabaseServerClient();
     const results: any = {};
@@ -100,7 +102,8 @@ export async function POST() {
     // 4. 创建测试解决方案
     const userId = authUser?.user?.id || results.user.data?.id;
     if (createdCategories && createdCategories.length > 0 && userId) {
-      console.log('创建测试解决方案...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('创建测试解决方案...');}
       const testSolutions = [
         {
           id: `sol-test-${Date.now()}-1`,
@@ -137,7 +140,8 @@ export async function POST() {
       
     // 5. 关联标签到解决方案
     if ((results.solutions.data?.length || 0) > 0 && (results.tags.data?.length || 0) > 0) {
-        console.log('关联标签到解决方案...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('关联标签到解决方案...');}
         const solutions = results.solutions.data;
         const tags = results.tags.data;
         const solutionTags = [
@@ -192,7 +196,8 @@ export async function POST() {
     });
     
   } catch (error) {
-    console.error('创建测试数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建测试数据失败:', error);}
     return NextResponse.json({
       success: false,
       error: '创建测试数据失败',

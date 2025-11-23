@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
   ArrowLeft,
   Save,
@@ -18,16 +20,19 @@ import {
   Video,
   FileText,
 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Textarea } from '@/components/ui/Textarea';
-import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Textarea } from '@/components/ui/Textarea';
 import { useRouting } from '@/lib/routing';
 import { SolutionCategory } from '@/shared/types/solutions';
 
@@ -52,11 +57,16 @@ interface MediaLink {
 }
 
 interface ProductLink {
-  platform: 'TAOBAO' | 'TMALL' | 'JD' | 'PINDUODUO' | 'AMAZON' | 'OTHER';
-  title: string;
+  platform?: 'TAOBAO' | 'TMALL' | 'JD' | 'PINDUODUO' | 'AMAZON' | 'OTHER';
+  title?: string;
   url: string;
   thumbnail?: string;
   description?: string;
+  productId?: string;
+  productName?: string;
+  productSku?: string;
+  productUrl?: string;
+  relationType?: 'REQUIRED' | 'RECOMMENDED' | 'OPTIONAL';
 }
 
 interface Solution {
@@ -131,7 +141,7 @@ export default function OptimizeSolutionPage() {
   const params = useParams();
   const router = useRouter();
   const { route } = useRouting();
-  const solutionId = params.id as string;
+  const solutionId = (params?.id as string) || '';
 
   const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
@@ -259,7 +269,8 @@ export default function OptimizeSolutionPage() {
         }));
       }
     } catch (error) {
-      console.error('获取方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案失败:', error);}
       toast.error('获取方案信息失败');
     } finally {
       setLoading(false);
@@ -291,7 +302,8 @@ export default function OptimizeSolutionPage() {
         }
       }
     } catch (error) {
-      console.error('获取发布数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取发布数据失败:', error);}
       // 忽略错误，使用默认值
     }
   };
@@ -513,7 +525,8 @@ export default function OptimizeSolutionPage() {
         }
       }
     } catch (error) {
-      console.error('获取预览失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取预览失败:', error);}
       toast.error('获取预览失败');
     }
   };
@@ -538,13 +551,13 @@ export default function OptimizeSolutionPage() {
           features: solutionFormData.features,
           images: solutionFormData.images,
           specs: solutionFormData.specs,
-          useCases: solutionFormData.useCases.length > 0 && solutionFormData.useCases[0].title 
+          useCases: solutionFormData.useCases.length > 0 && solutionFormData.useCases[0]?.title 
             ? solutionFormData.useCases.reduce((acc, uc) => {
                 if (uc.title) acc[uc.title] = uc.description || '';
                 return acc;
               }, {} as Record<string, string>)
             : undefined,
-          architecture: solutionFormData.architecture.length > 0 && solutionFormData.architecture[0].title
+          architecture: solutionFormData.architecture.length > 0 && solutionFormData.architecture[0]?.title
             ? solutionFormData.architecture.reduce((acc, arch) => {
                 if (arch.title) acc[arch.title] = arch.content || '';
                 return acc;

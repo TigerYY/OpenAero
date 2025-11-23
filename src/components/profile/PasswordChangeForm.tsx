@@ -4,14 +4,15 @@
 
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
+import { useState } from 'react';
+
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouting } from '@/lib/routing';
 import { InputSanitizer } from '@/lib/security';
 
 export default function PasswordChangeForm() {

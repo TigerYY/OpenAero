@@ -22,10 +22,12 @@ export function verifyWechatSignature(
     if (!key) {
       const isDevelopment = process.env.NODE_ENV === 'development';
       if (isDevelopment) {
-        console.warn('微信支付密钥未配置，在开发环境中跳过签名验证');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('微信支付密钥未配置，在开发环境中跳过签名验证');}
         return true;
       }
-      console.error('微信支付密钥未配置，无法验证签名');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('微信支付密钥未配置，无法验证签名');}
       return false;
     }
 
@@ -55,7 +57,8 @@ export function verifyWechatSignature(
 
     return calculatedSign === sign.toUpperCase();
   } catch (error) {
-    console.error('微信支付签名验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('微信支付签名验证失败:', error);}
     return false;
   }
 }

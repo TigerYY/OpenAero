@@ -29,7 +29,8 @@ export function formatDate(date: Date | string | number | null | undefined): str
       day: 'numeric',
     }).format(dateObj);
   } catch (error) {
-    console.error('日期格式化失败:', error, date);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('日期格式化失败:', error, date);}
     return '无效日期';
   }
 }

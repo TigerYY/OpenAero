@@ -1,16 +1,21 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { ArrowLeft, Users, Clock, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 
 import CollaborationEditor from '@/components/collaboration/CollaborationEditor';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouting } from '@/lib/routing';
 
 
 interface Solution {
@@ -27,8 +32,8 @@ interface Solution {
 
 export default function SolutionCollaboratePage() {
   const params = useParams();
-  const { data: session } = useSession();
-  const { route } = useRouting()
+  const { user: session } = useAuth();
+  const { route } = useRouting();
   const [solution, setSolution] = useState<Solution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +68,8 @@ export default function SolutionCollaboratePage() {
         });
         setContent(data.data.description || '');
       } catch (error) {
-        console.error('获取方案失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取方案失败:', error);}
         setError(error instanceof Error ? error.message : '获取方案失败');
       } finally {
         setIsLoading(false);
@@ -103,7 +109,8 @@ export default function SolutionCollaboratePage() {
 
       setLastSaved(new Date());
     } catch (error) {
-      console.error('保存失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存失败:', error);}
       alert('保存失败，请重试');
     } finally {
       setIsSaving(false);

@@ -5,9 +5,9 @@
 
 'use client';
 
-import { ReactNode } from 'react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ReactNode } from 'react';
 
 export interface FormFieldProps {
   label: string;

@@ -102,11 +102,11 @@ export async function GET(request: NextRequest) {
       where: {
         ...baseWhere,
         status: 'COMPLETED',
-        reviewStartedAt: { not: null },
+        review_started_at: { not: null },
         reviewedAt: { not: null },
       },
       select: {
-        reviewStartedAt: true,
+        review_started_at: true,
         reviewedAt: true,
       },
     });
@@ -154,11 +154,11 @@ export async function GET(request: NextRequest) {
             ...baseWhere,
             reviewerId: stat.reviewerId,
             status: 'COMPLETED',
-            reviewStartedAt: { not: null },
+            review_started_at: { not: null },
             reviewedAt: { not: null },
           },
           select: {
-            reviewStartedAt: true,
+            review_started_at: true,
             reviewedAt: true,
           },
         });
@@ -269,7 +269,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取审核统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取审核统计失败:', error);}
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('创建测试用户错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建测试用户错误:', error);}
       return NextResponse.json(
         { error: error.message || '创建用户失败' },
         { status: 400 }
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('创建测试用户错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建测试用户错误:', error);}
     return NextResponse.json(
       { error: '创建用户失败，请稍后重试' },
       { status: 500 }

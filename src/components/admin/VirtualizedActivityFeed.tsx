@@ -4,15 +4,16 @@
  */
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { 
   UserPlus, 
   FileText, 
   CheckCircle, 
   ShoppingCart,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+
 import { Badge } from '@/components/ui/Badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 type ActivityType = 'user_registration' | 'solution_submission' | 'review_completion' | 'order_creation';
 

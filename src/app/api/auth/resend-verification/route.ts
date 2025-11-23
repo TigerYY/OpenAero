@@ -4,14 +4,15 @@
  */
 
 import { NextRequest } from 'next/server';
-import { AuthService } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { AuthService } from '@/lib/auth/auth-service';
 
 // 重新发送验证邮件请求验证 schema
 const resendVerificationSchema = z.object({
@@ -73,7 +74,8 @@ export async function POST(request: NextRequest) {
       '如果该邮箱已注册，验证邮件已发送，请查收'
     );
   } catch (error: unknown) {
-    console.error('Resend verification error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Resend verification error:', error);}
     
     return createErrorResponse(
       '发送验证邮件失败，请稍后重试',

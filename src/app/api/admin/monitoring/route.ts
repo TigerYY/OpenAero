@@ -163,7 +163,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取监控数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取监控数据失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取监控数据失败' },
       { status: 500 }
@@ -201,7 +202,8 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('处理监控请求失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('处理监控请求失败:', error);}
     return NextResponse.json(
       { success: false, error: '处理监控请求失败' },
       { status: 500 }

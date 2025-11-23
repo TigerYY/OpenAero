@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { 
   Factory, 
@@ -19,6 +23,7 @@ import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 
@@ -119,7 +124,8 @@ export default function SupplyChainDashboard() {
         recentOrders,
       });
     } catch (error) {
-      console.error('获取仪表盘数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取仪表盘数据失败:', error);}
     } finally {
       setLoading(false);
     }

@@ -4,13 +4,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUserFromRequest, AuthService } from '@/lib/auth/auth-service';
-import { createSupabaseServerFromRequest, createSupabaseAdmin } from '@/lib/auth/supabase-client';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUserFromRequest, AuthService } from '@/lib/auth/auth-service';
+import { createSupabaseServerFromRequest, createSupabaseAdmin } from '@/lib/auth/supabase-client';
 
 // 允许的头像文件类型
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -63,12 +64,13 @@ export async function POST(request: NextRequest) {
     const fileExt = file.name.split('.').pop() || 'jpg';
     const fileName = `avatars/${user.id}/${Date.now()}.${fileExt}`;
 
-    console.log('准备上传头像:', {
-      fileName,
-      fileSize: file.size,
-      fileType: file.type,
-      userId: user.id,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('准备上传头像:', {
+        fileName,
+        fileSize: file.size,
+        fileType: file.type,
+        userId: user.id,
+      });};
 
     // 上传到 Supabase Storage (avatars bucket)
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -127,7 +129,8 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await AuthService.updateProfile(user.id, { avatar: avatarUrl });
 
     if (updateError) {
-      console.error('更新头像URL失败:', updateError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新头像URL失败:', updateError);}
       
       // 尝试删除已上传的文件
       await supabase.storage.from('avatars').remove([fileName]);
@@ -156,7 +159,8 @@ export async function POST(request: NextRequest) {
       '头像上传成功'
     );
   } catch (error: unknown) {
-    console.error('头像上传异常:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('头像上传异常:', error);}
     return createErrorResponse(
       '头像上传失败',
       500,
@@ -212,7 +216,8 @@ export async function DELETE(request: NextRequest) {
 
     return createSuccessResponse(null, '头像删除成功');
   } catch (error: unknown) {
-    console.error('删除头像异常:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除头像异常:', error);}
     return createErrorResponse(
       '删除头像失败',
       500,

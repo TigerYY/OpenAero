@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   ArrowLeft, 
   Calendar, 
@@ -14,19 +19,19 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
 import { useState, useEffect } from 'react';
-import { useRouting } from '@/lib/routing';
 
-import PaymentRetry from '@/components/PaymentRetry';
-import OrderTracking from '@/components/orders/OrderTracking';
-import OrderRefund from '@/components/orders/OrderRefund';
+
 import OrderHistory from '@/components/orders/OrderHistory';
-import ErrorMessage from '@/components/ui/ErrorMessage';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import OrderRefund from '@/components/orders/OrderRefund';
+import OrderTracking from '@/components/orders/OrderTracking';
+import PaymentRetry from '@/components/PaymentRetry';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useRouting } from '@/lib/routing';
 
 
 interface OrderDetail {
@@ -144,7 +149,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         setError(data.message || '获取订单详情失败，请稍后重试');
       }
     } catch (error) {
-      console.error('获取订单详情失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取订单详情失败:', error);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);
@@ -181,7 +187,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         throw new Error(errorData.message || '支付重试失败');
       }
     } catch (error) {
-      console.error('支付重试失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('支付重试失败:', error);}
       throw error; // 重新抛出错误，让PaymentRetry组件处理
     }
   };
@@ -198,7 +205,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         throw new Error(errorData.message || '检查支付状态失败');
       }
     } catch (error) {
-      console.error('检查支付状态失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('检查支付状态失败:', error);}
       throw error; // 重新抛出错误，让PaymentRetry组件处理
     }
   };
@@ -212,7 +220,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         setRetryInfo(data.data.retryInfo);
       }
     } catch (error) {
-      console.error('获取支付重试信息失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取支付重试信息失败:', error);}
     }
   };
 

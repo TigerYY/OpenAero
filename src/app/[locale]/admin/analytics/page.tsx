@@ -1,28 +1,32 @@
 'use client';
 
-import { 
-  Users, 
-  FileText, 
-  ShoppingCart, 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown,
-  Download,
-  RefreshCw,
-  Calendar,
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+import {
+  Activity,
   BarChart3,
+  Calendar,
+  DollarSign,
+  Download,
+  FileText,
   PieChart,
-  Activity
+  RefreshCw,
+  ShoppingCart,
+  TrendingDown,
+  TrendingUp,
+  Users
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 
 
 interface StatsOverview {
@@ -107,11 +111,12 @@ export default function AnalyticsPage() {
       ];
       
       // Generate additional data points if needed
-       const additionalData = Array.from({ length: Math.max(0, 30 - mockChartData.length) }, (_, i) => {
+       const additionalData: ChartData[] = Array.from({ length: Math.max(0, 30 - mockChartData.length) }, (_, i) => {
          const date = new Date();
          date.setDate(date.getDate() - (29 - i - mockChartData.length));
+         const dateStr = date.toISOString().split('T')[0];
          return {
-           date: date.toISOString().split('T')[0],
+           date: dateStr || '',
            users: Math.floor(Math.random() * 100) + 50,
            solutions: Math.floor(Math.random() * 20) + 5,
            orders: Math.floor(Math.random() * 15) + 3,
@@ -119,13 +124,14 @@ export default function AnalyticsPage() {
          };
        });
        
-       const finalChartData = [...mockChartData, ...additionalData];
+       const finalChartData: ChartData[] = [...mockChartData, ...additionalData];
 
       setStats(mockStats);
       setChartData(finalChartData);
       
     } catch (error) {
-      console.error('获取分析数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取分析数据失败:', error);}
       toast.error('获取分析数据失败');
     } finally {
       setLoading(false);
@@ -144,7 +150,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [selectedPeriod]);
+  }, []);
 
   if (loading) {
     return (

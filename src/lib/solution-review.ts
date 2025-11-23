@@ -2,8 +2,9 @@
  * 方案审核工具库
  */
 
-import { prisma } from '@/lib/prisma';
 import { SolutionStatus, ReviewStatus, ReviewDecision } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 export interface CreateReviewData {
   solutionId: string;
@@ -92,7 +93,7 @@ export async function startReview(
       decision: ReviewDecision.PENDING,
       from_status: solution.status, // **新增**：记录审核前的状态
       to_status: solution.status, // 初始值设为当前状态，完成审核时会更新
-      reviewStartedAt: new Date(),
+      review_started_at: new Date(),
     },
     include: {
       solution: {
@@ -192,7 +193,7 @@ export async function completeReview(
 
   // 获取审核前的状态（fromStatus）
   // 优先使用审核记录中已记录的 fromStatus，如果没有则使用方案当前状态
-  const fromStatus = review.fromStatus || solution.status;
+  const fromStatus = review.from_status || solution.status;
 
   // 确定审核后的状态（toStatus）
   let newStatus: SolutionStatus;
@@ -257,24 +258,12 @@ export async function completeReview(
     },
   });
 
-  // 获取审核员ID（可能在不同字段中）
-  // Prisma 会自动将 snake_case 字段名转换为 camelCase
-  const reviewerId = 
-    (review as any).reviewerId ||          // Prisma 转换后的字段名
-    (review as any).reviewer_id ||         // 原始数据库字段名（备用）
-    (updatedReviewRecord as any).reviewerId ||  // 更新后的记录
-    (updatedReviewRecord as any).reviewer_id || // 更新后的记录（备用）
-    data.reviewerId;                       // 从参数传入的（最可靠）
+  // 获取审核员ID
+  const reviewerId = review.reviewer_id || data.reviewerId;
   
   if (!reviewerId) {
-    console.error('[completeReview] ❌ 无法获取审核员ID');
-    console.error('[completeReview] review对象:', JSON.stringify(review, null, 2));
-    console.error('[completeReview] updatedReviewRecord对象:', JSON.stringify(updatedReviewRecord, null, 2));
-    console.error('[completeReview] data.reviewerId:', data.reviewerId);
     throw new Error('无法获取审核员ID，请确保提供了 reviewerId');
   }
-  
-  console.log('[completeReview] ✅ 获取到审核员ID:', reviewerId);
 
   // 获取审核员信息
   const reviewer = await prisma.userProfile.findUnique({
@@ -322,7 +311,7 @@ export async function getSolutionReviewHistory(
   });
 
   // 获取所有审核员信息
-  const reviewerIds = [...new Set(reviews.map((r) => r.reviewerId))];
+  const reviewerIds = [...new Set(reviews.map((r) => r.reviewer_id))];
   const reviewers = await prisma.userProfile.findMany({
     where: { user_id: { in: reviewerIds } },
     select: {
@@ -338,12 +327,12 @@ export async function getSolutionReviewHistory(
 
   return reviews.map((review) => ({
     ...review,
-    fromStatus: review.fromStatus, // **新增**：包含 fromStatus
-    toStatus: review.toStatus, // **新增**：包含 toStatus
+    fromStatus: review.from_status, // **新增**：包含 fromStatus
+    toStatus: review.to_status, // **新增**：包含 toStatus
     reviewer: {
-      id: review.reviewerId,
-      firstName: reviewerMap.get(review.reviewerId)?.firstName || null,
-      lastName: reviewerMap.get(review.reviewerId)?.lastName || null,
+      id: review.reviewer_id,
+      firstName: reviewerMap.get(review.reviewer_id)?.firstName || null,
+      lastName: reviewerMap.get(review.reviewer_id)?.lastName || null,
     },
   })) as ReviewWithDetails[];
 }
@@ -387,20 +376,20 @@ export async function getReviewStatistics(
         status: true,
         decision: true,
         score: true,
-        reviewStartedAt: true,
-        reviewedAt: true,
+        review_started_at: true,
+        reviewed_at: true,
       },
     }),
     prisma.solutionReview.findMany({
       where: {
         ...where,
         status: ReviewStatus.COMPLETED,
-        reviewedAt: { not: null },
-        reviewStartedAt: { not: null },
+        reviewed_at: { not: null },
+        review_started_at: { not: null },
       },
       select: {
-        reviewStartedAt: true,
-        reviewedAt: true,
+        review_started_at: true,
+        reviewed_at: true,
       },
     }),
   ]);
@@ -420,10 +409,10 @@ export async function getReviewStatistics(
 
   // 计算平均审核时间
   const reviewTimes = completedReviews
-    .filter((r) => r.reviewStartedAt && r.reviewedAt)
+    .filter((r) => r.review_started_at && r.reviewed_at)
     .map((r) => {
-      const start = r.reviewStartedAt!.getTime();
-      const end = r.reviewedAt!.getTime();
+      const start = r.review_started_at!.getTime();
+      const end = r.reviewed_at!.getTime();
       return (end - start) / (1000 * 60 * 60); // 转换为小时
     });
 

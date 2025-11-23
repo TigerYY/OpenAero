@@ -4,11 +4,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getUserApplicationStatus } from '@/lib/creator-application';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,8 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(application, '获取申请状态成功');
   } catch (error) {
-    console.error('获取申请状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取申请状态失败:', error);}
     return createErrorResponse(
       '获取申请状态失败',
       500,

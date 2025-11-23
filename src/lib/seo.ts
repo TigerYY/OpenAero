@@ -440,7 +440,8 @@ export const PerformanceTracker = {
       const entries = entryList.getEntries();
       if (entries.length > 0) {
         const lastEntry = entries[entries.length - 1];
-        console.log('LCP:', lastEntry.startTime);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('LCP:', lastEntry.startTime);}
       }
     }).observe({ entryTypes: ['largest-contentful-paint'] });
 
@@ -448,7 +449,8 @@ export const PerformanceTracker = {
     new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries();
       entries.forEach((entry: any) => {
-        console.log('FID:', entry.processingStart - entry.startTime);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('FID:', entry.processingStart - entry.startTime);}
       });
     }).observe({ entryTypes: ['first-input'] });
 
@@ -461,7 +463,8 @@ export const PerformanceTracker = {
           clsValue += entry.value;
         }
       });
-      console.log('CLS:', clsValue);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('CLS:', clsValue);}
     }).observe({ entryTypes: ['layout-shift'] });
   },
 
@@ -472,14 +475,15 @@ export const PerformanceTracker = {
     window.addEventListener('load', () => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       
-      console.log('页面性能指标:', {
-        DNS查询: navigation.domainLookupEnd - navigation.domainLookupStart,
-        TCP连接: navigation.connectEnd - navigation.connectStart,
-        请求响应: navigation.responseEnd - navigation.requestStart,
-        DOM解析: navigation.domContentLoadedEventEnd - navigation.responseEnd,
-        资源加载: navigation.loadEventStart - navigation.domContentLoadedEventEnd,
-        总加载时间: navigation.loadEventEnd - navigation.fetchStart
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('页面性能指标:', {
+          DNS查询: navigation.domainLookupEnd - navigation.domainLookupStart,
+          TCP连接: navigation.connectEnd - navigation.connectStart,
+          请求响应: navigation.responseEnd - navigation.requestStart,
+          DOM解析: navigation.domContentLoadedEventEnd - navigation.responseEnd,
+          资源加载: navigation.loadEventStart - navigation.domContentLoadedEventEnd,
+          总加载时间: navigation.loadEventEnd - navigation.fetchStart
+        });};
     });
   }
 };

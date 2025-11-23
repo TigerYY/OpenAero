@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -43,23 +44,23 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
+    // Note: auditLog model doesn't exist in Prisma schema
+    // Using Supabase client instead
+    const supabase = createSupabaseAdmin();
+    
     // 获取API响应时间统计（从审计日志中提取，如果有duration字段）
     // 注意：这需要审计日志记录duration信息
-    const apiCalls = await prisma.auditLog.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-        action: {
-          startsWith: 'API_',
-        },
-      },
-      select: {
-        action: true,
-        createdAt: true,
-        metadata: true,
-      },
-    });
+    const { data: apiCallsData } = await supabase
+      .from('audit_logs')
+      .select('action, created_at, metadata')
+      .gte('created_at', startDate.toISOString())
+      .like('action', 'API_%');
+    
+    const apiCalls = (apiCallsData || []).map((log: any) => ({
+      action: log.action,
+      createdAt: log.created_at,
+      metadata: log.metadata,
+    }));
 
     // 按小时分组统计
     const hourlyStats: Record<string, { count: number; avgDuration: number }> = {};
@@ -79,38 +80,38 @@ export async function GET(request: NextRequest) {
     });
 
     // 获取数据库查询统计
-    const dbQueries = await prisma.auditLog.count({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-        action: {
-          contains: 'QUERY',
-        },
-      },
-    });
+    const { count: dbQueriesCount } = await supabase
+      .from('audit_logs')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startDate.toISOString())
+      .ilike('action', '%QUERY%');
+    
+    const dbQueries = dbQueriesCount || 0;
 
     // 获取用户活动统计
-    const userActivity = await prisma.auditLog.groupBy({
-      by: ['userId'],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
+    const { data: allActivityLogs } = await supabase
+      .from('audit_logs')
+      .select('user_id')
+      .gte('created_at', startDate.toISOString());
+    
+    const userActivityMap = new Map<string, number>();
+    (allActivityLogs || []).forEach((log: any) => {
+      const userId = log.user_id || 'SYSTEM';
+      userActivityMap.set(userId, (userActivityMap.get(userId) || 0) + 1);
     });
+    const userActivity = Array.from(userActivityMap.entries()).map(([userId, count]) => ({
+      userId,
+      _count: { id: count },
+    }));
 
     const totalUsers = userActivity.length;
-    const totalRequests = await prisma.auditLog.count({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-    });
+    
+    const { count: totalRequestsCount } = await supabase
+      .from('audit_logs')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startDate.toISOString());
+    
+    const totalRequests = totalRequestsCount || 0;
 
     // 计算平均响应时间（如果有数据）
     const avgResponseTime = Object.values(hourlyStats).reduce(
@@ -139,7 +140,8 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(performanceData, '获取性能监控数据成功');
   } catch (error) {
-    console.error('获取性能监控数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取性能监控数据失败:', error);}
     return createErrorResponse(
       '获取性能监控数据失败',
       500,

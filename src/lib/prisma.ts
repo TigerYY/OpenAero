@@ -10,8 +10,10 @@ const globalForPrisma = globalThis as unknown as {
 const databaseUrl = process.env.DATABASE_URL || ''
 
 if (!databaseUrl) {
-  console.error('[Prisma] 错误: DATABASE_URL 环境变量未设置！')
-  console.error('[Prisma] 请在 .env.local 文件中设置 DATABASE_URL')
+  if (process.env.NODE_ENV === 'development') {
+    console.error('[Prisma] 错误: DATABASE_URL 环境变量未设置！');}
+  if (process.env.NODE_ENV === 'development') {
+    console.error('[Prisma] 请在 .env.local 文件中设置 DATABASE_URL');}
 }
 
 const isPooler = databaseUrl.includes('pooler.supabase.com') || 
@@ -25,7 +27,8 @@ if (isPooler && !databaseUrl.includes('pgbouncer=true')) {
   // 添加 pgbouncer=true 参数以禁用 prepared statements
   const separator = databaseUrl.includes('?') ? '&' : '?'
   finalDatabaseUrl = `${databaseUrl}${separator}pgbouncer=true`
-  console.log('[Prisma] 检测到 Supabase Session Pooler，已添加 pgbouncer=true 参数')
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Prisma] 检测到 Supabase Session Pooler，已添加 pgbouncer=true 参数');}
 }
 
 // 诊断信息（不显示完整密码）
@@ -35,13 +38,22 @@ if (databaseUrl) {
     const urlMatch = databaseUrl.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):?(\d+)?\/(.+)/)
     if (urlMatch) {
       const [, user, , host, port, database] = urlMatch
-      console.log('[Prisma] 数据库连接配置:')
-      console.log(`  - User: ${user}`)
-      console.log(`  - Host: ${host}`)
-      console.log(`  - Port: ${port || '5432'}`)
-      console.log(`  - Database: ${database.split('?')[0]}`)
-      console.log(`  - Pooler: ${isPooler ? '是' : '否'}`)
-      console.log(`  - PgBouncer: ${finalDatabaseUrl.includes('pgbouncer=true') ? '已启用' : '未启用'}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Prisma] 数据库连接配置:');}
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - User: ${user}`);}
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - Host: ${host}`);}
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - Port: ${port || '5432'}`);}
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - Database: ${database.split('?')[0]}`)
+      }
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - Pooler: ${isPooler ? '是' : '否'}`);}
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`  - PgBouncer: ${finalDatabaseUrl.includes('pgbouncer=true') ? '已启用' : '未启用'}`)
+      }
     }
   } catch (e) {
     console.warn('[Prisma] 无法解析 DATABASE_URL 格式')
@@ -66,7 +78,8 @@ const maxConnectionAttempts = 3
 async function connectWithRetry() {
   try {
     await prisma.$connect()
-    console.log('[Prisma] 数据库连接成功')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Prisma] 数据库连接成功');}
     connectionAttempts = 0
   } catch (error: any) {
     connectionAttempts++
@@ -80,12 +93,18 @@ async function connectWithRetry() {
         connectWithRetry()
       }, delay)
     } else {
-      console.error('[Prisma] 达到最大重试次数，连接失败')
-      console.error('[Prisma] 请检查：')
-      console.error('1. DATABASE_URL 环境变量是否正确配置')
-      console.error('2. 数据库服务器是否可访问')
-      console.error('3. 网络连接是否正常')
-      console.error('4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Prisma] 达到最大重试次数，连接失败');}
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Prisma] 请检查：');}
+      if (process.env.NODE_ENV === 'development') {
+        console.error('1. DATABASE_URL 环境变量是否正确配置');}
+      if (process.env.NODE_ENV === 'development') {
+        console.error('2. 数据库服务器是否可访问');}
+      if (process.env.NODE_ENV === 'development') {
+        console.error('3. 网络连接是否正常');}
+      if (process.env.NODE_ENV === 'development') {
+        console.error('4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串');}
     }
   }
 }

@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   User, 
   Mail, 
@@ -17,9 +22,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+
 import { AdminRoute } from '@/components/auth/ProtectedRoute';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -85,7 +90,8 @@ export default function AdminUsersPage() {
   const [batchValue, setBatchValue] = useState('');
 
   useEffect(() => {
-    console.log('[AdminUsersPage] useEffect 触发，开始加载用户列表');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AdminUsersPage] useEffect 触发，开始加载用户列表');}
     loadUsers();
   }, []);
 
@@ -139,7 +145,8 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      console.log('[AdminUsersPage] 开始加载用户列表...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AdminUsersPage] 开始加载用户列表...');}
 
       const response = await fetch('/api/admin/users', {
         credentials: 'include', // 确保发送 cookies
@@ -149,37 +156,42 @@ export default function AdminUsersPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: '未知错误' }));
-        console.error('[AdminUsersPage] API 错误响应:', errorData);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[AdminUsersPage] API 错误响应:', errorData);}
         throw new Error(errorData.error || `获取用户列表失败 (${response.status})`);
       }
 
       const data = await response.json();
-      console.log('[AdminUsersPage] API 响应数据:', {
-        success: data.success,
-        hasData: !!data.data,
-        hasItems: !!data.data?.items,
-        itemsLength: data.data?.items?.length || 0,
-        pagination: data.data?.pagination,
-        dataType: typeof data.data,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AdminUsersPage] API 响应数据:', {
+          success: data.success,
+          hasData: !!data.data,
+          hasItems: !!data.data?.items,
+          itemsLength: data.data?.items?.length || 0,
+          pagination: data.data?.pagination,
+          dataType: typeof data.data,
+        });};
       
       // API 返回格式: { success: true, data: { items: [...], pagination: {...} } }
       // 与 applications 页面保持一致的数据提取逻辑
       const usersList = data.data?.items || data.data || [];
       const validUsersList = Array.isArray(usersList) ? usersList : [];
       
-      console.log('[AdminUsersPage] 解析后的用户列表:', {
-        count: validUsersList.length,
-        firstUser: validUsersList[0] || null,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AdminUsersPage] 解析后的用户列表:', {
+          count: validUsersList.length,
+          firstUser: validUsersList[0] || null,
+        });};
       
       if (validUsersList.length === 0) {
-        console.warn('[AdminUsersPage] 用户列表为空');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AdminUsersPage] 用户列表为空');}
       }
       
       setUsers(validUsersList);
     } catch (error) {
-      console.error('[AdminUsersPage] 获取用户列表错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[AdminUsersPage] 获取用户列表错误:', error);}
       const errorMessage = error instanceof Error ? error.message : '获取用户列表失败';
       toast.error(errorMessage);
     } finally {
@@ -189,7 +201,9 @@ export default function AdminUsersPage() {
 
   const handleEditUser = (user: UserData) => {
     setSelectedUser(user);
-    const userRoles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : ['USER']);
+    const userRoles: UserRole[] = Array.isArray(user.roles) 
+      ? user.roles.filter((r): r is UserRole => typeof r === 'string' && ['USER', 'CREATOR', 'REVIEWER', 'FACTORY_MANAGER', 'ADMIN', 'SUPER_ADMIN'].includes(r))
+      : (user.role ? [user.role] : ['USER']);
     setEditForm({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
@@ -256,15 +270,17 @@ export default function AdminUsersPage() {
           body: JSON.stringify(infoPayload),
         });
         
-        console.log('[AdminUsersPage] 基本信息更新API响应:', {
-          status: infoResponse.status,
-          statusText: infoResponse.statusText,
-          ok: infoResponse.ok
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AdminUsersPage] 基本信息更新API响应:', {
+            status: infoResponse.status,
+            statusText: infoResponse.statusText,
+            ok: infoResponse.ok
+          });};
         
         if (!infoResponse.ok) {
           const errorData = await infoResponse.json().catch(() => ({}));
-          console.error('[AdminUsersPage] 基本信息更新失败:', errorData);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[AdminUsersPage] 基本信息更新失败:', errorData);}
           
           // 提供更具体的错误信息
           let errorMessage = '更新用户基本信息失败';
@@ -284,16 +300,18 @@ export default function AdminUsersPage() {
         }
         
         const responseData = await infoResponse.json();
-        console.log('[AdminUsersPage] 基本信息更新成功:', responseData);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AdminUsersPage] 基本信息更新成功:', responseData);}
         infoUpdated = true;
       }
 
       if (rolesChanged) {
-        console.log('[AdminUsersPage] 开始更新用户角色:', {
-          userId: selectedUser.id,
-          currentRoles: editForm.roles,
-          endpoint: `/api/admin/users/${selectedUser.id}/role`
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AdminUsersPage] 开始更新用户角色:', {
+            userId: selectedUser.id,
+            currentRoles: editForm.roles,
+            endpoint: `/api/admin/users/${selectedUser.id}/role`
+          });};
         
         const roleResponse = await fetch(`/api/admin/users/${selectedUser.id}/role`, {
           method: 'PATCH',
@@ -302,20 +320,23 @@ export default function AdminUsersPage() {
           body: JSON.stringify({ roles: editForm.roles }),
         });
         
-        console.log('[AdminUsersPage] 角色更新API响应:', {
-          status: roleResponse.status,
-          statusText: roleResponse.statusText,
-          ok: roleResponse.ok
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AdminUsersPage] 角色更新API响应:', {
+            status: roleResponse.status,
+            statusText: roleResponse.statusText,
+            ok: roleResponse.ok
+          });};
         
         if (!roleResponse.ok) {
           const errorData = await roleResponse.json().catch(() => ({}));
-          console.error('[AdminUsersPage] 角色更新失败:', errorData);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[AdminUsersPage] 角色更新失败:', errorData);}
           throw new Error(errorData.error || '更新用户角色失败');
         }
         
         const responseData = await roleResponse.json();
-        console.log('[AdminUsersPage] 角色更新成功:', responseData);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AdminUsersPage] 角色更新成功:', responseData);}
         rolesUpdated = true;
       }
 
@@ -333,7 +354,8 @@ export default function AdminUsersPage() {
       await loadUsers();
 
     } catch (error) {
-      console.error('更新用户信息错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新用户信息错误:', error);}
       const errorMessage = error instanceof Error ? error.message : '更新操作失败';
       toast.error(errorMessage);
     } finally {
@@ -367,7 +389,8 @@ export default function AdminUsersPage() {
         throw new Error('操作失败');
       }
     } catch (error) {
-      console.error('暂停用户错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('暂停用户错误:', error);}
       toast.error('暂停用户失败');
     }
   };
@@ -392,7 +415,8 @@ export default function AdminUsersPage() {
         throw new Error('删除失败');
       }
     } catch (error) {
-      console.error('删除用户错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除用户错误:', error);}
       toast.error('删除用户失败');
     }
   };
@@ -444,7 +468,8 @@ export default function AdminUsersPage() {
         throw new Error('批量操作失败');
       }
     } catch (error) {
-      console.error('批量操作错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('批量操作错误:', error);}
       toast.error('批量操作失败');
     }
   };

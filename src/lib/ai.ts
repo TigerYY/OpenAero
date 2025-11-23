@@ -94,7 +94,8 @@ class AIService {
 
       return await response.json();
     } catch (error) {
-      console.error('代码分析错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('代码分析错误:', error);}
       // 返回模拟数据作为后备
       return this.getMockAnalysisResult(code, language);
     }
@@ -120,7 +121,8 @@ class AIService {
 
       return await response.json();
     } catch (error) {
-      console.error('标签生成错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('标签生成错误:', error);}
       // 返回模拟数据作为后备
       return this.getMockTagSuggestions(content);
     }
@@ -150,7 +152,8 @@ class AIService {
 
       return await response.json();
     } catch (error) {
-      console.error('推荐获取错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('推荐获取错误:', error);}
       // 返回模拟数据作为后备
       return this.getMockRecommendations();
     }
@@ -176,7 +179,8 @@ class AIService {
 
       return await response.json();
     } catch (error) {
-      console.error('搜索建议错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('搜索建议错误:', error);}
       // 返回模拟数据作为后备
       return this.getMockSearchSuggestions(query);
     }
@@ -202,7 +206,8 @@ class AIService {
 
       return await response.json();
     } catch (error) {
-      console.error('优化建议错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('优化建议错误:', error);}
       return [
         '考虑使用更具描述性的变量名',
         '可以将重复的代码提取为函数',

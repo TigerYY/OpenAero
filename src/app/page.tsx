@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+
 import { RoutingUtils } from '@/lib/routing';
 
 export default function RootPage() {

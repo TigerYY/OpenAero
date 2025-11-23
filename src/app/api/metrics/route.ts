@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error generating metrics:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error generating metrics:', error);}
     return NextResponse.json(
       { error: 'Failed to generate metrics' },
       { status: 500 }

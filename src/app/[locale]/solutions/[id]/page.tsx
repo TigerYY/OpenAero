@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -88,7 +93,7 @@ export default function PublicSolutionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { route, routes } = useRouting();
-  const solutionId = params.id as string;
+  const solutionId = (params?.id as string) || '';
 
   const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +140,8 @@ export default function PublicSolutionDetailPage() {
         setError(result.error || '获取方案详情失败');
       }
     } catch (err) {
-      console.error('获取方案详情错误:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案详情错误:', err);}
       setError('获取方案详情失败');
     } finally {
       setLoading(false);
@@ -154,7 +160,8 @@ export default function PublicSolutionDetailPage() {
         }
       }
     } catch (error) {
-      console.error('获取升级历史失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取升级历史失败:', error);}
     }
   };
 
@@ -682,8 +689,8 @@ export default function PublicSolutionDetailPage() {
               </DialogHeader>
               <div className="relative">
                 <img
-                  src={imageAssets[selectedImageIndex].url}
-                  alt={imageAssets[selectedImageIndex].title || `图片 ${selectedImageIndex + 1}`}
+                  src={imageAssets[selectedImageIndex]?.url || ''}
+                  alt={imageAssets[selectedImageIndex]?.title || `图片 ${selectedImageIndex + 1}`}
                   className="w-full h-auto rounded-lg"
                 />
                 {imageAssets.length > 1 && (
@@ -705,7 +712,7 @@ export default function PublicSolutionDetailPage() {
                   </>
                 )}
               </div>
-              {imageAssets[selectedImageIndex].description && (
+              {imageAssets[selectedImageIndex]?.description && (
                 <p className="text-sm text-gray-600 mt-4">
                   {imageAssets[selectedImageIndex].description}
                 </p>

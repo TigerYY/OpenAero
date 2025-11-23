@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { Package, Plus, Search, Calendar, Factory, FileText, Download, Eye, Edit } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -97,7 +102,8 @@ export default function SampleOrdersPage() {
         setOrders(data.orders);
       }
     } catch (error) {
-      console.error('获取订单列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取订单列表失败:', error);}
       toast.error('获取订单列表失败');
     } finally {
       setLoading(false);
@@ -113,7 +119,8 @@ export default function SampleOrdersPage() {
         setFactories(data.factories);
       }
     } catch (error) {
-      console.error('获取工厂列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取工厂列表失败:', error);}
     }
   };
 
@@ -126,7 +133,8 @@ export default function SampleOrdersPage() {
         setSolutions(data.solutions);
       }
     } catch (error) {
-      console.error('获取解决方案列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取解决方案列表失败:', error);}
     }
   };
 
@@ -171,7 +179,8 @@ export default function SampleOrdersPage() {
         toast.error(error.message || '创建失败');
       }
     } catch (error) {
-      console.error('创建订单失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建订单失败:', error);}
       toast.error('创建订单失败');
     }
   };
@@ -195,7 +204,8 @@ export default function SampleOrdersPage() {
         toast.error(error.message || '更新失败');
       }
     } catch (error) {
-      console.error('更新状态失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新状态失败:', error);}
       toast.error('更新状态失败');
     }
   };
@@ -219,7 +229,8 @@ export default function SampleOrdersPage() {
         toast.error('导出失败');
       }
     } catch (error) {
-      console.error('导出失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出失败:', error);}
       toast.error('导出失败');
     }
   };
@@ -643,7 +654,8 @@ export default function SampleOrdersPage() {
                     toast.error(error.message || '更新失败');
                   }
                 } catch (error) {
-                  console.error('更新订单失败:', error);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.error('更新订单失败:', error);}
                   toast.error('更新订单失败');
                 }
               }

@@ -75,7 +75,8 @@ class LanguageStorageService {
         return JSON.parse(versionData);
       }
     } catch (error) {
-      console.warn('Failed to get storage version:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get storage version:', error);}
     }
 
     return { version: STORAGE_CONFIG.VERSION, timestamp: Date.now() };
@@ -94,7 +95,8 @@ class LanguageStorageService {
       };
       localStorage.setItem('openaero-storage-version', JSON.stringify(versionData));
     } catch (error) {
-      console.warn('Failed to set storage version:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to set storage version:', error);}
     }
   }
 
@@ -105,7 +107,8 @@ class LanguageStorageService {
     }
 
     if (!SUPPORTED_LOCALES.includes(locale)) {
-      console.warn(`Invalid locale: ${locale}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`Invalid locale: ${locale}`);};
       return false;
     }
 
@@ -114,7 +117,8 @@ class LanguageStorageService {
       this.setStorageVersion();
       return true;
     } catch (error) {
-      console.error('Failed to save locale:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to save locale:', error);}
       return false;
     }
   }
@@ -131,7 +135,8 @@ class LanguageStorageService {
         return saved as Locale;
       }
     } catch (error) {
-      console.warn('Failed to get locale:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get locale:', error);}
     }
 
     return null;
@@ -147,7 +152,8 @@ class LanguageStorageService {
       localStorage.removeItem(STORAGE_KEYS.LOCALE);
       return true;
     } catch (error) {
-      console.error('Failed to clear locale:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to clear locale:', error);}
       return false;
     }
   }
@@ -170,7 +176,8 @@ class LanguageStorageService {
       localStorage.setItem(STORAGE_KEYS.LANGUAGE_HISTORY, JSON.stringify(history));
       return true;
     } catch (error) {
-      console.error('Failed to save language history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to save language history:', error);}
       return false;
     }
   }
@@ -187,7 +194,8 @@ class LanguageStorageService {
         return JSON.parse(historyData);
       }
     } catch (error) {
-      console.warn('Failed to get language history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get language history:', error);}
     }
 
     return [];
@@ -203,7 +211,8 @@ class LanguageStorageService {
       localStorage.removeItem(STORAGE_KEYS.LANGUAGE_HISTORY);
       return true;
     } catch (error) {
-      console.error('Failed to clear language history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to clear language history:', error);}
       return false;
     }
   }
@@ -233,7 +242,8 @@ class LanguageStorageService {
       localStorage.setItem(STORAGE_KEYS.LANGUAGE_STATS, JSON.stringify(stats));
       return true;
     } catch (error) {
-      console.error('Failed to update language stats:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to update language stats:', error);}
       return false;
     }
   }
@@ -252,7 +262,8 @@ class LanguageStorageService {
         return this.mergeWithDefaultStats(stats);
       }
     } catch (error) {
-      console.warn('Failed to get language stats:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get language stats:', error);}
     }
 
     return this.getDefaultStats();
@@ -296,7 +307,8 @@ class LanguageStorageService {
       localStorage.removeItem(STORAGE_KEYS.LANGUAGE_STATS);
       return true;
     } catch (error) {
-      console.error('Failed to clear language stats:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to clear language stats:', error);}
       return false;
     }
   }
@@ -315,7 +327,8 @@ class LanguageStorageService {
       localStorage.setItem(STORAGE_KEYS.LAST_DETECTED, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error('Failed to save last detected locale:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to save last detected locale:', error);}
       return false;
     }
   }
@@ -335,7 +348,8 @@ class LanguageStorageService {
         }
       }
     } catch (error) {
-      console.warn('Failed to get last detected locale:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get last detected locale:', error);}
     }
 
     return null;
@@ -354,7 +368,8 @@ class LanguageStorageService {
       localStorage.removeItem('openaero-storage-version');
       return true;
     } catch (error) {
-      console.error('Failed to clear all language data:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to clear all language data:', error);}
       return false;
     }
   }
@@ -388,7 +403,8 @@ class LanguageStorageService {
         version: version.version
       };
     } catch (error) {
-      console.warn('Failed to get storage usage:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to get storage usage:', error);}
       return { totalKeys: 0, estimatedSize: 0, version: STORAGE_CONFIG.VERSION };
     }
   }
@@ -420,7 +436,8 @@ class LanguageStorageService {
 
       return true;
     } catch (error) {
-      console.error('Failed to cleanup storage:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to cleanup storage:', error);}
       return false;
     }
   }

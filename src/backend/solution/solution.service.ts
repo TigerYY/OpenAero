@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { db } from '@/lib/prisma';
 import { ValidationError, NotFoundError, UnauthorizedError } from '@/lib/error-handler';
+import { db } from '@/lib/prisma';
 import { isValidStatusTransition, validateSolutionCompleteness } from '@/lib/solution-status-workflow';
 import { createSolutionSchema, updateSolutionSchema } from '@/lib/validations';
 import { SolutionStatus } from '@/shared/types/solutions';
@@ -31,7 +31,7 @@ export class SolutionService {
     // 检查创作者是否存在且已认证
     const creator = await db.creatorProfile.findUnique({
       where: { user_id: creatorId },
-      include: { user: true }
+      include: { user: true } // Note: user relation exists via user_id
     });
 
     if (!creator) {
@@ -58,8 +58,7 @@ export class SolutionService {
         description: validatedData.description,
         category: validatedData.categoryId || 'default',
         price: validatedData.price,
-        creatorId: creator.id,
-        userId: creatorId,
+        creator_id: creator.id,
         status: 'DRAFT',
         specs: validatedData.specs || {},
         bom: validatedData.bom || {},
@@ -69,7 +68,7 @@ export class SolutionService {
       include: {
         creator: {
           include: {
-            user: true
+            user: true // Note: user relation exists via user_id
           }
         }
       }
@@ -302,7 +301,7 @@ export class SolutionService {
       db.solution.count({
         where: {
           creator: {
-            userId: creatorId
+            user_id: creatorId
           }
         }
       })
@@ -359,38 +358,21 @@ export class SolutionService {
    */
   async assignReviewer(solutionId: string) {
     // 获取可用的审核员（管理员）- 支持多角色
-    const availableReviewers = await db.user.findMany({
+    // Note: user model doesn't exist, use UserProfile instead
+    const availableReviewers = await db.userProfile.findMany({
       where: {
-        OR: [
-          { role: 'ADMIN' },
-          { role: 'SUPER_ADMIN' },
-          { 
-            profiles: { 
-              some: { 
-                OR: [
-                  { role: 'ADMIN' },
-                  { role: 'SUPER_ADMIN' }
-                ]
-              }
-            }
-          }
-        ],
+        roles: {
+          hasSome: ['ADMIN', 'SUPER_ADMIN']
+        },
+        status: 'ACTIVE',
         // 可以添加更多条件，如在线状态、工作负载等
       },
       select: {
         id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        _count: {
-          select: {
-            solutionReviews: {
-              where: {
-                status: 'IN_PROGRESS'
-              }
-            }
-          }
-        }
+        user_id: true,
+        first_name: true,
+        last_name: true,
+        // Note: solutionReviews count needs to be calculated separately
       }
     });
 
@@ -398,25 +380,44 @@ export class SolutionService {
       throw new ValidationError('当前没有可用的审核员');
     }
 
+    // 计算每个审核员的工作负载
+    const reviewersWithWorkload = await Promise.all(
+      availableReviewers.map(async (reviewer) => {
+        const workload = await db.solutionReview.count({
+          where: {
+            reviewer_id: reviewer.user_id,
+            status: 'IN_PROGRESS'
+          }
+        });
+        return { ...reviewer, workload };
+      })
+    );
+
     // 选择工作负载最少的审核员
-    const selectedReviewer = availableReviewers.reduce((prev, current) => {
-      return (prev._count.solutionReviews < current._count.solutionReviews) ? prev : current;
+    const selectedReviewer = reviewersWithWorkload.reduce((prev, current) => {
+      return (prev.workload < current.workload) ? prev : current;
     });
 
     // 创建审核记录并分配
     const review = await db.solutionReview.create({
       data: {
-        solutionId,
-        reviewerId: selectedReviewer.id,
+        solution_id: solutionId,
+        reviewer_id: selectedReviewer.user_id,
         status: 'IN_PROGRESS',
         decision: 'PENDING',
-        reviewStartedAt: new Date()
+        review_started_at: new Date(),
+        from_status: 'PENDING_REVIEW',
+        to_status: 'PENDING_REVIEW'
       }
     });
 
     return {
       review,
-      reviewer: selectedReviewer
+      reviewer: {
+        id: selectedReviewer.user_id,
+        firstName: selectedReviewer.first_name,
+        lastName: selectedReviewer.last_name
+      }
     };
   }
 
@@ -440,23 +441,13 @@ export class SolutionService {
     let assignedReviewer;
     if (reviewerId) {
       // 手动分配审核员 - 支持多角色
-      const reviewer = await db.user.findFirst({
+      // Note: user model doesn't exist, use UserProfile instead
+      const reviewer = await db.userProfile.findFirst({
         where: {
-          id: reviewerId,
-          OR: [
-            { role: 'ADMIN' },
-            { role: 'SUPER_ADMIN' },
-            { 
-              profiles: { 
-                some: { 
-                  OR: [
-                    { role: 'ADMIN' },
-                    { role: 'SUPER_ADMIN' }
-                  ]
-                }
-              }
-            }
-          ]
+          user_id: reviewerId,
+          roles: {
+            hasSome: ['ADMIN', 'SUPER_ADMIN']
+          }
         }
       });
       if (!reviewer) {
@@ -511,7 +502,7 @@ export class SolutionService {
     // 检查是否有正在进行的审核
     const activeReview = await db.solutionReview.findFirst({
       where: {
-        solutionId,
+        solution_id: solutionId,
         status: 'IN_PROGRESS'
       }
     });
@@ -521,8 +512,8 @@ export class SolutionService {
       where: { id: solutionId },
       data: {
         status: 'APPROVED',
-        reviewedAt: new Date(),
-        reviewNotes: notes || '方案已通过审核'
+        reviewed_at: new Date(),
+        review_notes: notes || '方案已通过审核'
       },
       include: {
         creator: {
@@ -539,19 +530,22 @@ export class SolutionService {
           status: 'COMPLETED',
           decision: 'APPROVED',
           comments: notes || '方案已通过审核',
-          reviewedAt: new Date()
+          reviewed_at: new Date(),
+          to_status: 'APPROVED'
         }
       });
     } else {
       await db.solutionReview.create({
         data: {
-          solutionId,
-          reviewerId: adminId,
+          solution_id: solutionId,
+          reviewer_id: adminId,
           status: 'COMPLETED',
           decision: 'APPROVED',
           comments: notes || '方案已通过审核',
-          reviewedAt: new Date(),
-          reviewStartedAt: new Date()
+          reviewed_at: new Date(),
+          review_started_at: new Date(),
+          from_status: 'PENDING_REVIEW',
+          to_status: 'APPROVED'
         }
       });
     }
@@ -583,8 +577,8 @@ export class SolutionService {
       where: { id: solutionId },
       data: {
         status: 'REJECTED',
-        reviewedAt: new Date(),
-        reviewNotes: notes
+        reviewed_at: new Date(),
+        review_notes: notes
       },
       include: {
         creator: {
@@ -596,12 +590,15 @@ export class SolutionService {
     // 创建审核历史记录
     await db.solutionReview.create({
       data: {
-        solutionId,
-        reviewerId: adminId,
+        solution_id: solutionId,
+        reviewer_id: adminId,
         status: 'COMPLETED',
         decision: 'REJECTED',
         comments: notes,
-        reviewedAt: new Date()
+        reviewed_at: new Date(),
+        review_started_at: new Date(),
+        from_status: 'PENDING_REVIEW',
+        to_status: 'REJECTED'
       }
     });
 
@@ -613,18 +610,9 @@ export class SolutionService {
    */
   async getReviewHistory(solutionId: string) {
     const reviews = await db.solutionReview.findMany({
-      where: { solutionId },
-      include: {
-        reviewer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+      where: { solution_id: solutionId },
+      // Note: reviewer relation doesn't exist, need to join via UserProfile
+      orderBy: { created_at: 'desc' }
     });
 
     return reviews;

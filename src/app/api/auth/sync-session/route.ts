@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { createSupabaseServerFromRequest } from '@/lib/auth/supabase-client';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +13,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { access_token, refresh_token } = body;
 
-    console.log('[sync-session] 收到同步请求，access_token 长度:', access_token?.length || 0);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[sync-session] 收到同步请求，access_token 长度:', access_token?.length || 0);}
 
     if (!access_token) {
       return NextResponse.json(
@@ -37,7 +39,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('[sync-session] 设置 session 失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[sync-session] 设置 session 失败:', error);}
       return NextResponse.json(
         { error: '设置 session 失败' },
         { status: 500 }
@@ -50,7 +53,8 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('同步 session 异常:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('同步 session 异常:', error);}
     return NextResponse.json(
       { error: '同步 session 失败' },
       { status: 500 }

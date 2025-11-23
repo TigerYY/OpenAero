@@ -202,7 +202,8 @@ const MobileForm: React.FC<MobileFormProps> = ({
     try {
       await onSave(formData);
     } catch (error) {
-      console.error('保存失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存失败:', error);}
     } finally {
       setIsSaving(false);
     }

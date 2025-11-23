@@ -1,4 +1,5 @@
 import { getServerSession } from 'next-auth';
+
 import { auth } from './auth';
 
 interface ApiRequestOptions extends RequestInit {
@@ -65,7 +66,8 @@ class ApiClient {
         // 尝试刷新token并重试请求
         const refreshed = await this.handleTokenRefresh();
         if (refreshed) {
-          console.log('Token刷新成功，重试请求');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Token刷新成功，重试请求');}
           return this.request(endpoint, { ...options, retryOnAuthError: false });
         }
       }
@@ -97,7 +99,8 @@ class ApiClient {
         message: data.message,
       };
     } catch (error) {
-      console.error('API请求失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('API请求失败:', error);}
       
       // 发送网络错误事件
       window.dispatchEvent(new CustomEvent('apiError', {
@@ -136,7 +139,8 @@ class ApiClient {
       await this.refreshPromise;
       return true;
     } catch (error) {
-      console.error('Token刷新失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Token刷新失败:', error);}
       return false;
     } finally {
       this.isRefreshing = false;
@@ -160,7 +164,8 @@ class ApiClient {
         throw new Error('会话刷新失败');
       }
     } catch (error) {
-      console.error('执行token刷新失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('执行token刷新失败:', error);}
       throw error;
     }
   }

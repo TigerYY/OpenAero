@@ -1,19 +1,18 @@
 import { existsSync } from 'fs';
-import { writeFile, mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import path, { join } from 'path';
+import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 
-import { requireUser } from '@/lib/supabase-server-auth';
-import { prisma } from '@/lib/prisma';
-import { 
-  UPLOAD_CONFIG, 
-  generateUniqueFilename, 
-  calculateChecksum, 
+import { createErrorResponse, createSuccessResponse } from '@/lib/api-helpers';
+import {
+  calculateChecksum,
+  generateUniqueFilename,
   getFileType
 } from '@/lib/multer-config';
-import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/supabase-server-auth';
 
 
 // 格式化文件大小的辅助函数
@@ -26,7 +25,7 @@ function formatFileSize(bytes: number): string {
 }
 
 // 配置
-const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 // 允许的文件类型
@@ -97,8 +96,7 @@ export async function POST(request: NextRequest) {
         where: {
           id: solutionId,
           OR: [
-            { userId: session.user.id },
-            { creator: { userId: session.user.id } }
+            { creator: { user_id: session.user.id } }
           ]
         }
       });
@@ -110,8 +108,8 @@ export async function POST(request: NextRequest) {
 
     // 确保上传目录存在
     const uploadPath = solutionId 
-      ? join(UPLOAD_DIR, 'solutions', solutionId)
-      : join(UPLOAD_DIR, 'temp');
+      ? path.join(UPLOAD_DIR, 'solutions', solutionId)
+      : path.join(UPLOAD_DIR, 'temp');
     
     if (!existsSync(uploadPath)) {
       await mkdir(uploadPath, { recursive: true });
@@ -167,7 +165,8 @@ export async function POST(request: NextRequest) {
     }, '文件上传成功');
 
   } catch (error) {
-    console.error('文件上传错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('文件上传错误:', error);}
     const errorMessage = process.env.NODE_ENV === 'development' 
       ? (error as Error).message 
       : '文件上传失败';

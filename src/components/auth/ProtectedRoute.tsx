@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useRouting } from '@/lib/routing';
 
@@ -32,18 +33,21 @@ export function ProtectedRoute({
   const defaultRedirectTo = redirectTo || route(routes.AUTH.LOGIN);
 
   useEffect(() => {
-    console.log('[ProtectedRoute] 状态检查:', {
-      loading,
-      isAuthenticated,
-      requireAuth,
-      requiredRoles,
-      hasRequiredRole: requiredRoles.length > 0 ? hasRole(requiredRoles) : true,
-      profileRole: profile?.role,
-      userId: user?.id,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ProtectedRoute] 状态检查:', {
+        loading,
+        isAuthenticated,
+        requireAuth,
+        requiredRoles,
+        hasRequiredRole: requiredRoles.length > 0 ? hasRole(requiredRoles) : true,
+        profileRole: profile?.role,
+        userId: user?.id,
+      })
+    };
 
     if (loading) {
-      console.log('[ProtectedRoute] 仍在加载中，等待...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ProtectedRoute] 仍在加载中，等待...');}
       return;
     }
 
@@ -61,7 +65,8 @@ export function ProtectedRoute({
       return;
     }
 
-    console.log('[ProtectedRoute] 权限验证通过，允许访问');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ProtectedRoute] 权限验证通过，允许访问');}
   }, [isAuthenticated, hasRole, loading, requireAuth, requiredRoles, defaultRedirectTo, route, router, profile, user]);
 
   // 加载中显示 fallback

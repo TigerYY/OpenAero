@@ -9,7 +9,7 @@ import path from 'path';
 
 import multer from 'multer';
 
-// 文件类型映射 - 使用字符串而不是枚举
+// 文件类型映射 - 使用字符串而不是枚举（避免构建时 Prisma 客户端未生成的问题）
 export const FILE_TYPE_MAP: Record<string, string> = {
   // 图片文件
   'image/jpeg': 'IMAGE',
@@ -198,6 +198,7 @@ export function cleanupTempFile(filePath: string): void {
       fs.unlinkSync(filePath);
     }
   } catch (error) {
-    console.error('清理临时文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('清理临时文件失败:', error);}
   }
 }

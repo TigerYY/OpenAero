@@ -141,7 +141,8 @@ export async function GET(
 
     return NextResponse.json(formattedProduct);
   } catch (error) {
-    console.error('获取商品详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取商品详情失败:', error);}
     return NextResponse.json({ error: '获取商品详情失败' }, { status: 500 });
   }
 }
@@ -270,7 +271,8 @@ export async function PUT(
       return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
     }
 
-    console.error('更新商品失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新商品失败:', error);}
     return NextResponse.json({ error: '更新商品失败' }, { status: 500 });
   }
 }
@@ -344,7 +346,8 @@ export async function DELETE(
 
     return NextResponse.json({ message: '商品删除成功' });
   } catch (error) {
-    console.error('删除商品失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除商品失败:', error);}
     return NextResponse.json({ error: '删除商品失败' }, { status: 500 });
   }
 }

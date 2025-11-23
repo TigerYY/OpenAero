@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +13,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useRouting } from '@/lib/routing';
 import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Solution, SolutionStatus, SolutionCategory } from '@/shared/types/solutions';
@@ -237,7 +242,8 @@ export default function ManageSolutionsPage() {
       };
       setStats(newStats);
     } catch (error) {
-      console.error('获取方案列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案列表失败:', error);}
     } finally {
       setLoading(false);
     }
@@ -357,7 +363,8 @@ export default function ManageSolutionsPage() {
         setSelectedSolutions([]);
         alert('批量删除成功');
       } catch (error) {
-        console.error('批量删除失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('批量删除失败:', error);}
         alert('删除失败，请重试');
       }
     }
@@ -386,7 +393,8 @@ export default function ManageSolutionsPage() {
       setSelectedSolutions([]);
       alert(`已提交 ${draftSolutions.length} 个方案进行审核`);
     } catch (error) {
-      console.error('批量提交审核失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('批量提交审核失败:', error);}
       alert('提交失败，请重试');
     }
   };
@@ -405,7 +413,8 @@ export default function ManageSolutionsPage() {
         setSelectedSolutions([]);
         alert('批量归档成功');
       } catch (error) {
-        console.error('批量归档失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('批量归档失败:', error);}
         alert('归档失败，请重试');
       }
     }
@@ -434,7 +443,8 @@ export default function ManageSolutionsPage() {
         setSolutions(prev => prev.filter(s => s.id !== id));
         alert('方案删除成功');
       } catch (error) {
-        console.error('删除方案失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('删除方案失败:', error);}
         alert('删除失败，请重试');
       }
     }
@@ -448,7 +458,8 @@ export default function ManageSolutionsPage() {
       ));
       alert('方案已提交审核');
     } catch (error) {
-      console.error('提交审核失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('提交审核失败:', error);}
       alert('提交失败，请重试');
     }
   };

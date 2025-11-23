@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import React, { useState } from 'react';
 
 import EnhancedMobileBottomNavigation from '@/components/layout/EnhancedMobileBottomNavigation';

@@ -4,11 +4,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, RefreshCw, Package } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface OrderHistoryEvent {
   id: string;
@@ -45,7 +46,8 @@ export default function OrderHistory({ orderId }: OrderHistoryProps) {
           setError(data.message || '获取历史记录失败');
         }
       } catch (err) {
-        console.error('获取历史记录失败:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取历史记录失败:', err);}
         setError('网络错误，请检查网络连接');
       } finally {
         setLoading(false);

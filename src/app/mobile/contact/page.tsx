@@ -1,13 +1,19 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import React from 'react';
 
 import ContactForm from '@/components/forms/ContactForm';
+import { useRouting } from '@/lib/routing';
 
 export default function MobileContactPage() {
+  const { route } = useRouting();
+  
   const handleContactSubmit = async (data: any) => {
-  const { route } = useRouting()
     // 这里可以添加额外的处理逻辑
     console.log('联系表单提交:', data);
   };

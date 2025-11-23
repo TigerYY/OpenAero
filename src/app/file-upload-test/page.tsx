@@ -1,12 +1,18 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import React from 'react';
 
 import FileUpload from '@/components/FileUpload';
 
 export default function FileUploadTestPage() {
   const handleUploadComplete = (files: any[]) => {
-    console.log('上传完成:', files);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('上传完成:', files);}
     alert(`成功上传 ${files.length} 个文件！`);
   };
 

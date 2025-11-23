@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('获取试产订单列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取试产订单列表失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取试产订单列表失败' },
       { status: 500 }
@@ -165,7 +166,8 @@ export async function POST(request: NextRequest) {
       data: sampleOrder
     }, { status: 201 });
   } catch (error) {
-    console.error('创建试产订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建试产订单失败:', error);}
     return NextResponse.json(
       { success: false, error: '创建试产订单失败' },
       { status: 500 }

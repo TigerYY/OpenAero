@@ -3,10 +3,11 @@
  * 用于所有 API 路由的权限验证
  */
 
-import { NextRequest } from 'next/server';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { createErrorResponse } from '@/lib/api-helpers';
 import { UserRole } from '@prisma/client';
+import { NextRequest } from 'next/server';
+
+import { createErrorResponse } from '@/lib/api-helpers';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 /**
  * 要求用户已登录

@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   Shield, 
   User, 
@@ -20,6 +25,7 @@ import {
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -28,7 +34,6 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface Permission {
   id: string;
@@ -143,7 +148,8 @@ export default function AdminPermissionsPage() {
       setPermissions(permissionsData.permissions || []);
       setUsers(usersData.users || []);
     } catch (error) {
-      console.error('加载权限数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载权限数据失败:', error);}
       toast.error('加载数据失败');
     } finally {
       setLoading(false);
@@ -176,7 +182,8 @@ export default function AdminPermissionsPage() {
         throw new Error('创建失败');
       }
     } catch (error) {
-      console.error('创建角色错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建角色错误:', error);}
       toast.error('创建角色失败');
     }
   };
@@ -207,7 +214,8 @@ export default function AdminPermissionsPage() {
         throw new Error('创建失败');
       }
     } catch (error) {
-      console.error('创建权限错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建权限错误:', error);}
       toast.error('创建权限失败');
     }
   };
@@ -239,7 +247,8 @@ export default function AdminPermissionsPage() {
         throw new Error('分配失败');
       }
     } catch (error) {
-      console.error('分配角色错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('分配角色错误:', error);}
       toast.error('分配角色失败');
     }
   };
@@ -290,7 +299,8 @@ export default function AdminPermissionsPage() {
         throw new Error('更新失败');
       }
     } catch (error) {
-      console.error('更新角色错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新角色错误:', error);}
       toast.error('更新角色失败');
     }
   };
@@ -319,7 +329,8 @@ export default function AdminPermissionsPage() {
         throw new Error('更新失败');
       }
     } catch (error) {
-      console.error('更新权限错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新权限错误:', error);}
       toast.error('更新权限失败');
     }
   };
@@ -341,7 +352,8 @@ export default function AdminPermissionsPage() {
         throw new Error('删除失败');
       }
     } catch (error) {
-      console.error('删除角色错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除角色错误:', error);}
       toast.error('删除角色失败');
     }
   };
@@ -363,7 +375,8 @@ export default function AdminPermissionsPage() {
         throw new Error('删除失败');
       }
     } catch (error) {
-      console.error('删除权限错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除权限错误:', error);}
       toast.error('删除权限失败');
     }
   };

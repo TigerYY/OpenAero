@@ -3,13 +3,12 @@ import path from 'path';
 
 import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { z } from 'zod';
 
-import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
 // 查询参数验证
 const querySchema = z.object({
@@ -95,7 +94,8 @@ export async function GET(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
     }
-    console.error('获取文件列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取文件列表失败:', error);}
     return createErrorResponse('获取文件列表失败', 500);
   }
 }
@@ -170,7 +170,8 @@ export async function PUT(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
     }
-    console.error('更新文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新文件失败:', error);}
     return createErrorResponse('更新文件失败', 500);
   }
 }
@@ -212,7 +213,8 @@ export async function DELETE(request: NextRequest) {
       const filePath = path.join(process.cwd(), 'uploads', file.path);
       await fs.unlink(filePath);
     } catch (fsError) {
-      console.warn('删除物理文件失败:', fsError);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('删除物理文件失败:', fsError);}
       // 继续删除数据库记录，即使物理文件删除失败
     }
 
@@ -224,7 +226,8 @@ export async function DELETE(request: NextRequest) {
     return createSuccessResponse(null, '文件删除成功');
 
   } catch (error) {
-    console.error('删除文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除文件失败:', error);}
     return createErrorResponse('删除文件失败', 500);
   }
 }

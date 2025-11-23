@@ -1,9 +1,15 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useRouting } from '@/lib/routing';
 
 export default function CreatorApplyStatusPage() {
   const { route, routes } = useRouting();
@@ -27,7 +33,8 @@ export default function CreatorApplyStatusPage() {
         estimatedReviewTime: '3-5个工作日'
       });
     } catch (error) {
-      console.error('获取申请状态失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取申请状态失败:', error);}
       setApplicationStatus('error');
     }
   };

@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
   AlertCircle,
   CheckCircle,
@@ -133,7 +138,8 @@ export default function ReviewWorkbenchPage() {
       const result = await response.json();
       
       if (!result.success) {
-        console.error('[ReviewWorkbench] API返回错误:', result);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[ReviewWorkbench] API返回错误:', result);}
         throw new Error(result.error || '获取方案列表失败');
       }
       
@@ -146,35 +152,42 @@ export default function ReviewWorkbenchPage() {
         itemsLength: result.data?.items?.length,
         dataLength: Array.isArray(result.data) ? result.data.length : 0,
       });
-      console.log('[ReviewWorkbench] 获取到的方案数量:', apiSolutions.length);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 获取到的方案数量:', apiSolutions.length);}
       if (apiSolutions.length > 0) {
-        console.log('[ReviewWorkbench] 所有方案的状态:', apiSolutions.map((s: any) => ({ 
-          id: s.id, 
-          status: s.status,
-          statusType: typeof s.status,
-          title: s.title?.substring(0, 30) 
-        })));
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ReviewWorkbench] 所有方案的状态:', apiSolutions.map((s: any) => ({
+            id: s.id, 
+            status: s.status,
+            statusType: typeof s.status,
+            title: s.title?.substring(0, 30) 
+          })))
+        }
         // 特别检查 PENDING_REVIEW 状态的方案
         const pendingReviewSolutions = apiSolutions.filter((s: any) => 
           s.status === 'PENDING_REVIEW' || 
           s.status === 'PENDING' || 
           String(s.status).toUpperCase() === 'PENDING_REVIEW'
         );
-        console.log('[ReviewWorkbench] 待审核方案数量（原始）:', pendingReviewSolutions.length);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ReviewWorkbench] 待审核方案数量（原始）:', pendingReviewSolutions.length);}
         if (pendingReviewSolutions.length > 0) {
-          console.log('[ReviewWorkbench] 待审核方案详情:', pendingReviewSolutions.map((s: any) => ({
-            id: s.id,
-            title: s.title,
-            status: s.status,
-            submittedAt: s.submittedAt
-          })));
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[ReviewWorkbench] 待审核方案详情:', pendingReviewSolutions.map((s: any) => ({
+              id: s.id,
+              title: s.title,
+              status: s.status,
+              submittedAt: s.submittedAt
+            })))
+          }
         }
       } else {
         console.warn('[ReviewWorkbench] ⚠️ 没有获取到任何方案，请检查：');
         console.warn('1. 数据库中是否有方案数据');
         console.warn('2. API认证是否成功');
         console.warn('3. API返回的数据格式是否正确');
-        console.warn('4. API URL:', '/api/admin/solutions?status=all&limit=100');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('4. API URL:', '/api/admin/solutions?status=all&limit=100');}
       }
       
       const formattedSolutions: Solution[] = apiSolutions.map((sol: any) => {
@@ -205,7 +218,9 @@ export default function ReviewWorkbenchPage() {
         
         // 调试：记录状态映射（特别是审核后的状态）
         if (originalStatus === 'APPROVED' || originalStatus === 'REJECTED' || originalStatus === 'NEEDS_REVISION' || originalStatus === 'PUBLISHED') {
-          console.log(`[ReviewWorkbench] ✅ 状态映射: ${sol.status} (原始) -> ${mappedStatus}，方案: ${sol.title?.substring(0, 40)}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[ReviewWorkbench] ✅ 状态映射: ${sol.status} (原始);-> ${mappedStatus}，方案: ${sol.title?.substring(0, 40)}`)
+          };
         }
         
         return {
@@ -244,22 +259,27 @@ export default function ReviewWorkbenchPage() {
         };
       });
       
-      console.log('[ReviewWorkbench] 格式化后的方案数量:', formattedSolutions.length);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 格式化后的方案数量:', formattedSolutions.length);}
       const statusDistribution = formattedSolutions.reduce((acc: any, s) => {
         acc[s.status] = (acc[s.status] || 0) + 1;
         return acc;
       }, {});
-      console.log('[ReviewWorkbench] 格式化后的状态分布:', statusDistribution);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 格式化后的状态分布:', statusDistribution);}
       
       // 详细记录待审核方案
       const pendingSolutions = formattedSolutions.filter(s => s.status === 'PENDING');
-      console.log('[ReviewWorkbench] 待审核方案数量:', pendingSolutions.length);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 待审核方案数量:', pendingSolutions.length);}
       if (pendingSolutions.length > 0) {
-        console.log('[ReviewWorkbench] 待审核方案列表:', pendingSolutions.map(s => ({ 
-          id: s.id, 
-          title: s.title?.substring(0, 30),
-          status: s.status 
-        })));
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ReviewWorkbench] 待审核方案列表:', pendingSolutions.map(s => ({
+            id: s.id, 
+            title: s.title?.substring(0, 30),
+            status: s.status 
+          })))
+        };
       } else {
         console.warn('[ReviewWorkbench] ⚠️ 没有找到待审核方案！');
         console.warn('[ReviewWorkbench] 原始方案状态:', apiSolutions.map((s: any) => ({ 
@@ -303,7 +323,9 @@ export default function ReviewWorkbenchPage() {
       // 调试信息：显示最终结果
       console.log('[ReviewWorkbench] 最终设置的方案数量:', formattedSolutions.length);
       console.log('[ReviewWorkbench] 待审核方案数量:', pendingCount);
-      console.log('[ReviewWorkbench] 待审核方案列表:', formattedSolutions.filter(s => s.status === 'PENDING').map(s => ({ id: s.id, title: s.title })));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 待审核方案列表:', formattedSolutions.filter(s => s.status === 'PENDING').map(s => ({ id: s.id, title: s.title })))
+      }
     } catch (error) {
       console.error('[ReviewWorkbench] 加载数据失败:', error);
       console.error('[ReviewWorkbench] 错误详情:', error instanceof Error ? error.message : String(error));
@@ -333,11 +355,12 @@ export default function ReviewWorkbenchPage() {
     }
 
     try {
-      console.log('[ReviewWorkbench] 提交审核:', {
-        solutionId: selectedSolution.id,
-        decision: reviewDecision,
-        currentStatus: selectedSolution.status,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 提交审核:', {
+          solutionId: selectedSolution.id,
+          decision: reviewDecision,
+          currentStatus: selectedSolution.status,
+        });};
 
       // 调用审核 API
       const response = await fetch(`/api/admin/solutions/${selectedSolution.id}/review`, {
@@ -354,12 +377,14 @@ export default function ReviewWorkbenchPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('[ReviewWorkbench] 审核 API 返回错误:', errorData);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[ReviewWorkbench] 审核 API 返回错误:', errorData);}
         throw new Error(errorData.error || '审核提交失败');
       }
 
       const result = await response.json();
-      console.log('[ReviewWorkbench] 审核 API 返回结果:', result);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ReviewWorkbench] 审核 API 返回结果:', result);}
       
       if (result.success) {
         // 重置表单
@@ -376,7 +401,8 @@ export default function ReviewWorkbenchPage() {
         throw new Error(result.error || '审核提交失败');
       }
     } catch (error) {
-      console.error('[ReviewWorkbench] 审核提交失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[ReviewWorkbench] 审核提交失败:', error);}
       alert(`审核提交失败：${error instanceof Error ? error.message : '请重试'}`);
     }
   };
@@ -413,7 +439,8 @@ export default function ReviewWorkbenchPage() {
         throw new Error(result.error || '发布失败');
       }
     } catch (error) {
-      console.error('Failed to publish solution:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to publish solution:', error);}
       alert(`发布失败：${error instanceof Error ? error.message : '请重试'}`);
     }
   };
@@ -779,7 +806,8 @@ export default function ReviewWorkbenchPage() {
                                     throw new Error(result.error || '恢复失败');
                                   }
                                 } catch (error) {
-                                  console.error('恢复方案失败:', error);
+                                  if (process.env.NODE_ENV === 'development') {
+                                    console.error('恢复方案失败:', error);}
                                   alert(`恢复失败：${error instanceof Error ? error.message : '请重试'}`);
                                 }
                               }}
@@ -834,7 +862,8 @@ export default function ReviewWorkbenchPage() {
                                   setShowDetailDialog(true);
                                 }
                               } catch (error) {
-                                console.error('获取方案详情失败:', error);
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.error('获取方案详情失败:', error);}
                                 setSelectedSolution(solution);
                                 setShowDetailDialog(true);
                               } finally {

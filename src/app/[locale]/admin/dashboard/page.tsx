@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   Users, 
   FileText, 
@@ -14,24 +19,24 @@ import {
   Trash2,
   UserCheck
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
+import { ActivityFeed } from '@/components/admin/ActivityFeed';
+import { AlertPanel } from '@/components/admin/AlertPanel';
+import { DashboardCharts } from '@/components/admin/DashboardCharts';
+import { ExportDialog, ExportParams } from '@/components/admin/ExportDialog';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
-import { AdminLayout } from '@/components/layout/AdminLayout';
-import { DashboardCharts } from '@/components/admin/DashboardCharts';
-import { ActivityFeed } from '@/components/admin/ActivityFeed';
-import { AlertPanel } from '@/components/admin/AlertPanel';
-import { ExportDialog, ExportParams } from '@/components/admin/ExportDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouting } from '@/lib/routing';
 
 
 // 统计数据接口
@@ -117,7 +122,8 @@ export default function AdminDashboard() {
           refresh_token: session.refresh_token || '',
         }),
       }).catch((error) => {
-        console.warn('同步 session 到 cookies 失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('同步 session 到 cookies 失败:', error);}
       });
     }
   }, [authLoading, session]);
@@ -170,7 +176,8 @@ export default function AdminDashboard() {
         }
       }
     } catch (error) {
-      console.error('获取待审核申请数量失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取待审核申请数量失败:', error);}
     }
   };
 
@@ -200,7 +207,8 @@ export default function AdminDashboard() {
         setLastRefreshTime(new Date());
       }
     } catch (error) {
-      console.error('加载仪表盘数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载仪表盘数据失败:', error);}
       const errorMessage = error instanceof Error ? error.message : '加载数据失败，请稍后重试';
       toast.error(errorMessage);
     } finally {
@@ -217,7 +225,8 @@ export default function AdminDashboard() {
         ...params.filters,
       });
     } catch (error) {
-      console.error('导出失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出失败:', error);}
       throw error;
     }
   };
@@ -270,7 +279,8 @@ export default function AdminDashboard() {
         toast.error(result.message);
       }
     } catch (error) {
-      console.error('快速操作失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('快速操作失败:', error);}
       const errorMessage = error instanceof Error ? error.message : '操作失败，请稍后重试';
       toast.error(errorMessage);
     } finally {

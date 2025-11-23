@@ -1,5 +1,15 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
+import { AlertCircle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -10,10 +20,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouting } from '@/lib/routing';
-import { AlertCircle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 interface Application {
   id: string;
@@ -82,7 +88,8 @@ export default function AdminApplicationsPage() {
         toast.error(result.error || '获取申请列表失败');
       }
     } catch (error) {
-      console.error('获取申请列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取申请列表失败:', error);}
       toast.error('获取申请列表失败');
     } finally {
       setLoading(false);
@@ -131,7 +138,8 @@ export default function AdminApplicationsPage() {
         toast.error(result.error || '审核失败');
       }
     } catch (error) {
-      console.error('审核失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('审核失败:', error);}
       toast.error('审核失败');
     }
   };
@@ -150,7 +158,7 @@ export default function AdminApplicationsPage() {
       case 'APPROVED':
         return <Badge variant="success">已通过</Badge>;
       case 'REJECTED':
-        return <Badge variant="danger">已拒绝</Badge>;
+        return <Badge variant="destructive">已拒绝</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -242,7 +250,7 @@ export default function AdminApplicationsPage() {
                           {app.status === 'PENDING' && (
                             <>
                               <Button
-                                variant="success"
+                                variant="default"
                                 size="sm"
                                 onClick={() => openReviewDialog(app, 'approve')}
                               >
@@ -250,7 +258,7 @@ export default function AdminApplicationsPage() {
                                 批准
                               </Button>
                               <Button
-                                variant="danger"
+                                variant="destructive"
                                 size="sm"
                                 onClick={() => openReviewDialog(app, 'reject')}
                               >
@@ -471,7 +479,7 @@ export default function AdminApplicationsPage() {
               {selectedDetailApplication?.status === 'PENDING' && (
                 <>
                   <Button
-                    variant="success"
+                    variant="default"
                     onClick={() => {
                       setDetailDialogOpen(false);
                       openReviewDialog(selectedDetailApplication, 'approve');
@@ -481,7 +489,7 @@ export default function AdminApplicationsPage() {
                     批准
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="destructive"
                     onClick={() => {
                       setDetailDialogOpen(false);
                       openReviewDialog(selectedDetailApplication, 'reject');
@@ -538,7 +546,7 @@ export default function AdminApplicationsPage() {
                 取消
               </Button>
               <Button
-                variant={reviewAction === 'approve' ? 'success' : 'danger'}
+                variant={reviewAction === 'approve' ? 'default' : 'destructive'}
                 onClick={handleReview}
               >
                 确认{reviewAction === 'approve' ? '批准' : '拒绝'}

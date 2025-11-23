@@ -2,8 +2,9 @@
  * 产品评价工具库
  */
 
-import { prisma } from '@/lib/prisma';
 import { ReviewStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 export interface CreateReviewData {
   productId: string;
@@ -69,12 +70,12 @@ export async function createProductReview(data: CreateReviewData): Promise<Revie
       where: { id: data.orderId },
       include: {
         orderItems: {
-          where: { productId: data.productId },
+          where: { product_id: data.productId },
         },
       },
     });
 
-    if (!order || order.userId !== data.userId) {
+    if (!order || order.user_id !== data.userId) {
       throw new Error('订单不存在或不属于当前用户');
     }
 
@@ -87,10 +88,10 @@ export async function createProductReview(data: CreateReviewData): Promise<Revie
   if (data.orderId) {
     const existingReview = await prisma.productReview.findUnique({
       where: {
-        productId_userId_orderId: {
-          productId: data.productId,
-          userId: data.userId,
-          orderId: data.orderId,
+        product_id_user_id_order_id: {
+          product_id: data.productId,
+          user_id: data.userId,
+          order_id: data.orderId,
         },
       },
     });
@@ -103,23 +104,23 @@ export async function createProductReview(data: CreateReviewData): Promise<Revie
   // 创建评价
   const review = await prisma.productReview.create({
     data: {
-      productId: data.productId,
-      userId: data.userId,
-      orderId: data.orderId,
+      product_id: data.productId,
+      user_id: data.userId,
+      order_id: data.orderId,
       rating: data.rating,
       title: data.title,
       content: data.content,
       images: data.images || [],
       videos: data.videos || [],
       status: ReviewStatus.PENDING, // 需要审核
-      isVerified: !!data.orderId, // 如果有订单ID，标记为已验证购买
+      is_verified: !!data.orderId, // 如果有订单ID，标记为已验证购买
     },
     include: {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          first_name: true,
+          last_name: true,
           avatar: true,
         },
       },
@@ -138,8 +139,8 @@ export async function createProductReview(data: CreateReviewData): Promise<Revie
 export async function updateProductRating(productId: string): Promise<void> {
   const reviews = await prisma.productReview.findMany({
     where: {
-      productId,
-      status: ReviewStatus.APPROVED, // 只计算已审核通过的评价
+      product_id: productId,
+      status: ReviewStatus.COMPLETED, // 只计算已完成的评价（COMPLETED 替代 APPROVED）
     },
     select: {
       rating: true,
@@ -151,7 +152,7 @@ export async function updateProductRating(productId: string): Promise<void> {
       where: { id: productId },
       data: {
         rating: null,
-        reviewCount: 0,
+        review_count: 0,
       },
     });
     return;
@@ -163,7 +164,7 @@ export async function updateProductRating(productId: string): Promise<void> {
     where: { id: productId },
     data: {
       rating: averageRating,
-      reviewCount: reviews.length,
+      review_count: reviews.length,
     },
   });
 }
@@ -181,7 +182,7 @@ export async function getProductReviews(
   const skip = (page - 1) * limit;
 
   const where: any = {
-    productId,
+    product_id: productId,
   };
 
   if (status) {
@@ -199,26 +200,14 @@ export async function getProductReviews(
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            first_name: true,
+            last_name: true,
             avatar: true,
           },
         },
-        replies: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' },
-        },
+        // Note: replies relation doesn't exist in schema
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       skip,
       take: limit,
     }),
@@ -251,13 +240,13 @@ export async function reviewProductReview(
   await prisma.productReview.update({
     where: { id: reviewId },
     data: {
-      status: approved ? ReviewStatus.APPROVED : ReviewStatus.REJECTED,
+      status: approved ? ReviewStatus.COMPLETED : ReviewStatus.CANCELLED,
     },
   });
 
   // 如果审核通过，更新产品评分
   if (approved) {
-    await updateProductRating(review.productId);
+    await updateProductRating(review.product_id);
   }
 }
 
@@ -281,8 +270,8 @@ export async function addReviewReply(
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          first_name: true,
+          last_name: true,
           avatar: true,
         },
       },
@@ -326,7 +315,7 @@ export async function markReviewHelpful(reviewId: string): Promise<void> {
   await prisma.productReview.update({
     where: { id: reviewId },
     data: {
-      helpfulCount: {
+      helpful_count: {
         increment: 1,
       },
     },
@@ -344,12 +333,12 @@ export async function getProductReviewStats(productId: string): Promise<{
 }> {
   const reviews = await prisma.productReview.findMany({
     where: {
-      productId,
-      status: ReviewStatus.APPROVED,
+      product_id: productId,
+      status: ReviewStatus.COMPLETED,
     },
     select: {
       rating: true,
-      isVerified: true,
+      is_verified: true,
     },
   });
 
@@ -370,7 +359,7 @@ export async function getProductReviewStats(productId: string): Promise<{
     ratingDistribution[review.rating] = (ratingDistribution[review.rating] || 0) + 1;
   });
 
-  const verifiedCount = reviews.filter((review) => review.isVerified).length;
+  const verifiedCount = reviews.filter((review) => review.is_verified).length;
 
   return {
     total,
@@ -379,4 +368,6 @@ export async function getProductReviewStats(productId: string): Promise<{
     verifiedCount,
   };
 }
+
+
 

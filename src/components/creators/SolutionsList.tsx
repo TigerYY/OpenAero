@@ -5,15 +5,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useRouting } from '@/lib/routing';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import ErrorMessage from '@/components/ui/ErrorMessage';
 import { 
   Plus, 
   Edit, 
@@ -24,8 +15,13 @@ import {
   X,
   ArrowUpRight,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +29,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import { Input } from '@/components/ui/Input';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useRouting } from '@/lib/routing';
+import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+
 import { UpgradeSolutionDialog } from './UpgradeSolutionDialog';
 
 interface Solution {
@@ -127,7 +129,8 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
         setError(data.error || data.message || '获取方案列表失败');
       }
     } catch (err) {
-      console.error('获取方案列表失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案列表失败:', err);}
       setError('获取方案列表失败，请稍后重试');
     } finally {
       setLoading(false);
@@ -165,7 +168,8 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
         toast.error(data.error || data.message || '提交失败');
       }
     } catch (err) {
-      console.error('提交方案失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('提交方案失败:', err);}
       toast.error('提交方案失败，请稍后重试');
     }
   };
@@ -190,7 +194,8 @@ export default function SolutionsList({ showHeader = true }: SolutionsListProps)
         setReviewHistory([]);
       }
     } catch (error) {
-      console.error('获取审核历史失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取审核历史失败:', error);}
       toast.error('获取审核历史失败，请稍后重试');
       setReviewHistory([]);
     } finally {

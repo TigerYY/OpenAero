@@ -4,8 +4,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { AuthService } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -14,6 +14,7 @@ import {
   getRequestIp,
   getRequestUserAgent,
 } from '@/lib/api-helpers';
+import { AuthService } from '@/lib/auth/auth-service';
 
 // 注册请求验证 schema
 const registerSchema = z.object({
@@ -93,7 +94,8 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error: unknown) {
-    console.error('Register error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Register error:', error);}
     
     return createErrorResponse(
       '注册失败，请稍后重试',

@@ -83,7 +83,8 @@ class WebSocketManager extends EventEmitter {
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-          console.log('WebSocket 连接已建立');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('WebSocket 连接已建立');}
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           this.startHeartbeat();
@@ -97,12 +98,14 @@ class WebSocketManager extends EventEmitter {
             const message: WebSocketMessage = JSON.parse(event.data);
             this.handleMessage(message);
           } catch (error) {
-            console.error('解析 WebSocket 消息失败:', error);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('解析 WebSocket 消息失败:', error);}
           }
         };
 
         this.ws.onclose = (event) => {
-          console.log('WebSocket 连接已关闭:', event.code, event.reason);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('WebSocket 连接已关闭:', event.code, event.reason);}
           this.isConnecting = false;
           this.stopHeartbeat();
           this.emit('disconnected', event);
@@ -113,7 +116,8 @@ class WebSocketManager extends EventEmitter {
         };
 
         this.ws.onerror = (error) => {
-          console.error('WebSocket 错误:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('WebSocket 错误:', error);}
           this.isConnecting = false;
           this.emit('error', error);
           reject(error);
@@ -258,7 +262,8 @@ class WebSocketManager extends EventEmitter {
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     
-    console.log(`${delay}ms 后尝试第 ${this.reconnectAttempts} 次重连...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`${delay}ms 后尝试第 ${this.reconnectAttempts} 次重连...`);};
     
     setTimeout(() => {
       if (this.userId && this.token) {

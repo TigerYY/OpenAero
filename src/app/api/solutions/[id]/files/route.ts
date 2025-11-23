@@ -1,12 +1,11 @@
 import { SolutionFileType, FileStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { z } from 'zod';
 
-import { prisma } from '@/lib/prisma';
 
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
 import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
   params: {
@@ -105,7 +104,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
     }
-    console.error('获取方案文件列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取方案文件列表失败:', error);}
     return createErrorResponse('获取方案文件列表失败', 500);
   }
 }
@@ -187,7 +187,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
     }
-    console.error('关联文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('关联文件失败:', error);}
     return createErrorResponse('关联文件失败', 500);
   }
 }
@@ -242,7 +243,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return createSuccessResponse(null, '文件关联已移除');
 
   } catch (error) {
-    console.error('移除文件关联失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('移除文件关联失败:', error);}
     return createErrorResponse('移除文件关联失败', 500);
   }
 }

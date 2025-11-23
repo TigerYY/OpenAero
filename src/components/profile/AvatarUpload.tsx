@@ -5,11 +5,12 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
+import { useState, useRef, useCallback } from 'react';
+
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AvatarUploadProps {
   currentAvatar?: string;

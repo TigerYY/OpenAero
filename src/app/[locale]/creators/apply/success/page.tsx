@@ -1,15 +1,20 @@
 'use client';
 
-import Link from 'next/link';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
+
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Button } from '@/components/ui/Button';
 import { useRouting } from '@/lib/routing';
-import { useParams } from 'next/navigation';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
 
 export default function CreatorApplySuccessPage() {
   const params = useParams();
-  const locale = params.locale as string;
+  const locale = (params?.locale as string) || 'zh-CN';
   const { route, routes } = useRouting();
 
   return (

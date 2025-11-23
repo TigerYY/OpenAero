@@ -1,6 +1,7 @@
+import { VerificationStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { VerificationStatus } from '@prisma/client';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -45,11 +46,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const statusParam = searchParams.get('status');
     
-    console.log('API 接收到的查询参数:', {
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      status: statusParam,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API 接收到的查询参数:', {
+        page: searchParams.get('page'),
+        limit: searchParams.get('limit'),
+        status: statusParam,
+      })
+    };
     
     const queryResult = applicationsQuerySchema.safeParse({
       page: searchParams.get('page'),
@@ -58,15 +61,18 @@ export async function GET(request: NextRequest) {
     });
 
     if (!queryResult.success) {
-      console.error('查询参数验证失败:', queryResult.error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('查询参数验证失败:', queryResult.error);}
       return createErrorResponse('查询参数无效', 400);
     }
 
     const { page, limit, status } = queryResult.data;
-    console.log('解析后的查询参数:', { page, limit, status });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('解析后的查询参数:', { page, limit, status });};
     
     const result = await getApplications(page, limit, status);
-    console.log('查询结果:', { count: result.applications.length, total: result.total });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('查询结果:', { count: result.applications.length, total: result.total });};
 
     return createPaginatedResponse(
       result.applications,
@@ -114,7 +120,7 @@ export async function PUT(request: NextRequest) {
       userId: authResult.user.id,
       action: action === 'approve' ? 'CREATOR_APPLICATION_APPROVED' : 'CREATOR_APPLICATION_REJECTED',
       resource: 'creator_applications',
-      resource_id: applicationId,
+      resourceId: applicationId,
       metadata: {
         action,
         notes,
@@ -128,9 +134,10 @@ export async function PUT(request: NextRequest) {
         const { sendEmail } = await import('@/lib/email/smtp-service');
         const { getCreatorApprovalEmail } = await import('@/lib/email/email-templates');
         
+        const emailPart = updatedApplication.user.email?.split('@')[0] || '';
         const userName = updatedApplication.user.firstName || updatedApplication.user.lastName 
           ? `${updatedApplication.user.firstName || ''} ${updatedApplication.user.lastName || ''}`.trim()
-          : updatedApplication.user.email.split('@')[0];
+          : emailPart;
         
         const emailTemplate = getCreatorApprovalEmail({
           userName,
@@ -145,7 +152,8 @@ export async function PUT(request: NextRequest) {
           text: emailTemplate.text,
         });
 
-        console.log(`已发送${action === 'approve' ? '批准' : '拒绝'}通知邮件给:`, updatedApplication.user.email);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`已发送${action === 'approve' ? '批准' : '拒绝'}通知邮件给:`, updatedApplication.user.email);};
       } catch (error) {
         console.error('发送通知邮件失败:', error);
         // 不抛出错误，避免影响审核流程
@@ -182,20 +190,12 @@ export async function DELETE(request: NextRequest) {
       return authResult.response;
     }
 
-    const applicationIndex = mockApplications.findIndex(app => app.id === applicationId);
-    if (applicationIndex === -1) {
-      return createErrorResponse('申请不存在', 404);
-    }
-
-    // 删除申请
-    const deletedApplication = mockApplications.splice(applicationIndex, 1)[0];
-
-    return createSuccessResponse(
-      { deletedApplication },
-      '申请已删除'
-    );
+    // 注意：CreatorProfile 不应该被删除，只能更新状态
+    // 如果需要"删除"功能，应该将状态设置为 REJECTED 或 EXPIRED
+    return createErrorResponse('不支持删除申请，请使用审核功能', 400);
   } catch (error) {
-    console.error('删除申请失败:', error);
-    return createErrorResponse(error instanceof Error ? error : new Error('服务器错误'), 500);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除申请失败:', error);}
+    return createErrorResponse(error instanceof Error ? error.message : '服务器错误', 500);
   }
 }

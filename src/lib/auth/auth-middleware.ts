@@ -3,10 +3,13 @@
  * 用于保护需要登录的路由和检查权限
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { prisma } from '@/lib/prisma';
 import { UserRole } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma';
+
+
 import { getRolePermissions } from './permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -55,7 +58,8 @@ export async function getCurrentUser(request: NextRequest) {
       creatorProfile: dbUser.creatorProfile,
     };
   } catch (error) {
-    console.error('获取当前用户失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取当前用户失败:', error);}
     return null;
   }
 }

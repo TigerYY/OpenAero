@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
+import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 
 interface RouteParams {
   params: {
@@ -180,7 +181,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       201
     );
   } catch (error) {
-    console.error('升级方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('升级方案失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);

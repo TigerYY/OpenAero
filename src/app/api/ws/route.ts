@@ -57,7 +57,8 @@ function initWebSocketServer(server: any) {
     connections.set(userId, connection);
     userSockets.set(userId, ws);
 
-    console.log(`用户 ${userId} 已连接`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`用户 ${userId} 已连接`);};
 
     // 广播用户上线状态
     broadcastUserStatus(userId, 'online');
@@ -72,7 +73,8 @@ function initWebSocketServer(server: any) {
     });
 
     ws.on('close', () => {
-      console.log(`用户 ${userId} 已断开连接`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`用户 ${userId} 已断开连接`);};
       
       // 离开所有房间
       const userConnection = connections.get(userId);
@@ -91,7 +93,9 @@ function initWebSocketServer(server: any) {
     });
 
     ws.on('error', (error: Error) => {
-      console.error(`WebSocket 错误 (用户 ${userId}):`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`WebSocket 错误 (用户 ${userId});:`, error)
+      };
     });
 
     // 发送连接成功消息
@@ -158,7 +162,8 @@ function handleMessage(userId: string, message: any) {
       break;
 
     default:
-      console.log('未知消息类型:', message.type);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('未知消息类型:', message.type);}
   }
 }
 
@@ -179,7 +184,8 @@ function joinRoom(userId: string, roomId: string) {
     data: { userId, roomId, timestamp: Date.now() }
   }, userId);
 
-  console.log(`用户 ${userId} 加入房间 ${roomId}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`用户 ${userId} 加入房间 ${roomId}`);};
 }
 
 function leaveRoom(userId: string, roomId: string) {
@@ -202,7 +208,8 @@ function leaveRoom(userId: string, roomId: string) {
     data: { userId, roomId, timestamp: Date.now() }
   }, userId);
 
-  console.log(`用户 ${userId} 离开房间 ${roomId}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`用户 ${userId} 离开房间 ${roomId}`);};
 }
 
 function handleChatMessage(senderId: string, messageData: any) {
@@ -330,9 +337,11 @@ export async function GET(request: NextRequest) {
   const { socket } = request as any;
   
   if (socket.server.ws) {
-    console.log('WebSocket 服务器已存在');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('WebSocket 服务器已存在');}
   } else {
-    console.log('初始化 WebSocket 服务器');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('初始化 WebSocket 服务器');}
     socket.server.ws = initWebSocketServer(socket.server);
   }
 

@@ -64,7 +64,8 @@ export default function QualityDashboard() {
       setStats(data.stats);
       setMetrics(data.metrics);
     } catch (error) {
-      console.error('Failed to fetch quality data:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch quality data:', error);}
     } finally {
       setLoading(false);
     }

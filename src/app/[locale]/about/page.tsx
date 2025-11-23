@@ -1,9 +1,14 @@
 'use client';
 
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { useRouting } from '@/lib/routing';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useRouting } from '@/lib/routing';
 
 interface AboutPageProps {
   params: {

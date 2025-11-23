@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { useRouting } from '@/lib/routing';
 
 import { Button } from '@/components/ui/Button';
+import { useRouting } from '@/lib/routing';
+
 
 interface Solution {
   id: string;

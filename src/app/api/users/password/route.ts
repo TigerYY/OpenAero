@@ -4,16 +4,16 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
-import { AuthService } from '@/lib/auth/auth-service';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser , AuthService } from '@/lib/auth/auth-service';
+import { createSupabaseServer } from '@/lib/auth/supabase-client';
 
 // 密码修改验证 schema
 const changePasswordSchema = z.object({
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       await logAuditAction(request, {
         action: 'CHANGE_PASSWORD_FAILED',
         resource: 'auth.users',
-        resource_id: user.id,
+        resourceId: user.id,
         metadata: {
           reason: 'invalid_current_password',
         },
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       await logAuditAction(request, {
         action: 'CHANGE_PASSWORD_FAILED',
         resource: 'auth.users',
-        resource_id: user.id,
+        resourceId: user.id,
         metadata: {
           reason: 'update_failed',
         },
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     await logAuditAction(request, {
       action: 'CHANGE_PASSWORD',
       resource: 'auth.users',
-      resource_id: user.id,
+      resourceId: user.id,
       metadata: {
         // 不记录密码本身
         passwordChanged: true,
@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(null, '密码修改成功，请重新登录');
   } catch (error: unknown) {
-    console.error('修改密码异常:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('修改密码异常:', error);}
     return createErrorResponse(
       '密码修改失败',
       500,

@@ -1,11 +1,12 @@
 'use client';
 
+import { AlertCircle, X, CheckCircle, AlertTriangle, Info , Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, X, CheckCircle, AlertTriangle, Info } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+
 
 interface Alert {
   id: string;

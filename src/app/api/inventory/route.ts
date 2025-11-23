@@ -1,12 +1,11 @@
 import { InventoryStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { z } from 'zod';
 
-import { prisma } from '@/lib/prisma';
 
 import { checkUserAuth } from '@/lib/api-auth-helpers';
 import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
 // 库存更新的验证模式
 const updateInventorySchema = z.object({
@@ -131,7 +130,8 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(formattedInventories, page, limit, total, '获取库存列表成功');
   } catch (error) {
-    console.error('获取库存列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取库存列表失败:', error);}
     return createErrorResponse('获取库存列表失败', 500);
   }
 }
@@ -243,7 +243,8 @@ export async function POST(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('更新库存失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新库存失败:', error);}
     return createErrorResponse('更新库存失败', 500);
   }
 }
@@ -364,7 +365,8 @@ export async function PUT(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('批量更新库存失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('批量更新库存失败:', error);}
     return createErrorResponse('批量更新库存失败', 500);
   }
 }

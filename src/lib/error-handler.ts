@@ -53,7 +53,8 @@ export class RateLimitError extends AppError {
 }
 
 export function handleApiError(error: unknown): NextResponse<ApiResponse> {
-  console.error('API Error:', error);
+  if (process.env.NODE_ENV === 'development') {
+    console.error('API Error:', error);}
 
   // Handle known AppError instances
   if (error instanceof AppError) {

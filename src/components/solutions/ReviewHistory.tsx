@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { formatDate } from '@/lib/utils';
-import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
 import { Clock, User, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/Badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { formatDate } from '@/lib/utils';
 
 export interface ReviewRecord {
   id: string;

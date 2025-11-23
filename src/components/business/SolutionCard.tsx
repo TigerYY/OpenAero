@@ -37,7 +37,7 @@ export function SolutionCard({ solution }: SolutionCardProps) {
     >
         {/* 图片区域 */}
         <div className="aspect-video bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-          {solution.images && solution.images.length > 0 ? (
+          {solution.images && solution.images.length > 0 && solution.images[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`${solution.images[0]}${solution.images[0].includes('?') ? '&' : '?'}t=${Date.now()}&v=${solution.id}`}

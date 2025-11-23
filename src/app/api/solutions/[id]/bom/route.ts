@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { prisma } from '@/lib/prisma';
+
 import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { bomItemsToJson } from '@/lib/bom-dual-write';
+import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
   params: {
@@ -77,7 +78,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     try {
       validatedData = bomUpdateSchema.parse(body);
     } catch (error) {
-      console.error('BOM 验证失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('BOM 验证失败:', error);}
       if (error instanceof z.ZodError) {
         return createValidationErrorResponse(error);
       }
@@ -200,7 +202,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       validatedData.items.length > 0 ? 'BOM 清单更新成功' : 'BOM 清单已清空（草稿保存）'
     );
   } catch (error) {
-    console.error('更新 BOM 清单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新 BOM 清单失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
@@ -335,7 +338,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       '获取 BOM 清单成功'
     );
   } catch (error) {
-    console.error('获取 BOM 清单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取 BOM 清单失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('获取 BOM 清单失败'),
       500

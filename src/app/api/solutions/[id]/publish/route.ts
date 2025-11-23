@@ -1,9 +1,9 @@
+import { SolutionStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { requireAdminAuth } from '@/lib/api-helpers';
+
+import { requireAdminAuth , createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
-import { SolutionStatus } from '@prisma/client';
 
 interface RouteParams {
   params: {
@@ -150,7 +150,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       `方案${actionMessage}成功`
     );
   } catch (error) {
-    console.error('发布/下架方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('发布/下架方案失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);

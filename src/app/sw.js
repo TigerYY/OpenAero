@@ -41,11 +41,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log('Service Worker: Caching static assets');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Service Worker: Caching static assets');}
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('Service Worker: Static assets cached');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Service Worker: Static assets cached');}
         return self.skipWaiting();
       })
       .catch((error) => {
@@ -66,14 +68,16 @@ self.addEventListener('activate', (event) => {
             if (cacheName !== STATIC_CACHE_NAME && 
                 cacheName !== DYNAMIC_CACHE_NAME &&
                 cacheName !== CACHE_NAME) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Service Worker: Deleting old cache', cacheName);}
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Service Worker: Activated');}
         return self.clients.claim();
       })
   );
@@ -124,7 +128,8 @@ async function handleNavigationRequest(request) {
       }
       throw new Error('Root path network response not ok');
     } catch (error) {
-      console.log('Service Worker: Root path failed, redirecting to default locale', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Service Worker: Root path failed, redirecting to default locale', error);}
       // 如果根路径失败，直接重定向到默认语言版本（中文）
       // 注意：Service Worker 中无法使用路由工具库，使用硬编码的默认语言
       const defaultLocale = 'zh-CN';
@@ -145,7 +150,8 @@ async function handleNavigationRequest(request) {
     
     throw new Error('Network response not ok');
   } catch (error) {
-    console.log('Service Worker: Network failed, trying cache', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Worker: Network failed, trying cache', error);}
     
     // 尝试从缓存获取
     const cachedResponse = await caches.match(request);
@@ -187,7 +193,8 @@ async function handleApiRequest(request) {
     
     return networkResponse;
   } catch (error) {
-    console.log('Service Worker: API request failed, trying cache', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Worker: API request failed, trying cache', error);}
     
     if (shouldCache) {
       // 尝试从缓存获取
@@ -230,7 +237,8 @@ async function handleStaticRequest(request) {
     
     return networkResponse;
   } catch (error) {
-    console.log('Service Worker: Static request failed', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Worker: Static request failed', error);}
     
     // 返回通用错误响应
     return new Response('资源加载失败', {
@@ -322,7 +330,8 @@ async function doBackgroundSync() {
     
     console.log('Service Worker: Background sync completed');
   } catch (error) {
-    console.error('Service Worker: Background sync failed', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Service Worker: Background sync failed', error);}
   }
 }
 
@@ -342,7 +351,8 @@ async function cleanupExpiredCache() {
         const responseDate = new Date(dateHeader).getTime();
         if (responseDate < expireTime) {
           await dynamicCache.delete(request);
-          console.log('Service Worker: Deleted expired cache', request.url);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Service Worker: Deleted expired cache', request.url);}
         }
       }
     }

@@ -117,7 +117,8 @@ export class CollaborationManager extends EventEmitter {
         });
       });
     } catch (error) {
-      console.error('加入协作会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加入协作会话失败:', error);}
       throw error;
     }
   }
@@ -141,7 +142,8 @@ export class CollaborationManager extends EventEmitter {
       this.document = null;
       this.operationQueue = [];
     } catch (error) {
-      console.error('离开协作会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('离开协作会话失败:', error);}
     }
   }
 

@@ -1,5 +1,6 @@
-import { getSupabaseServerClient } from '@/lib/supabase';
 import { NextRequest } from 'next/server';
+
+import { getSupabaseServerClient } from '@/lib/supabase';
 
 /**
  * 获取服务器端Supabase会话
@@ -22,7 +23,8 @@ export async function getServerSession(request?: NextRequest) {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
-      console.error('获取会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取会话失败:', error);}
       return null;
     }
     
@@ -44,7 +46,8 @@ export async function getServerSession(request?: NextRequest) {
       expires: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
     };
   } catch (error) {
-    console.error('服务器会话获取错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('服务器会话获取错误:', error);}
     return null;
   }
 }

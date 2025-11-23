@@ -1,8 +1,9 @@
 /**
  * ActivityFeed组件测试
  */
-import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import { ActivityFeed } from '../ActivityFeed';
 
 // Mock fetch

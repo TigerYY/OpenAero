@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { z } from 'zod';
 
 import { notificationService } from '@/backend/notification/notification.service';
@@ -30,7 +29,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('获取通知列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取通知列表失败:', error);}
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -111,7 +111,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('发送通知失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('发送通知失败:', error);}
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -153,7 +154,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('删除通知失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除通知失败:', error);}
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

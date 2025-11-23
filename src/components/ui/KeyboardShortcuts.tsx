@@ -5,12 +5,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Keyboard, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useKeyboardShortcuts, CommonShortcuts, createShortcut } from '@/lib/keyboard-shortcuts';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { useState, useEffect } from 'react';
+
 import { Button } from '@/components/ui/Button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { useKeyboardShortcuts, CommonShortcuts, createShortcut } from '@/lib/keyboard-shortcuts';
 
 export interface KeyboardShortcutsProps {
   shortcuts?: Array<{

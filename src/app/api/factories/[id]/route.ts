@@ -41,7 +41,8 @@ export async function GET(
       data: factory
     });
   } catch (error) {
-    console.error('获取工厂详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取工厂详情失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取工厂详情失败' },
       { status: 500 }
@@ -105,7 +106,8 @@ export async function PUT(
       data: factory
     });
   } catch (error) {
-    console.error('更新工厂信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新工厂信息失败:', error);}
     return NextResponse.json(
       { success: false, error: '更新工厂信息失败' },
       { status: 500 }
@@ -154,7 +156,8 @@ export async function DELETE(
       message: '工厂删除成功'
     });
   } catch (error) {
-    console.error('删除工厂失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除工厂失败:', error);}
     return NextResponse.json(
       { success: false, error: '删除工厂失败' },
       { status: 500 }

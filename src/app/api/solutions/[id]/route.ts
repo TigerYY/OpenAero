@@ -148,7 +148,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
           return Array.isArray(solution.bom) ? solution.bom : [];
         } catch (error) {
-          console.error('解析 BOM 数据失败:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('解析 BOM 数据失败:', error);}
           return [];
         }
       })(),
@@ -230,7 +231,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }))
     }, '获取方案详情成功');
   } catch (error) {
-    console.error('获取方案详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取方案详情失败:', error);}
     const errorMessage = error instanceof Error ? error.message : '获取方案详情失败';
     const errorDetails = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : undefined;
     return createErrorResponse(errorMessage, 500, errorDetails);
@@ -362,7 +364,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         try {
           bomPayload = JSON.parse(validatedData.bom);
         } catch (error) {
-          console.warn('解析 BOM 失败，使用原始值:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('解析 BOM 失败，使用原始值:', error);}
           bomPayload = validatedData.bom;
         }
       } else {
@@ -435,7 +438,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       bom: updatedSolution.bom || []
     }, '更新方案成功');
   } catch (error: any) {
-    console.error('更新方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新方案失败:', error);}
     return createErrorResponse(error.message || '更新方案失败', error.statusCode || 500);
   }
 }
@@ -475,7 +479,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return createSuccessResponse(null, '删除方案成功');
   } catch (error: any) {
-    console.error('删除方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除方案失败:', error);}
     return createErrorResponse(error.message || '删除方案失败', error.statusCode || 500);
   }
 }

@@ -146,7 +146,8 @@ export async function GET(request: NextRequest) {
         try {
           return JSON.parse(jsonString);
         } catch (e) {
-          console.warn('Failed to parse JSON:', jsonString, e);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Failed to parse JSON:', jsonString, e);}
           return fallback;
         }
       }
@@ -217,7 +218,8 @@ export async function GET(request: NextRequest) {
     
     return response;
   } catch (error) {
-    console.error('获取方案列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取方案列表失败:', error);}
     return createErrorResponse(error instanceof Error ? error : new Error('获取方案列表失败'), 500);
   }
 }
@@ -313,7 +315,8 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    console.error('创建方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建方案失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('创建方案失败'),
       500

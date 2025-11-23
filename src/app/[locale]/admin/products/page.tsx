@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   Package, 
   Plus, 
@@ -24,11 +29,11 @@ import {
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -188,7 +193,8 @@ export default function AdminProductsPage() {
       setProducts(data.products);
       setTotalPages(data.pagination.pages);
     } catch (error) {
-      console.error('获取商品列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取商品列表失败:', error);}
       toast.error('获取商品列表失败');
     } finally {
       setLoading(false);
@@ -204,7 +210,8 @@ export default function AdminProductsPage() {
       const data = await response.json();
       setCategories(data.categories);
     } catch (error) {
-      console.error('获取分类列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取分类列表失败:', error);}
       toast.error('获取分类列表失败');
     }
   };
@@ -230,7 +237,8 @@ export default function AdminProductsPage() {
       resetForm();
       fetchProducts();
     } catch (error) {
-      console.error('创建商品失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建商品失败:', error);}
       toast.error(error instanceof Error ? error.message : '创建商品失败');
     }
   };
@@ -259,7 +267,8 @@ export default function AdminProductsPage() {
       resetForm();
       fetchProducts();
     } catch (error) {
-      console.error('更新商品失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新商品失败:', error);}
       toast.error(error instanceof Error ? error.message : '更新商品失败');
     }
   };
@@ -283,7 +292,8 @@ export default function AdminProductsPage() {
       setSelectedProduct(null);
       fetchProducts();
     } catch (error) {
-      console.error('删除商品失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除商品失败:', error);}
       toast.error(error instanceof Error ? error.message : '删除商品失败');
     }
   };

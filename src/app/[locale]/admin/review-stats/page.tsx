@@ -1,11 +1,16 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import React, { useState, useEffect } from 'react';
 
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface ReviewStats {
   overview: {
@@ -63,10 +68,12 @@ export default function ReviewStatsPage() {
       if (data.success) {
         setStats(data.data);
       } else {
-        console.error('获取统计数据失败:', data.error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取统计数据失败:', data.error);}
       }
     } catch (error) {
-      console.error('获取统计数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取统计数据失败:', error);}
     } finally {
       setLoading(false);
     }

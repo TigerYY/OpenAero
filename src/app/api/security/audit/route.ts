@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取安全审计报告失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取安全审计报告失败:', error);}
     return NextResponse.json(
       { 
         success: false, 
@@ -100,7 +101,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('记录安全事件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('记录安全事件失败:', error);}
     return NextResponse.json(
       { 
         success: false, 

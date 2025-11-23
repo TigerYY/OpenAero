@@ -1,16 +1,21 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+import { BomList, BomListItem } from '@/components/solutions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { BomList, BomListItem } from '@/components/solutions';
+import { useRouting } from '@/lib/routing';
 
 interface Solution {
   id: string;
@@ -52,7 +57,8 @@ interface Review {
 
 export default function SolutionDetailPage() {
   const params = useParams();
-  const solutionId = params.id as string;
+  const { route } = useRouting();
+  const solutionId = params?.id as string;
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -89,7 +95,8 @@ export default function SolutionDetailPage() {
       }
     } catch (err) {
       setError('Failed to load solution');
-      console.error('Error fetching solution:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching solution:', err);}
     } finally {
       setLoading(false);
     }
@@ -105,7 +112,8 @@ export default function SolutionDetailPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching reviews:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching reviews:', err);}
     }
   };
 

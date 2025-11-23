@@ -4,12 +4,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Package, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useState, useEffect } from 'react';
+
 import { Badge } from '@/components/ui/Badge';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface TrackingInfo {
   trackingNumber?: string;
@@ -51,7 +52,8 @@ export default function OrderTracking({ orderId }: OrderTrackingProps) {
           setError(data.message || '获取物流信息失败');
         }
       } catch (err) {
-        console.error('获取物流信息失败:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取物流信息失败:', err);}
         setError('网络错误，请检查网络连接');
       } finally {
         setLoading(false);

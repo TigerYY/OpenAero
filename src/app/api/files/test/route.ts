@@ -108,7 +108,8 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('测试失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('测试失败:', error);}
     return NextResponse.json({
       success: false,
       message: '测试过程中发生错误',

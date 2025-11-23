@@ -1,12 +1,13 @@
-import { NextRequest } from 'next/server';
 import { RevenueStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,11 +157,13 @@ export async function GET(_request: NextRequest) {
 
     return createSuccessResponse(stats, '获取统计数据成功');
   } catch (error) {
-    console.error('获取创作者统计数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取创作者统计数据失败:', error);}
     // 返回更详细的错误信息
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('错误详情:', { errorMessage, errorStack });
+    if (process.env.NODE_ENV === 'development') {
+      console.error('错误详情:', { errorMessage, errorStack });};
     return createErrorResponse(
       `获取统计数据失败: ${errorMessage}`,
       500,

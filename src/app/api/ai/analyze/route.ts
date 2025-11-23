@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(analysisResult);
 
   } catch (error) {
-    console.error('代码分析错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('代码分析错误:', error);}
     return NextResponse.json(
       { error: '代码分析失败' },
       { status: 500 }

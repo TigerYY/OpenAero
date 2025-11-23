@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+
 import { BOM_CATEGORIES } from './BomForm';
 
 // BOM 项类型定义（与 API 响应格式一致）

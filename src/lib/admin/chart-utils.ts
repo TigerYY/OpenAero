@@ -144,7 +144,7 @@ export function fillTimeSeries(
   const filled: TimeSeriesDataPoint[] = [];
   const dataMap = new Map(data.map(d => [d.date, d.value]));
 
-  let current = new Date(startDate);
+  const current = new Date(startDate);
   const end = new Date(endDate);
 
   while (current <= end) {

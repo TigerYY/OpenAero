@@ -257,7 +257,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, { status: 200 });
 
   } catch (error) {
-    console.error('获取审核队列失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取审核队列失败:', error);}
     
     if (error instanceof z.ZodError) {
       const response: ApiResponse<null> = {
@@ -353,7 +354,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(response, { status: 200 });
 
   } catch (error) {
-    console.error('更新方案优先级失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新方案优先级失败:', error);}
     
     if (error instanceof z.ZodError) {
       const response: ApiResponse<null> = {

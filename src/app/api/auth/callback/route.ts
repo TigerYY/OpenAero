@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { createSupabaseServer } from '@/lib/auth/supabase-client';
 import { RoutingUtils, ROUTES } from '@/lib/routing';
 
@@ -44,11 +45,12 @@ export async function GET(request: NextRequest) {
   const error_description = requestUrl.searchParams.get('error_description');
   let next = requestUrl.searchParams.get('next') ?? '/';
 
-  console.log('[Auth Callback] 收到回调请求:', {
-    code: code ? 'exists' : 'missing',
-    error: error || 'none',
-    originalNext: next
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Auth Callback] 收到回调请求:', {
+      code: code ? 'exists' : 'missing',
+      error: error || 'none',
+      originalNext: next
+    });};
 
   // 处理 Supabase 返回的错误
   if (error) {
@@ -68,21 +70,25 @@ export async function GET(request: NextRequest) {
   if (next && !next.startsWith('/zh-CN') && !next.startsWith('/en-US')) {
     const locale = detectUserLocale(request);
     
-    console.log('[Auth Callback] 检测到的语言:', locale);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Auth Callback] 检测到的语言:', locale);}
     
     // 修复常见路径 - 使用路由工具库
     if (next === '/welcome' || next === '/auth/welcome') {
       // 注意：welcome 页面在 (auth) 路由组中，URL 不包含 /auth/
       next = RoutingUtils.generateRoute(locale, '/welcome');
-      console.log('[Auth Callback] 修复 welcome 路径:', next);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Callback] 修复 welcome 路径:', next);}
     } else if (next === '/' || next === '') {
       next = RoutingUtils.generateRoute(locale, ROUTES.BUSINESS.HOME);
-      console.log('[Auth Callback] 默认跳转到首页:', next);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Callback] 默认跳转到首页:', next);}
     } else if (!next.startsWith('/api')) {
       // 其他路径自动添加语言前缀
       const cleanNext = next.startsWith('/') ? next : '/' + next;
       next = RoutingUtils.generateRoute(locale, cleanNext);
-      console.log('[Auth Callback] 添加语言前缀:', next);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth Callback] 添加语言前缀:', next);}
     }
   }
 
@@ -93,7 +99,8 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error('[Auth Callback] Code 交换失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Auth Callback] Code 交换失败:', error);}
       const locale = detectUserLocale(request);
       
       // 重定向到注册页面并显示错误 - 使用路由工具库
@@ -105,7 +112,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(registerRoute, request.url));
     }
 
-    console.log('[Auth Callback] Session 交换成功，用户:', data?.user?.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Auth Callback] Session 交换成功，用户:', data?.user?.id);}
   }
 
   // 重定向到指定页面

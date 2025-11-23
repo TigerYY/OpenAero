@@ -1,14 +1,20 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function WelcomePage() {
   const params = useParams();
-  const locale = params.locale || 'zh-CN';
+  const locale = (params?.locale as string) || 'zh-CN';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

@@ -2,8 +2,9 @@
  * 订单物流跟踪工具库
  */
 
-import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 export interface TrackingInfo {
   trackingNumber?: string;

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -36,7 +37,8 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(stats, '获取审核统计成功');
   } catch (error) {
-    console.error('获取审核统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取审核统计失败:', error);}
     return createErrorResponse(
       '获取审核统计失败',
       500,

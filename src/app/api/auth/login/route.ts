@@ -4,8 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+
+import { AuthService } from '@/lib/auth/auth-service';
 
 // 登录请求验证 schema
 const loginSchema = z.object({
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Login error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Login error:', error);}
     
     return NextResponse.json(
       { error: '登录失败，请稍后重试' },

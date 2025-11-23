@@ -135,7 +135,8 @@ export async function POST(request: NextRequest) {
       message: '提现申请提交成功',
     });
   } catch (error) {
-    console.error('提现申请失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('提现申请失败:', error);}
     return NextResponse.json(
       { error: '提现申请失败' },
       { status: 500 }
@@ -236,7 +237,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取提现记录失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取提现记录失败:', error);}
     return NextResponse.json(
       { error: '获取提现记录失败' },
       { status: 500 }

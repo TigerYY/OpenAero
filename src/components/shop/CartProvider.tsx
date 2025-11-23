@@ -165,7 +165,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SET_LOADING', payload: false });
         }
       } catch (error) {
-        console.error('Failed to load cart from localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to load cart from localStorage:', error);}
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
@@ -179,7 +180,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.setItem('openaero-cart', JSON.stringify(state.items));
       } catch (error) {
-        console.error('Failed to save cart to localStorage:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to save cart to localStorage:', error);}
       }
     }
   }, [state.items, state.isLoading]);

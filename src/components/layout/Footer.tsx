@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouting } from '@/lib/routing';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+
+import { useRouting } from '@/lib/routing';
 
 export function Footer() {
   const t = useTranslations('footer');

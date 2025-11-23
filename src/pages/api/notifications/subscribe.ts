@@ -94,7 +94,8 @@ export default async function handler(
     });
 
   } catch (error) {
-    console.error('Subscribe API error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Subscribe API error:', error);}
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -138,7 +139,8 @@ async function sendWelcomeNotification(subscription: PushSubscription) {
 
     await webpush.sendNotification(subscription, payload);
   } catch (error) {
-    console.error('Failed to send welcome notification:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to send welcome notification:', error);}
     // 不抛出错误，避免影响订阅流程
   }
 }

@@ -50,7 +50,8 @@ class LazyLoadErrorBoundary extends React.Component<
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('LazyLoad Error:', error, errorInfo);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('LazyLoad Error:', error, errorInfo);}
   }
 
   render() {

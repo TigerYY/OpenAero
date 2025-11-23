@@ -181,7 +181,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取评价统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取评价统计失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取评价统计失败' },
       { status: 500 }

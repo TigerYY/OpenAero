@@ -121,7 +121,11 @@ export function usePerformanceOptimization(options: PerformanceOptimizationOptio
       link.href = resource;
       
       link.onload = () => prefetchedResources.current.add(resource);
-      link.onerror = () => console.warn(`Failed to prefetch: ${resource}`);
+      link.onerror = () => {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Failed to prefetch: ${resource}`)
+        }
+      };
       
       document.head.appendChild(link);
     });

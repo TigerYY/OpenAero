@@ -1,13 +1,19 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import React from 'react';
 
 import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
+import { useRouting } from '@/lib/routing';
 
 export default function MobileCreatorApplyPage() {
+  const { route } = useRouting();
+  
   const handleApplicationSubmit = async (data: any) => {
-  const { route } = useRouting()
     // 这里可以添加额外的处理逻辑
     console.log('创作者申请提交:', data);
   };

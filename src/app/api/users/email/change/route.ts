@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -86,7 +87,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (updateError) {
-      console.error('发送邮箱修改验证邮件失败:', updateError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送邮箱修改验证邮件失败:', updateError);}
       
       // 检查是否是邮箱已被使用的错误
       if (updateError.message.includes('already registered') || 
@@ -139,7 +141,8 @@ export async function POST(request: NextRequest) {
       '验证邮件已发送到新邮箱，请查收并点击链接确认邮箱修改'
     );
   } catch (error: unknown) {
-    console.error('Change email error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Change email error:', error);}
     return createErrorResponse(
       '修改邮箱失败，请稍后重试',
       500,

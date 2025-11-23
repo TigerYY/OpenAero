@@ -1,5 +1,9 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { 
   Calendar, 
   User, 
@@ -19,13 +23,13 @@ import {
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 
 interface AuditLog {
   id: string;
@@ -125,7 +129,8 @@ export default function AdminAuditLogsPage() {
         pages: data.pagination?.pages || 0
       }));
     } catch (error) {
-      console.error('加载审计日志失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载审计日志失败:', error);}
       toast.error('加载审计日志失败');
     } finally {
       setLoading(false);
@@ -144,7 +149,8 @@ export default function AdminAuditLogsPage() {
         setStats(data);
       }
     } catch (error) {
-      console.error('加载审计统计失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载审计统计失败:', error);}
     }
   };
 
@@ -193,7 +199,8 @@ export default function AdminAuditLogsPage() {
         throw new Error('导出失败');
       }
     } catch (error) {
-      console.error('导出审计日志失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出审计日志失败:', error);}
       toast.error('导出失败');
     }
   };

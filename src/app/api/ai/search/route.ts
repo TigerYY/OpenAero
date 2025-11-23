@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('搜索建议生成错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('搜索建议生成错误:', error);}
     return NextResponse.json(
       { error: '搜索建议生成失败' },
       { status: 500 }

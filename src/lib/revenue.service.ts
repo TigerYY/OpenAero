@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
 
 /**
  * 收益分成服务
@@ -38,10 +38,14 @@ export class RevenueService {
       }
 
       const payment = order.paymentTransactions[0];
+      
+      if (!payment) {
+        throw new Error(`支付记录不存在: ${paymentId}`);
+      }
 
       // 检查是否已经处理过收益分成
       const existingRevenueShare = await prisma.revenueShare.findFirst({
-        where: { orderId },
+        where: { order_id: orderId },
       });
 
       if (existingRevenueShare) {
@@ -59,12 +63,12 @@ export class RevenueService {
         order.orderSolutions.map(async (orderSolution) => {
           const revenueShare = await prisma.revenueShare.create({
             data: {
-              orderId: order.id,
-              solutionId: orderSolution.solutionId,
-              creatorId: orderSolution.solution.creatorId,
-              totalAmount: totalAmount,
-              platformFee: platformFee,
-              creatorRevenue: creatorRevenue,
+              order_id: order.id,
+              solution_id: orderSolution.solution_id,
+              creator_id: orderSolution.solution.creator_id,
+              total_amount: totalAmount,
+              platform_fee: platformFee,
+              creator_revenue: creatorRevenue,
               status: 'PENDING',
             },
           });
@@ -72,8 +76,8 @@ export class RevenueService {
           logger.info('创建收益分成记录', {
             revenueShareId: revenueShare.id,
             orderId: order.id,
-            solutionId: orderSolution.solutionId,
-            creatorId: orderSolution.solution.creatorId,
+            solutionId: orderSolution.solution_id,
+            creatorId: orderSolution.solution.creator_id,
             totalAmount: totalAmount,
             platformFee: platformFee,
             creatorRevenue: creatorRevenue,
@@ -84,7 +88,10 @@ export class RevenueService {
       );
 
       // 更新创作者收益总额
-      await this.updateCreatorRevenue(order.orderSolutions[0].solution.creatorId, creatorRevenue);
+      const firstOrderSolution = order.orderSolutions[0];
+      if (firstOrderSolution?.solution?.creator_id) {
+        await this.updateCreatorRevenue(firstOrderSolution.solution.creator_id, creatorRevenue);
+      }
 
       logger.info('收益分成处理完成', {
         orderId: order.id,
@@ -144,7 +151,7 @@ export class RevenueService {
       const [revenueShares, totalRevenue, pendingRevenue, availableRevenue] = await Promise.all([
         // 获取所有收益分成记录
         prisma.revenueShare.findMany({
-          where: { creatorId },
+          where: { creator_id: creatorId },
           include: {
             order: {
               include: {
@@ -157,37 +164,37 @@ export class RevenueService {
             },
           },
           orderBy: {
-            createdAt: 'desc',
+            created_at: 'desc',
           },
         }),
         
         // 总收益
         prisma.revenueShare.aggregate({
-          where: { creatorId },
+          where: { creator_id: creatorId },
           _sum: {
-            creatorRevenue: true,
+            creator_revenue: true,
           },
         }),
         
         // 待结算收益
         prisma.revenueShare.aggregate({
           where: { 
-            creatorId,
+            creator_id: creatorId,
             status: 'PENDING',
           },
           _sum: {
-            creatorRevenue: true,
+            creator_revenue: true,
           },
         }),
         
         // 可提现收益
         prisma.revenueShare.aggregate({
           where: { 
-            creatorId,
+            creator_id: creatorId,
             status: 'AVAILABLE',
           },
           _sum: {
-            creatorRevenue: true,
+            creator_revenue: true,
           },
         }),
       ]);
@@ -195,9 +202,9 @@ export class RevenueService {
       return {
         revenueShares,
         stats: {
-          totalRevenue: Number(totalRevenue._sum.creatorRevenue || 0),
-          pendingRevenue: Number(pendingRevenue._sum.creatorRevenue || 0),
-          availableRevenue: Number(availableRevenue._sum.creatorRevenue || 0),
+          totalRevenue: Number(totalRevenue._sum?.creator_revenue || 0),
+          pendingRevenue: Number(pendingRevenue._sum?.creator_revenue || 0),
+          availableRevenue: Number(availableRevenue._sum?.creator_revenue || 0),
           withdrawnRevenue: 0, // 需要从提现记录中计算
         },
       };
@@ -229,14 +236,14 @@ export class RevenueService {
         where: { id: revenueShareId },
         data: {
           status: 'AVAILABLE',
-          settledAt: new Date(),
+          settled_at: new Date(),
         },
       });
 
       logger.info('收益结算成功', {
         revenueShareId: revenueShareId,
-        creatorId: revenueShare.creatorId,
-        amount: Number(revenueShare.creatorRevenue),
+        creatorId: revenueShare.creator_id,
+        amount: Number(revenueShare.creator_revenue),
       });
 
       return settledRevenue;
@@ -254,15 +261,15 @@ export class RevenueService {
       // 获取可提现收益总额
       const availableRevenue = await prisma.revenueShare.aggregate({
         where: { 
-          creatorId,
+          creator_id: creatorId,
           status: 'AVAILABLE',
         },
         _sum: {
-          creatorRevenue: true,
+          creator_revenue: true,
         },
       });
 
-      const availableAmount = Number(availableRevenue._sum.creatorRevenue || 0);
+      const availableAmount = Number(availableRevenue._sum?.creator_revenue || 0);
 
       if (amount > availableAmount) {
         throw new Error(`提现金额超过可提现余额: ${amount} > ${availableAmount}`);
@@ -271,14 +278,14 @@ export class RevenueService {
       // 创建提现记录
       const withdrawal = await prisma.revenueShare.updateMany({
         where: { 
-          creatorId,
+          creator_id: creatorId,
           status: 'AVAILABLE',
         },
         data: {
           status: 'WITHDRAWN',
-          withdrawnAt: new Date(),
-          withdrawMethod: withdrawMethod,
-          withdrawAccount: withdrawAccount,
+          withdrawn_at: new Date(),
+          withdraw_method: withdrawMethod,
+          withdraw_account: withdrawAccount,
         },
       });
 

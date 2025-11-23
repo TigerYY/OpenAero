@@ -2,8 +2,9 @@
  * 创作者申请工具库
  */
 
-import { prisma } from '@/lib/prisma';
 import { VerificationStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 // 使用 VerificationStatus 作为申请状态
 type ApplicationStatus = VerificationStatus;
@@ -74,7 +75,8 @@ export async function createCreatorApplication(
         const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
         userEmail = authUser?.user?.email || '';
       } catch (error) {
-        console.warn('获取用户邮箱失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('获取用户邮箱失败:', error);}
       }
 
       return {
@@ -132,7 +134,8 @@ export async function createCreatorApplication(
         const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
         userEmail = authUser?.user?.email || '';
       } catch (error) {
-        console.warn('获取用户邮箱失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('获取用户邮箱失败:', error);}
       }
 
       return {
@@ -195,7 +198,8 @@ export async function createCreatorApplication(
     const { data: authUser } = await supabase.auth.admin.getUserById(data.userId);
     userEmail = authUser?.user?.email || '';
   } catch (error) {
-    console.warn('获取用户邮箱失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('获取用户邮箱失败:', error);}
   }
 
   return {
@@ -253,7 +257,8 @@ export async function getUserApplicationStatus(
     const { data: authUser } = await supabase.auth.admin.getUserById(userId);
     userEmail = authUser?.user?.email || '';
   } catch (error) {
-    console.warn('获取用户邮箱失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('获取用户邮箱失败:', error);}
   }
 
   // 返回所有状态的申请信息（不只是 PENDING）
@@ -290,14 +295,16 @@ export async function getApplications(
 ): Promise<{ applications: ApplicationWithDetails[]; total: number }> {
   const skip = (page - 1) * limit;
 
-  console.log('getApplications 调用参数:', { page, limit, status });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('getApplications 调用参数:', { page, limit, status });};
 
   const where: any = {};
   if (status) {
     where.verification_status = status;
   }
   
-  console.log('Prisma 查询条件:', where);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Prisma 查询条件:', where);}
 
   // 使用 CreatorProfile 查询申请列表
   const [profiles, total] = await Promise.all([
@@ -336,12 +343,14 @@ export async function getApplications(
             emailMap.set(userId, authUser.user.email);
           }
         } catch (error) {
-          console.warn(`获取用户 ${userId} 邮箱失败:`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`获取用户 ${userId} 邮箱失败:`, error);};
         }
       })
     );
   } catch (error) {
-    console.warn('批量获取用户邮箱失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('批量获取用户邮箱失败:', error);}
   }
 
   // 转换为 ApplicationWithDetails 格式
@@ -367,16 +376,17 @@ export async function getApplications(
     },
   }));
 
-  console.log('getApplications 返回结果:', {
-    applicationsCount: applications.length,
-    total,
-    firstApplication: applications[0] ? {
-      id: applications[0].id,
-      userId: applications[0].userId,
-      status: applications[0].status,
-      userEmail: applications[0].user.email,
-    } : null,
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('getApplications 返回结果:', {
+      applicationsCount: applications.length,
+      total,
+      firstApplication: applications[0] ? {
+        id: applications[0].id,
+        userId: applications[0].userId,
+        status: applications[0].status,
+        userEmail: applications[0].user.email,
+      } : null,
+    });};
 
   return {
     applications,
@@ -462,7 +472,8 @@ export async function reviewApplication(
     const { data: authUser } = await supabase.auth.admin.getUserById(creatorProfile.user_id);
     userEmail = authUser?.user?.email || '';
   } catch (error) {
-    console.warn('获取用户邮箱失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('获取用户邮箱失败:', error);}
   }
 
   return {

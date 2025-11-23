@@ -277,7 +277,8 @@ export async function getComprehensiveRecommendations(
       const purchaseHistoryRecs = await getRecommendationsByPurchaseHistory(userId, Math.ceil(limit * 0.4));
       recommendations.push(...viewHistoryRecs, ...purchaseHistoryRecs);
     } catch (error) {
-      console.error('获取个性化推荐失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取个性化推荐失败:', error);}
     }
   }
 

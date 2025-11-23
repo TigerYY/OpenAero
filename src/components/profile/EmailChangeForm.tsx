@@ -4,13 +4,14 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { isValidEmail } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { isValidEmail } from '@/lib/utils';
 
 export default function EmailChangeForm() {
   const { user, refreshProfile } = useAuth();
@@ -74,7 +75,8 @@ export default function EmailChangeForm() {
         setGeneralError(data.message || getLocalizedErrorMessage(data.error || '修改邮箱失败', 'zh-CN'));
       }
     } catch (err: unknown) {
-      console.error('Email change error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Email change error:', err);}
       setGeneralError(getLocalizedErrorMessage(err, 'zh-CN'));
     } finally {
       setLoading(false);

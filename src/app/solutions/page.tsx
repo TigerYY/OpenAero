@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, Suspense } from 'react';
@@ -129,7 +134,8 @@ function SolutionsContent() {
         setSolutions(transformedSolutions);
       }
     } catch (error) {
-      console.error('获取解决方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取解决方案失败:', error);}
     } finally {
       setLoading(false);
     }

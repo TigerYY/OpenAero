@@ -1,30 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
-  CheckCircle,
-  XCircle,
-  Send,
-  Eye,
-  Search,
-  Filter,
-  CheckSquare,
-  Square,
-  MoreVertical,
-  RefreshCw,
-  Archive,
   AlertCircle,
+  Eye,
+  RefreshCw,
+  Search,
+  Send,
+  Star
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { useRouting } from '@/lib/routing';
-import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { getStatusColor, getStatusText } from '@/lib/solution-status-workflow';
 
 interface Solution {
   id: string;
@@ -75,7 +74,8 @@ export default function PublishManagementPage() {
         setSolutions(items);
       }
     } catch (error) {
-      console.error('加载方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载方案失败:', error);}
       toast.error('加载方案列表失败');
     } finally {
       setLoading(false);
@@ -159,7 +159,8 @@ export default function PublishManagementPage() {
         throw new Error(result.error || `${actionName}失败`);
       }
     } catch (error) {
-      console.error('批量操作失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('批量操作失败:', error);}
       toast.error(`批量操作失败：${error instanceof Error ? error.message : '请重试'}`);
     } finally {
       setShowBatchDialog(false);
@@ -180,7 +181,8 @@ export default function PublishManagementPage() {
         }
       }
     } catch (error) {
-      console.error('获取预览失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取预览失败:', error);}
       toast.error('获取预览失败');
     }
   };
@@ -538,8 +540,13 @@ export default function PublishManagementPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-bold">{selectedSolution.title}</h3>
-                {selectedSolution.publishing?.publishDescription && (
-                  <p className="mt-2 text-gray-700">{selectedSolution.publishing.publishDescription}</p>
+                {selectedSolution.publishing && 'publishDescription' in selectedSolution.publishing && selectedSolution.publishing.publishDescription && (
+                  <p className="mt-2 text-gray-700">
+                    {(() => {
+                      const desc = selectedSolution.publishing.publishDescription;
+                      return typeof desc === 'string' ? desc : String(desc ?? '');
+                    })()}
+                  </p>
                 )}
               </div>
               {/* 可以添加更多预览内容 */}

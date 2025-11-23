@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   Eye, 
   CheckCircle, 
@@ -18,11 +23,12 @@ import {
   Search,
   ChevronDown
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useRouting } from '@/lib/routing';
 
+import { AdminRoute } from '@/components/auth/ProtectedRoute';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -32,9 +38,8 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { AdminLayout } from '@/components/layout/AdminLayout';
-import { AdminRoute } from '@/components/auth/ProtectedRoute';
 
 
 interface Solution {
@@ -194,7 +199,8 @@ function AdminSolutionsPage() {
       const solutions = result.data?.items || result.data || [];
       setSolutions(Array.isArray(solutions) ? solutions : []);
     } catch (error) {
-      console.error('获取方案列表错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案列表错误:', error);}
       toast.error('获取方案列表失败');
       setSolutions([]);
     } finally {
@@ -214,7 +220,8 @@ function AdminSolutionsPage() {
         setReviewHistory(result.data || []);
       }
     } catch (error) {
-      console.error('获取审核历史错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取审核历史错误:', error);}
     }
   };
 
@@ -278,7 +285,8 @@ function AdminSolutionsPage() {
       setShowBatchDialog(false);
       setBatchNotes('');
     } catch (error) {
-      console.error('批量审核错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('批量审核错误:', error);}
       toast.error('批量审核失败，请重试');
     } finally {
       setBatchLoading(false);
@@ -352,7 +360,8 @@ function AdminSolutionsPage() {
         toast.error('审核失败，请重试');
       }
     } catch (error) {
-      console.error('审核错误:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('审核错误:', error);}
       toast.error('审核失败，请重试');
     } finally {
       setSubmitting(false);

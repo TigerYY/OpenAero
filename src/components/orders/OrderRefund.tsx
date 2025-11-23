@@ -4,11 +4,12 @@
 
 'use client';
 
-import { useState } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
@@ -48,7 +49,8 @@ export default function OrderRefund({ orderId, orderStatus, canRefund }: OrderRe
         setRefundInfo(data.data);
       }
     } catch (err) {
-      console.error('获取退款信息失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取退款信息失败:', err);}
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,8 @@ export default function OrderRefund({ orderId, orderStatus, canRefund }: OrderRe
         setError(data.message || '申请退款失败');
       }
     } catch (err) {
-      console.error('申请退款失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('申请退款失败:', err);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);

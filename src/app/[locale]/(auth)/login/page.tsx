@@ -1,5 +1,15 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -7,10 +17,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
 import { useRouting } from '@/lib/routing';
 import { isValidEmail } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +36,7 @@ export default function LoginPage() {
   const [emailNotVerified, setEmailNotVerified] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
-  const verified = searchParams.get('verified') === 'true';
+  const verified = searchParams?.get('verified') === 'true';
 
   // 实时验证邮箱
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +47,7 @@ export default function LoginPage() {
     if (email && !isValidEmail(email)) {
       setFieldErrors({ ...fieldErrors, email: tLogin('invalidEmail') });
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email: _email, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
@@ -115,7 +122,7 @@ export default function LoginPage() {
       }
 
       // 登录成功，AuthContext 会自动更新状态
-      const callbackUrl = searchParams.get('callbackUrl') || '/';
+      const callbackUrl = searchParams?.get('callbackUrl') || '/';
       router.push(callbackUrl);
       router.refresh();
     } catch (err: unknown) {

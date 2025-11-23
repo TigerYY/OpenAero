@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { 
   TrendingUp, 
@@ -16,16 +20,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import ErrorMessage from '@/components/ui/ErrorMessage';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import RevenueChart from '@/components/creators/RevenueChart';
 import SolutionsList from '@/components/creators/SolutionsList';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
-
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 
@@ -97,7 +101,8 @@ export default function CreatorDashboardPage() {
       if (statsData.success) {
         setStats(statsData.data);
       } else {
-        console.error('获取统计数据失败:', statsData);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取统计数据失败:', statsData);}
         setError(statsData.error || statsData.message || '获取统计数据失败');
       }
 
@@ -115,7 +120,8 @@ export default function CreatorDashboardPage() {
         setRecentOrders(ordersData.data);
       }
     } catch (error) {
-      console.error('获取仪表盘数据失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取仪表盘数据失败:', error);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);

@@ -1,9 +1,10 @@
 'use client';
 
+import { ArrowUpRight, Copy, Package, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowUpRight, Copy, Package, FileText } from 'lucide-react';
 
+import { Button } from '@/components/ui/Button';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
@@ -72,7 +72,8 @@ export function UpgradeSolutionDialog({
         throw new Error(result.error || '升级失败');
       }
     } catch (error) {
-      console.error('升级方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('升级方案失败:', error);}
       toast.error(`升级失败：${error instanceof Error ? error.message : '请重试'}`);
     } finally {
       setUpgrading(false);

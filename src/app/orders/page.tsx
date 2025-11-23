@@ -1,5 +1,11 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
+import { OrderStatus } from '@prisma/client';
 import { 
   Package, 
   Clock, 
@@ -14,17 +20,15 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useRouting } from '@/lib/routing';
-import { OrderStatus } from '@prisma/client';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Input } from '@/components/ui/Input';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { Input } from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 // 订单接口
@@ -123,7 +127,8 @@ export default function OrdersPage() {
         setError(data.message || '获取订单列表失败，请稍后重试');
       }
     } catch (error) {
-      console.error('获取订单列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取订单列表失败:', error);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);
@@ -172,7 +177,8 @@ export default function OrdersPage() {
         setError('导出订单失败，请稍后重试');
       }
     } catch (error) {
-      console.error('导出订单失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出订单失败:', error);}
       setError('导出订单失败，请检查网络连接');
     }
   };

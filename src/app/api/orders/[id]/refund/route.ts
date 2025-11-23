@@ -5,15 +5,17 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
-import { createRefundRequest, getOrderRefund } from '@/lib/order-refund';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getOrderById } from '@/lib/order';
-import { z } from 'zod';
+import { createRefundRequest, getOrderRefund } from '@/lib/order-refund';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +84,8 @@ export async function POST(
 
     return createSuccessResponse(refundResult, '退款申请已提交，等待审核');
   } catch (error) {
-    console.error('申请退款失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('申请退款失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '申请退款失败',
       error instanceof Error && error.message.includes('无权') ? 403 : 500,
@@ -127,7 +130,8 @@ export async function GET(
 
     return createSuccessResponse(refundInfo, '获取退款信息成功');
   } catch (error) {
-    console.error('获取退款信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取退款信息失败:', error);}
     return createErrorResponse(
       '获取退款信息失败',
       500,

@@ -20,7 +20,8 @@ export class EmailService {
       console.log('发送邮件:', options);
       return { success: true };
     } catch (error) {
-      console.error('发送邮件失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送邮件失败:', error);}
       return { 
         success: false, 
         error: error instanceof Error ? error.message : '发送邮件失败' 

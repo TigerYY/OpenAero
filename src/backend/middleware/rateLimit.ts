@@ -84,7 +84,8 @@ function getClientIP(request: NextRequest): string {
   const realIP = request.headers.get('x-real-ip');
   
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    const firstIP = forwarded.split(',')[0];
+    return firstIP ? firstIP.trim() : '';
   }
   
   if (realIP) {

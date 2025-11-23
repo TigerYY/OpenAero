@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 import { getProductReviewStats } from '@/lib/product-review';
 
@@ -27,7 +28,8 @@ export async function GET(
 
     return createSuccessResponse(stats, '获取评价统计成功');
   } catch (error) {
-    console.error('获取评价统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取评价统计失败:', error);}
     return createErrorResponse(
       '获取评价统计失败',
       500,

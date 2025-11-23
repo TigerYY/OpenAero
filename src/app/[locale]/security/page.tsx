@@ -2,8 +2,8 @@
 
 import { Metadata } from 'next';
 
-import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 
 export const metadata: Metadata = {
   title: '安全仪表板 | OpenAero',

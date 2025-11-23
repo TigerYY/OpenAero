@@ -1,19 +1,25 @@
 /**
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
  * 支付失败页面
  * 显示支付失败信息并提供重试选项
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
 import { XCircle, RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Button } from '@/components/ui/Button';
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useRouting } from '@/lib/routing';
 
 export default function PaymentFailurePage() {
   const router = useRouter();
@@ -28,9 +34,9 @@ export default function PaymentFailurePage() {
 
   useEffect(() => {
     // 从URL参数获取订单信息
-    const orderIdParam = searchParams.get('orderId');
-    const paymentIdParam = searchParams.get('paymentId');
-    const errorParam = searchParams.get('error');
+    const orderIdParam = searchParams?.get('orderId');
+    const paymentIdParam = searchParams?.get('paymentId');
+    const errorParam = searchParams?.get('error');
 
     if (orderIdParam) setOrderId(orderIdParam);
     if (paymentIdParam) setPaymentId(paymentIdParam);
@@ -45,7 +51,8 @@ export default function PaymentFailurePage() {
       // 跳转到订单详情页面，用户可以重新支付
       router.push(routeWithDynamicParams(routes.ORDERS.DETAIL, { id: orderId }));
     } catch (error) {
-      console.error('重试支付失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('重试支付失败:', error);}
       setIsRetrying(false);
     }
   };

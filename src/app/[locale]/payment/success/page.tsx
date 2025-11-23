@@ -1,18 +1,24 @@
 /**
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
  * 支付成功页面
  * 显示支付成功信息并提供后续操作
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
 import { CheckCircle, ArrowRight, Package, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { Button } from '@/components/ui/Button';
+import { useRouting } from '@/lib/routing';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -26,9 +32,9 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     // 从URL参数获取订单信息
-    const orderIdParam = searchParams.get('orderId');
-    const paymentIdParam = searchParams.get('paymentId');
-    const amountParam = searchParams.get('amount');
+    const orderIdParam = searchParams?.get('orderId');
+    const paymentIdParam = searchParams?.get('paymentId');
+    const amountParam = searchParams?.get('amount');
 
     if (orderIdParam) setOrderId(orderIdParam);
     if (paymentIdParam) setPaymentId(paymentIdParam);

@@ -5,9 +5,10 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import { X, CreditCard, Smartphone, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import React, { useState, useEffect } from 'react';
+
 import { Button } from '@/components/ui/Button';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -123,7 +124,8 @@ export default function PaymentModal({
           console.error('检查支付状态失败:', result.message);
         }
       } catch (err) {
-        console.error('检查支付状态异常:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('检查支付状态异常:', err);}
         // 不显示错误，继续轮询
       } finally {
         setIsCheckingStatus(false);
@@ -184,7 +186,8 @@ export default function PaymentModal({
         );
       }
     } catch (err) {
-      console.error('创建支付订单失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建支付订单失败:', err);}
       setError(
         getLocalizedErrorMessage(
           err,

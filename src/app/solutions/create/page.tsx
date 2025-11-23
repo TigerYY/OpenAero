@@ -1,17 +1,22 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { BomForm, BomItem } from '@/components/solutions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileUpload } from '@/components/ui/FileUpload';
+import { useRouting } from '@/lib/routing';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
-import { BomForm, BomItem } from '@/components/solutions';
 
 interface SolutionFormData {
   title: string;
@@ -162,7 +167,8 @@ export default function CreateSolutionPage() {
         throw new Error(result.message || '提交失败');
       }
     } catch (error) {
-      console.error('提交方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('提交方案失败:', error);}
       alert('提交失败，请重试');
     } finally {
       setLoading(false);

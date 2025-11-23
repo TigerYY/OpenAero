@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { 
   DollarSign, 
   TrendingUp, 
@@ -12,11 +17,11 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface RevenueShare {

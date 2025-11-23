@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { AuthService, getServerUser } from '@/lib/auth/auth-service';
 
 export async function POST(request: NextRequest) {
@@ -37,7 +38,8 @@ export async function POST(request: NextRequest) {
       message: '登出成功',
     });
   } catch (error: any) {
-    console.error('Logout error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Logout error:', error);}
     
     return NextResponse.json(
       { error: '登出失败，请稍后重试' },

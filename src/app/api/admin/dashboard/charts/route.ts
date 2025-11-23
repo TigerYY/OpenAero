@@ -1,26 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { dashboardCache } from '@/lib/admin/dashboard-cache';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
-import { dashboardCache } from '@/lib/admin/dashboard-cache';
+
+// 强制动态渲染（避免静态生成）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // GET /api/admin/dashboard/charts - 获取图表数据
 export async function GET(request: NextRequest) {
   try {
-    console.log('[API /admin/dashboard/charts] 开始处理请求');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /admin/dashboard/charts] 开始处理请求');
+    }
     
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
-    console.log('[API /admin/dashboard/charts] 认证结果:', {
-      success: authResult.success,
-      hasUser: !!authResult.user,
-      userId: authResult.user?.id,
-      userRoles: authResult.user?.roles,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /admin/dashboard/charts] 认证结果:', {
+        success: authResult.success,
+        hasUser: !!authResult.user,
+        userId: authResult.user?.id,
+        userRoles: authResult.user?.roles,
+      });;
+    }
     
     if (!authResult.success || !authResult.user) {
-      console.error('[API /admin/dashboard/charts] 认证失败');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[API /admin/dashboard/charts] 认证失败');
+      }
       return authResult.error || NextResponse.json(
         {
           success: false,
@@ -33,10 +43,14 @@ export async function GET(request: NextRequest) {
 
     // 检查管理员权限
     const userRoles = authResult.user.roles || [];
-    console.log('[API /admin/dashboard/charts] 用户角色:', userRoles);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /admin/dashboard/charts] 用户角色:', userRoles);
+    }
     
     if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
-      console.warn('[API /admin/dashboard/charts] 权限不足，当前角色:', userRoles);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[API /admin/dashboard/charts] 权限不足，当前角色:', userRoles);
+      }
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看图表数据',
@@ -80,16 +94,19 @@ export async function GET(request: NextRequest) {
       getRevenueTrend(startDate, days),
     ]);
 
-    const chartData = {
-      trends: trendData,
-      categoryDistribution,
-      statusDistribution,
-      revenueTrend,
-    };
-
-    const response: ApiResponse<typeof chartData> = {
+    const response: ApiResponse<{
+      trends: typeof trendData;
+      categoryDistribution: typeof categoryDistribution;
+      statusDistribution: typeof statusDistribution;
+      revenueTrend: typeof revenueTrend;
+    }> = {
       success: true,
-      data: chartData,
+      data: {
+        trends: trendData,
+        categoryDistribution,
+        statusDistribution,
+        revenueTrend,
+      },
       message: '图表数据获取成功'
     };
 
@@ -104,7 +121,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取图表数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取图表数据失败:', error);
+    }
 
     const response: ApiResponse<null> = {
       success: false,

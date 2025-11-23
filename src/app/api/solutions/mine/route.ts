@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { prisma } from '@/lib/prisma';
+
 import { createErrorResponse, createPaginatedResponse } from '@/lib/api-helpers';
+import { authenticateRequest } from '@/lib/auth-helpers';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/solutions/mine - 获取当前创作者的所有方案
 export async function GET(request: NextRequest) {
@@ -203,7 +204,8 @@ export async function GET(request: NextRequest) {
       '获取方案列表成功'
     );
   } catch (error) {
-    console.error('获取我的方案列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取我的方案列表失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('获取方案列表失败'),
       500

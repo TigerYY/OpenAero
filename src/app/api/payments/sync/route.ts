@@ -5,6 +5,8 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -12,7 +14,6 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { syncPendingPayments, syncPaymentStatus } from '@/lib/payment/payment-status-sync';
-import { z } from 'zod';
 
 const syncSchema = z.object({
   paymentId: z.string().optional(),
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(result, '批量同步完成');
   } catch (error: unknown) {
-    console.error('支付状态同步失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('支付状态同步失败:', error);}
     return createErrorResponse(
       '支付状态同步失败',
       500,
@@ -116,7 +118,8 @@ export async function GET(request: NextRequest) {
       lastSyncTime: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    console.error('获取同步统计信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取同步统计信息失败:', error);}
     return createErrorResponse(
       '获取统计信息失败',
       500,

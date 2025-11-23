@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error processing quality metric:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error processing quality metric:', error);}
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -70,7 +71,8 @@ export async function GET(request: NextRequest) {
       count: filteredMetrics.length
     });
   } catch (error) {
-    console.error('Error fetching quality metrics:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching quality metrics:', error);}
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -196,7 +198,8 @@ async function sendQualityAlert(metric: QualityMetric) {
         }),
       });
     } catch (error) {
-      console.error('Failed to send Slack alert:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to send Slack alert:', error);}
     }
   }
 }

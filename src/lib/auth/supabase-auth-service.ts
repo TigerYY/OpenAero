@@ -3,15 +3,18 @@
  * 处理用户注册、登录、角色管理等
  */
 
-import { createSupabaseAdmin } from './supabase-client';
-import { prisma } from '@/lib/prisma';
 import { UserRole, UserStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
+
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendRoleChangeEmail,
 } from '../email/smtp-service';
+
+import { createSupabaseAdmin } from './supabase-client';
 
 /**
  * 注册用户数据接口
@@ -83,7 +86,8 @@ export async function registerUser(data: RegisterUserData) {
       },
     };
   } catch (error: any) {
-    console.error('用户注册失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('用户注册失败:', error);}
     throw new Error(error.message || '用户注册失败');
   }
 }
@@ -155,7 +159,8 @@ export async function loginUser(email: string, password: string) {
       session: authData.session,
     };
   } catch (error: any) {
-    console.error('用户登录失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('用户登录失败:', error);}
     throw new Error(error.message || '登录失败');
   }
 }
@@ -197,7 +202,8 @@ export async function verifyEmail(token: string) {
       },
     };
   } catch (error: any) {
-    console.error('邮箱验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('邮箱验证失败:', error);}
     throw new Error(error.message || '验证失败');
   }
 }
@@ -238,7 +244,8 @@ export async function requestPasswordReset(email: string) {
 
     return { success: true };
   } catch (error: any) {
-    console.error('请求重置密码失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('请求重置密码失败:', error);}
     throw new Error(error.message || '请求失败');
   }
 }
@@ -262,7 +269,8 @@ export async function resetPassword(token: string, newPassword: string) {
 
     return { success: true };
   } catch (error: any) {
-    console.error('重置密码失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('重置密码失败:', error);}
     throw new Error(error.message || '重置密码失败');
   }
 }
@@ -320,17 +328,18 @@ export async function updateUserRole(
     );
 
     // 6. 记录审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: adminId,
-        action: 'UPDATE_USER_ROLE',
-        resource: 'user',
-        resourceId: userId,
-        oldValue: { role: oldRole },
-        newValue: { role: newRole },
-        ipAddress: 'system',
-        userAgent: 'system',
-      },
+    // Note: Using AuthService.logAudit instead of prisma.auditLog
+    const { AuthService } = await import('./auth-service');
+    await AuthService.logAudit({
+      user_id: adminId,
+      action: 'UPDATE_USER_ROLE',
+      resource: 'user',
+      resource_id: userId,
+      old_value: { role: oldRole },
+      new_value: { role: newRole },
+      ip_address: 'system',
+      user_agent: 'system',
+      success: true,
     });
 
     return {
@@ -342,7 +351,8 @@ export async function updateUserRole(
       },
     };
   } catch (error: any) {
-    console.error('更新用户角色失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新用户角色失败:', error);}
     throw new Error(error.message || '更新角色失败');
   }
 }
@@ -369,7 +379,8 @@ export async function getUserById(userId: string) {
       user,
     };
   } catch (error: any) {
-    console.error('获取用户信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取用户信息失败:', error);}
     throw new Error(error.message || '获取用户信息失败');
   }
 }
@@ -408,7 +419,8 @@ export async function updateUserProfile(
       },
     };
   } catch (error: any) {
-    console.error('更新用户信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新用户信息失败:', error);}
     throw new Error(error.message || '更新失败');
   }
 }
@@ -471,7 +483,8 @@ export async function listUsers(params: {
       },
     };
   } catch (error: any) {
-    console.error('获取用户列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取用户列表失败:', error);}
     throw new Error(error.message || '获取用户列表失败');
   }
 }

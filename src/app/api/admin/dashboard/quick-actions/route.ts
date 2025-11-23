@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { requireAdminAuth } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
-import { ApiResponse } from '@/types';
+import { dashboardCache } from '@/lib/admin/dashboard-cache';
 import { 
   exportLargeDataset, 
   generateExportFilename, 
   ExportFormat 
 } from '@/lib/admin/export-utils';
-import { dashboardCache } from '@/lib/admin/dashboard-cache';
+import { requireAdminAuth } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
+import { ApiResponse } from '@/types';
 
 // 快速操作验证模式
 const quickActionSchema = z.object({
@@ -145,7 +145,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status: 200 });
 
   } catch (error) {
-    console.error('执行快速操作失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('执行快速操作失败:', error);}
     
     if (error instanceof z.ZodError) {
       const response: ApiResponse<null> = {
@@ -205,7 +206,8 @@ async function approveAllPendingSolutions(adminId: string) {
       approved++;
       results.push({ id: solution.id, title: solution.title, status: 'approved' });
     } catch (error) {
-      console.error(`批准方案 ${solution.id} 失败:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`批准方案 ${solution.id} 失败:`, error);};
       results.push({ id: solution.id, title: solution.title, status: 'failed', error: error instanceof Error ? error.message : '未知错误' });
     }
   }
@@ -252,7 +254,8 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
       rejected++;
       results.push({ id: solution.id, title: solution.title, status: 'rejected' });
     } catch (error) {
-      console.error(`拒绝方案 ${solution.id} 失败:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`拒绝方案 ${solution.id} 失败:`, error);};
       results.push({ id: solution.id, title: solution.title, status: 'failed', error: error instanceof Error ? error.message : '未知错误' });
     }
   }
@@ -484,7 +487,8 @@ async function sendBulkNotification(params: any) {
       console.log(`发送通知给用户 ${user.user_id} (${user.display_name}): ${message}`);
       sent++;
     } catch (error) {
-      console.error(`发送通知给用户 ${user.user_id} 失败:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`发送通知给用户 ${user.user_id} 失败:`, error);};
     }
   }
 

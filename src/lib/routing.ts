@@ -4,6 +4,10 @@
  */
 
 // 支持的locale类型
+// React Hook - 用于组件中的路由生成
+import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
+
 export type SupportedLocale = 'zh-CN' | 'en-US';
 
 // 应用配置
@@ -336,10 +340,6 @@ export class RoutingUtils {
     }
   }
 }
-
-// React Hook - 用于组件中的路由生成
-import { useLocale } from 'next-intl';
-import { usePathname } from 'next/navigation';
 
 /**
  * useRouting Hook 返回类型

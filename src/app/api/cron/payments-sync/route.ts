@@ -11,6 +11,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -43,7 +44,8 @@ export async function GET(request: NextRequest) {
       '定时同步完成'
     );
   } catch (error: unknown) {
-    console.error('定时同步支付状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('定时同步支付状态失败:', error);}
     return createErrorResponse(
       '定时同步失败',
       500,

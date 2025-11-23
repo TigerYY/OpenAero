@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
-
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
+import { prisma } from '@/lib/prisma';
 import { compareVersions } from '@/lib/solution-version';
 
 // GET /api/solutions/[id]/versions/compare?v1=1&v2=2 - 比较两个版本
@@ -60,7 +59,8 @@ export async function GET(
     
     return NextResponse.json({ comparison });
   } catch (error) {
-    console.error('版本比较失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('版本比较失败:', error);}
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }

@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取安全警报失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取安全警报失败:', error);}
     return NextResponse.json(
       { error: '获取安全警报失败' },
       { status: 500 }
@@ -76,7 +77,8 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('标记警报失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('标记警报失败:', error);}
     return NextResponse.json(
       { error: '标记警报失败' },
       { status: 500 }

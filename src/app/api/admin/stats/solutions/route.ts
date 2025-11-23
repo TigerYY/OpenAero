@@ -149,7 +149,8 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('获取方案统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取方案统计失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取方案统计失败' },
       { status: 500 }

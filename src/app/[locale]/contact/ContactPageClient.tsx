@@ -1,12 +1,12 @@
 'use client';
-import { useRouting } from '@/lib/routing';
 
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import ContactForm from '@/components/forms/ContactForm';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useRouting } from '@/lib/routing';
 
 export default function ContactPageClient() {
   const t = useTranslations('contact');

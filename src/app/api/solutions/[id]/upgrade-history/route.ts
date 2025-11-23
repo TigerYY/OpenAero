@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
+
+import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 
 interface RouteParams {
   params: {
@@ -114,7 +115,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })),
     }, '升级历史获取成功');
   } catch (error) {
-    console.error('获取升级历史失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取升级历史失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('获取升级历史失败'),
       500

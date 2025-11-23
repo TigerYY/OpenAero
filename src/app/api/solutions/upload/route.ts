@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { fileService } from '@/backend/file/file.service';
+import { logAuditAction, createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
-import { logAuditAction, createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 
 // POST /api/solutions/upload - 上传方案相关文件
 export async function POST(request: NextRequest) {
@@ -130,7 +130,8 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (error: any) {
-        console.error(`文件上传失败: ${file.name}`, error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`文件上传失败: ${file.name}`, error);};
         errors.push({
           filename: file.name,
           error: error.message || '上传失败'
@@ -147,7 +148,8 @@ export async function POST(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined
     }, '文件上传成功');
   } catch (error) {
-    console.error('文件上传失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('文件上传失败:', error);}
     return createErrorResponse('文件上传失败', 500);
   }
 }
@@ -210,7 +212,8 @@ export async function DELETE(request: NextRequest) {
 
     return createSuccessResponse(null, '删除文件成功');
   } catch (error) {
-    console.error('删除文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除文件失败:', error);}
     return createErrorResponse('删除文件失败', 500);
   }
 }

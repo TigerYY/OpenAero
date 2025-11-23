@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
   ArrowLeft,
   CheckCircle,
@@ -15,22 +17,26 @@ import {
   Star,
   AlertCircle,
 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AdminRoute } from '@/components/auth/ProtectedRoute';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
-import { Label } from '@/components/ui/Label';
-import { Textarea } from '@/components/ui/Textarea';
-import { Input } from '@/components/ui/Input';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { BomList, BomListItem } from '@/components/solutions';
 import { ReviewHistory, ReviewRecord } from '@/components/solutions/ReviewHistory';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Textarea } from '@/components/ui/Textarea';
 import { useRouting } from '@/lib/routing';
+import { SolutionStatus } from '@/shared/types/solutions';
 import { getStatusText, getStatusColor } from '@/lib/solution-status-workflow';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface SolutionAsset {
   id: string;
@@ -66,7 +72,7 @@ function AdminSolutionDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { route, routes } = useRouting();
-  const solutionId = params.id as string;
+  const solutionId = (params?.id as string) || '';
 
   const [solution, setSolution] = useState<Solution | null>(null);
   const [reviewHistory, setReviewHistory] = useState<ReviewRecord[]>([]);
@@ -112,7 +118,8 @@ function AdminSolutionDetailContent() {
         setError(result.error || '获取方案详情失败');
       }
     } catch (err) {
-      console.error('获取方案详情错误:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案详情错误:', err);}
       setError('获取方案详情失败');
     } finally {
       setLoading(false);
@@ -132,7 +139,8 @@ function AdminSolutionDetailContent() {
         }
       }
     } catch (err) {
-      console.error('获取审核历史错误:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取审核历史错误:', err);}
     }
   };
 
@@ -193,7 +201,8 @@ function AdminSolutionDetailContent() {
         throw new Error(result.error || '审核失败');
       }
     } catch (err) {
-      console.error('审核错误:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('审核错误:', err);}
       toast.error(err instanceof Error ? err.message : '审核失败，请重试');
     } finally {
       setSubmitting(false);
@@ -281,8 +290,8 @@ function AdminSolutionDetailContent() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold text-gray-900">{solution.title}</h1>
-                <Badge className={getStatusColor(solution.status)}>
-                  {getStatusText(solution.status)}
+                <Badge className={getStatusColor(solution.status as SolutionStatus)}>
+                  {getStatusText(solution.status as SolutionStatus)}
                 </Badge>
               </div>
               <p className="text-gray-600 mb-4">{solution.description}</p>
@@ -715,11 +724,13 @@ function AdminSolutionDetailContent() {
                 </DialogTitle>
               </DialogHeader>
               <div className="relative">
-                <img
-                  src={imageAssets[selectedImageIndex].url}
-                  alt={imageAssets[selectedImageIndex].title || `图片 ${selectedImageIndex + 1}`}
-                  className="w-full h-auto rounded-lg"
-                />
+                {imageAssets[selectedImageIndex] && (
+                  <img
+                    src={imageAssets[selectedImageIndex].url}
+                    alt={imageAssets[selectedImageIndex].title || `图片 ${selectedImageIndex + 1}`}
+                    className="w-full h-auto rounded-lg"
+                  />
+                )}
                 {imageAssets.length > 1 && (
                   <>
                     <Button
@@ -739,7 +750,7 @@ function AdminSolutionDetailContent() {
                   </>
                 )}
               </div>
-              {imageAssets[selectedImageIndex].description && (
+              {imageAssets[selectedImageIndex]?.description && (
                 <p className="text-sm text-gray-600 mt-4">
                   {imageAssets[selectedImageIndex].description}
                 </p>

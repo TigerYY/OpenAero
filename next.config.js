@@ -26,13 +26,18 @@ const nextConfig = {
     // instrumentationHook: true,
   },
   
+  
   // TypeScript配置
   typescript: {
+    // ⚠️ 暂时允许构建时忽略类型错误，以便测试部署流程
+    // TODO: 修复所有类型错误后，改回 false
     ignoreBuildErrors: true,
   },
   
   // ESLint配置
   eslint: {
+    // ⚠️ 暂时允许构建时忽略 ESLint 错误，以便测试部署流程
+    // TODO: 修复所有 ESLint 错误后，改回 false
     ignoreDuringBuilds: true,
   },
   
@@ -61,7 +66,7 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'openaero-build-' + Date.now();
   },
-
+  
   // 压缩
   compress: true,
 

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
 import { supabaseBrowser as supabase } from '@/lib/auth/supabase-client';
 
 /**
@@ -78,7 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (apiError) {
-        console.warn('API 获取用户资料失败，尝试直接查询:', apiError);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('API 获取用户资料失败，尝试直接查询:', apiError);}
       }
 
       // 回退到直接查询 Supabase
@@ -89,11 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.error('获取用户资料失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取用户资料失败:', error);}
         
         // 如果是"未找到记录"错误，尝试通过 API 创建
         if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
-          console.log('未找到用户profile，尝试通过 API 创建...');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('未找到用户profile，尝试通过 API 创建...');}
           
           // 尝试通过 API 创建（如果 API 支持自动创建）
           // 或者尝试直接创建
@@ -111,7 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .single();
 
             if (createError) {
-              console.error('创建用户profile失败:', createError);
+              if (process.env.NODE_ENV === 'development') {
+                console.error('创建用户profile失败:', createError);}
               // 不设置为 null，让页面显示友好的错误提示
               // setProfile(null);
             } else if (newProfile) {
@@ -119,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setProfile(newProfile as UserProfile);
             }
           } catch (createErr) {
-            console.error('创建用户profile异常:', createErr);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('创建用户profile异常:', createErr);}
           }
         } else {
           // 其他错误（如权限问题），不设置为 null，让页面显示错误提示
@@ -135,7 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('用户profile数据为空');
       }
     } catch (error) {
-      console.error('获取用户资料异常:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取用户资料异常:', error);}
       // 不设置为 null，让页面显示友好的错误提示
     }
   };
@@ -148,12 +155,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('[AuthContext.refreshProfile] 开始刷新 profile, user:', user?.id);
     
     if (!user) {
-      console.log('[AuthContext.refreshProfile] 无用户，跳过');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthContext.refreshProfile] 无用户，跳过');}
       return;
     }
     
     try {
-      console.log('[AuthContext.refreshProfile] 调用 /api/users/me...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthContext.refreshProfile] 调用 /api/users/me...');}
       
       // 优先使用 API 端点获取完整用户信息（包含 phone 等字段）
       const response = await fetch('/api/users/me', {
@@ -164,7 +173,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[AuthContext.refreshProfile] 响应数据:', data);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AuthContext.refreshProfile] 响应数据:', data);}
         
         if (data.success && data.data) {
           // 更新 user 和 profile
@@ -172,7 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('[AuthContext.refreshProfile] 更新 profile:', data.data.profile);
             setProfile(data.data.profile as UserProfile);
           } else {
-            console.log('[AuthContext.refreshProfile] 响应中没有 profile');
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[AuthContext.refreshProfile] 响应中没有 profile');}
           }
           // 注意: user 对象来自 Supabase Auth，不能直接更新
           // phone 等信息需要从 data.data.phone 获取，但这里我们主要更新 profile
@@ -222,7 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }),
           });
         } catch (syncError) {
-          console.warn('同步 session 到 cookies 失败:', syncError);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('同步 session 到 cookies 失败:', syncError);}
           // 不阻止登录流程，继续执行
         }
         
@@ -248,11 +260,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   ) => {
     try {
-      console.log('[AuthContext.signUp] 开始调用 Supabase Auth:', {
-        email,
-        metadata,
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/welcome`,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthContext.signUp] 开始调用 Supabase Auth:', {
+          email,
+          metadata,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/welcome`,
+        });};
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -263,21 +276,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      console.log('[AuthContext.signUp] Supabase 响应:', {
-        hasData: !!data,
-        hasUser: !!data?.user,
-        hasSession: !!data?.session,
-        hasError: !!error,
-        error: error,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthContext.signUp] Supabase 响应:', {
+          hasData: !!data,
+          hasUser: !!data?.user,
+          hasSession: !!data?.session,
+          hasError: !!error,
+          error: error,
+        });};
 
       if (error) {
-        console.error('[AuthContext.signUp] 注册错误:', {
-          message: error.message,
-          status: error.status,
-          name: error.name,
-          error: error,
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[AuthContext.signUp] 注册错误:', {
+            message: error.message,
+            status: error.status,
+            name: error.name,
+            error: error,
+          });};
         return { error };
       }
 
@@ -289,7 +304,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      console.error('[AuthContext.signUp] 注册异常:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[AuthContext.signUp] 注册异常:', error);}
       return { error: error as Error };
     }
   };
@@ -304,7 +320,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setSession(null);
     } catch (error) {
-      console.error('登出失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('登出失败:', error);}
     }
   };
 
@@ -365,7 +382,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }),
       });
     } catch (error) {
-      console.warn('同步 session 到 cookies 失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('同步 session 到 cookies 失败:', error);}
     }
   };
 
@@ -383,20 +401,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await syncSessionToCookies(session);
           } catch (syncError) {
-            console.warn('同步 session 到 cookies 失败:', syncError);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('同步 session 到 cookies 失败:', syncError);}
           }
           // 获取用户资料（不阻塞 loading 状态）
           fetchUserProfile(session.user.id).catch((profileError) => {
-            console.error('获取用户资料失败:', profileError);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('获取用户资料失败:', profileError);}
           });
         }
       } catch (error) {
-        console.error('处理会话时出错:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('处理会话时出错:', error);}
       } finally {
         setLoading(false);
       }
     }).catch((error) => {
-      console.error('获取会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取会话失败:', error);}
       setLoading(false);
     });
 
@@ -413,17 +435,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await syncSessionToCookies(session);
           } catch (syncError) {
-            console.warn('同步 session 到 cookies 失败:', syncError);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('同步 session 到 cookies 失败:', syncError);}
           }
           // 获取用户资料（不阻塞 loading 状态）
           fetchUserProfile(session.user.id).catch((profileError) => {
-            console.error('获取用户资料失败:', profileError);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('获取用户资料失败:', profileError);}
           });
         } else {
           setProfile(null);
         }
       } catch (error) {
-        console.error('处理认证状态变化时出错:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('处理认证状态变化时出错:', error);}
       } finally {
         setLoading(false);
       }

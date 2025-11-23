@@ -22,10 +22,12 @@ export function verifyAlipaySignature(
     if (!publicKey) {
       const isDevelopment = process.env.NODE_ENV === 'development';
       if (isDevelopment) {
-        console.warn('支付宝公钥未配置，在开发环境中跳过签名验证');
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('支付宝公钥未配置，在开发环境中跳过签名验证');}
         return true;
       }
-      console.error('支付宝公钥未配置，无法验证签名');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('支付宝公钥未配置，无法验证签名');}
       return false;
     }
 
@@ -58,7 +60,8 @@ export function verifyAlipaySignature(
 
     return verify.verify(publicKeyPEM, sign, 'base64');
   } catch (error) {
-    console.error('支付宝签名验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('支付宝签名验证失败:', error);}
     return false;
   }
 }

@@ -66,7 +66,8 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('邮件发送成功:', info.messageId);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('邮件发送成功:', info.messageId);}
     return true;
   } catch (error) {
     console.error('邮件发送失败:', error);

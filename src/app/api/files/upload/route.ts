@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('文件上传失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('文件上传失败:', error);}
     return NextResponse.json(
       { 
         error: '文件上传失败',

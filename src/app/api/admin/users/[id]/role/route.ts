@@ -3,6 +3,10 @@
  * PATCH /api/admin/users/[id]/role - 更新用户角色
  */
 
+import { PrismaClient } from '@prisma/client';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -11,9 +15,6 @@ import {
   requireAdminAuth,
 } from '@/lib/api-helpers';
 import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
-import { PrismaClient } from '@prisma/client';
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -33,42 +34,48 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log('[PATCH /users/[id]/role] 开始处理角色更新请求, userId:', params.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PATCH /users/[id]/role] 开始处理角色更新请求, userId:', params.id);}
     
     const authResult = await requireAdminAuth(request);
     if (!authResult.success) {
-      console.log('[PATCH /users/[id]/role] 认证失败:', authResult.response?.status);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PATCH /users/[id]/role] 认证失败:', authResult.response?.status);}
       return authResult.response;
     }
 
     const adminUser = authResult.user;
     const userId = params.id;
     
-    console.log('[PATCH /users/[id]/role] 认证成功:', {
-      adminId: adminUser.id,
-      adminRoles: adminUser.roles,
-      targetUserId: userId
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PATCH /users/[id]/role] 认证成功:', {
+        adminId: adminUser.id,
+        adminRoles: adminUser.roles,
+        targetUserId: userId
+      });};
 
     const body = await request.json();
-    console.log('[PATCH /users/[id]/role] 请求体:', body);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PATCH /users/[id]/role] 请求体:', body);}
     
     const validationResult = updateRoleSchema.safeParse(body);
 
     if (!validationResult.success) {
-      console.log('[PATCH /users/[id]/role] 验证失败:', validationResult.error.errors);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PATCH /users/[id]/role] 验证失败:', validationResult.error.errors);}
       return createValidationErrorResponse(validationResult.error);
     }
 
     const { roles, role, reason } = validationResult.data;
     const rolesToSet = roles || (role ? [role] : []);
     
-    console.log('[PATCH /users/[id]/role] 解析后的角色:', {
-      roles,
-      role,
-      rolesToSet,
-      reason
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PATCH /users/[id]/role] 解析后的角色:', {
+        roles,
+        role,
+        rolesToSet,
+        reason
+      });};
     
     const supabase = createSupabaseAdmin();
 
@@ -97,19 +104,21 @@ export async function PATCH(
       return createErrorResponse('无权修改超级管理员角色', 403);
     }
     if (rolesToSet.includes('SUPER_ADMIN') && !adminRoles.includes('SUPER_ADMIN')) {
-      console.warn('[PATCH /users/[id]/role] 无权将用户设置为超级管理员:', {
-        targetUserId: userId,
-        newRoles: rolesToSet,
-        adminRoles
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[PATCH /users/[id]/role] 无权将用户设置为超级管理员:', {
+          targetUserId: userId,
+          newRoles: rolesToSet,
+          adminRoles
+        });};
       return createErrorResponse('无权将用户设置为超级管理员', 403);
     }
     if (userId === adminUser.id && !adminRoles.includes('SUPER_ADMIN')) {
-      console.warn('[PATCH /users/[id]/role] 不能修改自己的角色:', {
-        targetUserId: userId,
-        adminId: adminUser.id,
-        adminRoles
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[PATCH /users/[id]/role] 不能修改自己的角色:', {
+          targetUserId: userId,
+          adminId: adminUser.id,
+          adminRoles
+        });};
       return createErrorResponse('不能修改自己的角色', 400);
     }
 
@@ -146,11 +155,13 @@ export async function PATCH(
     );
 
   } catch (error: unknown) {
-    console.error('[PATCH /users/[id]/role] 更新用户角色时出错:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[PATCH /users/[id]/role] 更新用户角色时出错:', error);}
     const errorDetails = error instanceof Error 
       ? { name: error.name, message: error.message, stack: error.stack } 
       : { error: String(error) };
-    console.error('[PATCH /users/[id]/role] 错误详情:', errorDetails);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[PATCH /users/[id]/role] 错误详情:', errorDetails);}
     return createErrorResponse(
       '更新用户角色失败',
       500,

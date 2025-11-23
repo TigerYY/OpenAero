@@ -4,10 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+import { ApiResponse } from '@/types';
+
 import { AuthService } from './auth/auth-service';
 import { authenticateRequest } from './auth-helpers';
-import { ApiResponse } from '@/types';
-import { z } from 'zod';
 
 /**
  * 从请求中提取IP地址
@@ -76,7 +78,8 @@ export async function requireAdminAuth(
       { success: false, error: '未授权访问' },
       { status: 401 }
     );
-    console.log('[requireAdminAuth] 认证失败，返回错误响应');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[requireAdminAuth] 认证失败，返回错误响应');}
     return {
       success: false,
       response: errorResponse,
@@ -92,7 +95,8 @@ export async function requireAdminAuth(
 
   // 检查管理员权限（包括 ADMIN 和 SUPER_ADMIN）
   if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
-    console.log('[requireAdminAuth] 权限不足，当前角色:', userRoles);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[requireAdminAuth] 权限不足，当前角色:', userRoles);}
     const errorResponse = NextResponse.json(
       { success: false, error: '权限不足，需要管理员权限' },
       { status: 403 }
@@ -104,10 +108,11 @@ export async function requireAdminAuth(
     };
   }
 
-  console.log('[requireAdminAuth] 权限验证成功:', {
-    userId: authResult.user.id,
-    roles: userRoles,
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[requireAdminAuth] 权限验证成功:', {
+      userId: authResult.user.id,
+      roles: userRoles,
+    });};
 
   return {
     success: true,

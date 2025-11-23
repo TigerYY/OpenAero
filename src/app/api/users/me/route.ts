@@ -5,14 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService, getServerUserFromRequest, getServerExtendedUserFromRequest } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { AuthService, getServerUserFromRequest, getServerExtendedUserFromRequest } from '@/lib/auth/auth-service';
 
 // 更新用户信息验证 schema
 const updateProfileSchema = z.object({
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('未授权访问', 401);
     }
 
-    console.log('[API /users/me] 用户已认证:', user.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /users/me] 用户已认证:', user.id);}
 
     // 获取扩展用户信息
     let extendedUser = await getServerExtendedUserFromRequest(request);
@@ -74,7 +76,8 @@ export async function GET(request: NextRequest) {
         });
 
         if (!createError) {
-          console.log('[API /users/me] Profile 创建成功，重新获取...');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[API /users/me] Profile 创建成功，重新获取...');}
           // 重新获取用户信息
           extendedUser = await getServerExtendedUserFromRequest(request);
           console.log('[API /users/me] 重新获取后 hasProfile:', !!extendedUser?.profile);
@@ -89,19 +92,23 @@ export async function GET(request: NextRequest) {
             });
           }
         } else {
-          console.error('[API /users/me] 创建 profile 失败:', createError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[API /users/me] 创建 profile 失败:', createError);}
         }
       } catch (createErr) {
-        console.error('[API /users/me] 创建 profile 异常:', createErr);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[API /users/me] 创建 profile 异常:', createErr);}
       }
     }
 
     if (!extendedUser) {
-      console.log('[API /users/me] extendedUser 为 null');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API /users/me] extendedUser 为 null');}
       return createErrorResponse('用户信息不存在', 404);
     }
 
-    console.log('[API /users/me] 返回用户信息');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /users/me] 返回用户信息');}
     return createSuccessResponse(extendedUser, '获取用户信息成功');
   } catch (error: unknown) {
     console.error('[API /users/me] 异常:', error);
@@ -201,10 +208,11 @@ export async function PATCH(request: NextRequest) {
       
       const { error } = await AuthService.updateProfile(user.id, profileUpdates);
       
-      console.log('[API /users/me PATCH] 更新结果:', {
-        success: !error,
-        error: error?.message,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API /users/me PATCH] 更新结果:', {
+          success: !error,
+          error: error?.message,
+        });};
       
       if (error) {
         await logAuditAction(request, {
@@ -221,9 +229,11 @@ export async function PATCH(request: NextRequest) {
         return createErrorResponse(error.message, 400);
       }
       
-      console.log('[API /users/me PATCH] Profile 更新成功');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API /users/me PATCH] Profile 更新成功');}
     } else {
-      console.log('[API /users/me PATCH] 没有 profile 字段需要更新');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API /users/me PATCH] 没有 profile 字段需要更新');}
     }
 
     // 更新 auth.users 的 phone（如果提供）
@@ -288,7 +298,8 @@ export async function PATCH(request: NextRequest) {
 
     return createSuccessResponse(updatedUser, '用户信息更新成功');
   } catch (error: unknown) {
-    console.error('Update user error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Update user error:', error);}
     return createErrorResponse(
       '更新用户信息失败',
       500,

@@ -3,10 +3,12 @@
  * 基于 Supabase Auth 的完整用户认证系统
  */
 
-import { supabaseBrowser, createSupabaseAdmin, createSupabaseServer, type UserProfile, type ExtendedUser } from './supabase-client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
+
 import { convertSnakeToCamel } from '../field-mapper';
+
+import { supabaseBrowser, createSupabaseAdmin, createSupabaseServer, type UserProfile, type ExtendedUser } from './supabase-client';
 
 // ============================================
 // 认证服务类
@@ -154,17 +156,20 @@ export class AuthService {
     try {
       const supabaseAdmin = createSupabaseAdmin();
       
-      console.log('[getExtendedUser] 开始获取用户信息:', userId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getExtendedUser] 开始获取用户信息:', userId);}
       
       // 获取 auth.users 信息
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
       
       if (userError || !userData.user) {
-        console.error('[getExtendedUser] 获取 auth.users 失败:', userError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getExtendedUser] 获取 auth.users 失败:', userError);}
         return null;
       }
       
-      console.log('[getExtendedUser] 成功获取 auth.users');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getExtendedUser] 成功获取 auth.users');}
 
       // 获取 user_profiles 信息
       const { data: profileData, error: profileError } = await supabaseAdmin
@@ -174,15 +179,17 @@ export class AuthService {
         .single();
 
       if (profileError) {
-        console.error('[getExtendedUser] 获取 user_profiles 失败:', {
-          error: profileError,
-          code: profileError.code,
-          message: profileError.message,
-          details: profileError.details,
-          hint: profileError.hint,
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getExtendedUser] 获取 user_profiles 失败:', {
+            error: profileError,
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+          });};
       } else {
-        console.log('[getExtendedUser] 成功获取 user_profiles:', profileData ? 'exists' : 'null');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[getExtendedUser] 成功获取 user_profiles:', profileData ? 'exists' : 'null');}
       }
 
       // 如果是创作者，获取创作者资料（支持多角色）
@@ -214,7 +221,8 @@ export class AuthService {
         creatorProfile: convertedCreatorProfile,
       };
     } catch (error) {
-      console.error('Failed to get extended user:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to get extended user:', error);}
       return null;
     }
   }
@@ -232,7 +240,8 @@ export class AuthService {
         updated_at: new Date().toISOString(),
       };
       
-      console.log('[AuthService.updateProfile] 更新数据:', { userId, updateData });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthService.updateProfile] 更新数据:', { userId, updateData });};
       
       const { data: result, error } = await supabaseAdmin
         .from('user_profiles')
@@ -241,7 +250,8 @@ export class AuthService {
         .select()
         .single();
       
-      console.log('[AuthService.updateProfile] 更新结果:', { result, error });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AuthService.updateProfile] 更新结果:', { result, error });};
 
       return { error };
     } catch (error) {
@@ -314,7 +324,8 @@ export class AuthService {
         .update({ last_login_at: new Date().toISOString() })
         .eq('user_id', userId);
     } catch (error) {
-      console.error('Failed to update last login:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to update last login:', error);}
     }
   }
 
@@ -372,7 +383,8 @@ export class AuthService {
 
       return roles.some(role => userRoles.includes(role));
     } catch (error) {
-      console.error('Failed to check role:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to check role:', error);}
       return false;
     }
   }
@@ -448,7 +460,8 @@ export class AuthService {
         error_message: data.error_message,
       });
     } catch (error) {
-      console.error('Failed to create audit log:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to create audit log:', error);}
     }
   }
 }
@@ -484,9 +497,11 @@ export async function getServerUserFromRequest(request: NextRequest): Promise<Us
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
-      console.error('[getServerUserFromRequest] 获取 session 失败:', sessionError.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getServerUserFromRequest] 获取 session 失败:', sessionError.message);}
     } else if (sessionData?.session?.user) {
-      console.log('[getServerUserFromRequest] 通过 session 成功获取用户:', sessionData.session.user.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getServerUserFromRequest] 通过 session 成功获取用户:', sessionData.session.user.id);}
       return sessionData.session.user;
     }
     
@@ -494,16 +509,19 @@ export async function getServerUserFromRequest(request: NextRequest): Promise<Us
     const { data, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.error('[getServerUserFromRequest] 获取用户失败:', error.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getServerUserFromRequest] 获取用户失败:', error.message);}
       return null;
     }
     
     if (!data.user) {
-      console.warn('[getServerUserFromRequest] 用户数据为空');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[getServerUserFromRequest] 用户数据为空');}
       return null;
     }
     
-    console.log('[getServerUserFromRequest] 成功获取用户:', data.user.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[getServerUserFromRequest] 成功获取用户:', data.user.id);}
     return data.user;
   } catch (error) {
     console.error('[getServerUserFromRequest] 异常:', error);

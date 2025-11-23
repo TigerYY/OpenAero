@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
 
 import { requireCreatorAuth } from '@/lib/api-helpers';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取最近方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取最近方案失败:', error);}
     
     return NextResponse.json(
       { error: '获取最近方案失败' },

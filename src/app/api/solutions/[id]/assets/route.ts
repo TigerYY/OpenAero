@@ -1,10 +1,13 @@
+import { createHash } from 'crypto';
+
+import { SolutionFileType } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createHash } from 'crypto';
+
+import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
-import { SolutionFileType } from '@prisma/client';
+
 
 interface RouteParams {
   params: {
@@ -139,7 +142,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       '资产添加成功'
     );
   } catch (error) {
-    console.error('添加资产失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('添加资产失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);
@@ -224,7 +228,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       '获取资产列表成功'
     );
   } catch (error) {
-    console.error('获取资产列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取资产列表失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('获取资产列表失败'),
       500
@@ -310,7 +315,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return createSuccessResponse(null, '资产删除成功');
   } catch (error) {
-    console.error('删除资产失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除资产失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('删除资产失败'),
       500

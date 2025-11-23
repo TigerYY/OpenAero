@@ -2,8 +2,8 @@
 
 import { Metadata } from 'next';
 
-import { SecurityAlertNotification } from '@/components/security/SecurityAlerts';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { SecurityAlertNotification } from '@/components/security/SecurityAlerts';
 
 export const metadata: Metadata = {
   title: '安全警报 | OpenAero',

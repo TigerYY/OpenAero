@@ -1,13 +1,15 @@
-import { NextRequest } from 'next/server';
 import { OrderStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getOrderById, updateOrderStatus, cancelOrder } from '@/lib/order';
-import { z } from 'zod';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +49,8 @@ export async function GET(
 
     return createSuccessResponse(order, '获取订单详情成功');
   } catch (error) {
-    console.error('获取订单详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取订单详情失败:', error);}
     return createErrorResponse(
       '获取订单详情失败',
       500,
@@ -133,7 +136,8 @@ export async function PUT(
 
     return createSuccessResponse(updatedOrder, '订单状态更新成功');
   } catch (error) {
-    console.error('更新订单状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新订单状态失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '更新订单状态失败',
       500,
@@ -185,7 +189,8 @@ export async function DELETE(
 
     return createSuccessResponse(cancelledOrder, '订单取消成功');
   } catch (error) {
-    console.error('取消订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('取消订单失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '取消订单失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,

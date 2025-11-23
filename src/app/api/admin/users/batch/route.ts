@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -12,9 +13,8 @@ import {
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { createSupabaseServer , createSupabaseAdmin } from '@/lib/auth/supabase-client';
 import { prisma } from '@/lib/prisma';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
-import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,7 +125,8 @@ export async function POST(request: NextRequest) {
       .in('user_id', userIds);
 
     if (updateError) {
-      console.error('批量更新用户失败:', updateError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('批量更新用户失败:', updateError);}
       await logAuditAction(request, {
         userId: adminUser.id,
         action: 'BATCH_UPDATE_USERS_FAILED',
@@ -151,7 +152,8 @@ export async function POST(request: NextRequest) {
         for (const userId of userIds) {
           const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId);
           if (signOutError) {
-            console.error(`使用户 ${userId} 会话失效失败:`, signOutError);
+            if (process.env.NODE_ENV === 'development') {
+              console.error(`使用户 ${userId} 会话失效失败:`, signOutError);};
             // 不阻止批量更新，只记录错误
           }
         }
@@ -184,7 +186,8 @@ export async function POST(request: NextRequest) {
       `成功批量操作 ${userIds.length} 个用户`
     );
   } catch (error) {
-    console.error('批量操作用户失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('批量操作用户失败:', error);}
     return createErrorResponse(
       '批量操作用户失败',
       500,

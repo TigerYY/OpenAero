@@ -4,8 +4,10 @@
  * PUT /api/admin/solutions/[id]/review - 完成审核
  */
 
+import { ReviewDecision } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   requireAdminAuth,
   requireReviewerAuth,
@@ -15,7 +17,6 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { startReview, completeReview, getSolutionReviewHistory } from '@/lib/solution-review';
-import { ReviewDecision } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,8 @@ export async function POST(
 
     return createSuccessResponse(review, '审核已开始', 201);
   } catch (error) {
-    console.error('开始审核失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('开始审核失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '开始审核失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,
@@ -224,7 +226,8 @@ export async function GET(
 
     return createSuccessResponse(formattedHistory, '获取审核历史成功');
   } catch (error) {
-    console.error('获取审核历史失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取审核历史失败:', error);}
     const errorMessage = error instanceof Error ? error.message : '获取审核历史失败';
     const errorDetails = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : undefined;
     return createErrorResponse(errorMessage, 500, errorDetails);

@@ -3,8 +3,9 @@
  * 用于自动创建和管理 CreatorProfile
  */
 
-import { prisma } from '@/lib/prisma';
 import { VerificationStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 /**
  * 确保用户有 CreatorProfile
@@ -58,7 +59,8 @@ export async function ensureCreatorProfile(userId: string) {
       },
     });
 
-    console.log(`[ensureCreatorProfile] 自动创建 CreatorProfile for user ${userId}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ensureCreatorProfile] 自动创建 CreatorProfile for user ${userId}`);};
   }
 
   return creatorProfile;

@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -7,6 +11,7 @@ import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
 import { FileUpload } from '@/components/ui/FileUpload';
+import { useRouting } from '@/lib/routing';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
 
 interface SolutionFormData {
@@ -101,7 +106,8 @@ export default function EditSolutionPage() {
         bom: data.bom || [],
       });
     } catch (error) {
-      console.error('获取方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案失败:', error);}
       alert('获取方案失败，请重试');
     } finally {
       setLoading(false);
@@ -194,7 +200,8 @@ export default function EditSolutionPage() {
       alert(status === 'draft' ? '方案已保存为草稿' : '方案已提交审核');
       router.push(route('/solutions/manage'));
     } catch (error) {
-      console.error('更新方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新方案失败:', error);}
       alert(error instanceof Error ? error.message : '更新方案失败，请重试');
     } finally {
       setSaving(false);

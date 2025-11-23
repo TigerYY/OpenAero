@@ -1,8 +1,5 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -18,9 +15,13 @@ import {
   Home,
   CheckCircle
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ReactNode, useState } from 'react';
+
+import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouting } from '@/lib/routing';
-import { Button } from '@/components/ui/Button';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -87,7 +88,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     try {
       await signOut();
     } catch (error) {
-      console.error('退出登录失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('退出登录失败:', error);}
     }
   };
 

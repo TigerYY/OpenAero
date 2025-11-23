@@ -64,7 +64,8 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
         setUnreadCount(data.unreadCount || 0);
       }
     } catch (error) {
-      console.error('加载通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载通知失败:', error);}
     }
   };
 
@@ -85,7 +86,8 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('标记通知为已读失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('标记通知为已读失败:', error);}
     }
   };
 
@@ -102,7 +104,8 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
         setUnreadCount(0);
       }
     } catch (error) {
-      console.error('标记所有通知为已读失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('标记所有通知为已读失败:', error);}
     }
   };
 
@@ -121,7 +124,8 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
         }
       }
     } catch (error) {
-      console.error('删除通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除通知失败:', error);}
     }
   };
 
@@ -136,7 +140,8 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
         setUnreadCount(0);
       }
     } catch (error) {
-      console.error('清空通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('清空通知失败:', error);}
     }
   };
 

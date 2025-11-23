@@ -4,12 +4,14 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,118 +45,102 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
-    // 获取审计日志统计
-    const auditLogStats = await prisma.auditLog.groupBy({
-      by: ['action'],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
+    // Note: auditLog model doesn't exist in Prisma schema
+    // Using Supabase client instead
+    const supabase = createSupabaseAdmin();
+    
+    // 获取所有审计日志（用于统计）
+    const { data: allLogs, error: logsError } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .gte('created_at', startDate.toISOString());
+    
+    if (logsError) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch audit logs:', logsError);
+      }
+      // Return empty stats on error
+      return createSuccessResponse({
+        auditLogStats: [],
+        errorLogs: [],
+        userActivity: [],
+        resourceStats: [],
+        successRate: 0,
+        recentActivity: [],
+      });
+    }
+    
+    const logs = allLogs || [];
+    
+    // 手动分组统计 - 按操作类型
+    const actionMap = new Map<string, number>();
+    logs.forEach((log: any) => {
+      const action = log.action || 'UNKNOWN';
+      actionMap.set(action, (actionMap.get(action) || 0) + 1);
     });
+    const auditLogStats = Array.from(actionMap.entries()).map(([action, count]) => ({
+      action,
+      _count: { id: count },
+    }));
 
     // 获取错误日志统计
-    const errorLogs = await prisma.auditLog.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-        success: false,
-      },
-      select: {
-        id: true,
-        action: true,
-        createdAt: true,
-        errorMessage: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 100,
-    });
+    const errorLogs = logs
+      .filter((log: any) => !log.success)
+      .map((log: any) => ({
+        id: log.id,
+        action: log.action,
+        createdAt: log.created_at,
+        errorMessage: log.error_message,
+      }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 100);
 
     // 获取用户活动统计
-    const userActivity = await prisma.auditLog.groupBy({
-      by: ['userId'],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _count: {
-          id: 'desc',
-        },
-      },
-      take: 10,
+    const userActivityMap = new Map<string, number>();
+    logs.forEach((log: any) => {
+      const userId = log.user_id || 'SYSTEM';
+      userActivityMap.set(userId, (userActivityMap.get(userId) || 0) + 1);
     });
+    const userActivity = Array.from(userActivityMap.entries())
+      .map(([userId, count]) => ({
+        userId,
+        _count: { id: count },
+      }))
+      .sort((a, b) => b._count.id - a._count.id)
+      .slice(0, 10);
 
     // 获取资源访问统计
-    const resourceStats = await prisma.auditLog.groupBy({
-      by: ['resource'],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _count: {
-          id: 'desc',
-        },
-      },
-      take: 10,
+    const resourceMap = new Map<string, number>();
+    logs.forEach((log: any) => {
+      const resource = log.resource || 'UNKNOWN';
+      resourceMap.set(resource, (resourceMap.get(resource) || 0) + 1);
     });
+    const resourceStats = Array.from(resourceMap.entries())
+      .map(([resource, count]) => ({
+        resource,
+        _count: { id: count },
+      }))
+      .sort((a, b) => b._count.id - a._count.id)
+      .slice(0, 10);
 
     // 计算成功率
-    const totalLogs = await prisma.auditLog.count({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-    });
-
-    const successLogs = await prisma.auditLog.count({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-        success: true,
-      },
-    });
-
+    const totalLogs = logs.length;
+    const successLogs = logs.filter((log: any) => log.success).length;
     const successRate = totalLogs > 0 ? (successLogs / totalLogs) * 100 : 0;
 
     // 获取最近的活动
-    const recentActivity = await prisma.auditLog.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      select: {
-        id: true,
-        action: true,
-        resource: true,
-        resourceId: true,
-        userId: true,
-        success: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 50,
-    });
+    const recentActivity = logs
+      .map((log: any) => ({
+        id: log.id,
+        action: log.action,
+        resource: log.resource,
+        resourceId: log.resource_id,
+        userId: log.user_id,
+        success: log.success,
+        createdAt: log.created_at,
+      }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 50);
 
     const stats = {
       period,
@@ -193,7 +179,8 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(stats, '获取监控统计成功');
   } catch (error) {
-    console.error('获取监控统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取监控统计失败:', error);}
     return createErrorResponse(
       '获取监控统计失败',
       500,

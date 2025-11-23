@@ -141,7 +141,8 @@ export async function POST(request: NextRequest) {
       message: '支付创建成功',
     });
   } catch (error) {
-    console.error('创建支付失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建支付失败:', error);}
     return NextResponse.json(
       { 
         success: false, 
@@ -231,7 +232,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('查询支付记录失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('查询支付记录失败:', error);}
     return NextResponse.json(
       { 
         success: false, 

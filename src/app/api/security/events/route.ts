@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取安全事件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取安全事件失败:', error);}
     return NextResponse.json(
       { error: '获取安全事件失败' },
       { status: 500 }
@@ -93,7 +94,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('创建安全事件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建安全事件失败:', error);}
     return NextResponse.json(
       { error: '创建安全事件失败' },
       { status: 500 }

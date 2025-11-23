@@ -1,9 +1,9 @@
+import { SolutionStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { requireAdminAuth } from '@/lib/api-helpers';
+
+import { requireAdminAuth , createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
-import { SolutionStatus } from '@prisma/client';
 
 interface RouteParams {
   params: {
@@ -246,7 +246,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       statusMessage
     );
   } catch (error) {
-    console.error('上架优化失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('上架优化失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);

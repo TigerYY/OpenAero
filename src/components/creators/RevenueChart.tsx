@@ -4,12 +4,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useState, useEffect } from 'react';
+
 import { Button } from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 
 interface RevenueData {
@@ -65,7 +66,8 @@ export default function RevenueChart({ creatorId }: RevenueChartProps) {
         setError(data.message || '获取收益数据失败');
       }
     } catch (err) {
-      console.error('获取收益数据失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取收益数据失败:', err);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);

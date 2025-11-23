@@ -4,13 +4,14 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, MessageCircle, CheckCircle, Image as ImageIcon, Video } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useState, useEffect } from 'react';
+
 import { Badge } from '@/components/ui/Badge';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatDate } from '@/lib/utils';
 
 interface Review {
@@ -92,7 +93,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         setError(data.message || '获取评价失败');
       }
     } catch (err) {
-      console.error('获取评价失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取评价失败:', err);}
       setError('网络错误，请检查网络连接');
     } finally {
       setLoading(false);
@@ -108,7 +110,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         setStats(data.data);
       }
     } catch (err) {
-      console.error('获取评价统计失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取评价统计失败:', err);}
     }
   };
 
@@ -130,7 +133,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         );
       }
     } catch (err) {
-      console.error('标记有用失败:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('标记有用失败:', err);}
     }
   };
 

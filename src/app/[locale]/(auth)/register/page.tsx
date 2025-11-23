@@ -1,20 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { isValidEmail } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { useRouting } from '@/lib/routing';
+import { isValidEmail } from '@/lib/utils';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const t = useTranslations();
   const { route, routes } = useRouting();
   const { signUp } = useAuth();
@@ -71,7 +76,8 @@ export default function RegisterPage() {
     if (email && !isValidEmail(email)) {
       setFieldErrors({ ...fieldErrors, email: '请输入有效的邮箱地址' });
     } else {
-      const { email: _, ...rest } = fieldErrors;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email: _email, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
   };
@@ -84,7 +90,8 @@ export default function RegisterPage() {
     if (confirmPassword && confirmPassword !== formData.password) {
       setFieldErrors({ ...fieldErrors, confirmPassword: '两次输入的密码不一致' });
     } else {
-      const { confirmPassword: _, ...rest } = fieldErrors;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { confirmPassword: _confirmPassword, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
   };
@@ -126,11 +133,13 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log('[注册] 开始注册:', {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[注册] 开始注册:', {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        });;
+      }
 
       const { error: signUpError } = await signUp(
         formData.email,
@@ -143,42 +152,47 @@ export default function RegisterPage() {
       );
 
       if (signUpError) {
-        console.error('[注册] Supabase 返回错误:', {
-          message: signUpError.message,
-          name: signUpError.name,
-          stack: signUpError.stack,
-          error: signUpError,
-        });
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[注册] Supabase 返回错误:', {
+            message: signUpError.message,
+            name: signUpError.name,
+            stack: signUpError.stack,
+            error: signUpError,
+          });;
+        }
         
         // 使用统一的错误消息处理
         const localizedError = getLocalizedErrorMessage(signUpError, 'zh-CN');
-        console.log('[注册] 本地化错误:', localizedError);
         setError(localizedError);
         setLoading(false);
         return;
       }
 
-      console.log('[注册] 注册成功！');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[注册] 注册成功！');;
+      }
       
       // 立即尝试创建 profile（即使邮箱未验证）
       try {
-        console.log('[注册] 尝试预创建 profile...');
         await fetch('/api/users/me', { 
           method: 'GET',
           credentials: 'include',
         });
-        console.log('[注册] Profile 预创建完成');
       } catch (profileErr) {
-        console.log('[注册] Profile 预创建失败（正常，因为未登录）:', profileErr);
+        // Profile 预创建失败是正常的，因为用户可能未登录
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[注册] Profile 预创建失败（正常，因为未登录）:', profileErr);;
+        }
       }
       
       setSuccess(true);
     } catch (err: unknown) {
-      console.error('[注册] 捕获异常:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[注册] 捕获异常:', err);;
+      }
       
       // 使用统一的错误消息处理
       const localizedError = getLocalizedErrorMessage(err, 'zh-CN');
-      console.log('[注册] 本地化错误:', localizedError);
       setError(localizedError);
     } finally {
       setLoading(false);

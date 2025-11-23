@@ -6,7 +6,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -14,8 +14,9 @@ import {
   createPaginatedResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,7 +148,8 @@ export async function GET(request: NextRequest) {
       '获取方案列表成功'
     );
   } catch (error) {
-    console.error('获取方案列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取方案列表失败:', error);}
     return createErrorResponse(
       '获取方案列表失败',
       500,
@@ -233,7 +235,8 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    console.error('创建方案失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建方案失败:', error);}
     return createErrorResponse(
       '创建方案失败',
       500,

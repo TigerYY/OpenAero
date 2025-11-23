@@ -1,8 +1,8 @@
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
 import { syncPaymentStatus } from '@/lib/payment/payment-status-sync';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,7 +104,8 @@ export async function GET(
           }
         }
       } catch (error) {
-        console.error('同步支付状态失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('同步支付状态失败:', error);}
         // 继续返回当前状态，不影响主流程
       }
     }
@@ -114,7 +115,8 @@ export async function GET(
       data: payment,
     });
   } catch (error) {
-    console.error('查询支付状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('查询支付状态失败:', error);}
     return NextResponse.json(
       { 
         success: false, 
@@ -210,7 +212,8 @@ export async function POST(
       message: '支付状态更新成功',
     });
   } catch (error) {
-    console.error('更新支付状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新支付状态失败:', error);}
     return NextResponse.json(
       { 
         success: false, 
@@ -278,7 +281,8 @@ async function checkExternalPaymentStatus(payment: any) {
 
     return null;
   } catch (error) {
-    console.error('查询第三方支付状态失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('查询第三方支付状态失败:', error);}
     throw error;
   }
 }
@@ -299,7 +303,8 @@ async function verifyPaymentCallback(payment: any, callbackData: any): Promise<b
         return false;
     }
   } catch (error) {
-    console.error('验证支付回调失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('验证支付回调失败:', error);}
     return false;
   }
 }
@@ -345,7 +350,8 @@ async function createRevenueShares(orderId: string) {
       });
     }
   } catch (error) {
-    console.error('创建收益分成记录失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建收益分成记录失败:', error);}
   }
 }
 

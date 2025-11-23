@@ -4,9 +4,10 @@
  * POST /api/products/[id]/reviews - 创建产品评价
  */
 
-import { NextRequest } from 'next/server';
 import { ReviewStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -14,12 +15,13 @@ import {
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import {
   createProductReview,
   getProductReviews,
   getProductReviewStats,
 } from '@/lib/product-review';
-import { z } from 'zod';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -83,7 +85,8 @@ export async function GET(
       '获取评价列表成功'
     );
   } catch (error) {
-    console.error('获取评价列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取评价列表失败:', error);}
     return createErrorResponse(
       '获取评价列表失败',
       500,
@@ -141,7 +144,8 @@ export async function POST(
 
     return createSuccessResponse(review, '评价提交成功，等待审核');
   } catch (error) {
-    console.error('创建评价失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建评价失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '创建评价失败',
       error instanceof Error && error.message.includes('已评价') ? 400 : 500,

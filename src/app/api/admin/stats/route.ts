@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAdminAuth } from '@/lib/api-helpers';
 
 interface DashboardStats {
@@ -111,7 +112,8 @@ export async function GET(request: NextRequest) {
       data: stats
     });
   } catch (error) {
-    console.error('获取统计数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取统计数据失败:', error);}
     return NextResponse.json(
       { success: false, error: '服务器错误' },
       { status: 500 }
@@ -139,7 +141,8 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('刷新统计数据失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('刷新统计数据失败:', error);}
     return NextResponse.json(
       { success: false, error: '服务器错误' },
       { status: 500 }

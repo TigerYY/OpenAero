@@ -3,15 +3,16 @@
  * GET /api/creators/dashboard/revenue - 获取创作者收益统计
  */
 
-import { NextRequest } from 'next/server';
 import { RevenueStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { ensureCreatorProfile } from '@/lib/creator-profile-utils';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,7 +151,8 @@ export async function GET(request: NextRequest) {
       '获取收益统计成功'
     );
   } catch (error) {
-    console.error('获取收益统计失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取收益统计失败:', error);}
     return createErrorResponse(
       '获取收益统计失败',
       500,

@@ -6,6 +6,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
+
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
 
 export interface ErrorMessageProps {

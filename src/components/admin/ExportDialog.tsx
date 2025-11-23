@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
 import { Download, Loader2, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import React, { useState } from 'react';
+
 import { Button } from '@/components/ui/Button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
-import { Input } from '@/components/ui/Input';
 
 export type ExportFormat = 'json' | 'csv' | 'excel';
 export type ExportType = 'solutions' | 'users';
@@ -52,7 +53,8 @@ export function ExportDialog({
       });
       onOpenChange(false);
     } catch (error) {
-      console.error('导出失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出失败:', error);}
     } finally {
       setLoading(false);
     }
@@ -109,7 +111,8 @@ export function ExportDialog({
 
       onOpenChange(false);
     } catch (error) {
-      console.error('导出失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('导出失败:', error);}
       alert('导出失败，请重试');
     } finally {
       setLoading(false);

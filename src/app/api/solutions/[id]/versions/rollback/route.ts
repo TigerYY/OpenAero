@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
-
 import { checkCreatorAuth } from '@/lib/api-auth-helpers';
+import { prisma } from '@/lib/prisma';
 import { rollbackToVersion } from '@/lib/solution-version';
 
 // POST /api/solutions/[id]/versions/rollback - 回滚到指定版本
@@ -59,7 +58,8 @@ export async function POST(
       message: `已成功回滚到版本 ${targetVersion}`
     });
   } catch (error) {
-    console.error('版本回滚失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('版本回滚失败:', error);}
     
     if (error instanceof Error && error.message.includes('不存在')) {
       return NextResponse.json({ error: error.message }, { status: 404 });

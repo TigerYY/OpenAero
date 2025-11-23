@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import {
   ArrowRight,
@@ -16,8 +20,8 @@ import {
   Truck,
   Zap
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +29,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency } from '@/lib/utils';
 
 interface Product {
@@ -78,7 +83,8 @@ export default function ShopPage() {
       const data = await response.json();
       setFeaturedProducts(data.products);
     } catch (error) {
-      console.error('获取推荐商品失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取推荐商品失败:', error);}
       toast.error('获取推荐商品失败');
     }
   };
@@ -92,7 +98,8 @@ export default function ShopPage() {
       const data = await response.json();
       setCategories(data.categories);
     } catch (error) {
-      console.error('获取分类失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取分类失败:', error);}
       toast.error('获取分类失败');
     }
   };

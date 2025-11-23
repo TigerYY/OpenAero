@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouting } from '@/lib/routing';
 import React from 'react';
+
+import { useRouting } from '@/lib/routing';
 
 interface NavigationItem {
   name: string;
@@ -82,6 +83,7 @@ export function RoleBasedNavigation() {
 // 移动端导航组件
 export function MobileRoleBasedNavigation() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { routes, route } = useRouting();
   
   const navigationItems = createNavigationItems(routes);
 

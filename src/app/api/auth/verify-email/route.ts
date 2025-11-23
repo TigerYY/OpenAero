@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
 import { verifyEmail } from '@/lib/auth/supabase-auth-service';
 import { RoutingUtils, ROUTES } from '@/lib/routing';
 
@@ -57,7 +58,8 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.redirect(new URL(loginRoute, request.url));
   } catch (error: any) {
-    console.error('邮箱验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('邮箱验证失败:', error);}
 
     // 检测用户语言偏好
     const locale = detectUserLocale(request);

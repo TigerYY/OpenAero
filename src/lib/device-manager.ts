@@ -223,7 +223,8 @@ export class DeviceManager {
         return data.devices || [];
       }
     } catch (error) {
-      console.error('获取用户设备失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取用户设备失败:', error);}
     }
 
     // 从本地缓存获取
@@ -256,7 +257,8 @@ export class DeviceManager {
         method: 'DELETE',
       });
     } catch (error) {
-      console.error('删除设备会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除设备会话失败:', error);}
     }
   }
 
@@ -270,7 +272,8 @@ export class DeviceManager {
       try {
         await this.updateDeviceOnServer(device);
       } catch (error) {
-        console.error('更新设备信任状态失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('更新设备信任状态失败:', error);}
       }
     }
   }
@@ -288,7 +291,8 @@ export class DeviceManager {
       try {
         await this.updateDeviceOnServer(device);
       } catch (error) {
-        console.error('撤销设备失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('撤销设备失败:', error);}
       }
     }
   }
@@ -311,7 +315,8 @@ export class DeviceManager {
     try {
       await this.saveLoginAttemptToServer(loginAttempt);
     } catch (error) {
-      console.error('保存登录尝试记录失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存登录尝试记录失败:', error);}
     }
   }
 

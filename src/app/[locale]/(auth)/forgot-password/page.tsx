@@ -1,20 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+import { useState } from 'react';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { isValidEmail } from '@/lib/utils';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { useRouting } from '@/lib/routing';
+import { isValidEmail } from '@/lib/utils';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations();
   const { route, routes } = useRouting();
-  const { sendPasswordResetEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -28,7 +31,8 @@ export default function ForgotPasswordPage() {
     // 清除错误
     if (error) setError(null);
     if (fieldErrors.email) {
-      const { email: _, ...rest } = fieldErrors;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email: _email, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
   };
@@ -69,7 +73,10 @@ export default function ForgotPasswordPage() {
         setError(data.message || getLocalizedErrorMessage(data.error || '请求失败，请稍后重试', 'zh-CN'));
       }
     } catch (err: unknown) {
-      console.error('Forgot password error:', err);
+      // Log error in development only
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Forgot password error:', err);;
+      }
       setError(getLocalizedErrorMessage(err, 'zh-CN'));
     } finally {
       setLoading(false);

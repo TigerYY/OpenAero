@@ -62,7 +62,8 @@ export class LazyLoadErrorBoundary extends React.Component<
   }
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('懒加载组件错误:', error, errorInfo);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('懒加载组件错误:', error, errorInfo);}
   }
 
   render() {

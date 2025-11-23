@@ -184,13 +184,15 @@ export class BrowserCache {
     try {
       this.storage.setItem(this.prefix + key, JSON.stringify(item));
     } catch (error) {
-      console.warn('缓存存储失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('缓存存储失败:', error);}
       // 存储空间不足时清理过期项
       this.cleanup();
       try {
         this.storage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (retryError) {
-        console.error('缓存存储重试失败:', retryError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('缓存存储重试失败:', retryError);}
       }
     }
   }
@@ -213,7 +215,8 @@ export class BrowserCache {
 
       return item.value;
     } catch (error) {
-      console.warn('缓存读取失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('缓存读取失败:', error);}
       return null;
     }
   }
@@ -435,7 +438,8 @@ export const CacheUtils = {
         }
       }
     } catch (error) {
-      console.error('缓存预热失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('缓存预热失败:', error);}
     }
   }
 };

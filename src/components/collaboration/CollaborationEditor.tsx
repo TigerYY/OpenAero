@@ -1,11 +1,11 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useAuth } from '@/hooks/useAuth';
 import { getCollaborationManager, CollaborationUser, CollaborationOperation } from '@/lib/collaboration';
 
 
@@ -72,7 +72,7 @@ export default function CollaborationEditor({
   onContentChange,
   className = ''
 }: CollaborationEditorProps) {
-  const { data: session } = useSession();
+  const { user: session } = useAuth();
   const [content, setContent] = useState(initialContent);
   const [activeUsers, setActiveUsers] = useState<CollaborationUser[]>([]);
   const [cursors, setCursors] = useState<CursorInfo[]>([]);
@@ -105,7 +105,8 @@ export default function CollaborationEditor({
         }
       }
     } catch (error) {
-      console.error('加入协作会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加入协作会话失败:', error);}
       setError(error instanceof Error ? error.message : '加入协作会话失败');
     } finally {
       setIsLoading(false);
@@ -121,7 +122,8 @@ export default function CollaborationEditor({
       setCursors([]);
       setSelections([]);
     } catch (error) {
-      console.error('离开协作会话失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('离开协作会话失败:', error);}
     }
   }, [collaborationManager]);
 
@@ -168,7 +170,8 @@ export default function CollaborationEditor({
         onContentChange(newContent);
       }
     } catch (error) {
-      console.error('发送操作失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送操作失败:', error);}
     } finally {
       isLocalChange.current = false;
     }

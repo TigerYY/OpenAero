@@ -5,8 +5,8 @@
 
 'use client';
 
-import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 /**
  * 显示成功消息

@@ -43,7 +43,8 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('标记所有通知为已读失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('标记所有通知为已读失败:', error);}
     return NextResponse.json(
       { success: false, error: '标记所有通知为已读失败' },
       { status: 500 }

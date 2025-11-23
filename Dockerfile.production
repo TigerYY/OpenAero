@@ -1,5 +1,5 @@
 # 生产环境Dockerfile
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 WORKDIR /app
 
@@ -10,13 +10,18 @@ COPY package.json package-lock.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # 构建阶段
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
+
+# 安装 OpenSSL 和必要的依赖（Prisma 需要）
+RUN apk add --no-cache openssl libc6-compat
 
 # 复制包管理文件
 COPY package.json package-lock.json ./
 
-# 安装所有依赖
+# ✅ 安装所有依赖（包括 devDependencies）
+# 注意：autoprefixer, postcss, tailwindcss 在 devDependencies 中，
+# 但 Next.js 构建时需要这些依赖，所以必须安装所有依赖
 RUN npm ci
 
 # 复制源代码
@@ -29,12 +34,54 @@ ENV NODE_ENV=production
 # 生成Prisma客户端
 RUN npx prisma generate
 
-# 构建应用（跳过ESLint检查）
-ENV ESLINT_NO_DEV_ERRORS=true
+# 构建应用（启用所有检查）
+# ✅ 移除错误忽略，确保构建失败时能及时发现
 RUN npm run build
+# 检查 standalone 目录，如果不存在则从 server 目录创建
+RUN if [ ! -d "/app/.next/standalone" ] && [ -d "/app/.next/server" ]; then \
+      echo "Creating standalone directory from server directory..."; \
+      mkdir -p /app/.next/standalone; \
+      cp -r /app/.next/server /app/.next/standalone/server; \
+      cp /app/package.json /app/.next/standalone/; \
+      cp /app/next.config.js /app/.next/standalone/ 2>/dev/null || true; \
+      echo "Standalone directory created"; \
+    fi
+# 创建 server.js 入口文件（如果不存在）
+RUN if [ ! -f "/app/.next/standalone/server.js" ] && [ -d "/app/.next/standalone" ]; then \
+      echo "Creating server.js..."; \
+      printf '%s\n' \
+        "const { createServer } = require('http');" \
+        "const next = require('next');" \
+        "const { parse } = require('url');" \
+        "const app = next({ dev: false, dir: __dirname });" \
+        "const handle = app.getRequestHandler();" \
+        "app.prepare().then(() => {" \
+        "  createServer((req, res) => {" \
+        "    const parsedUrl = parse(req.url, true);" \
+        "    handle(req, res, parsedUrl);" \
+        "  }).listen(process.env.PORT || 3000, process.env.HOSTNAME || '0.0.0.0', () => {" \
+        "    console.log('> Ready on http://' + (process.env.HOSTNAME || '0.0.0.0') + ':' + (process.env.PORT || 3000));" \
+        "  });" \
+        "});" > /app/.next/standalone/server.js; \
+    fi
+# ✅ 验证构建产物完整性
+RUN if [ ! -d "/app/.next/standalone" ]; then \
+      echo "ERROR: Standalone directory not found after build"; \
+      ls -la /app/.next/; \
+      exit 1; \
+    fi && \
+    if [ ! -f "/app/.next/standalone/server.js" ]; then \
+      echo "ERROR: server.js not found in standalone directory"; \
+      exit 1; \
+    fi && \
+    if [ ! -d "/app/.next/static" ]; then \
+      echo "ERROR: Static files directory not found"; \
+      exit 1; \
+    fi && \
+    echo "✅ Build validation passed: standalone, server.js, and static files exist"
 
 # 生产阶段
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 # 设置环境变量
@@ -49,13 +96,22 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# 复制完整的 .next 目录（standalone 模式需要完整的 .next 结构）
+COPY --from=builder /app/.next ./.next
+
+# 复制完整的 node_modules 作为后备（Standalone 模式可能遗漏嵌套依赖）
+COPY --from=builder /app/node_modules ./node_modules
 
 # 复制Prisma文件
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # 复制必要的配置文件
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/postcss.config.js ./
+COPY --from=builder /app/tailwind.config.js ./
 COPY --from=builder /app/sentry.*.config.ts ./
 
 # 设置权限

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
   try {
-    console.log('开始最终集成测试...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('开始最终集成测试...');}
     
     const supabase = getSupabaseAdmin();
     const testResults: any = {};
@@ -166,7 +168,8 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('集成测试失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('集成测试失败:', error);}
     return NextResponse.json({
       success: false,
       error: '集成测试失败',

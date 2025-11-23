@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { dashboardCache } from '@/lib/admin/dashboard-cache';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
-import { dashboardCache } from '@/lib/admin/dashboard-cache';
 
 // GET /api/admin/dashboard/activities - 获取实时活动流
 export async function GET(request: NextRequest) {
   try {
-    console.log('[API /admin/dashboard/activities] 开始处理请求');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API /admin/dashboard/activities] 开始处理请求');}
     
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
@@ -20,7 +21,8 @@ export async function GET(request: NextRequest) {
     });
     
     if (!authResult.success || !authResult.user) {
-      console.error('[API /admin/dashboard/activities] 认证失败');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[API /admin/dashboard/activities] 认证失败');}
       return authResult.error || NextResponse.json(
         {
           success: false,
@@ -36,7 +38,8 @@ export async function GET(request: NextRequest) {
     console.log('[API /admin/dashboard/activities] 用户角色:', userRoles);
     
     if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
-      console.warn('[API /admin/dashboard/activities] 权限不足，当前角色:', userRoles);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[API /admin/dashboard/activities] 权限不足，当前角色:', userRoles);}
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看活动流',
@@ -315,7 +318,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取活动流失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取活动流失败:', error);}
 
     const response: ApiResponse<null> = {
       success: false,

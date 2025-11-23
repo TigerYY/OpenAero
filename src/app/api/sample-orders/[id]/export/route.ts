@@ -105,7 +105,8 @@ export async function GET(
             specFolder?.file(`${fileName}.txt`, `文件链接: ${fileUrl}\n注意: 原文件未找到`);
           }
         } catch (error) {
-          console.error(`处理规格文件失败: ${fileUrl}`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`处理规格文件失败: ${fileUrl}`, error);};
         }
       }
     }
@@ -128,7 +129,8 @@ export async function GET(
             resultFolder?.file(`${fileName}.txt`, `文件链接: ${fileUrl}\n注意: 原文件未找到`);
           }
         } catch (error) {
-          console.error(`处理结果文件失败: ${fileUrl}`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`处理结果文件失败: ${fileUrl}`, error);};
         }
       }
     }
@@ -148,7 +150,8 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('导出试产订单文件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('导出试产订单文件失败:', error);}
     return NextResponse.json(
       { success: false, error: '导出文件失败' },
       { status: 500 }

@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import Link from 'next/link';
 
@@ -8,8 +12,11 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FileUpload } from '@/components/ui/FileUpload';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { useRouting } from '@/lib/routing';
 
 export default function TestPage() {
+  const { route } = useRouting();
+  
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="text-center">
@@ -22,7 +29,6 @@ export default function TestPage() {
       </div>
 
       {/* 导航测试 */}
-  const { route } = useRouting()
       <Card>
         <CardHeader>
           <CardTitle>页面导航测试</CardTitle>
@@ -120,7 +126,8 @@ export default function TestPage() {
               alert(`上传完成！成功: ${results.filter(r => r.success).length}, 失败: ${results.filter(r => !r.success).length}`);
             }}
             onProgress={(filename, progress) => {
-              console.log(`${filename}: ${progress}%`);
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`${filename}: ${progress}%`);};
             }}
           />
         </CardContent>
@@ -138,7 +145,8 @@ export default function TestPage() {
                 try {
                   const response = await fetch('/api/solutions');
                   const data = await response.json();
-                  console.log('方案列表:', data);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('方案列表:', data);}
                   alert('方案列表 API 测试成功！请查看控制台');
                 } catch (error) {
                   console.error('API 测试失败:', error);
@@ -154,7 +162,8 @@ export default function TestPage() {
                 try {
                   const response = await fetch('/api/solutions/1');
                   const data = await response.json();
-                  console.log('方案详情:', data);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('方案详情:', data);}
                   alert('方案详情 API 测试成功！请查看控制台');
                 } catch (error) {
                   console.error('API 测试失败:', error);
@@ -171,7 +180,8 @@ export default function TestPage() {
                   const response = await fetch('/api/upload', {
                     method: 'OPTIONS'
                   });
-                  console.log('上传 API 状态:', response.status);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('上传 API 状态:', response.status);}
                   alert(`上传 API 测试完成！状态码: ${response.status}`);
                 } catch (error) {
                   console.error('API 测试失败:', error);

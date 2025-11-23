@@ -58,19 +58,22 @@ export class BuildMonitor {
   }
 
   logMetrics(): void {
-    console.log('Build Metrics:', {
-      duration: this.metrics.duration,
-      success: this.metrics.success,
-      errorCount: this.metrics.errors.length,
-      warningCount: this.metrics.warnings.length,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Build Metrics:', {
+        duration: this.metrics.duration,
+        success: this.metrics.success,
+        errorCount: this.metrics.errors.length,
+        warningCount: this.metrics.warnings.length,
+      });};
 
     if (this.metrics.errors.length > 0) {
-      console.error('Build Errors:', this.metrics.errors);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Build Errors:', this.metrics.errors);}
     }
 
     if (this.metrics.warnings.length > 0) {
-      console.warn('Build Warnings:', this.metrics.warnings);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Build Warnings:', this.metrics.warnings);}
     }
   }
 }

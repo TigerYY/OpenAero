@@ -4,13 +4,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
-import { getOrderHistory } from '@/lib/order-history';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getOrderById } from '@/lib/order';
+import { getOrderHistory } from '@/lib/order-history';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,8 @@ export async function GET(
 
     return createSuccessResponse(history, '获取订单历史记录成功');
   } catch (error) {
-    console.error('获取订单历史记录失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取订单历史记录失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '获取订单历史记录失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,

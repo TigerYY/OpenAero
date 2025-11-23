@@ -121,7 +121,8 @@ export class CacheManager {
       try {
         this.cache = await caches.open(`${this.config.name}-v${this.config.version}`);
       } catch (error) {
-        console.warn('缓存初始化失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('缓存初始化失败:', error);}
       }
     }
   }
@@ -159,7 +160,8 @@ export class CacheManager {
         });
         await this.cache.put(key, response);
       } catch (error) {
-        console.warn('浏览器缓存设置失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('浏览器缓存设置失败:', error);}
       }
     }
   }
@@ -207,7 +209,8 @@ export class CacheManager {
           }
         }
       } catch (error) {
-        console.warn('浏览器缓存读取失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('浏览器缓存读取失败:', error);}
       }
     }
 
@@ -226,7 +229,8 @@ export class CacheManager {
       try {
         await this.cache.delete(key);
       } catch (error) {
-        console.warn('浏览器缓存删除失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('浏览器缓存删除失败:', error);}
       }
     }
   }
@@ -257,7 +261,8 @@ export class CacheManager {
         const keys = await this.cache.keys();
         await Promise.all(keys.map(key => this.cache!.delete(key)));
       } catch (error) {
-        console.warn('清空浏览器缓存失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('清空浏览器缓存失败:', error);}
       }
     }
   }
@@ -320,7 +325,8 @@ export class PerformanceMonitor {
       this.observers.push(clsObserver);
 
     } catch (error) {
-      console.warn('性能监控初始化失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('性能监控初始化失败:', error);}
     }
   }
 

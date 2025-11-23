@@ -4,11 +4,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { markReviewHelpful } from '@/lib/product-review';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,8 @@ export async function POST(
 
     return createSuccessResponse(null, '已标记为有用');
   } catch (error) {
-    console.error('标记评价失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('标记评价失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '标记评价失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,

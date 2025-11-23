@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabaseServerClient } from '@/lib/supabase';
 
 /**
@@ -108,21 +109,22 @@ export async function logUserAction(
   userAgent?: string
 ) {
   try {
-    const { prisma } = await import('@/lib/prisma');
-    
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action,
-        resource,
-        resourceId,
-        oldValue: oldValue ? JSON.stringify(oldValue) : undefined,
-        newValue: newValue ? JSON.stringify(newValue) : undefined,
-        ipAddress: ipAddress || 'unknown',
-        userAgent: userAgent || 'unknown',
-      },
+    // Note: auditLog model doesn't exist in Prisma schema
+    // Using AuthService.logAudit instead which uses Supabase
+    const { AuthService } = await import('@/lib/auth/auth-service');
+    await AuthService.logAudit({
+      user_id: userId,
+      action,
+      resource,
+      resource_id: resourceId,
+      old_value: oldValue,
+      new_value: newValue,
+      ip_address: ipAddress || 'unknown',
+      user_agent: userAgent || 'unknown',
+      success: true,
     });
   } catch (error) {
-    console.error('Failed to log user action:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to log user action:', error);}
   }
 }

@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
-
 import { z } from 'zod';
 
+import { createErrorResponse, createSuccessResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 
-import { createErrorResponse, createSuccessResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 // 验证schemas
 const joinSessionSchema = z.object({
@@ -94,7 +93,8 @@ export async function GET(request: NextRequest) {
     }, '获取协作会话成功');
 
   } catch (error) {
-    console.error('获取协作会话失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取协作会话失败:', error);}
     return createErrorResponse('服务器错误', 500);
   }
 }
@@ -197,7 +197,8 @@ export async function POST(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('创建/加入协作会话失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建/加入协作会话失败:', error);}
     return createErrorResponse('服务器错误', 500);
   }
 }
@@ -259,7 +260,8 @@ export async function PUT(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('保存协作操作失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('保存协作操作失败:', error);}
     return createErrorResponse('服务器错误', 500);
   }
 }
@@ -307,7 +309,8 @@ export async function DELETE(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('离开协作会话失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('离开协作会话失败:', error);}
     return createErrorResponse('服务器错误', 500);
   }
 }

@@ -1,26 +1,32 @@
 /**
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
  * 认证错误页面
  * 显示友好的错误信息和重试选项
  */
 
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
+import { useEffect } from 'react';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { useRouting } from '@/lib/routing';
 
 export default function AuthErrorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
-  const locale = useLocale() as 'zh-CN' | 'en-US';
   const { route, routes } = useRouting();
   
-  const errorMessage = searchParams.get('message') || searchParams.get('error');
-  const errorType = searchParams.get('type') || 'error';
+  const errorMessage = searchParams?.get('message') || searchParams?.get('error') || '';
+  const errorType = searchParams?.get('type') || 'error';
 
   useEffect(() => {
     // 如果5秒后用户没有操作，自动跳转到登录页

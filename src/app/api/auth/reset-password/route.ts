@@ -4,14 +4,15 @@
  */
 
 import { NextRequest } from 'next/server';
-import { AuthService, getServerUser } from '@/lib/auth/auth-service';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { AuthService, getServerUser } from '@/lib/auth/auth-service';
 import { InputSanitizer } from '@/lib/security';
 
 // 重置密码请求验证 schema
@@ -87,7 +88,8 @@ export async function POST(request: NextRequest) {
       '密码重置成功，请使用新密码登录'
     );
   } catch (error: unknown) {
-    console.error('Reset password error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Reset password error:', error);}
     return createErrorResponse(
       '密码重置失败，请稍后重试',
       500,

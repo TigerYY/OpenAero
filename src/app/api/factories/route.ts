@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('获取工厂列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取工厂列表失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取工厂列表失败' },
       { status: 500 }
@@ -119,7 +120,8 @@ export async function POST(request: NextRequest) {
       data: factory
     }, { status: 201 });
   } catch (error) {
-    console.error('创建工厂失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建工厂失败:', error);}
     return NextResponse.json(
       { success: false, error: '创建工厂失败' },
       { status: 500 }

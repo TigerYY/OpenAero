@@ -2,8 +2,9 @@
  * 订单历史记录工具库
  */
 
-import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@prisma/client';
+
+import { prisma } from '@/lib/prisma';
 
 export interface OrderHistoryEvent {
   id: string;

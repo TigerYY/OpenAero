@@ -15,8 +15,8 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { formatCurrency } from '@/lib/utils';
 import { useRouting } from '@/lib/routing';
+import { formatCurrency } from '@/lib/utils';
 
 import { useCart } from './CartProvider';
 

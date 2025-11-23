@@ -50,7 +50,8 @@ export async function GET(
       data: sampleOrder
     });
   } catch (error) {
-    console.error('获取试产订单详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取试产订单详情失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取试产订单详情失败' },
       { status: 500 }
@@ -173,7 +174,8 @@ export async function PUT(
       data: sampleOrder
     });
   } catch (error) {
-    console.error('更新试产订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新试产订单失败:', error);}
     return NextResponse.json(
       { success: false, error: '更新试产订单失败' },
       { status: 500 }
@@ -217,7 +219,8 @@ export async function DELETE(
       message: '试产订单删除成功'
     });
   } catch (error) {
-    console.error('删除试产订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除试产订单失败:', error);}
     return NextResponse.json(
       { success: false, error: '删除试产订单失败' },
       { status: 500 }

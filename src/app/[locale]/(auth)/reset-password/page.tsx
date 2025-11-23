@@ -1,24 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useRouting } from '@/lib/routing';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLocalizedErrorMessage } from '@/lib/error-messages';
+import { useRouting } from '@/lib/routing';
 import { InputSanitizer } from '@/lib/security';
 
 export default function ResetPasswordPage() {
   const t = useTranslations();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { route, routes, routeWithParams } = useRouting();
-  const { resetPassword } = useAuth();
   
   const [formData, setFormData] = useState({
     password: '',
@@ -56,7 +60,8 @@ export default function ResetPasswordPage() {
     
     // 清除密码错误
     if (fieldErrors.password) {
-      const { password: _, ...rest } = fieldErrors;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...rest } = fieldErrors;
       setFieldErrors(rest);
     }
   };
@@ -103,7 +108,9 @@ export default function ResetPasswordPage() {
         setError(data.message || getLocalizedErrorMessage(data.error || '密码重置失败，请稍后重试', 'zh-CN'));
       }
     } catch (err: unknown) {
-      console.error('Reset password error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Reset password error:', err);;
+      }
       setError(getLocalizedErrorMessage(err, 'zh-CN'));
     } finally {
       setLoading(false);

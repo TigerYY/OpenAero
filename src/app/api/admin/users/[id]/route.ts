@@ -6,6 +6,10 @@
  * DELETE /api/admin/users/[id] - 删除用户
  */
 
+import { PrismaClient } from '@prisma/client';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -14,9 +18,6 @@ import {
   requireAdminAuth,
 } from '@/lib/api-helpers';
 import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
-import { PrismaClient } from '@prisma/client';
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -72,12 +73,13 @@ export async function PUT(
 
     const { firstName, lastName } = validationResult.data;
     
-    console.log('[PUT /users/[id]] 开始更新用户信息:', {
-      userId,
-      firstName,
-      lastName,
-      adminId: adminUser.id
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PUT /users/[id]] 开始更新用户信息:', {
+        userId,
+        firstName,
+        lastName,
+        adminId: adminUser.id
+      });};
 
     // 构建更新数据对象，只包含提供的字段
     const updateData: { first_name?: string | null; last_name?: string | null; updated_at: Date } = {
@@ -98,7 +100,8 @@ export async function PUT(
         where: { user_id: userId },
         data: updateData,
       });
-      console.log('[PUT /users/[id]] 更新现有 profile 成功');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[PUT /users/[id]] 更新现有 profile 成功');}
     } catch (updateError: any) {
       if (updateError.code === 'P2025') {
         // Profile 不存在，创建新的
@@ -109,7 +112,8 @@ export async function PUT(
         const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
         
         if (authError || !authUser?.user) {
-          console.error('[PUT /users/[id]] 无法获取认证用户信息:', authError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[PUT /users/[id]] 无法获取认证用户信息:', authError);}
           return createErrorResponse('用户不存在于认证系统中', 404);
         }
         
@@ -126,7 +130,8 @@ export async function PUT(
               status: 'ACTIVE',
             },
           });
-          console.log('[PUT /users/[id]] 创建新 profile 成功');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PUT /users/[id]] 创建新 profile 成功');}
         } catch (createError: any) {
           console.error('[PUT /users/[id]] 创建 profile 失败:', createError);
           return createErrorResponse('创建用户资料失败: ' + createError.message, 500);
@@ -170,7 +175,8 @@ export async function PUT(
     return createSuccessResponse(updatedProfile, '用户信息更新成功');
 
   } catch (error: unknown) {
-    console.error('Update user error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Update user error:', error);}
     const errorMessage = error instanceof Error ? error.message : '更新用户信息时发生未知错误';
     return createErrorResponse(errorMessage, 500);
   }

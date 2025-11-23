@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { useRouting } from '@/lib/routing';
-import AvatarUpload from '@/components/profile/AvatarUpload';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import AvatarUpload from '@/components/profile/AvatarUpload';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouting } from '@/lib/routing';
 
 /**
  * 用户资料页面
@@ -23,8 +29,8 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const { user, profile, refreshProfile, loading: authLoading } = useAuth();
-  const router = useRouter();
   const { route } = useRouting();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -47,22 +53,15 @@ function ProfileContent() {
   // 自动初始化 profile（如果不存在）
   useEffect(() => {
     if (!authLoading && user && !profile) {
-      console.log('[ProfilePage] 检测到 profile 不存在，自动尝试初始化...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ProfilePage] 检测到 profile 不存在，自动尝试初始化...');;
+      }
       const initProfile = async () => {
         await refreshProfile();
       };
       initProfile();
     }
   }, [authLoading, user, profile, refreshProfile]);
-
-  // 调试日志
-  useEffect(() => {
-    console.log('[ProfilePage] 状态更新:', {
-      authLoading,
-      user: user ? { id: user.id, email: user.email } : null,
-      profile: profile ? { id: profile.id, display_name: profile.display_name } : null,
-    });
-  }, [authLoading, user, profile]);
 
   // 获取创作者申请状态
   useEffect(() => {
@@ -95,7 +94,9 @@ function ProfileContent() {
           setApplicationStatus(null);
         }
       } catch (error) {
-        console.error('获取申请状态失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取申请状态失败:', error);;
+        }
         setApplicationStatus(null);
       } finally {
         setLoadingStatus(false);
@@ -161,12 +162,16 @@ function ProfileContent() {
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       const firstError = Object.values(errors)[0];
-      setMessage({ type: 'error', text: firstError });
+      if (firstError) {
+        setMessage({ type: 'error', text: firstError });
+      }
       setLoading(false);
       return;
     }
 
-    console.log('[ProfilePage] 提交数据:', formData);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ProfilePage] 提交数据:', formData);;
+    }
 
     try {
       const response = await fetch('/api/users/me', {
@@ -180,10 +185,14 @@ function ProfileContent() {
 
       const data = await response.json();
 
-      console.log('[ProfilePage] 更新响应:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ProfilePage] 更新响应:', data);;
+      }
 
       if (data.success) {
-        console.log('[ProfilePage] 更新成功，开始刷新 profile');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ProfilePage] 更新成功，开始刷新 profile');;
+        }
         setMessage({ type: 'success', text: data.message || '资料更新成功!' });
         setFieldErrors({});
         setIsEditing(false);
@@ -196,7 +205,9 @@ function ProfileContent() {
       } else {
         // 处理验证错误
         if (data.details && typeof data.details === 'object') {
-          console.log('[ProfilePage] 验证错误详情:', data.details);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[ProfilePage] 验证错误详情:', data.details);;
+          }
           const errors: Record<string, string> = {};
           
           // 处理两种可能的格式
@@ -439,18 +450,18 @@ function ProfileContent() {
                       <>
                         <input
                           type="text"
-                          value={formData.first_name}
-                          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                          value={formData.firstName}
+                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                            fieldErrors.first_name ? 'border-red-300' : 'border-gray-300'
+                            fieldErrors.firstName ? 'border-red-300' : 'border-gray-300'
                           }`}
                         />
-                        {fieldErrors.first_name && (
-                          <p className="mt-1 text-sm text-red-600">{fieldErrors.first_name}</p>
+                        {fieldErrors.firstName && (
+                          <p className="mt-1 text-sm text-red-600">{fieldErrors.firstName}</p>
                         )}
                       </>
                     ) : (
-                      <p className="text-gray-900">{profile.first_name || '未设置'}</p>
+                      <p className="text-gray-900">{profile.firstName || '未设置'}</p>
                     )}
                   </div>
 
@@ -463,18 +474,18 @@ function ProfileContent() {
                       <>
                         <input
                           type="text"
-                          value={formData.last_name}
-                          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                          value={formData.lastName}
+                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                            fieldErrors.last_name ? 'border-red-300' : 'border-gray-300'
+                            fieldErrors.lastName ? 'border-red-300' : 'border-gray-300'
                           }`}
                         />
-                        {fieldErrors.last_name && (
-                          <p className="mt-1 text-sm text-red-600">{fieldErrors.last_name}</p>
+                        {fieldErrors.lastName && (
+                          <p className="mt-1 text-sm text-red-600">{fieldErrors.lastName}</p>
                         )}
                       </>
                     ) : (
-                      <p className="text-gray-900">{profile.last_name || '未设置'}</p>
+                      <p className="text-gray-900">{profile.lastName || '未设置'}</p>
                     )}
                   </div>
 
@@ -487,18 +498,18 @@ function ProfileContent() {
                       <>
                         <input
                           type="text"
-                          value={formData.display_name}
-                          onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                          value={formData.displayName}
+                          onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                            fieldErrors.display_name ? 'border-red-300' : 'border-gray-300'
+                            fieldErrors.displayName ? 'border-red-300' : 'border-gray-300'
                           }`}
                         />
-                        {fieldErrors.display_name && (
-                          <p className="mt-1 text-sm text-red-600">{fieldErrors.display_name}</p>
+                        {fieldErrors.displayName && (
+                          <p className="mt-1 text-sm text-red-600">{fieldErrors.displayName}</p>
                         )}
                       </>
                     ) : (
-                      <p className="text-gray-900">{profile.display_name || '未设置'}</p>
+                      <p className="text-gray-900">{profile.displayName || '未设置'}</p>
                     )}
                   </div>
 
@@ -518,7 +529,6 @@ function ProfileContent() {
                           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                             fieldErrors.phone ? 'border-red-300' : 'border-gray-300'
                           }`}
-                          placeholder="+86 138 0013 8000"
                         />
                         {fieldErrors.phone && (
                           <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
@@ -571,19 +581,19 @@ function ProfileContent() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">账号ID:</span>
                     <span className="text-gray-900 font-mono">
-                      {profile.user_id ? `${profile.user_id.substring(0, 16)}...` : user?.id ? `${user.id.substring(0, 16)}...` : 'N/A'}
+                      {profile.userId ? `${profile.userId.substring(0, 16)}...` : user?.id ? `${user.id.substring(0, 16)}...` : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">创建时间:</span>
                     <span className="text-gray-900">
-                      {profile.created_at ? new Date(profile.created_at).toLocaleDateString('zh-CN') : 'N/A'}
+                      {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('zh-CN') : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">最后更新:</span>
                     <span className="text-gray-900">
-                      {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('zh-CN') : 'N/A'}
+                      {profile.updatedAt ? new Date(profile.updatedAt).toLocaleDateString('zh-CN') : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -598,9 +608,9 @@ function ProfileContent() {
                       setIsEditing(false);
                       setFieldErrors({});
                       setFormData({
-                        first_name: profile.first_name || '',
-                        last_name: profile.last_name || '',
-                        display_name: profile.display_name || '',
+                        firstName: profile.firstName || '',
+                        lastName: profile.lastName || '',
+                        displayName: profile.displayName || '',
                         bio: profile.bio || '',
                         phone: user?.phone || '',
                       });

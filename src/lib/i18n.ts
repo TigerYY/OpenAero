@@ -69,13 +69,15 @@ export default getRequestConfig(async ({ locale }) => {
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
   } catch (error) {
-    console.error(`Failed to load messages for locale ${locale}:`, error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Failed to load messages for locale ${locale}:`, error);};
     // 回退到默认语言
     if (locale !== DEFAULT_LOCALE) {
       try {
         messages = (await import(`../../messages/${DEFAULT_LOCALE}.json`)).default;
       } catch (fallbackError) {
-        console.error(`Failed to load fallback messages:`, fallbackError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`Failed to load fallback messages:`, fallbackError);}
         messages = {};
       }
     } else {

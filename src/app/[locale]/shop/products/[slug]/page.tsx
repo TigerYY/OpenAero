@@ -1,5 +1,9 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { 
   ShoppingCart, 
@@ -35,6 +39,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface Product {
@@ -138,7 +143,8 @@ export default function ProductDetailPage() {
         setProduct(data);
       }
     } catch (error) {
-      console.error('获取商品详情失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取商品详情失败:', error);}
       toast.error(error instanceof Error ? error.message : '获取商品详情失败');
     } finally {
       setLoading(false);
@@ -684,7 +690,7 @@ export default function ProductDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {product.relatedProducts.map((relatedProduct) => (
-                    <Link key={relatedProduct.id} href={routeWithDynamicParams(routes.BUSINESS.PRODUCT_DETAIL, { slug: relatedProduct.slug })} className="group">
+                    <Link key={relatedProduct.id} href={route(routes.BUSINESS.PRODUCT_DETAIL.replace('[slug]', relatedProduct.slug))} className="group">
                       <Card className="h-full hover:shadow-lg transition-shadow duration-300">
                         <div className="relative">
                           {relatedProduct.images.length > 0 && (

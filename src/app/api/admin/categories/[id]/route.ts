@@ -34,8 +34,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    const userRoles = Array.isArray(session?.user?.roles) 
-      ? session.user.roles 
+    const userRoles = Array.isArray((session?.user as any)?.roles) 
+      ? (session.user as any).roles 
       : (session?.user?.role ? [session.user.role] : []);
     
     if (!userRoles.includes('ADMIN')) {
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             id: true,
             name: true,
             slug: true,
-            isActive: true,
+            is_active: true,
           },
         },
         _count: {
@@ -75,7 +75,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(category);
   } catch (error) {
-    console.error('获取分类失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取分类失败:', error);}
     return NextResponse.json({ error: '获取分类失败' }, { status: 500 });
   }
 }
@@ -89,8 +90,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    const userRoles = Array.isArray(session?.user?.roles) 
-      ? session.user.roles 
+    const userRoles = Array.isArray((session?.user as any)?.roles) 
+      ? (session.user as any).roles 
       : (session?.user?.role ? [session.user.role] : []);
     
     if (!userRoles.includes('ADMIN')) {
@@ -164,7 +165,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             id: true,
             name: true,
             slug: true,
-            isActive: true,
+            is_active: true,
           },
         },
         _count: {
@@ -182,7 +183,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
     }
 
-    console.error('更新分类失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('更新分类失败:', error);}
     return NextResponse.json({ error: '更新分类失败' }, { status: 500 });
   }
 }
@@ -196,8 +198,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
     const session = authResult.session;
     
-    const userRoles = Array.isArray(session?.user?.roles) 
-      ? session.user.roles 
+    const userRoles = Array.isArray((session?.user as any)?.roles) 
+      ? (session.user as any).roles 
       : (session?.user?.role ? [session.user.role] : []);
     
     if (!userRoles.includes('ADMIN')) {
@@ -244,7 +246,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ message: '分类删除成功' });
   } catch (error) {
-    console.error('删除分类失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除分类失败:', error);}
     return NextResponse.json({ error: '删除分类失败' }, { status: 500 });
   }
 }

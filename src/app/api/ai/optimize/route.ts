@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(optimizations);
 
   } catch (error) {
-    console.error('代码优化建议生成错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('代码优化建议生成错误:', error);}
     return NextResponse.json(
       { error: '代码优化建议生成失败' },
       { status: 500 }

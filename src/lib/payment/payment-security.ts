@@ -3,11 +3,12 @@
  * 提供CSRF保护、金额验证、重复支付检查、频率限制等安全功能
  */
 
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
-import { logger } from '@/lib/logger';
+import { NextRequest } from 'next/server';
+
 import { getRequestIp } from '@/lib/api-helpers';
+import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
 
 // 支付频率限制配置
 const PAYMENT_RATE_LIMIT = {
@@ -54,7 +55,7 @@ export function verifyCsrfProtection(request: NextRequest): { valid: boolean; er
   // 开发环境允许localhost
   if (process.env.NODE_ENV === 'development') {
     if (host?.includes('localhost') || host?.includes('127.0.0.1')) {
-      return { valid: true };
+      return { valid: true }
     }
   }
 

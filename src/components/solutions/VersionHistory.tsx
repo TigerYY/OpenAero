@@ -90,7 +90,8 @@ export function VersionHistory({
         setVersions(data.versions);
       }
     } catch (error) {
-      console.error('加载版本历史失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载版本历史失败:', error);}
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,8 @@ export function VersionHistory({
         setSelectedVersions([v1, v2]);
       }
     } catch (error) {
-      console.error('版本比较失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('版本比较失败:', error);}
     } finally {
       setCompareLoading(false);
     }
@@ -133,7 +135,8 @@ export function VersionHistory({
         onVersionChange?.(targetVersion);
       }
     } catch (error) {
-      console.error('版本回滚失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('版本回滚失败:', error);}
     } finally {
       setRollbackLoading(false);
     }

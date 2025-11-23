@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { requireAdminAuth } from '@/lib/api-helpers';
+
+import { requireAdminAuth , createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createValidationErrorResponse, logAuditAction } from '@/lib/api-helpers';
 
 const batchRestoreSchema = z.object({
   solutionIds: z.array(z.string().min(1)).min(1, '至少选择一个方案').max(10, '最多只能选择 10 个方案'),
@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
       `成功恢复 ${results.success.length} 个方案${results.failures.length > 0 ? `，失败 ${results.failures.length} 个` : ''}`
     );
   } catch (error) {
-    console.error('批量恢复失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('批量恢复失败:', error);}
     
     if (error instanceof z.ZodError) {
       return createValidationErrorResponse(error);

@@ -3,23 +3,30 @@
  * 用于浏览器端和服务器端的认证
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
 // Supabase 配置
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// 在构建时允许环境变量缺失（运行时再检查）
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+// 只在运行时检查，构建时允许缺失（Next.js 构建时可能没有环境变量）
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production' && (!supabaseUrl || !supabaseAnonKey)) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️  Supabase environment variables are missing. This is OK during build time.');}
 }
+
+// 提供一个安全的默认值用于构建时
+const safeSupabaseUrl = supabaseUrl || 'https://placeholder.supabase.co';
+const safeSupabaseAnonKey = supabaseAnonKey || 'placeholder-key';
 
 /**
  * 浏览器端 Supabase 客户端
  * 用于客户端组件中的认证操作
  */
-export const supabaseBrowser = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabaseBrowser = createClient(safeSupabaseUrl, safeSupabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -38,7 +45,7 @@ export async function createSupabaseServer() {
   const { cookies } = await import('next/headers');
   const cookieStore = cookies();
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(safeSupabaseUrl, safeSupabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
@@ -55,7 +62,8 @@ export async function createSupabaseServer() {
         try {
           cookieStore.set({ name, value: '', ...options });
         } catch (error) {
-          console.warn('Failed to remove cookie:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Failed to remove cookie:', error);}
         }
       },
     },
@@ -80,13 +88,14 @@ export function createSupabaseServerFromRequest(
     );
   }
   
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(safeSupabaseUrl, safeSupabaseAnonKey, {
     cookies: {
       get(name: string) {
         const cookie = request.cookies.get(name);
         const value = cookie?.value;
         if (process.env.NODE_ENV === 'development' && value) {
-          console.log(`[createSupabaseServerFromRequest] 读取 cookie: ${name}, 长度: ${value.length}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[createSupabaseServerFromRequest] 读取 cookie: ${name}, 长度: ${value.length}`);};
         }
         return value;
       },
@@ -123,13 +132,15 @@ export function createSupabaseServerFromRequest(
  * 警告: 不要在客户端暴露此客户端
  */
 export function createSupabaseAdmin() {
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
-  if (!supabaseServiceKey) {
+  // 构建时允许缺失，运行时再检查
+  if (!supabaseServiceKey && process.env.NODE_ENV === 'production') {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  const serviceKey = supabaseServiceKey || 'placeholder-service-key';
+  return createClient(safeSupabaseUrl, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

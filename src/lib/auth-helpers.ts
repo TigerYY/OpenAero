@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getServerExtendedUserFromRequest } from '@/lib/auth/auth-service';
 import { ApiResponse } from '@/types';
 
@@ -24,14 +25,16 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
     
     // ExtendedUser 结构: { id, email, phone, profile, creator_profile }
     if (!extendedUser || !extendedUser.id) {
-      console.log('[authenticateRequest] 未找到用户，extendedUser:', extendedUser);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[authenticateRequest] 未找到用户，extendedUser:', extendedUser);}
       
       // 尝试直接获取用户（不要求 profile）
       const { getServerUserFromRequest } = await import('./auth/auth-service');
       const user = await getServerUserFromRequest(request);
       
       if (!user) {
-        console.log('[authenticateRequest] 直接获取用户也失败');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[authenticateRequest] 直接获取用户也失败');}
         return {
           success: false,
           error: NextResponse.json(
@@ -51,7 +54,8 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       const createResult = await AuthService.createProfileIfNotExists(user.id);
       
       if (createResult.error) {
-        console.log('[authenticateRequest] 无法创建 profile:', createResult.error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[authenticateRequest] 无法创建 profile:', createResult.error);}
         return {
           success: false,
           error: NextResponse.json(
@@ -68,7 +72,8 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       // 重新获取 extendedUser
       const retryExtendedUser = await getServerExtendedUserFromRequest(request);
       if (!retryExtendedUser || !retryExtendedUser.profile) {
-        console.log('[authenticateRequest] 重新获取 extendedUser 失败');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[authenticateRequest] 重新获取 extendedUser 失败');}
         return {
           success: false,
           error: NextResponse.json(
@@ -90,12 +95,13 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
                         userRoles.includes('ADMIN') ? 'ADMIN' : 
                         userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
 
-      console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
-        userId: retryExtendedUser.id,
-        email: retryExtendedUser.email,
-        roles: userRoles,
-        primaryRole: primaryRole,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
+          userId: retryExtendedUser.id,
+          email: retryExtendedUser.email,
+          roles: userRoles,
+          primaryRole: primaryRole,
+        });};
       
       return {
         success: true,
@@ -109,13 +115,15 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
     }
     
     if (!extendedUser.profile) {
-      console.log('[authenticateRequest] 未找到用户资料，但用户存在，尝试创建');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[authenticateRequest] 未找到用户资料，但用户存在，尝试创建');}
       // 用户存在但没有 profile，尝试创建
       const { AuthService } = await import('./auth/auth-service');
       const createResult = await AuthService.createProfileIfNotExists(extendedUser.id);
       
       if (createResult.error) {
-        console.log('[authenticateRequest] 无法创建 profile:', createResult.error);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[authenticateRequest] 无法创建 profile:', createResult.error);}
         return {
           success: false,
           error: NextResponse.json(
@@ -132,7 +140,8 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       // 重新获取 extendedUser
       const retryExtendedUser = await getServerExtendedUserFromRequest(request);
       if (!retryExtendedUser || !retryExtendedUser.profile) {
-        console.log('[authenticateRequest] 重新获取 extendedUser 失败');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[authenticateRequest] 重新获取 extendedUser 失败');}
         return {
           success: false,
           error: NextResponse.json(
@@ -154,12 +163,13 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
                         userRoles.includes('ADMIN') ? 'ADMIN' : 
                         userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
 
-      console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
-        userId: retryExtendedUser.id,
-        email: retryExtendedUser.email,
-        roles: userRoles,
-        primaryRole: primaryRole,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[authenticateRequest] 认证成功（通过创建 profile）:', {
+          userId: retryExtendedUser.id,
+          email: retryExtendedUser.email,
+          roles: userRoles,
+          primaryRole: primaryRole,
+        });};
       
       return {
         success: true,
@@ -180,12 +190,13 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
                       userRoles.includes('ADMIN') ? 'ADMIN' : 
                       userRoles.includes('CREATOR') ? 'CREATOR' : 'USER';
 
-    console.log('[authenticateRequest] 认证成功:', {
-      userId: extendedUser.id,
-      email: extendedUser.email,
-      roles: userRoles,
-      primaryRole: primaryRole,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[authenticateRequest] 认证成功:', {
+        userId: extendedUser.id,
+        email: extendedUser.email,
+        roles: userRoles,
+        primaryRole: primaryRole,
+      });};
     
     return {
       success: true,

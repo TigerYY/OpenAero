@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(recommendations);
 
   } catch (error) {
-    console.error('推荐生成错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('推荐生成错误:', error);}
     return NextResponse.json(
       { error: '推荐生成失败' },
       { status: 500 }

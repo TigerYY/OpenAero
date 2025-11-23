@@ -1,13 +1,18 @@
 'use client';
-import { useRouting } from '@/lib/routing';
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 import CreatorApplicationForm from '@/components/forms/CreatorApplicationForm';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Button } from '@/components/ui/Button';
 import { FileUpload } from '@/components/ui/FileUpload';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { useRouting } from '@/lib/routing';
 
 // 图标组件
 const User = () => (
@@ -212,7 +217,8 @@ export default function CreatorApplyPage() {
     const validResults = results.filter((r): r is { success?: boolean; url?: string; error?: string } => r != null);
     
     if (validResults.length === 0) {
-      console.warn('没有有效的上传结果');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('没有有效的上传结果');}
       return;
     }
 
@@ -387,7 +393,8 @@ export default function CreatorApplyPage() {
         alert(`申请提交失败：${errorMessage}${details ? '\n\n详细信息：\n' + details : ''}`);
       }
     } catch (error) {
-      console.error('提交申请失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('提交申请失败:', error);}
       alert('申请提交失败，请稍后重试');
     } finally {
       setIsSubmitting(false);

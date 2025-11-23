@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取设备列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取设备列表失败:', error);}
     return NextResponse.json(
       { error: '获取设备列表失败' },
       { status: 500 }
@@ -76,7 +77,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('注册设备失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('注册设备失败:', error);}
     return NextResponse.json(
       { error: '注册设备失败' },
       { status: 500 }
@@ -118,7 +120,8 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('删除设备失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('删除设备失败:', error);}
     return NextResponse.json(
       { error: '删除设备失败' },
       { status: 500 }

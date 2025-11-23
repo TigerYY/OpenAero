@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
 import { RoutingUtils } from '@/lib/routing'
 
 // 简化中间件，暂时移除认证检查以避免 openid-client 错误

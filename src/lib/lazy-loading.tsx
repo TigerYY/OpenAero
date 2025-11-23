@@ -6,6 +6,7 @@
 'use client';
 
 import React, { lazy, Suspense, ComponentType } from 'react';
+
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 /**

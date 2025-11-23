@@ -29,7 +29,7 @@ export interface VersionComparison {
 export async function createSolutionVersion(data: CreateVersionData): Promise<SolutionVersion> {
   // 获取当前最大版本号
   const latestVersion = await prisma.solutionVersion.findFirst({
-    where: { solutionId: data.solutionId },
+    where: { solution_id: data.solutionId },
     orderBy: { version: 'desc' },
   });
 
@@ -38,16 +38,16 @@ export async function createSolutionVersion(data: CreateVersionData): Promise<So
   // 将之前的活跃版本设为非活跃
   await prisma.solutionVersion.updateMany({
     where: { 
-      solutionId: data.solutionId,
-      isActive: true 
+      solution_id: data.solutionId,
+      is_active: true 
     },
-    data: { isActive: false },
+    data: { is_active: false },
   });
 
   // 创建新版本
   const newVersion = await prisma.solutionVersion.create({
     data: {
-      solutionId: data.solutionId,
+      solution_id: data.solutionId,
       version: newVersionNumber,
       title: data.title,
       description: data.description,
@@ -57,9 +57,9 @@ export async function createSolutionVersion(data: CreateVersionData): Promise<So
       features: data.features,
       specs: data.specs,
       bom: data.bom,
-      changeLog: data.changeLog,
-      createdBy: data.createdBy,
-      isActive: true,
+      change_log: data.changeLog,
+      created_by: data.createdBy,
+      is_active: true,
     },
   });
 
@@ -76,7 +76,7 @@ export async function createSolutionVersion(data: CreateVersionData): Promise<So
       features: data.features,
       specs: data.specs,
       bom: data.bom,
-      updatedAt: new Date(),
+      updated_at: new Date(),
     },
   });
 
@@ -88,18 +88,10 @@ export async function createSolutionVersion(data: CreateVersionData): Promise<So
  */
 export async function getSolutionVersionHistory(solutionId: string): Promise<SolutionVersion[]> {
   return await prisma.solutionVersion.findMany({
-    where: { solutionId },
+    where: { solution_id: solutionId },
     orderBy: { version: 'desc' },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
+    // Note: creator relation doesn't exist in SolutionVersion model
+    // Use solution.creator instead if needed
   });
 }
 
@@ -109,21 +101,13 @@ export async function getSolutionVersionHistory(solutionId: string): Promise<Sol
 export async function getSolutionVersion(solutionId: string, version: number): Promise<SolutionVersion | null> {
   return await prisma.solutionVersion.findUnique({
     where: {
-      solutionId_version: {
-        solutionId,
+      solution_id_version: {
+        solution_id: solutionId,
         version,
       },
     },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
+    // Note: creator relation doesn't exist in SolutionVersion model
+    // Use solution.creator instead if needed
   });
 }
 
@@ -198,19 +182,10 @@ export async function compareVersions(
 export async function getActiveVersion(solutionId: string): Promise<SolutionVersion | null> {
   return await prisma.solutionVersion.findFirst({
     where: { 
-      solutionId,
-      isActive: true 
+      solution_id: solutionId,
+      is_active: true 
     },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
+    // Note: creator relation doesn't exist in SolutionVersion model
   });
 }
 
@@ -224,7 +199,7 @@ export async function archiveVersion(solutionId: string, version: number): Promi
     throw new Error(`版本 ${version} 不存在`);
   }
 
-  if (versionToArchive.isActive) {
+  if (versionToArchive.is_active) {
     throw new Error('不能删除当前活跃版本');
   }
 

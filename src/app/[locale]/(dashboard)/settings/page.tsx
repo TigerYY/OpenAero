@@ -1,16 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from 'react';
+
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { useRouting } from '@/lib/routing';
-import Link from 'next/link';
-import PasswordChangeForm from '@/components/profile/PasswordChangeForm';
-import EmailChangeForm from '@/components/profile/EmailChangeForm';
-import ErrorMessage from '@/components/ui/ErrorMessage';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import EmailChangeForm from '@/components/profile/EmailChangeForm';
+import PasswordChangeForm from '@/components/profile/PasswordChangeForm';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouting } from '@/lib/routing';
+
+
 
 /**
  * 用户设置页面
@@ -198,9 +206,11 @@ function GeneralSettings({ profile, user }: any) {
 
   // 切换语言
   const handleLocaleChange = (newLocale: string) => {
-    const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
-    router.push(newPathname);
-    router.refresh();
+    if (pathname) {
+      const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
+      router.push(newPathname);
+      router.refresh();
+    }
   };
 
   // 保存时区设置
@@ -394,7 +404,8 @@ function NotificationSettings() {
       // TODO: 调用 API 保存到服务器
       // await fetch('/api/users/notifications', { method: 'PATCH', body: JSON.stringify({...}) });
     } catch (error) {
-      console.error('保存通知设置失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存通知设置失败:', error);}
     } finally {
       setSaving(false);
     }

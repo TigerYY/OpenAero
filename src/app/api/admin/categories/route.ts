@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { z } from 'zod';
 
-import { requireAdmin } from '@/lib/supabase-server-auth';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/supabase-server-auth';
 
 // 创建分类的验证模式
 const createCategorySchema = z.object({
@@ -32,8 +31,8 @@ export async function GET(request: NextRequest) {
     }
     const session = authResult.session;
     
-    const userRoles = Array.isArray(session?.user?.roles) 
-      ? session.user.roles 
+    const userRoles = Array.isArray((session?.user as any)?.roles) 
+      ? (session.user as any).roles 
       : (session?.user?.role ? [session.user.role] : []);
     
     if (!userRoles.includes('ADMIN')) {
@@ -65,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (isActive !== null) {
-      where.isActive = isActive === 'true';
+      where.is_active = isActive === 'true';
     }
 
     if (level !== null) {
@@ -89,7 +88,7 @@ export async function GET(request: NextRequest) {
               id: true,
               name: true,
               slug: true,
-              isActive: true,
+              is_active: true,
             },
           },
           _count: {
@@ -101,7 +100,7 @@ export async function GET(request: NextRequest) {
         },
         orderBy: [
           { level: 'asc' },
-          { sortOrder: 'asc' },
+          { sort_order: 'asc' },
           { name: 'asc' },
         ],
         skip,
@@ -120,7 +119,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取分类列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取分类列表失败:', error);}
     return NextResponse.json({ error: '获取分类列表失败' }, { status: 500 });
   }
 }
@@ -137,8 +137,8 @@ export async function POST(request: NextRequest) {
     }
     const session = authResult.session;
     
-    const userRoles = Array.isArray(session?.user?.roles) 
-      ? session.user.roles 
+    const userRoles = Array.isArray((session?.user as any)?.roles) 
+      ? (session.user as any).roles 
       : (session?.user?.role ? [session.user.role] : []);
     
     if (!userRoles.includes('ADMIN')) {
@@ -201,7 +201,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '数据验证失败', details: error.errors }, { status: 400 });
     }
 
-    console.error('创建分类失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建分类失败:', error);}
     return NextResponse.json({ error: '创建分类失败' }, { status: 500 });
   }
 }

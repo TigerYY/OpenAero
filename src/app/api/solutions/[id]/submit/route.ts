@@ -1,8 +1,9 @@
+import { SolutionStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
+
+import { createSuccessResponse, createErrorResponse, logAuditAction, requireCreatorAuth } from '@/lib/api-helpers';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, logAuditAction, requireCreatorAuth } from '@/lib/api-helpers';
-import { SolutionStatus } from '@prisma/client';
 
 // POST /api/solutions/[id]/submit - 提交方案审核
 export async function POST(
@@ -152,7 +153,8 @@ export async function POST(
     );
 
   } catch (error: any) {
-    console.error('提交方案审核失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('提交方案审核失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error : new Error('提交审核失败'),
       error.statusCode || 500

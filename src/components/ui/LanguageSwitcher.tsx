@@ -31,7 +31,8 @@ export function LanguageSwitcher({
   const handleLanguageChange = (newLocale: Locale) => {
     if (newLocale === currentLocale) return;
     
-    console.log('LanguageSwitcher: Changing language from', currentLocale, 'to', newLocale);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('LanguageSwitcher: Changing language from', currentLocale, 'to', newLocale);}
     onLocaleChange(newLocale);
     setIsOpen(false);
     setFocusedIndex(-1);

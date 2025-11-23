@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createValidationErrorResponse,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { createCreatorApplication } from '@/lib/creator-application';
 
 export const dynamic = 'force-dynamic';
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    console.error('创作者申请错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创作者申请错误:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '申请提交失败，请稍后重试',
       error instanceof Error && (error.message.includes('已经是') || error.message.includes('已经有一个'))

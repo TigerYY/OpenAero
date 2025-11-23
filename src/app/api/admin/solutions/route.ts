@@ -1,6 +1,7 @@
 import { SolutionStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -8,8 +9,8 @@ import {
   createValidationErrorResponse,
   createPaginatedResponse,
 } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
 import { convertSnakeToCamel } from '@/lib/field-mapper';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -174,20 +175,25 @@ export async function GET(request: NextRequest) {
             try {
               const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
               if (error) {
-                console.warn(`[Admin Solutions API] 获取用户邮箱失败 (userId: ${userId}):`, error.message);
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn(`[Admin Solutions API] 获取用户邮箱失败 (userId: ${userId});:`, error.message)
+                };
                 emailMap.set(userId, null);
               } else {
                 emailMap.set(userId, authUser?.user?.email || null);
               }
             } catch (error: any) {
-              console.warn(`[Admin Solutions API] 获取用户邮箱异常 (userId: ${userId}):`, error?.message || error);
+              if (process.env.NODE_ENV === 'development') {
+                console.warn(`[Admin Solutions API] 获取用户邮箱异常 (userId: ${userId});:`, error?.message || error)
+              };
               emailMap.set(userId, null);
             }
           })
         );
       }
     } catch (error: any) {
-      console.warn('[Admin Solutions API] 批量获取用户邮箱失败:', error?.message || error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Admin Solutions API] 批量获取用户邮箱失败:', error?.message || error);}
       // 继续执行，不中断主流程
     }
 
@@ -315,7 +321,8 @@ export async function GET(request: NextRequest) {
       '获取方案列表成功'
     );
   } catch (error) {
-    console.error('[Admin Solutions API] 获取方案列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Admin Solutions API] 获取方案列表失败:', error);}
     
     // 提供更详细的错误信息
     let errorMessage = '获取方案列表失败';
@@ -327,11 +334,11 @@ export async function GET(request: NextRequest) {
         name: error.name,
         message: error.message,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      };
+      }
       
       // 打印完整的错误堆栈（仅在开发环境）
       if (process.env.NODE_ENV === 'development') {
-        console.error('[Admin Solutions API] 错误堆栈:', error.stack);
+        console.error('[Admin Solutions API] 错误堆栈:', error.stack);;
       }
       
       // 如果是数据库连接错误，提供更详细的诊断信息
@@ -356,7 +363,8 @@ export async function GET(request: NextRequest) {
         errorDetails.suggestion = '请检查 Prisma schema 和数据库结构是否一致';
       }
     } else {
-      console.error('[Admin Solutions API] 未知错误类型:', typeof error, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Admin Solutions API] 未知错误类型:', typeof error, error);}
     }
     
     return createErrorResponse(

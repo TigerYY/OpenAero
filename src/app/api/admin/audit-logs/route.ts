@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -13,6 +14,7 @@ import {
   createPaginatedResponse,
 } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
+import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,31 +98,82 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [logs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        where,
-        select: {
-          id: true,
-          userId: true,
-          action: true,
-          resource: true,
-          resourceId: true,
-          success: true,
-          errorMessage: true,
-          metadata: true,
-          ipAddress: true,
-          userAgent: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.auditLog.count({ where }),
-    ]);
+    // Note: auditLog model doesn't exist in Prisma schema
+    // Using Supabase client instead
+    const supabase = createSupabaseAdmin();
+    
+    // Build Supabase query
+    let query = supabase
+      .from('audit_logs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(skip, skip + limit - 1);
+    
+    // Apply filters
+    if (where.userId) {
+      query = query.eq('user_id', where.userId);
+    }
+    if (where.action) {
+      query = query.eq('action', where.action);
+    }
+    if (where.resource) {
+      query = query.eq('resource', where.resource);
+    }
+    if (where.success !== undefined) {
+      query = query.eq('success', where.success);
+    }
+    if (where.createdAt) {
+      if (where.createdAt.gte) {
+        query = query.gte('created_at', where.createdAt.gte.toISOString());
+      }
+      if (where.createdAt.lte) {
+        query = query.lte('created_at', where.createdAt.lte.toISOString());
+      }
+    }
+    if (where.OR && where.OR.length > 0) {
+      // Handle search - extract search term from OR conditions
+      const searchConditions = where.OR as any[];
+      const searchTerms: string[] = [];
+      searchConditions.forEach(condition => {
+        if (condition.action?.contains) searchTerms.push(condition.action.contains);
+        if (condition.resource?.contains) searchTerms.push(condition.resource.contains);
+        if (condition.resourceId?.contains) searchTerms.push(condition.resourceId.contains);
+        if (condition.errorMessage?.contains) searchTerms.push(condition.errorMessage.contains);
+      });
+      const searchTerm = searchTerms[0]; // Use first search term
+      if (searchTerm) {
+        // Supabase doesn't support OR directly, so we'll search in multiple fields
+        query = query.or(`action.ilike.%${searchTerm}%,resource.ilike.%${searchTerm}%,resource_id.ilike.%${searchTerm}%,error_message.ilike.%${searchTerm}%`);
+      }
+    }
+    
+    const { data: logsData, error, count } = await query;
+    
+    if (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch audit logs:', error);
+      }
+      return createErrorResponse('获取审计日志失败', 500);
+    }
+    
+    const logs = (logsData || []).map((log: any) => ({
+      id: log.id,
+      userId: log.user_id,
+      action: log.action,
+      resource: log.resource,
+      resourceId: log.resource_id,
+      success: log.success,
+      errorMessage: log.error_message,
+      metadata: log.metadata,
+      ipAddress: log.ip_address,
+      userAgent: log.user_agent,
+      createdAt: log.created_at,
+    }));
+    
+    const total = count || 0;
 
     // 获取用户信息（如果需要）
-    const userIds = [...new Set(logs.map((log) => log.userId).filter(Boolean))];
+    const userIds = [...new Set(logs.map((log: any) => log.userId).filter(Boolean))];
     const users = userIds.length > 0
       ? await prisma.userProfile.findMany({
           where: { user_id: { in: userIds } },
@@ -135,7 +188,7 @@ export async function GET(request: NextRequest) {
 
     const userMap = new Map(users.map((u) => [u.user_id, u]));
 
-    const formattedLogs = logs.map((log) => ({
+    const formattedLogs = logs.map((log: any) => ({
       id: log.id,
       userId: log.userId,
       userName: log.userId
@@ -156,16 +209,14 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(
       formattedLogs,
-      {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      page,
+      limit,
+      total,
       '获取审计日志成功'
     );
   } catch (error) {
-    console.error('获取审计日志失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取审计日志失败:', error);}
     return createErrorResponse(
       '获取审计日志失败',
       500,

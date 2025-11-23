@@ -154,7 +154,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('获取搜索建议失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取搜索建议失败:', error);}
     return NextResponse.json(
       { error: '获取搜索建议失败' },
       { status: 500 }
@@ -184,7 +185,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('记录搜索行为失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('记录搜索行为失败:', error);}
     return NextResponse.json(
       { error: '记录搜索行为失败' },
       { status: 500 }

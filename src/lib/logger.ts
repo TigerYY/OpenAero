@@ -11,12 +11,12 @@ interface Logger {
 const developmentLogger: Logger = {
   info: (message: string, data?: any) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[INFO] ${message}`, data || '');
+      console.log(`[INFO] ${message}`, data || '');;
     }
   },
   warn: (message: string, data?: any) => {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[WARN] ${message}`, data || '');
+      console.warn(`[WARN] ${message}`, data || '');;
     }
   },
   error: (message: string, data?: any) => {
@@ -24,7 +24,7 @@ const developmentLogger: Logger = {
   },
   debug: (message: string, data?: any) => {
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${message}`, data || '');
+      console.debug(`[DEBUG] ${message}`, data || '');;
     }
   }
 };

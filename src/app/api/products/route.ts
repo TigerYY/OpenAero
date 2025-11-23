@@ -2,12 +2,12 @@ import { ProductStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
-import { prisma } from '@/lib/prisma';
 import {
   createSuccessResponse,
   createErrorResponse,
   createPaginatedResponse,
 } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
 const productQuerySchema = z.object({
   page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
@@ -201,7 +201,8 @@ export async function GET(request: NextRequest) {
       '获取商品列表成功'
     );
   } catch (error) {
-    console.error('获取商品列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取商品列表失败:', error);}
     return createErrorResponse(
       '获取商品列表失败',
       500,

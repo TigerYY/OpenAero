@@ -5,11 +5,12 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getServerUser } from '@/lib/auth/auth-service';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import {
   getRecommendationsByViewHistory,
   getRecommendationsByPurchaseHistory,
@@ -74,7 +75,8 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(recommendations, '获取推荐成功');
   } catch (error) {
-    console.error('获取产品推荐失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取产品推荐失败:', error);}
     return createErrorResponse(
       '获取产品推荐失败',
       500,

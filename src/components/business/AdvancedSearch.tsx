@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
+
 import { useRouting } from '@/lib/routing';
 
 interface SearchFilters {
@@ -94,7 +95,8 @@ export default function AdvancedSearch({ onSearch, isOpen, onClose }: AdvancedSe
         setSuggestions(data.suggestions || []);
       }
     } catch (error) {
-      console.error('获取搜索建议失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取搜索建议失败:', error);}
     }
   }, []);
 
@@ -165,7 +167,8 @@ export default function AdvancedSearch({ onSearch, isOpen, onClose }: AdvancedSe
       onSearch(filters);
       onClose();
     } catch (error) {
-      console.error('搜索失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('搜索失败:', error);}
     } finally {
       setIsLoading(false);
     }

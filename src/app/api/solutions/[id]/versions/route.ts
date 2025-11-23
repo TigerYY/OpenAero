@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
-
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
+import { prisma } from '@/lib/prisma';
 import { 
   getSolutionVersionHistory, 
   createSolutionVersion, 
@@ -52,7 +51,8 @@ export async function GET(
     
     return NextResponse.json({ versions });
   } catch (error) {
-    console.error('获取版本历史失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取版本历史失败:', error);}
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
@@ -113,7 +113,8 @@ export async function POST(
 
     return NextResponse.json({ version: newVersion }, { status: 201 });
   } catch (error) {
-    console.error('创建版本失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建版本失败:', error);}
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }

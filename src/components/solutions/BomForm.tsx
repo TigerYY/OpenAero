@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { Plus, Trash2, Edit2, X, Save } from 'lucide-react';
+import { useState, useCallback } from 'react';
+
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 
 // BOM 物料类别枚举
 export const BOM_CATEGORIES = [

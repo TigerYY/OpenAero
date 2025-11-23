@@ -165,7 +165,8 @@ export default function ChatSystem({ currentUserId, className = '' }: ChatSystem
         setRooms(data.rooms || []);
       }
     } catch (error) {
-      console.error('加载聊天室失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载聊天室失败:', error);}
     }
   };
 
@@ -177,7 +178,8 @@ export default function ChatSystem({ currentUserId, className = '' }: ChatSystem
         setMessages(data.messages || []);
       }
     } catch (error) {
-      console.error('加载消息失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('加载消息失败:', error);}
     }
   };
 

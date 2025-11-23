@@ -5,11 +5,12 @@
 
 import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -188,7 +189,8 @@ export async function GET(
 
     return createSuccessResponse({ product: formattedProduct }, '获取商品详情成功');
   } catch (error) {
-    console.error('获取商品详情失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取商品详情失败:', error);}
     return createErrorResponse(
       '获取商品详情失败',
       500,

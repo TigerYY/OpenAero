@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -32,7 +33,8 @@ export async function GET(request: NextRequest) {
       needsVerification: !isVerified,
     });
   } catch (error: unknown) {
-    console.error('Get email verification status error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Get email verification status error:', error);}
     return createErrorResponse(
       '获取邮箱验证状态失败',
       500,

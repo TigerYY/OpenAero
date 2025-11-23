@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -12,8 +13,7 @@ import {
   requireAdminAuth,
   logAuditAction,
 } from '@/lib/api-helpers';
-import { createSupabaseServer } from '@/lib/auth/supabase-client';
-import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
+import { createSupabaseServer , createSupabaseAdmin } from '@/lib/auth/supabase-client';
 import { sendStatusChangeNotification } from '@/lib/email/smtp-service';
 
 // 用户状态枚举
@@ -111,7 +111,8 @@ export async function PATCH(
       .eq('user_id', userId);
 
     if (updateError) {
-      console.error('更新用户状态失败:', updateError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新用户状态失败:', updateError);}
       await logAuditAction(request, {
         userId: adminUser.id,
         action: 'UPDATE_USER_STATUS_FAILED',
@@ -138,7 +139,8 @@ export async function PATCH(
         // 注意：Supabase Admin API 的 signOut 方法签名可能不同，需要根据实际API调整
         const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId);
         if (signOutError) {
-          console.error('使用户会话失效失败:', signOutError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('使用户会话失效失败:', signOutError);}
           // 不阻止状态更新，只记录错误
         }
       } catch (signOutErr) {
@@ -178,7 +180,8 @@ export async function PATCH(
         oldStatus,
         reason
       );
-      console.log(`[用户状态变更] 已发送通知邮件给用户: ${currentProfile.email}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[用户状态变更] 已发送通知邮件给用户: ${currentProfile.email}`);};
     } catch (emailError) {
       // 邮件发送失败不影响状态更新，只记录错误
       console.error('[用户状态变更] 发送通知邮件失败:', emailError);

@@ -170,7 +170,8 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('获取消息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取消息失败:', error);}
     return NextResponse.json(
       { success: false, error: '获取消息失败' },
       { status: 500 }
@@ -224,7 +225,8 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('发送消息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('发送消息失败:', error);}
     return NextResponse.json(
       { success: false, error: '发送消息失败' },
       { status: 500 }

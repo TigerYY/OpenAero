@@ -54,7 +54,8 @@ export default async function handler(
         message: 'Test notification sent successfully'
       });
     } catch (error) {
-      console.error('Failed to send test notification:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to send test notification:', error);}
       res.status(500).json({ 
         error: 'Failed to send test notification',
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -62,7 +63,8 @@ export default async function handler(
     }
 
   } catch (error) {
-    console.error('Test notification API error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Test notification API error:', error);}
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -116,7 +118,8 @@ async function sendTestNotification(
 
     await webpush.sendNotification(subscription, payload);
   } catch (error) {
-    console.error('Failed to send test notification:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to send test notification:', error);}
     throw error;
   }
 }

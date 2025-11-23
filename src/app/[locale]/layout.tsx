@@ -3,16 +3,18 @@
  * 添加页面过渡动画和移动端优化
  */
 
+import { Inter } from 'next/font/google';
+import { notFound } from 'next/navigation';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { ReactNode } from 'react';
+
 import { MobileOptimization } from '@/components/layout/MobileOptimization';
 import { PageTransitionWrapper } from '@/components/layout/PageTransitionWrapper';
 import { CartProvider } from '@/components/shop/CartProvider';
 import { APP_CONFIG } from '@/config/app';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { Inter } from 'next/font/google';
-import { notFound } from 'next/navigation';
-import { ReactNode } from 'react';
+import '../globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -48,7 +50,7 @@ export default async function LocaleLayout({
   
   // 调试：确认加载的翻译文件
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[LocaleLayout] Loading locale: ${locale}`);
+    console.log(`[LocaleLayout] Loading locale: ${locale}`);;
     console.log(`[LocaleLayout] Hero title (en):`, messages?.hero?.title);
   }
 

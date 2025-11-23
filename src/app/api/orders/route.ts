@@ -1,13 +1,15 @@
-import { NextRequest } from 'next/server';
 import { OrderStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
   createPaginatedResponse,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getUserOrders, createOrder } from '@/lib/order';
-import { z } from 'zod';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +66,8 @@ export async function GET(request: NextRequest) {
       '获取订单列表成功'
     );
   } catch (error) {
-    console.error('获取订单列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取订单列表失败:', error);}
     return createErrorResponse(
       '获取订单列表失败',
       500,
@@ -108,7 +111,8 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(order, '订单创建成功');
   } catch (error) {
-    console.error('创建订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建订单失败:', error);}
     return createErrorResponse(
       '创建订单失败',
       500,

@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(tagSuggestions);
 
   } catch (error) {
-    console.error('标签生成错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('标签生成错误:', error);}
     return NextResponse.json(
       { error: '标签生成失败' },
       { status: 500 }

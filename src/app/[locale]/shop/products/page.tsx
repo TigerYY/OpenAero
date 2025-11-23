@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import {
   Eye,
   Grid,
@@ -547,8 +552,8 @@ export default function ProductsPage() {
                       value={`${filters.sortBy}-${filters.sortOrder}`}
                       onChange={e => {
                         const [sortBy, sortOrder] = e.target.value.split('-');
-                        handleFilterChange('sortBy', sortBy);
-                        handleFilterChange('sortOrder', sortOrder);
+                        if (sortBy) handleFilterChange('sortBy', sortBy);
+                        if (sortOrder) handleFilterChange('sortOrder', sortOrder);
                       }}
                       className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                     >

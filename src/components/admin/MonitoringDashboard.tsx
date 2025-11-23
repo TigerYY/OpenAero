@@ -1,13 +1,13 @@
 'use client';
 
+import { Activity, AlertCircle, TrendingUp, Server, Database, Zap, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Activity, AlertCircle, TrendingUp, Server, Database, Zap, Clock } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
 // 健康检查响应类型
 interface HealthCheckResponse {
@@ -157,7 +157,8 @@ export function MonitoringDashboard() {
 
       setLastUpdate(new Date());
     } catch (err) {
-      console.error('Failed to fetch monitoring data:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch monitoring data:', err);}
       setError(err instanceof Error ? err.message : 'Failed to fetch monitoring data');
     } finally {
       setLoading(false);

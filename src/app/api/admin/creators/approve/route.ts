@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAdminAuth } from '@/lib/api-helpers';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { requireAdminAuth, logAuditAction } from '@/lib/api-helpers';
 
 const prisma = new PrismaClient();
 
@@ -80,19 +81,16 @@ export async function POST(request: NextRequest) {
     });
 
     // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: adminUserId,
-        action: 'CREATOR_APPLICATION_APPROVED',
-        resource: 'CreatorApplication',
-        resourceId: applicationId,
-        details: {
-          applicantUserId: application.userId,
-          adminNotes: adminNotes
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
+    await logAuditAction(request, {
+      userId: adminUserId,
+      action: 'CREATOR_APPLICATION_APPROVED',
+      resource: 'CreatorApplication',
+      resourceId: applicationId,
+      metadata: {
+        applicantUserId: application.userId,
+        adminNotes: adminNotes
+      },
+      success: true,
     });
 
     // 发送批准通知邮件（这里应该调用邮件服务）
@@ -105,7 +103,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('批准创作者申请错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('批准创作者申请错误:', error);}
     return NextResponse.json(
       { error: '批准申请失败，请稍后重试' },
       { status: 500 }
@@ -166,19 +165,16 @@ export async function PUT(request: NextRequest) {
     });
 
     // 创建审计日志
-    await prisma.auditLog.create({
-      data: {
-        userId: adminUserId,
-        action: 'CREATOR_APPLICATION_REJECTED',
-        resource: 'CreatorApplication',
-        resourceId: applicationId,
-        details: {
-          applicantUserId: application.userId,
-          rejectionReason: rejectionReason
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
-      }
+    await logAuditAction(request, {
+      userId: adminUserId,
+      action: 'CREATOR_APPLICATION_REJECTED',
+      resource: 'CreatorApplication',
+      resourceId: applicationId,
+      metadata: {
+        applicantUserId: application.userId,
+        rejectionReason: rejectionReason
+      },
+      success: true,
     });
 
     // 发送拒绝通知邮件（这里应该调用邮件服务）
@@ -191,7 +187,8 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('拒绝创作者申请错误:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('拒绝创作者申请错误:', error);}
     return NextResponse.json(
       { error: '拒绝申请失败，请稍后重试' },
       { status: 500 }

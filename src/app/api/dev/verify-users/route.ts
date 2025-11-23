@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabaseServerClient } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    console.log('开始验证用户数据...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('开始验证用户数据...');}
     
     const supabase = getSupabaseServerClient();
     
@@ -24,7 +26,8 @@ export async function GET() {
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     
     if (authError) {
-      console.error('获取Auth用户失败:', authError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取Auth用户失败:', authError);}
     }
     
     return NextResponse.json({
@@ -41,7 +44,8 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('用户验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('用户验证失败:', error);}
     return NextResponse.json({
       success: false,
       error: '用户验证失败',
@@ -76,7 +80,8 @@ export async function POST(request: NextRequest) {
     });
     
     if (authError) {
-      console.error('创建Auth用户失败:', authError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('创建Auth用户失败:', authError);}
       return NextResponse.json({
         success: false,
         error: '创建用户失败',
@@ -99,7 +104,8 @@ export async function POST(request: NextRequest) {
         });
       
       if (dbError) {
-        console.error('同步数据库失败:', dbError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('同步数据库失败:', dbError);}
         return NextResponse.json({
           success: false,
           error: '同步数据库失败',
@@ -115,7 +121,8 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('创建用户失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建用户失败:', error);}
     return NextResponse.json({
       success: false,
       error: '创建用户失败',

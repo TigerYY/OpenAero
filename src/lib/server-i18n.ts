@@ -21,7 +21,8 @@ export async function getServerMessagesFor(locale: 'zh-CN' | 'en-US'): Promise<R
     const messages = (await import(`../../messages/${locale}.json`)).default;
     return messages;
   } catch (error) {
-    console.error(`Failed to load messages for locale ${locale}:`, error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Failed to load messages for locale ${locale}:`, error);};
     return {};
   }
 }

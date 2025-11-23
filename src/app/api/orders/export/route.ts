@@ -3,12 +3,14 @@
  * GET /api/orders/export - 导出订单为CSV格式
  */
 
-import { NextRequest } from 'next/server';
 import { OrderStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
-import { createErrorResponse } from '@/lib/api-helpers';
-import { getUserOrders } from '@/lib/order';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
+import { createErrorResponse } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
+import { getUserOrders } from '@/lib/order';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -90,7 +92,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('导出订单失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('导出订单失败:', error);}
     return createErrorResponse(
       '导出订单失败',
       500,

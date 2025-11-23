@@ -74,7 +74,8 @@ export function VersionCompare({
         setComparison(data.differences);
       }
     } catch (error) {
-      console.error('版本比较失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('版本比较失败:', error);}
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+
 import {
   requireAdminAuth,
   createSuccessResponse,
@@ -8,8 +9,8 @@ import {
   createValidationErrorResponse,
   createPaginatedResponse,
 } from '@/lib/api-helpers';
-import { prisma } from '@/lib/prisma';
 import { createSupabaseAdmin } from '@/lib/auth/supabase-client';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,13 +47,14 @@ export async function GET(request: NextRequest) {
 
     // 3. Fetch ALL users from Supabase Auth (the single source of truth)
     const supabaseAdmin = createSupabaseAdmin();
-    let allAuthUsers = [];
+    const allAuthUsers = [];
     let nextPageToken: string | null = null;
 
     do {
       const { data: authUsersBatch, error: authError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000, pageToken: nextPageToken });
       if (authError) {
-        console.error('从 Supabase 获取用户时出错:', authError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('从 Supabase 获取用户时出错:', authError);}
         throw new Error('无法从认证服务获取用户列表');
       }
       allAuthUsers.push(...authUsersBatch.users);
@@ -123,7 +125,8 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('获取用户列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取用户列表失败:', error);}
     return createErrorResponse(error instanceof Error ? error.message : '获取用户列表时发生未知错误', 500);
   }
 }

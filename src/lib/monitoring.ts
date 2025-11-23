@@ -70,7 +70,8 @@ function handlePerformanceMetric(metric: PerformanceMetrics) {
         timestamp: Date.now(),
       }),
     }).catch(error => {
-      console.error('Failed to send performance metric:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to send performance metric:', error);}
     });
   }
 }
@@ -296,7 +297,7 @@ export class ErrorMonitor {
   static captureError(error: Error, context?: Record<string, unknown>) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.error('Error captured:', error, context);
+      console.error('Error captured:', error, context);;
     }
 
     // 发送错误到监控服务
@@ -331,7 +332,7 @@ export class ErrorMonitor {
   static setUser(user: { id: string; email?: string; name?: string }) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('User set:', user);
+      console.log('User set:', user);;
     }
     // 可以存储到 localStorage 或发送到分析服务
     if (typeof window !== 'undefined') {
@@ -342,7 +343,7 @@ export class ErrorMonitor {
   static clearUser() {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('User cleared');
+      console.log('User cleared');;
     }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('monitoring_user');
@@ -352,7 +353,7 @@ export class ErrorMonitor {
   static addBreadcrumb(message: string, category: string, level: 'info' | 'warning' | 'error' = 'info', data?: Record<string, unknown>) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Breadcrumb added:', { message, category, level, data });
+      console.log('Breadcrumb added:', { message, category, level, data });;
     }
   }
 }
@@ -387,7 +388,7 @@ export class APIMonitor {
           duration,
           success,
           error: error?.message,
-        });
+        });;
       }
 
       // 发送到监控服务
@@ -434,7 +435,7 @@ export class BusinessMetrics {
   static trackSolutionView(solutionId: string, solutionTitle: string) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Solution view tracked:', { solutionId, solutionTitle });
+      console.log('Solution view tracked:', { solutionId, solutionTitle });;
     }
 
     if (typeof window !== 'undefined') {
@@ -470,7 +471,7 @@ export class BusinessMetrics {
   static trackCreatorApplication(creatorId: string, status: 'started' | 'completed' | 'failed') {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Creator application tracked:', { creatorId, status });
+      console.log('Creator application tracked:', { creatorId, status });;
     }
 
     if (typeof window !== 'undefined') {
@@ -506,7 +507,7 @@ export class BusinessMetrics {
   static trackSearch(query: string, resultsCount: number, filters?: Record<string, unknown>) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Search tracked:', { query, resultsCount, filters });
+      console.log('Search tracked:', { query, resultsCount, filters });;
     }
 
     if (typeof window !== 'undefined') {

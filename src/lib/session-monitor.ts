@@ -98,7 +98,8 @@ export class SessionMonitor {
       },
     });
 
-    console.log('会话监控已启动:', { userId, sessionId, deviceId });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('会话监控已启动:', { userId, sessionId, deviceId });};
   }
 
   // 结束会话监控
@@ -212,7 +213,8 @@ export class SessionMonitor {
         return data;
       }
     } catch (error) {
-      console.error('获取会话分析失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取会话分析失败:', error);}
     }
 
     // 从本地数据生成分析
@@ -332,7 +334,8 @@ export class SessionMonitor {
         this.activities = this.activities.slice(-1000);
       }
     } catch (error) {
-      console.error('刷新活动失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('刷新活动失败:', error);}
       // 失败时重新加入缓冲区
       this.activityBuffer.unshift(...activitiesToFlush);
     }

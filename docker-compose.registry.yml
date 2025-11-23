@@ -1,0 +1,70 @@
+version: '3.8'
+
+# 使用容器注册表镜像的 Docker Compose 配置
+# 从 GitHub Container Registry 或 Docker Hub 拉取镜像
+
+services:
+  app:
+    # 使用环境变量指定镜像，默认从 GitHub Container Registry
+    image: ${DOCKER_IMAGE:-ghcr.io/openaero-web:latest}
+    container_name: openaero-app
+    restart: unless-stopped
+    
+    ports:
+      - "${PORT:-3000}:3000"
+    
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      # 从环境变量文件加载
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    
+    env_file:
+      - .env.production
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - openaero-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: openaero-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes
+    
+    volumes:
+      - redis_data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    
+    networks:
+      - openaero-network
+
+volumes:
+  redis_data:
+
+networks:
+  openaero-network:
+    driver: bridge
+

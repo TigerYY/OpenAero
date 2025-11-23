@@ -1,11 +1,12 @@
 'use client';
 
-import { Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
 import { useTranslations } from 'next-intl';
+import { Fragment } from 'react';
+
+import { useAuth } from '@/hooks/useAuth';
 import { useRouting } from '@/lib/routing';
 
 function classNames(...classes: string[]) {

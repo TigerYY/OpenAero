@@ -3,9 +3,10 @@
  * PUT /api/admin/products/reviews/[id] - 审核产品评价
  */
 
-import { NextRequest } from 'next/server';
 import { ReviewStatus } from '@prisma/client';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -13,8 +14,9 @@ import {
   requireAdminAuth,
   logAuditAction,
 } from '@/lib/api-helpers';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { reviewProductReview } from '@/lib/product-review';
-import { z } from 'zod';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +71,8 @@ export async function PUT(
       approved ? '评价审核通过' : '评价已拒绝'
     );
   } catch (error) {
-    console.error('审核评价失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('审核评价失败:', error);}
     return createErrorResponse(
       error instanceof Error ? error.message : '审核评价失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,

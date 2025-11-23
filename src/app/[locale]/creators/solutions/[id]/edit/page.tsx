@@ -1,24 +1,30 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
+import { Save, ArrowRight, ArrowLeft, X, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { BomForm, BomItem, ReviewHistory, ReviewRecord } from '@/components/solutions';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { FileUpload } from '@/components/ui/FileUpload';
+import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouting } from '@/lib/routing';
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
-import { FileUpload } from '@/components/ui/FileUpload';
-import { BomForm, BomItem, ReviewHistory, ReviewRecord } from '@/components/solutions';
+import { canEditSolution } from '@/lib/solution-status-workflow';
 import { SolutionCategory, SolutionStatus } from '@/shared/types/solutions';
-import { toast } from 'sonner';
-import { Save, ArrowRight, ArrowLeft, X, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { canEditSolution } from '@/lib/solution-status-workflow';
 import {
   Dialog,
   DialogContent,
@@ -197,7 +203,8 @@ function CreatorSolutionEditContent() {
           try {
             parsedTechnicalSpecs = JSON.parse(solutionData.technicalSpecs);
           } catch (e) {
-            console.error('解析 technicalSpecs 失败:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('解析 technicalSpecs 失败:', e);}
             parsedTechnicalSpecs = {};
           }
         } else if (typeof solutionData.technicalSpecs === 'object' && solutionData.technicalSpecs !== null) {
@@ -209,7 +216,8 @@ function CreatorSolutionEditContent() {
           try {
             parsedSpecs = JSON.parse(solutionData.specs);
           } catch (e) {
-            console.error('解析 specs 失败:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('解析 specs 失败:', e);}
             parsedSpecs = {};
           }
         } else if (typeof solutionData.specs === 'object' && solutionData.specs !== null) {
@@ -247,7 +255,8 @@ function CreatorSolutionEditContent() {
           try {
             parsedUseCases = JSON.parse(solutionData.useCases);
           } catch (e) {
-            console.error('解析 useCases 失败:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('解析 useCases 失败:', e);}
             parsedUseCases = {};
           }
         } else if (typeof solutionData.useCases === 'object' && solutionData.useCases !== null) {
@@ -277,7 +286,8 @@ function CreatorSolutionEditContent() {
           try {
             parsedArchitecture = JSON.parse(solutionData.architecture);
           } catch (e) {
-            console.error('解析 architecture 失败:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('解析 architecture 失败:', e);}
             parsedArchitecture = {};
           }
         } else if (typeof solutionData.architecture === 'object' && solutionData.architecture !== null) {
@@ -318,7 +328,8 @@ function CreatorSolutionEditContent() {
       setUseCases(useCasesArray.length > 0 ? useCasesArray : [{ title: '', description: '' }]);
       setArchitectureSections(architectureArray.length > 0 ? architectureArray : [{ title: '', content: '' }]);
     } catch (error) {
-      console.error('获取方案失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取方案失败:', error);}
       toast.error(error instanceof Error ? error.message : '获取方案失败');
     } finally {
       setLoading(false);
@@ -337,7 +348,8 @@ function CreatorSolutionEditContent() {
         setReviewHistory(result.data);
       }
     } catch (error) {
-      console.error('获取审核历史失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取审核历史失败:', error);}
     }
   };
 
@@ -371,7 +383,8 @@ function CreatorSolutionEditContent() {
       if (!response.ok) {
         console.warn('[EditSolution] 自动保存失败');
       } else {
-        console.log('[EditSolution] 自动保存成功（基本信息、技术规格、应用场景、架构、BOM）');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[EditSolution] 自动保存成功（基本信息、技术规格、应用场景、架构、BOM）');}
       }
     } catch (error) {
       console.error('[EditSolution] 自动保存失败:', error);
@@ -502,6 +515,7 @@ function CreatorSolutionEditContent() {
 
   const removeAsset = async (index: number) => {
     const asset = formData.assets[index];
+    if (!asset) return;
     if (asset.id) {
       // 如果资产有 ID，调用 API 删除
       try {
@@ -519,7 +533,8 @@ function CreatorSolutionEditContent() {
           return;
         }
       } catch (error) {
-        console.error('删除资产失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('删除资产失败:', error);}
         toast.error('删除资产失败');
         return;
       }
@@ -607,7 +622,7 @@ function CreatorSolutionEditContent() {
         setValidationErrors(errors);
         // 滚动到第一个错误字段
         const firstErrorField = Object.keys(errors)[0];
-        const element = document.getElementById(firstErrorField);
+        const element = firstErrorField ? document.getElementById(firstErrorField) : null;
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.focus();
@@ -658,7 +673,8 @@ function CreatorSolutionEditContent() {
         throw new Error(result.error || result.message || '更新方案失败');
       }
 
-      console.log('[EditSolution] 方案基本信息已保存');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[EditSolution] 方案基本信息已保存');}
 
       // 更新 BOM（即使为空数组也发送，用于清空 BOM）
       // 保存草稿时也要保存 BOM，确保所有步骤的数据都被保存
@@ -692,7 +708,8 @@ function CreatorSolutionEditContent() {
 
         if (!bomResponse.ok) {
           const errorData = await bomResponse.json();
-          console.warn('[EditSolution] 更新 BOM 失败:', errorData);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[EditSolution] 更新 BOM 失败:', errorData);}
           // 保存草稿时，BOM 更新失败不应该阻止保存，只显示警告
           if (isDraft) {
             toast.warning('BOM 清单保存失败，但其他内容已保存');
@@ -701,7 +718,8 @@ function CreatorSolutionEditContent() {
             throw new Error(errorData.error || 'BOM 更新失败');
           }
         } else {
-          console.log('[EditSolution] BOM 已保存，项目数量:', formData.bom.length);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[EditSolution] BOM 已保存，项目数量:', formData.bom.length);}
         }
       } catch (error) {
         if (!isDraft) {
@@ -715,7 +733,8 @@ function CreatorSolutionEditContent() {
       // 保存草稿时也要保存资产，确保所有步骤的数据都被保存
       const newAssets = formData.assets.filter(a => !a.id);
       const existingAssets = formData.assets.filter(a => a.id);
-      console.log('[EditSolution] 开始保存资产，新资产数量:', newAssets.length, '已存在资产数量:', existingAssets.length);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[EditSolution] 开始保存资产，新资产数量:', newAssets.length, '已存在资产数量:', existingAssets.length);}
       
       if (newAssets.length > 0) {
         try {
@@ -732,7 +751,8 @@ function CreatorSolutionEditContent() {
 
           if (!assetsResponse.ok) {
             const errorData = await assetsResponse.json();
-            console.warn('[EditSolution] 添加资产失败:', errorData);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('[EditSolution] 添加资产失败:', errorData);}
             // 保存草稿时，资产添加失败不应该阻止保存，只显示警告
             if (isDraft) {
               toast.warning('部分资产保存失败，但其他内容已保存');
@@ -741,7 +761,8 @@ function CreatorSolutionEditContent() {
               throw new Error(errorData.error || '资产添加失败');
             }
           } else {
-            console.log('[EditSolution] 新资产已保存，数量:', newAssets.length);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[EditSolution] 新资产已保存，数量:', newAssets.length);}
           }
         } catch (error) {
           if (!isDraft) {
@@ -751,7 +772,8 @@ function CreatorSolutionEditContent() {
           toast.warning('部分资产保存失败，但其他内容已保存');
         }
       } else {
-        console.log('[EditSolution] 没有新资产需要保存');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[EditSolution] 没有新资产需要保存');}
       }
 
       // 如果不是草稿，提交审核
@@ -765,15 +787,16 @@ function CreatorSolutionEditContent() {
         if (!submitResult.success) {
           toast.warning('方案已更新，但提交审核失败：' + (submitResult.error || submitResult.message));
           // 提交失败时不跳转，让用户继续编辑
-          return;
+          
         } else {
           toast.success('方案已提交审核');
           // 提交成功后才跳转到方案列表
           router.push(route(routes.CREATORS.SOLUTIONS));
-          return;
+          
         }
       } else {
-        console.log('[EditSolution] 草稿保存完成，所有步骤的数据已保存');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[EditSolution] 草稿保存完成，所有步骤的数据已保存');}
         toast.success('草稿已保存，所有内容已保存');
         // 保存草稿时不跳转，让用户继续编辑
       }
@@ -802,7 +825,7 @@ function CreatorSolutionEditContent() {
       case 1:
         return formData.title.trim().length >= 5 && 
                formData.description.trim().length >= 20 && 
-               formData.category !== '';
+               formData.category && formData.category.length > 0;
       case 2:
         return true; // 技术规格可选
       case 3:
@@ -828,7 +851,7 @@ function CreatorSolutionEditContent() {
   if (!solution) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <ErrorMessage message="方案不存在或无权访问" />
+        <ErrorMessage error="方案不存在或无权访问" />
       </div>
     );
   }
@@ -1148,7 +1171,9 @@ function CreatorSolutionEditContent() {
                               value={useCase.title}
                               onChange={(e) => {
                                 const updated = [...useCases];
-                                updated[index].title = e.target.value;
+                                if (updated[index]) {
+                                  updated[index].title = e.target.value;
+                                }
                                 setUseCases(updated);
                               }}
                               placeholder="例如：农业植保、巡检检测、物流配送等"
@@ -1162,7 +1187,9 @@ function CreatorSolutionEditContent() {
                               value={useCase.description}
                               onChange={(e) => {
                                 const updated = [...useCases];
-                                updated[index].description = e.target.value;
+                                if (updated[index]) {
+                                  updated[index].description = e.target.value;
+                                }
                                 setUseCases(updated);
                               }}
                               placeholder="详细描述该应用场景的具体用途、优势和使用方法"
@@ -1216,7 +1243,9 @@ function CreatorSolutionEditContent() {
                               value={section.title}
                               onChange={(e) => {
                                 const updated = [...architectureSections];
-                                updated[index].title = e.target.value;
+                                if (updated[index]) {
+                                  updated[index].title = e.target.value;
+                                }
                                 setArchitectureSections(updated);
                               }}
                               placeholder="例如：系统架构、硬件组成、软件架构、工作流程等"
@@ -1230,7 +1259,9 @@ function CreatorSolutionEditContent() {
                               value={section.content}
                               onChange={(e) => {
                                 const updated = [...architectureSections];
-                                updated[index].content = e.target.value;
+                                if (updated[index]) {
+                                  updated[index].content = e.target.value;
+                                }
                                 setArchitectureSections(updated);
                               }}
                               placeholder="详细描述该部分的组成、功能和技术特点"

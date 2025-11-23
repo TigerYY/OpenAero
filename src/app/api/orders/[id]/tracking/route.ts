@@ -4,14 +4,16 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerUser } from '@/lib/auth/auth-service';
+import { z } from 'zod';
+
 import {
   createSuccessResponse,
   createErrorResponse,
 } from '@/lib/api-helpers';
-import { getOrderTracking, addTrackingEvent } from '@/lib/order-tracking';
+import { getServerUser } from '@/lib/auth/auth-service';
 import { getOrderById } from '@/lib/order';
-import { z } from 'zod';
+import { getOrderTracking, addTrackingEvent } from '@/lib/order-tracking';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +60,8 @@ export async function GET(
 
     return createSuccessResponse(trackingInfo, '获取物流跟踪信息成功');
   } catch (error) {
-    console.error('获取物流跟踪信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取物流跟踪信息失败:', error);}
     return createErrorResponse(
       '获取物流跟踪信息失败',
       500,
@@ -109,7 +112,8 @@ export async function POST(
 
     return createSuccessResponse(null, '物流跟踪事件添加成功');
   } catch (error) {
-    console.error('添加物流跟踪事件失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('添加物流跟踪事件失败:', error);}
     return createErrorResponse(
       '添加物流跟踪事件失败',
       500,

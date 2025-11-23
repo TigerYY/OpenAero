@@ -108,7 +108,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('输入验证失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('输入验证失败:', error);}
     return NextResponse.json(
       { 
         success: false, 
@@ -171,7 +172,8 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('获取验证配置失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取验证配置失败:', error);}
     return NextResponse.json(
       { 
         success: false, 

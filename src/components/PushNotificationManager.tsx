@@ -59,7 +59,8 @@ export default function PushNotificationManager({
           onSubscriptionChange?.(existingSubscription);
         }
       } catch (error) {
-        console.error('获取推送订阅失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('获取推送订阅失败:', error);}
       }
     };
 
@@ -81,7 +82,8 @@ export default function PushNotificationManager({
       
       return result === 'granted';
     } catch (error) {
-      console.error('请求通知权限失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('请求通知权限失败:', error);}
       return false;
     } finally {
       setIsLoading(false);
@@ -110,7 +112,8 @@ export default function PushNotificationManager({
 
       return pushSubscription;
     } catch (error) {
-      console.error('订阅推送通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('订阅推送通知失败:', error);}
       return null;
     } finally {
       setIsLoading(false);
@@ -136,7 +139,8 @@ export default function PushNotificationManager({
 
       return success;
     } catch (error) {
-      console.error('取消订阅失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('取消订阅失败:', error);}
       return false;
     } finally {
       setIsLoading(false);
@@ -169,7 +173,8 @@ export default function PushNotificationManager({
         })
       });
     } catch (error) {
-      console.error('发送测试通知失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('发送测试通知失败:', error);}
     }
   }, [subscription]);
 
@@ -344,7 +349,8 @@ function NotificationTypeToggle({
         })
       });
     } catch (error) {
-      console.error('保存通知偏好失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('保存通知偏好失败:', error);}
       // 回滚状态
       setEnabled(!newEnabled);
     }
@@ -403,7 +409,8 @@ async function sendSubscriptionToServer(subscription: PushSubscription): Promise
       })
     });
   } catch (error) {
-    console.error('发送订阅信息到服务器失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('发送订阅信息到服务器失败:', error);}
     throw error;
   }
 }
@@ -421,7 +428,8 @@ async function removeSubscriptionFromServer(subscription: PushSubscription): Pro
       })
     });
   } catch (error) {
-    console.error('从服务器移除订阅信息失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('从服务器移除订阅信息失败:', error);}
     throw error;
   }
 }

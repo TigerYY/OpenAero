@@ -1,5 +1,10 @@
 'use client';
 
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+
 import { Trash2, Edit, Plus, Search, Building2, Phone, Mail, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -94,7 +99,8 @@ export default function FactoriesPage() {
         toast.error('获取工厂列表失败');
       }
     } catch (error) {
-      console.error('获取工厂列表失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('获取工厂列表失败:', error);}
       toast.error('获取工厂列表失败');
     } finally {
       setLoading(false);
@@ -143,7 +149,8 @@ export default function FactoriesPage() {
         toast.error(data.error || '添加工厂失败');
       }
     } catch (error) {
-      console.error('添加工厂失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('添加工厂失败:', error);}
       toast.error('添加工厂失败');
     }
   };
@@ -173,7 +180,8 @@ export default function FactoriesPage() {
         toast.error(data.error || '更新工厂失败');
       }
     } catch (error) {
-      console.error('更新工厂失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('更新工厂失败:', error);}
       toast.error('更新工厂失败');
     }
   };
@@ -196,7 +204,8 @@ export default function FactoriesPage() {
         toast.error(data.error || '删除工厂失败');
       }
     } catch (error) {
-      console.error('删除工厂失败:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('删除工厂失败:', error);}
       toast.error('删除工厂失败');
     }
   };

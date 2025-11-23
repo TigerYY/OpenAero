@@ -1,8 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useAuth } from '@/hooks/useAuth';
+
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 // Mock the useAuth hook
 vi.mock('@/hooks/useAuth', () => ({

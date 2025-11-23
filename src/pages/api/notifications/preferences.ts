@@ -37,7 +37,8 @@ export default async function handler(
     }
 
   } catch (error) {
-    console.error('Notification preferences API error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Notification preferences API error:', error);}
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -75,7 +76,8 @@ async function getUserPreferences(userId: string, res: NextApiResponse) {
     });
 
   } catch (error) {
-    console.error('Failed to get user preferences:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to get user preferences:', error);}
     res.status(500).json({ error: 'Failed to get preferences' });
   }
 }
@@ -122,7 +124,8 @@ async function updateUserPreferences(
       }
       */
 
-      console.log('Batch updated preferences:', { userId, preferences });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Batch updated preferences:', { userId, preferences });};
 
       res.status(200).json({
         success: true,
@@ -159,7 +162,8 @@ async function updateUserPreferences(
       });
       */
 
-      console.log('Updated preference:', { userId, type, enabled });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Updated preference:', { userId, type, enabled });};
 
       res.status(200).json({
         success: true,

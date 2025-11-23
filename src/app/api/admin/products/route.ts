@@ -1,10 +1,10 @@
 import { ProductStatus } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
+import { createErrorResponse, createPaginatedResponse, createSuccessResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
-import { createSuccessResponse, createErrorResponse, createPaginatedResponse, createValidationErrorResponse } from '@/lib/api-helpers';
 
 // 创建商品的验证模式
 const createProductSchema = z.object({
@@ -31,7 +31,7 @@ const createProductSchema = z.object({
   images: z.array(z.string().url()).default([]),
   videos: z.array(z.string().url()).default([]),
   documents: z.array(z.string().url()).default([]),
-  status: z.nativeEnum(ProductStatus).default(ProductStatus.DRAFT),
+  status: z.nativeEnum(ProductStatus).default('DRAFT' as ProductStatus),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   metaTitle: z.string().optional(),
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (categoryId) {
-      where.categoryId = categoryId;
+      where.category_id = categoryId;
     }
 
     if (status) {
@@ -92,16 +92,26 @@ export async function GET(request: NextRequest) {
     }
 
     if (isActive !== null) {
-      where.isActive = isActive === 'true';
+      where.is_active = isActive === 'true';
     }
 
     if (isFeatured !== null) {
-      where.isFeatured = isFeatured === 'true';
+      where.is_featured = isFeatured === 'true';
     }
 
     // 构建排序条件
     const orderBy: any = {};
-    orderBy[sortBy] = sortOrder;
+    // Map camelCase sortBy to snake_case field names
+    const sortByMap: Record<string, string> = {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      price: 'price',
+      rating: 'rating',
+      salesCount: 'sales_count',
+      name: 'name',
+      reviewCount: 'review_count',
+    };
+    orderBy[sortByMap[sortBy] || sortBy] = sortOrder;
 
     // 获取商品列表
     const [products, total] = await Promise.all([
@@ -156,7 +166,8 @@ export async function GET(request: NextRequest) {
 
     return createPaginatedResponse(formattedProducts, page, limit, total, '获取商品列表成功');
   } catch (error) {
-    console.error('获取商品列表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取商品列表失败:', error);}
     return createErrorResponse('获取商品列表失败', 500);
   }
 }
@@ -219,9 +230,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 创建商品
+    // 创建商品 - 转换字段名为 snake_case
+    const productData: any = {
+      ...validatedData,
+      category_id: validatedData.categoryId,
+      solution_id: validatedData.solutionId,
+      original_price: validatedData.originalPrice,
+      cost_price: validatedData.costPrice,
+      is_active: validatedData.isActive,
+      is_featured: validatedData.isFeatured,
+      meta_title: validatedData.metaTitle,
+      meta_description: validatedData.metaDescription,
+      meta_keywords: validatedData.metaKeywords,
+      short_desc: validatedData.shortDesc,
+    };
+    // Remove camelCase fields
+    delete productData.categoryId;
+    delete productData.solutionId;
+    delete productData.originalPrice;
+    delete productData.costPrice;
+    delete productData.isActive;
+    delete productData.isFeatured;
+    delete productData.metaTitle;
+    delete productData.metaDescription;
+    delete productData.metaKeywords;
+    delete productData.shortDesc;
+    
     const product = await prisma.product.create({
-      data: validatedData,
+      data: productData,
       include: {
         category: {
           select: {
@@ -243,7 +279,7 @@ export async function POST(request: NextRequest) {
     // 创建对应的库存记录
     await prisma.productInventory.create({
       data: {
-        productId: product.id,
+        product_id: product.id,
         quantity: 0,
         available: 0,
       },
@@ -265,7 +301,8 @@ export async function POST(request: NextRequest) {
       return createValidationErrorResponse(error);
     }
 
-    console.error('创建商品失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('创建商品失败:', error);}
     return createErrorResponse('创建商品失败', 500);
   }
 }

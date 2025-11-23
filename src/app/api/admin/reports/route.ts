@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
 import { checkAdminAuth } from '@/lib/api-auth-helpers';
+import { prisma } from '@/lib/prisma';
 
 interface ReportConfig {
   type: 'users' | 'orders' | 'solutions' | 'reviews' | 'revenue';
@@ -284,7 +284,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('生成报表失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('生成报表失败:', error);}
     return NextResponse.json(
       { error: '生成报表失败' },
       { status: 500 }
@@ -357,7 +358,8 @@ export async function GET(request: NextRequest) {
   });
 
   } catch (error) {
-    console.error('获取报表模板失败:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('获取报表模板失败:', error);}
     return NextResponse.json(
       { error: '获取报表模板失败' },
       { status: 500 }
