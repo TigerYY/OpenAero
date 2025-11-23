@@ -267,9 +267,7 @@ jobs:
       matrix:
         include:
           - name: staging
-            condition: ${{ needs.deploy-staging.result == 'success' }}
           - name: production
-            condition: ${{ needs.deploy-production.result == 'success' }}
     
     steps:
     - name: Checkout code
@@ -301,15 +299,22 @@ jobs:
     - name: Run E2E tests
       run: |
         echo "Running E2E tests for ${{ matrix.name }}..."
-        if [ "${{ matrix.name }}" == "staging" ]; then
+        if [ "${{ matrix.name }}" == "staging" ] && [ "${{ needs.deploy-staging.result }}" == "success" ]; then
           BASE_URL="$STAGING_URL"
-        else
+          if [ -n "$BASE_URL" ]; then
+            npm run test:e2e -- --base-url=$BASE_URL
+          else
+            echo "⚠️  STAGING_URL not configured, skipping tests"
+          fi
+        elif [ "${{ matrix.name }}" == "production" ] && [ "${{ needs.deploy-production.result }}" == "success" ]; then
           BASE_URL="$PRODUCTION_URL"
-        fi
-        if [ -n "$BASE_URL" ]; then
-          npm run test:e2e -- --base-url=$BASE_URL
+          if [ -n "$BASE_URL" ]; then
+            npm run test:e2e -- --base-url=$BASE_URL
+          else
+            echo "⚠️  PRODUCTION_URL not configured, skipping tests"
+          fi
         else
-          echo "⚠️  URL not configured, skipping tests"
+          echo "⚠️  Deployment not successful, skipping tests"
         fi
       continue-on-error: true
       env:
