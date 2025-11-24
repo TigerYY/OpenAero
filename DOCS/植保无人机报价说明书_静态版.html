@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植保无人机产品报价说明书 - 广州特瑞电气设备有限公司</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .company-logo {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .company-logo .logo-item {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .company-logo img {
+            height: 80px;
+            width: auto;
+        }
+
+        .company-logo .logo-label {
+            font-size: 0.85em;
+            color: #1e3c72;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .company-name {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .date {
+            font-size: 1.1em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 公司介绍部分 */
+        .company-intro {
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+            padding: 50px 40px;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .intro-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .intro-title {
+            font-size: 2.2em;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .intro-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .intro-content {
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #667eea;
+            margin-bottom: 30px;
+        }
+
+        .intro-content p {
+            line-height: 1.8;
+            color: #555;
+            font-size: 1.05em;
+            text-align: justify;
+            margin: 0;
+        }
+
+        .intro-content a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .intro-content a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .company-address {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .company-address::before {
+            content: '📍';
+            font-size: 2em;
+        }
+
+        .company-address .label {
+            color: #1e3c72;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+
+        .company-address .text {
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        /* 产品分组 */
+        .product-group {
+            padding: 50px 40px;
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        .product-group:last-of-type {
+            border-bottom: none;
+        }
+
+        .product-group-title {
+            font-size: 2.5em;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .product-group-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* 版本对比容器 */
+        .version-comparison {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        /* 配置卡片 */
+        .config-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .config-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .config-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+        }
+
+        .config-header.overseas {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .config-header.domestic {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .config-name {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .config-model {
+            font-size: 1em;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+
+        .config-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .config-price {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .config-price .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .config-price .amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 30px 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        thead th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tbody td {
+            padding: 12px 10px;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .category-cell {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .price-cell {
+            font-weight: 600;
+            color: #e74c3c;
+            font-size: 1.05em;
+        }
+
+        /* 说明部分 */
+        .info-section {
+            padding: 50px 40px;
+            background: linear-gradient(to bottom, #f8f9fa, #fff);
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #1e3c72;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-card h3::before {
+            margin-right: 12px;
+            font-size: 1.3em;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-card li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .info-card li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* 图标 */
+        .icon-price::before { content: '💰'; }
+        .icon-feature::before { content: '⭐'; }
+        .icon-support::before { content: '🛠️'; }
+        .icon-service::before { content: '🔧'; }
+        .icon-delivery::before { content: '🚚'; }
+        .icon-payment::before { content: '💳'; }
+
+        /* 页脚 */
+        .footer {
+            background: #1e3c72;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .footer h3 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .contact-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .contact-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #a8d0ff;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .version-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 40px 20px;
+            }
+
+            .company-logo {
+                gap: 20px;
+            }
+
+            .company-logo img {
+                height: 60px;
+            }
+
+            .company-logo .logo-item {
+                padding: 12px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .company-name {
+                font-size: 1.1em;
+            }
+
+            .company-intro {
+                padding: 30px 20px;
+            }
+
+            .intro-title {
+                font-size: 1.6em;
+            }
+
+            .intro-content, .company-address {
+                padding: 20px;
+            }
+
+            .company-address {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .product-group {
+                padding: 30px 20px;
+            }
+
+            .product-group-title {
+                font-size: 1.8em;
+            }
+
+            .table-wrapper {
+                padding: 0 15px 15px;
+            }
+
+            table {
+                font-size: 0.75em;
+            }
+
+            thead th, tbody td {
+                padding: 8px 5px;
+            }
+
+            .info-section {
+                padding: 30px 20px;
+            }
+
+            .section-title {
+                font-size: 1.6em;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .product-group {
+                page-break-before: always;
+            }
+
+            .product-group:first-child {
+                page-break-before: avoid;
+            }
+
+            .config-card {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="company-logo">
+                <div class="logo-item">
+                    <img src="trirm logo.png" alt="特瑞电气 TRIRM Logo">
+                    <div class="logo-label">广州特瑞电气设备有限公司</div>
+                </div>
+                <div class="logo-item">
+                    <img src="logo_white_bg.png" alt="开元空御 OpenAero Logo">
+                    <div class="logo-label">开元空御 OpenAero</div>
+                </div>
+            </div>
+            <div class="company-name">广州特瑞电气设备有限公司</div>
+            <h1>植保无人机产品报价说明书</h1>
+            <div class="date">报价日期:2025年11月21日 | 有效期:30天</div>
+        </div>
+
+        <!-- 公司介绍 -->
+        <div class="company-intro">
+            <div class="intro-container">
+                <h2 class="intro-title">🏢 公司简介</h2>
+                <div class="intro-content">
+                    <p>广州特瑞电气设备有限公司致力于新一代工业互联网与智能装备技术研发，面向工业场景提供从数据采集、边缘计算到智能控制的完整解决方案。公司产品涵盖工业级物联网网关（4G/5G）、智能配电网关、智能传感器、通用协议互联平台，同时布局无人机研发、测试生产及智能设备定制，形成"软硬件一体化 + 行业应用"的综合能力体系。</p>
+                    <p style="margin-top: 20px;"><strong style="color: #1e3c72;">开元空御</strong>（网址：<a href="https://openaero.cn" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600;">openaero.cn</a>）是特瑞旗下专注无人机领域的专业品牌。开元空御秉承"开放创新、技术领航"的理念，专注于工业级无人机系统的研发与应用，提供包括植保无人机、巡检无人机在内的多场景解决方案。依托开源飞控技术和自主研发能力，开元空御为客户提供高性价比、高可靠性的无人机产品，并支持定制化开发，助力智慧农业、基础设施巡检等行业数字化转型。</p>
+                </div>
+                <div class="company-address">
+                    <span class="label">公司地址：</span>
+                    <span class="text">广东省广州市黄埔区神舟路 9 号 4 栋 321 房</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 20L植保无人机（A型） -->
+        <div class="product-group">
+            <h2 class="product-group-title">🚁 20L植保无人机（A型）- F20-A系列</h2>
+            
+            <div class="version-comparison">
+                <!-- 海外版 -->
+                <div class="config-card">
+                    <div class="config-header overseas">
+                        <div class="config-name">20L植保无人机 F20-A系列</div>
+                        <div class="config-model">型号：ZBF-20L-AF</div>
+                        <div class="config-badge">🌏 海外版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥17,949.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>4轴20公斤植保机多旋翼载支架+20L水箱</td>
+                                    <td class="price-cell">2,720.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 27KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">5,600.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能16000mah锂电池</td>
+                                    <td class="price-cell">1,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴多轴APM飞控，自动定点巡航，失控返航（海外版）</td>
+                                    <td class="price-cell">476.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（海外版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（海外版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（海外版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 国内版 -->
+                <div class="config-card">
+                    <div class="config-header domestic">
+                        <div class="config-name">20L植保无人机 F20-A系列</div>
+                        <div class="config-model">型号：ZBF-20-AD</div>
+                        <div class="config-badge">🇨🇳 国内版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥17,883.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>4轴20公斤植保机多旋翼载支架+20L水箱</td>
+                                    <td class="price-cell">2,720.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 27KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">5,600.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能16000mah锂电池</td>
+                                    <td class="price-cell">1,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴多轴APM飞控，自动定点巡航，失控返航（国内版）</td>
+                                    <td class="price-cell">410.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（国内版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（国内版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（国内版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 20L植保无人机（B型） -->
+        <div class="product-group">
+            <h2 class="product-group-title">🚁 20L植保无人机（B型）- F20-B系列</h2>
+            
+            <div class="version-comparison">
+                <!-- 海外版 -->
+                <div class="config-card">
+                    <div class="config-header overseas">
+                        <div class="config-name">20L植保无人机 F20-B系列</div>
+                        <div class="config-model">型号：ZBF-20L-BF</div>
+                        <div class="config-badge">🌏 海外版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥19,708.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>6轴22公斤植保机多旋翼载支架+22L水箱</td>
+                                    <td class="price-cell">2,999.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 22KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">7,080.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能16000mah锂电池</td>
+                                    <td class="price-cell">1,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（海外版）</td>
+                                    <td class="price-cell">476.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（海外版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（海外版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（海外版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 国内版 -->
+                <div class="config-card">
+                    <div class="config-header domestic">
+                        <div class="config-name">20L植保无人机 F20-B系列</div>
+                        <div class="config-model">型号：ZBF-20L-BD</div>
+                        <div class="config-badge">🇨🇳 国内版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥19,642.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>6轴22公斤植保机多旋翼载支架+22L水箱</td>
+                                    <td class="price-cell">2,999.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 22KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">7,080.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能16000mah锂电池</td>
+                                    <td class="price-cell">1,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（国内版）</td>
+                                    <td class="price-cell">410.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（国内版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（国内版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（国内版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 30L植保无人机（A型） -->
+        <div class="product-group">
+            <h2 class="product-group-title">🚁 30L植保无人机（A型）- F30-A系列</h2>
+            
+            <div class="version-comparison">
+                <!-- 海外版 -->
+                <div class="config-card">
+                    <div class="config-header overseas">
+                        <div class="config-name">30L植保无人机 F30-A系列</div>
+                        <div class="config-model">型号：ZBF-30L-AF</div>
+                        <div class="config-badge">🌏 海外版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥21,708.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>4轴30公斤植保机多旋翼载支架+30L水箱</td>
+                                    <td class="price-cell">4,199.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>14S无人机动力套装 最大拉力 37KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">6,880.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/14S智能22000mah锂电池</td>
+                                    <td class="price-cell">2,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（海外版）</td>
+                                    <td class="price-cell">476.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（海外版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（海外版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（海外版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 国内版 -->
+                <div class="config-card">
+                    <div class="config-header domestic">
+                        <div class="config-name">30L植保无人机 F30-A系列</div>
+                        <div class="config-model">型号：ZBF-30L-AD</div>
+                        <div class="config-badge">🇨🇳 国内版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥21,642.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>4轴30公斤植保机多旋翼载支架+30L水箱</td>
+                                    <td class="price-cell">4,199.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>14S无人机动力套装 最大拉力 37KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">6,880.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/14S智能22000mah锂电池</td>
+                                    <td class="price-cell">2,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>8L/min水泵/12-14S锂电池，喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>加长杆喷头，8mm扇形锥形喷嘴</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（国内版）</td>
+                                    <td class="price-cell">410.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（国内版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（国内版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（国内版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 30L植保无人机（B型） -->
+        <div class="product-group">
+            <h2 class="product-group-title">🚁 30L植保无人机（B型）- F30-B系列</h2>
+            
+            <div class="version-comparison">
+                <!-- 海外版 -->
+                <div class="config-card">
+                    <div class="config-header overseas">
+                        <div class="config-name">30L植保无人机 F30-B系列</div>
+                        <div class="config-model">型号：ZBF-30L-BF</div>
+                        <div class="config-badge">🌏 海外版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥23,326.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>6轴30公斤植保机多旋翼载支架+30L水箱</td>
+                                    <td class="price-cell">4,299.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 22KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">8,400.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能22000mah锂电池</td>
+                                    <td class="price-cell">2,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>好盈水泵 8L/min水泵8L流量12-14S锂电池 植保打药飞机喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>农业植保机无人机喷洒系统好盈无刷水泵打药机撒肥机专用折叠喷杆</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（海外版）</td>
+                                    <td class="price-cell">474.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（海外版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（海外版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（海外版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 国内版 -->
+                <div class="config-card">
+                    <div class="config-header domestic">
+                        <div class="config-name">30L植保无人机 F30-B系列</div>
+                        <div class="config-model">型号：ZBF-30L-BD</div>
+                        <div class="config-badge">🇨🇳 国内版</div>
+                        <div class="config-price">
+                            <div class="label">配置总价</div>
+                            <div class="amount">¥23,262.30</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 18%;">部件分类</th>
+                                    <th style="width: 15%;">部件名称</th>
+                                    <th style="width: 52%;">规格说明</th>
+                                    <th style="width: 15%;">单价（元）</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="category-cell">结构套件</td>
+                                    <td>机架（含水箱）</td>
+                                    <td>6轴30公斤植保机多旋翼载支架+30L水箱</td>
+                                    <td class="price-cell">4,299.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电机</td>
+                                    <td>12S无人机动力套装 最大拉力 22KG/轴，含电机电调螺旋桨安装座</td>
+                                    <td class="price-cell">8,400.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电调</td>
+                                    <td>电机内置</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>电池</td>
+                                    <td>48V/12S智能22000mah锂电池</td>
+                                    <td class="price-cell">2,850.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">喷洒套件</td>
+                                    <td>喷洒抽水泵</td>
+                                    <td>好盈水泵 8L/min水泵8L流量12-14S锂电池 植保打药飞机喷洒抽水泵</td>
+                                    <td class="price-cell">350.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>折叠喷杆</td>
+                                    <td>农业植保机无人机喷洒系统好盈无刷水泵打药机撒肥机专用折叠喷杆</td>
+                                    <td class="price-cell">514.90</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">飞控套件</td>
+                                    <td>飞控</td>
+                                    <td>四轴/多轴APM飞控，自动定点巡航，失控返航（国内版）</td>
+                                    <td class="price-cell">410.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>仿地雷达</td>
+                                    <td>24GHZ/100M仿地雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>GPS</td>
+                                    <td>植保专用GPS</td>
+                                    <td class="price-cell">360.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>流量计</td>
+                                    <td>12mm白色流量计</td>
+                                    <td class="price-cell">63.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>避障雷达</td>
+                                    <td>24G HZ/25米避障雷达</td>
+                                    <td class="price-cell">1,200.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">遥控套件</td>
+                                    <td>遥控机</td>
+                                    <td>图传/遥控/云台/5英寸屏幕/数传一体化遥控器（国内版）</td>
+                                    <td class="price-cell">2,070.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>接受机</td>
+                                    <td>1.4G、2.4G一体化接收机（国内版）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>图传（发射机）</td>
+                                    <td>1080P/6-10KM图传系统（遥控内置）</td>
+                                    <td class="price-cell">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell"></td>
+                                    <td>摄像头</td>
+                                    <td>夜视镜头无人机摄像头/1080P（国内版）</td>
+                                    <td class="price-cell">169.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="category-cell">辅助设备</td>
+                                    <td>充电器</td>
+                                    <td>无人机锂电池充电器6s-24s锂电池智能充电器2400W平衡充</td>
+                                    <td class="price-cell">1,376.40</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报价说明 -->
+        <div class="info-section">
+            <h2 class="section-title">报价说明与服务条款</h2>
+            <div class="info-grid">
+                <!-- 价格说明 -->
+                <div class="info-card">
+                    <h3 class="icon-price">价格说明</h3>
+                    <ul>
+                        <li>以上报价均为人民币含税价格</li>
+                        <li>价格包含产品主机及标准配件</li>
+                        <li>充电器可选配，详见各型号配置清单</li>
+                        <li>批量采购可享受优惠折扣</li>
+                        <li>海外版与国内版配置略有差异</li>
+                    </ul>
+                </div>
+
+                <!-- 产品特点 -->
+                <div class="info-card">
+                    <h3 class="icon-feature">产品特点</h3>
+                    <ul>
+                        <li>开源飞控系统，支持二次开发</li>
+                        <li>模块化设计，便于维护和升级</li>
+                        <li>大载荷、长续航，高效作业</li>
+                        <li>智能控制，自主飞行精准喷洒</li>
+                        <li>多规格选择，满足不同作业需求</li>
+                    </ul>
+                </div>
+
+                <!-- 技术支持 -->
+                <div class="info-card">
+                    <h3 class="icon-support">技术支持</h3>
+                    <ul>
+                        <li>提供完整的技术文档和操作手册</li>
+                        <li>7×24小时技术支持热线</li>
+                        <li>定期软件更新和功能升级</li>
+                        <li>专业培训服务</li>
+                        <li>远程技术指导</li>
+                    </ul>
+                </div>
+
+                <!-- 售后服务 -->
+                <div class="info-card">
+                    <h3 class="icon-service">售后服务</h3>
+                    <ul>
+                        <li>整机质保12个月</li>
+                        <li>提供终身维修服务</li>
+                        <li>常用配件库存充足，快速发货</li>
+                        <li>可提供上门安装调试服务</li>
+                        <li>建立客户档案，定期回访</li>
+                    </ul>
+                </div>
+
+                <!-- 交付周期 -->
+                <div class="info-card">
+                    <h3 class="icon-delivery">交付周期</h3>
+                    <ul>
+                        <li>标准配置：3-5个工作日</li>
+                        <li>定制配置：7-15个工作日</li>
+                        <li>批量订单：根据实际情况商定</li>
+                        <li>紧急订单可加急处理</li>
+                        <li>海外发货需另行确认时间</li>
+                    </ul>
+                </div>
+
+                <!-- 付款方式 -->
+                <div class="info-card">
+                    <h3 class="icon-payment">付款方式</h3>
+                    <ul>
+                        <li>支持转账、支票等多种支付方式</li>
+                        <li>大额订单可分期付款</li>
+                        <li>详细付款条件请与销售部门协商</li>
+                        <li>支持对公转账开具发票</li>
+                        <li>接受第三方担保交易</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <h3>📞 联系我们</h3>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <strong>公司名称</strong>
+                    广州特瑞电气设备有限公司
+                </div>
+                <div class="contact-item">
+                    <strong>公司地址</strong>
+                    广东省广州市黄埔区神舟路 9 号 4 栋 321 房
+                </div>
+                <div class="contact-item">
+                    <strong>联系电话</strong>
+                    +86 400-691-1891
+                </div>
+                <div class="contact-item">
+                    <strong>电子邮箱</strong>
+                    support@trirm.com
+                </div>
+            </div>
+            <div class="footer-note">
+                本报价单有效期：30天（自2025年11月21日起） | 最终解释权归广州特瑞电气设备有限公司所有
+            </div>
+        </div>
+    </div>
+</body>
+</html>

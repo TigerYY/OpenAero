@@ -1,25 +1,22 @@
 /**
  * 评价有用性 API
- * POST /api/products/[id]/reviews/[reviewId]/helpful - 标记评价为有用
+ * POST /api/products/[slug]/reviews/[reviewId]/helpful - 标记评价为有用
  */
 
 import { NextRequest } from 'next/server';
 
-import {
-  createSuccessResponse,
-  createErrorResponse,
-} from '@/lib/api-helpers';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api-helpers';
 import { getServerUser } from '@/lib/auth/auth-service';
 import { markReviewHelpful } from '@/lib/product-review';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/products/[id]/reviews/[reviewId]/helpful - 标记评价为有用
+ * POST /api/products/[slug]/reviews/[reviewId]/helpful - 标记评价为有用
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; reviewId: string }> }
+  { params }: { params: Promise<{ slug: string; reviewId: string }> }
 ) {
   try {
     const user = await getServerUser();
@@ -37,7 +34,8 @@ export async function POST(
     return createSuccessResponse(null, '已标记为有用');
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('标记评价失败:', error);}
+      console.error('标记评价失败:', error);
+    }
     return createErrorResponse(
       error instanceof Error ? error.message : '标记评价失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,
@@ -45,4 +43,3 @@ export async function POST(
     );
   }
 }
-

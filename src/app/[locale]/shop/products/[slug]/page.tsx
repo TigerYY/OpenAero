@@ -1,17 +1,11 @@
-'use client';
-
-// 强制动态渲染，避免构建时预渲染
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-
-import { 
-  ShoppingCart, 
-  Star, 
-  Heart, 
-  Share2, 
-  Truck, 
-  Shield, 
+/* eslint-disable no-unused-expressions */
+import {
+  ShoppingCart,
+  Star,
+  Heart,
+  Share2,
+  Truck,
+  Shield,
   RotateCcw,
   Plus,
   Minus,
@@ -25,22 +19,46 @@ import {
   ThumbsDown,
   ChevronLeft,
   ChevronRight,
-  Zap,
-  Award,
-  Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
+
+('use client');
+/* eslint-enable no-unused-expressions */
+
+// 强制动态渲染，避免构建时预渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+interface ProductComponent {
+  id: string;
+  category: string;
+  name: string;
+  specification: string;
+  unitPrice: number;
+  sortOrder: number;
+}
+
+interface ProductQuotationInfo {
+  priceNotes: string[];
+  features: string[];
+  support: string[];
+  service: string[];
+  delivery: string[];
+  payment: string[];
+  validityDays: number;
+  validityStartDate?: string;
+}
 
 interface Product {
   id: string;
@@ -78,6 +96,8 @@ interface Product {
     title: string;
     status: string;
   };
+  components?: ProductComponent[];
+  quotationInfo?: ProductQuotationInfo | null;
   reviews: Review[];
   relatedProducts: RelatedProduct[];
 }
@@ -111,10 +131,8 @@ interface RelatedProduct {
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
-  const t = useTranslations();
-  const locale = useLocale();
   const { route, routes } = useRouting();
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -144,7 +162,8 @@ export default function ProductDetailPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('获取商品详情失败:', error);}
+        console.error('获取商品详情失败:', error);
+      }
       toast.error(error instanceof Error ? error.message : '获取商品详情失败');
     } finally {
       setLoading(false);
@@ -154,7 +173,7 @@ export default function ProductDetailPage() {
   // 添加到购物车
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     // TODO: 实现添加到购物车逻辑（需要集成购物车Context）
     // addToCart({ id: product.id, name: product.name, price: product.price, quantity });
     toast.success(`已将 ${quantity} 个 ${product.name} 添加到购物车`);
@@ -163,7 +182,7 @@ export default function ProductDetailPage() {
   // 立即购买
   const handleBuyNow = () => {
     if (!product) return;
-    
+
     // TODO: 实现立即购买逻辑（需要先添加到购物车，然后跳转到结算页面）
     // addToCart({ id: product.id, name: product.name, price: product.price, quantity });
     // router.push(route(routes.ORDERS.HOME));
@@ -193,23 +212,27 @@ export default function ProductDetailPage() {
   // 获取商品评分星星
   const renderStars = (rating?: number, size: 'sm' | 'md' | 'lg' = 'md') => {
     if (!rating) return null;
-    
+
     const sizeClasses = {
       sm: 'h-3 w-3',
       md: 'h-4 w-4',
-      lg: 'h-5 w-5'
+      lg: 'h-5 w-5',
     };
-    
+
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} className={`${sizeClasses[size]} fill-yellow-400 text-yellow-400`} />);
+      stars.push(
+        <Star key={i} className={`${sizeClasses[size]} fill-yellow-400 text-yellow-400`} />
+      );
     }
 
     if (hasHalfStar) {
-      stars.push(<Star key="half" className={`${sizeClasses[size]} fill-yellow-400/50 text-yellow-400`} />);
+      stars.push(
+        <Star key='half' className={`${sizeClasses[size]} fill-yellow-400/50 text-yellow-400`} />
+      );
     }
 
     const emptyStars = 5 - Math.ceil(rating);
@@ -217,7 +240,7 @@ export default function ProductDetailPage() {
       stars.push(<Star key={`empty-${i}`} className={`${sizeClasses[size]} text-gray-300`} />);
     }
 
-    return <div className="flex items-center gap-1">{stars}</div>;
+    return <div className='flex items-center gap-1'>{stars}</div>;
   };
 
   // 获取库存状态
@@ -234,106 +257,126 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">加载中...</p>
+      <DefaultLayout>
+        <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+          <div className='text-center'>
+            <RefreshCw className='h-8 w-8 animate-spin text-blue-600 mx-auto mb-4' />
+            <p className='text-gray-600'>加载中...</p>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">商品不存在</h2>
-          <p className="text-gray-600 mb-4">您访问的商品可能已下架或不存在</p>
-          <Link href={route(routes.BUSINESS.SHOP)}>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-4 w-4" />
-              返回商品列表
-            </Button>
-          </Link>
+      <DefaultLayout>
+        <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+          <div className='text-center'>
+            <Package className='h-16 w-16 text-gray-400 mx-auto mb-4' />
+            <h2 className='text-2xl font-bold text-gray-900 mb-2'>商品不存在</h2>
+            <p className='text-gray-600 mb-4'>您访问的商品可能已下架或不存在</p>
+            <Link href={route(routes.BUSINESS.SHOP)}>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='flex items-center gap-2 text-gray-600 hover:text-gray-900'
+              >
+                <ArrowLeft className='h-4 w-4' />
+                返回商品列表
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </DefaultLayout>
     );
   }
 
   const stockStatus = getStockStatus();
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-  const discountPercent = hasDiscount 
+  const discountPercent = hasDiscount
     ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+    <DefaultLayout>
+      <div className='min-h-screen bg-gray-50'>
+        <div className='container mx-auto px-4 py-8'>
           {/* 面包屑导航 */}
-          <nav className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-            <Link href={route('/shop')} className="hover:text-blue-600">商城</Link>
+          <nav className='flex items-center gap-2 text-sm text-gray-600 mb-6'>
+            <Link href={route('/shop')} className='hover:text-blue-600'>
+              商城
+            </Link>
             <span>/</span>
-            <Link href={route(routes.BUSINESS.SHOP)} className="hover:text-blue-600">商品</Link>
+            <Link href={route(routes.BUSINESS.SHOP)} className='hover:text-blue-600'>
+              商品
+            </Link>
             <span>/</span>
-            <Link href={route(routes.BUSINESS.SHOP) + `?category=${product.category.slug}`} className="hover:text-blue-600">
+            <Link
+              href={route(routes.BUSINESS.SHOP) + `?category=${product.category.slug}`}
+              className='hover:text-blue-600'
+            >
               {product.category.name}
             </Link>
             <span>/</span>
-            <span className="text-gray-900">{product.name}</span>
+            <span className='text-gray-900'>{product.name}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12'>
             {/* 商品图片 */}
-            <div className="space-y-4">
-              <div className="relative bg-white rounded-lg overflow-hidden shadow-sm">
+            <div className='space-y-4'>
+              <div className='relative bg-white rounded-lg overflow-hidden shadow-sm'>
                 {product.images.length > 0 && (
                   <img
                     src={product.images[selectedImageIndex]}
                     alt={product.name}
-                    className="w-full h-96 object-cover"
+                    className='w-full h-96 object-cover'
                   />
                 )}
                 {hasDiscount && (
-                  <Badge className="absolute top-4 left-4 bg-red-500 text-white">
+                  <Badge className='absolute top-4 left-4 bg-red-500 text-white'>
                     -{discountPercent}%
                   </Badge>
                 )}
                 {product.isFeatured && (
-                  <Badge className="absolute top-4 right-4 bg-yellow-500 text-white">
-                    <Star className="h-3 w-3 mr-1" />
+                  <Badge className='absolute top-4 right-4 bg-yellow-500 text-white'>
+                    <Star className='h-3 w-3 mr-1' />
                     推荐
                   </Badge>
                 )}
-                
+
                 {/* 图片导航 */}
                 {product.images.length > 1 && (
                   <>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80"
+                      variant='outline'
+                      size='sm'
+                      className='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80'
                       onClick={() => setSelectedImageIndex(Math.max(0, selectedImageIndex - 1))}
                       disabled={selectedImageIndex === 0}
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className='h-4 w-4' />
                     </Button>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80"
-                      onClick={() => setSelectedImageIndex(Math.min(product.images.length - 1, selectedImageIndex + 1))}
+                      variant='outline'
+                      size='sm'
+                      className='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80'
+                      onClick={() =>
+                        setSelectedImageIndex(
+                          Math.min(product.images.length - 1, selectedImageIndex + 1)
+                        )
+                      }
                       disabled={selectedImageIndex === product.images.length - 1}
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className='h-4 w-4' />
                     </Button>
                   </>
                 )}
               </div>
-              
+
               {/* 缩略图 */}
               {product.images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto">
+                <div className='flex gap-2 overflow-x-auto'>
                   {product.images.map((image, index) => (
                     <button
                       key={index}
@@ -345,7 +388,7 @@ export default function ProductDetailPage() {
                       <img
                         src={image}
                         alt={`${product.name} ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className='w-full h-full object-cover'
                       />
                     </button>
                   ))}
@@ -354,145 +397,145 @@ export default function ProductDetailPage() {
             </div>
 
             {/* 商品信息 */}
-            <div className="space-y-6">
+            <div className='space-y-6'>
               <div>
-                <Badge variant="outline" className="mb-2">
+                <Badge variant='outline' className='mb-2'>
                   {product.category.name}
                 </Badge>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                {product.shortDesc && (
-                  <p className="text-gray-600 text-lg">{product.shortDesc}</p>
-                )}
+                <h1 className='text-3xl font-bold text-gray-900 mb-2'>{product.name}</h1>
+                {product.shortDesc && <p className='text-gray-600 text-lg'>{product.shortDesc}</p>}
               </div>
 
               {/* 评分和统计 */}
-              <div className="flex items-center gap-6">
+              <div className='flex items-center gap-6'>
                 {product.rating && (
-                  <div className="flex items-center gap-2">
+                  <div className='flex items-center gap-2'>
                     {renderStars(product.rating, 'lg')}
-                    <span className="text-lg font-medium">{product.rating}</span>
-                    <span className="text-gray-500">({product.reviewCount} 评价)</span>
+                    <span className='text-lg font-medium'>{product.rating}</span>
+                    <span className='text-gray-500'>({product.reviewCount} 评价)</span>
                   </div>
                 )}
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="h-4 w-4" />
+                <div className='flex items-center gap-4 text-sm text-gray-500'>
+                  <div className='flex items-center gap-1'>
+                    <TrendingUp className='h-4 w-4' />
                     <span>销量 {product.salesCount}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
+                  <div className='flex items-center gap-1'>
+                    <Eye className='h-4 w-4' />
                     <span>浏览 {product.viewCount}</span>
                   </div>
                 </div>
               </div>
 
               {/* 价格 */}
-              <div className="space-y-2">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-bold text-red-600">
+              <div className='space-y-2'>
+                <div className='flex items-baseline gap-3'>
+                  <span className='text-3xl font-bold text-red-600'>
                     {formatCurrency(product.price)}
                   </span>
                   {hasDiscount && (
-                    <span className="text-xl text-gray-500 line-through">
+                    <span className='text-xl text-gray-500 line-through'>
                       {formatCurrency(product.originalPrice!)}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className={`font-medium ${
-                    stockStatus.status === 'in-stock' ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                <div className='flex items-center gap-4 text-sm'>
+                  <span
+                    className={`font-medium ${
+                      stockStatus.status === 'in-stock' ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
                     {stockStatus.label}
                   </span>
                   {stockStatus.status === 'in-stock' && (
-                    <span className="text-gray-500">库存 {stockStatus.available} 件</span>
+                    <span className='text-gray-500'>库存 {stockStatus.available} 件</span>
                   )}
                 </div>
               </div>
 
               {/* 商品属性 */}
-              <div className="space-y-3">
+              <div className='space-y-3'>
                 {product.brand && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 w-16">品牌:</span>
-                    <span className="font-medium">{product.brand}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-gray-600 w-16'>品牌:</span>
+                    <span className='font-medium'>{product.brand}</span>
                   </div>
                 )}
                 {product.model && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 w-16">型号:</span>
-                    <span className="font-medium">{product.model}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-gray-600 w-16'>型号:</span>
+                    <span className='font-medium'>{product.model}</span>
                   </div>
                 )}
                 {product.sku && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 w-16">SKU:</span>
-                    <span className="font-medium">{product.sku}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-gray-600 w-16'>SKU:</span>
+                    <span className='font-medium'>{product.sku}</span>
                   </div>
                 )}
                 {product.color && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 w-16">颜色:</span>
-                    <span className="font-medium">{product.color}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-gray-600 w-16'>颜色:</span>
+                    <span className='font-medium'>{product.color}</span>
                   </div>
                 )}
                 {product.material && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-600 w-16">材质:</span>
-                    <span className="font-medium">{product.material}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-gray-600 w-16'>材质:</span>
+                    <span className='font-medium'>{product.material}</span>
                   </div>
                 )}
               </div>
 
               {/* 数量选择 */}
-              <div className="flex items-center gap-4">
-                <span className="text-gray-600">数量:</span>
-                <div className="flex items-center border border-gray-300 rounded">
+              <div className='flex items-center gap-4'>
+                <span className='text-gray-600'>数量:</span>
+                <div className='flex items-center border border-gray-300 rounded'>
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant='ghost'
+                    size='sm'
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className='h-4 w-4' />
                   </Button>
-                  <span className="px-4 py-2 min-w-[60px] text-center">{quantity}</span>
+                  <span className='px-4 py-2 min-w-[60px] text-center'>{quantity}</span>
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant='ghost'
+                    size='sm'
                     onClick={() => setQuantity(Math.min(stockStatus.available, quantity + 1))}
                     disabled={quantity >= stockStatus.available}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className='h-4 w-4' />
                   </Button>
                 </div>
               </div>
 
               {/* 操作按钮 */}
-              <div className="space-y-3">
-                <div className="flex gap-3">
+              <div className='space-y-3'>
+                <div className='flex gap-3'>
                   <Button
-                    className="flex-1"
+                    className='flex-1'
                     onClick={handleAddToCart}
                     disabled={stockStatus.status !== 'in-stock'}
                   >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    <ShoppingCart className='h-4 w-4 mr-2' />
                     加入购物车
                   </Button>
                   <Button
-                    variant="outline"
+                    variant='outline'
                     onClick={handleToggleWishlist}
                     className={isWishlisted ? 'text-red-600 border-red-600' : ''}
                   >
                     <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button variant="outline" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
+                  <Button variant='outline' onClick={handleShare}>
+                    <Share2 className='h-4 w-4' />
                   </Button>
                 </div>
                 <Button
-                  variant="default"
-                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  variant='default'
+                  className='w-full bg-orange-600 hover:bg-orange-700'
                   onClick={handleBuyNow}
                   disabled={stockStatus.status !== 'in-stock'}
                 >
@@ -501,128 +544,215 @@ export default function ProductDetailPage() {
               </div>
 
               {/* 服务保障 */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <div className="text-center">
-                  <Truck className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-600">免费配送</div>
+              <div className='grid grid-cols-3 gap-4 pt-4 border-t'>
+                <div className='text-center'>
+                  <Truck className='h-6 w-6 text-blue-600 mx-auto mb-1' />
+                  <div className='text-xs text-gray-600'>免费配送</div>
                 </div>
-                <div className="text-center">
-                  <Shield className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-600">品质保证</div>
+                <div className='text-center'>
+                  <Shield className='h-6 w-6 text-green-600 mx-auto mb-1' />
+                  <div className='text-xs text-gray-600'>品质保证</div>
                 </div>
-                <div className="text-center">
-                  <RotateCcw className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                  <div className="text-xs text-gray-600">7天退换</div>
+                <div className='text-center'>
+                  <RotateCcw className='h-6 w-6 text-purple-600 mx-auto mb-1' />
+                  <div className='text-xs text-gray-600'>7天退换</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 详细信息标签页 */}
-          <Card className="mb-12">
-            <Tabs defaultValue="description" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="description">商品详情</TabsTrigger>
-                <TabsTrigger value="specifications">规格参数</TabsTrigger>
-                <TabsTrigger value="reviews">用户评价 ({product.reviewCount})</TabsTrigger>
-                <TabsTrigger value="shipping">配送说明</TabsTrigger>
+          <Card className='mb-12'>
+            <Tabs defaultValue='components' className='w-full'>
+              <TabsList className='grid w-full grid-cols-5'>
+                <TabsTrigger value='components'>配置清单</TabsTrigger>
+                <TabsTrigger value='description'>商品详情</TabsTrigger>
+                <TabsTrigger value='specifications'>规格参数</TabsTrigger>
+                <TabsTrigger value='reviews'>用户评价 ({product.reviewCount})</TabsTrigger>
+                <TabsTrigger value='quotation'>报价说明</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="description" className="p-6">
-                <div className="prose max-w-none">
+
+              <TabsContent value='components' className='p-6'>
+                {product.components && product.components.length > 0 ? (
+                  <div className='space-y-6'>
+                    <div className='flex items-center justify-between mb-4'>
+                      <h3 className='text-xl font-bold text-gray-900'>产品配置清单</h3>
+                      <div className='text-lg font-semibold text-primary-600'>
+                        配置总价: {formatCurrency(product.price)}
+                      </div>
+                    </div>
+                    <div className='overflow-x-auto'>
+                      <table className='w-full border-collapse'>
+                        <thead>
+                          <tr className='bg-gradient-to-r from-gray-800 to-gray-700 text-white'>
+                            <th
+                              className='px-4 py-3 text-left text-sm font-semibold'
+                              style={{ width: '18%' }}
+                            >
+                              部件分类
+                            </th>
+                            <th
+                              className='px-4 py-3 text-left text-sm font-semibold'
+                              style={{ width: '15%' }}
+                            >
+                              部件名称
+                            </th>
+                            <th
+                              className='px-4 py-3 text-left text-sm font-semibold'
+                              style={{ width: '52%' }}
+                            >
+                              规格说明
+                            </th>
+                            <th
+                              className='px-4 py-3 text-right text-sm font-semibold'
+                              style={{ width: '15%' }}
+                            >
+                              单价（元）
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {product.components.map((component, index) => {
+                            const categoryChanged =
+                              index === 0 ||
+                              product.components![index - 1].category !== component.category;
+                            return (
+                              <tr
+                                key={component.id}
+                                className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                              >
+                                <td className='px-4 py-3 text-sm font-semibold text-blue-600'>
+                                  {categoryChanged ? component.category : ''}
+                                </td>
+                                <td className='px-4 py-3 text-sm text-gray-900'>
+                                  {component.name}
+                                </td>
+                                <td className='px-4 py-3 text-sm text-gray-700'>
+                                  {component.specification}
+                                </td>
+                                <td className='px-4 py-3 text-sm text-right font-semibold text-red-600'>
+                                  {component.unitPrice > 0
+                                    ? formatCurrency(component.unitPrice)
+                                    : '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr className='bg-gray-100 font-bold'>
+                            <td colSpan={3} className='px-4 py-3 text-right text-gray-900'>
+                              配置总价：
+                            </td>
+                            <td className='px-4 py-3 text-right text-lg text-red-600'>
+                              {formatCurrency(product.price)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='text-center py-8 text-gray-500'>暂无配置清单信息</div>
+                )}
+              </TabsContent>
+
+              <TabsContent value='description' className='p-6'>
+                <div className='prose max-w-none'>
                   {product.description ? (
                     <div dangerouslySetInnerHTML={{ __html: product.description }} />
                   ) : (
-                    <p className="text-gray-600">暂无详细描述</p>
+                    <p className='text-gray-600'>暂无详细描述</p>
                   )}
                 </div>
               </TabsContent>
-              
-              <TabsContent value="specifications" className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">基本参数</h3>
-                  <div className="grid grid-cols-2 gap-4">
+
+              <TabsContent value='specifications' className='p-6'>
+                <div className='space-y-4'>
+                  <h3 className='text-lg font-semibold'>基本参数</h3>
+                  <div className='grid grid-cols-2 gap-4'>
                     {product.brand && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">品牌</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>品牌</span>
                         <span>{product.brand}</span>
                       </div>
                     )}
                     {product.model && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">型号</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>型号</span>
                         <span>{product.model}</span>
                       </div>
                     )}
                     {product.weight && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">重量</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>重量</span>
                         <span>{product.weight}kg</span>
                       </div>
                     )}
                     {product.dimensions && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">尺寸</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>尺寸</span>
                         <span>
-                          {product.dimensions.length} × {product.dimensions.width} × {product.dimensions.height} cm
+                          {product.dimensions.length} × {product.dimensions.width} ×{' '}
+                          {product.dimensions.height} cm
                         </span>
                       </div>
                     )}
                     {product.color && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">颜色</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>颜色</span>
                         <span>{product.color}</span>
                       </div>
                     )}
                     {product.material && (
-                      <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">材质</span>
+                      <div className='flex justify-between py-2 border-b'>
+                        <span className='text-gray-600'>材质</span>
                         <span>{product.material}</span>
                       </div>
                     )}
                   </div>
                 </div>
               </TabsContent>
-              
-              <TabsContent value="reviews" className="p-6">
-                <div className="space-y-6">
+
+              <TabsContent value='reviews' className='p-6'>
+                <div className='space-y-6'>
                   {product.reviews.length > 0 ? (
-                    product.reviews.map((review) => (
-                      <div key={review.id} className="border-b pb-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    product.reviews.map(review => (
+                      <div key={review.id} className='border-b pb-4'>
+                        <div className='flex items-start gap-4'>
+                          <div className='w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center'>
                             {review.user.avatar ? (
                               <img
                                 src={review.user.avatar}
                                 alt={`${review.user.firstName} ${review.user.lastName}`}
-                                className="w-full h-full rounded-full object-cover"
+                                className='w-full h-full rounded-full object-cover'
                               />
                             ) : (
-                              <span className="text-sm font-medium">
+                              <span className='text-sm font-medium'>
                                 {review.user.firstName.charAt(0)}
                               </span>
                             )}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-medium">
+                          <div className='flex-1'>
+                            <div className='flex items-center gap-2 mb-2'>
+                              <span className='font-medium'>
                                 {review.user.firstName} {review.user.lastName}
                               </span>
                               {renderStars(review.rating)}
-                              <span className="text-sm text-gray-500">
+                              <span className='text-sm text-gray-500'>
                                 {formatDate(review.createdAt)}
                               </span>
                             </div>
                             {review.comment && (
-                              <p className="text-gray-700 mb-2">{review.comment}</p>
+                              <p className='text-gray-700 mb-2'>{review.comment}</p>
                             )}
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <button className="flex items-center gap-1 hover:text-blue-600">
-                                <ThumbsUp className="h-3 w-3" />
+                            <div className='flex items-center gap-4 text-sm text-gray-500'>
+                              <button className='flex items-center gap-1 hover:text-blue-600'>
+                                <ThumbsUp className='h-3 w-3' />
                                 有用 ({review.helpful})
                               </button>
-                              <button className="flex items-center gap-1 hover:text-blue-600">
-                                <ThumbsDown className="h-3 w-3" />
+                              <button className='flex items-center gap-1 hover:text-blue-600'>
+                                <ThumbsDown className='h-3 w-3' />
                                 无用 ({review.notHelpful})
                               </button>
                             </div>
@@ -631,52 +761,168 @@ export default function ProductDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8">
-                      <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">暂无用户评价</p>
+                    <div className='text-center py-8'>
+                      <MessageCircle className='h-12 w-12 text-gray-400 mx-auto mb-4' />
+                      <p className='text-gray-600'>暂无用户评价</p>
                     </div>
                   )}
                 </div>
               </TabsContent>
-              
-              <TabsContent value="shipping" className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">配送信息</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Truck className="h-5 w-5 text-blue-600" />
-                        <span>全国包邮，部分偏远地区除外</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-green-600" />
-                        <span>48小时内发货，3-7个工作日送达</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5 text-purple-600" />
-                        <span>支持货到付款，安全可靠</span>
-                      </div>
+
+              <TabsContent value='quotation' className='p-6'>
+                {product.quotationInfo ? (
+                  <div className='space-y-8'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                      {/* 价格说明 */}
+                      {product.quotationInfo.priceNotes &&
+                        product.quotationInfo.priceNotes.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>💰</span>
+                              价格说明
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.priceNotes.map((note, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{note}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* 产品特点 */}
+                      {product.quotationInfo.features &&
+                        product.quotationInfo.features.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>⭐</span>
+                              产品特点
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.features.map((feature, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* 技术支持 */}
+                      {product.quotationInfo.support &&
+                        product.quotationInfo.support.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>🛠️</span>
+                              技术支持
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.support.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* 售后服务 */}
+                      {product.quotationInfo.service &&
+                        product.quotationInfo.service.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>🔧</span>
+                              售后服务
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.service.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* 交付周期 */}
+                      {product.quotationInfo.delivery &&
+                        product.quotationInfo.delivery.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>🚚</span>
+                              交付周期
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.delivery.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* 付款方式 */}
+                      {product.quotationInfo.payment &&
+                        product.quotationInfo.payment.length > 0 && (
+                          <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
+                            <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                              <span className='text-2xl'>💳</span>
+                              付款方式
+                            </h3>
+                            <ul className='space-y-2'>
+                              {product.quotationInfo.payment.map((item, index) => (
+                                <li
+                                  key={index}
+                                  className='text-sm text-gray-700 flex items-start gap-2'
+                                >
+                                  <span className='text-primary-600 font-bold mt-1'>✓</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                     </div>
+
+                    {/* 报价有效期 */}
+                    {product.quotationInfo.validityStartDate && (
+                      <div className='mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+                        <p className='text-sm text-gray-700'>
+                          <span className='font-semibold'>报价有效期：</span>
+                          {product.quotationInfo.validityDays}天（自{' '}
+                          {new Date(product.quotationInfo.validityStartDate).toLocaleDateString(
+                            'zh-CN'
+                          )}{' '}
+                          起）
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">售后服务</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Award className="h-5 w-5 text-yellow-600" />
-                        <span>7天无理由退换货</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5 text-green-600" />
-                        <span>1年质量保证</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Zap className="h-5 w-5 text-blue-600" />
-                        <span>24小时客服支持</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <div className='text-center py-8 text-gray-500'>暂无报价说明信息</div>
+                )}
               </TabsContent>
             </Tabs>
           </Card>
@@ -688,48 +934,66 @@ export default function ProductDetailPage() {
                 <CardTitle>相关商品</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {product.relatedProducts.map((relatedProduct) => (
-                    <Link key={relatedProduct.id} href={route(routes.BUSINESS.PRODUCT_DETAIL.replace('[slug]', relatedProduct.slug))} className="group">
-                      <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-                        <div className="relative">
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+                  {product.relatedProducts.map(relatedProduct => (
+                    <Link
+                      key={relatedProduct.id}
+                      href={route(
+                        routes.BUSINESS.PRODUCT_DETAIL.replace('[slug]', relatedProduct.slug)
+                      )}
+                      className='group'
+                    >
+                      <Card className='h-full hover:shadow-lg transition-shadow duration-300'>
+                        <div className='relative'>
                           {relatedProduct.images.length > 0 && (
                             <img
                               src={relatedProduct.images[0]}
                               alt={relatedProduct.name}
-                              className="w-full h-40 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+                              className='w-full h-40 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300'
                             />
                           )}
-                          {relatedProduct.originalPrice && relatedProduct.originalPrice > relatedProduct.price && (
-                            <Badge className="absolute top-2 left-2 bg-red-500 text-white">
-                              -{Math.round(((relatedProduct.originalPrice - relatedProduct.price) / relatedProduct.originalPrice) * 100)}%
-                            </Badge>
-                          )}
+                          {relatedProduct.originalPrice &&
+                            relatedProduct.originalPrice > relatedProduct.price && (
+                              <Badge className='absolute top-2 left-2 bg-red-500 text-white'>
+                                -
+                                {Math.round(
+                                  ((relatedProduct.originalPrice - relatedProduct.price) /
+                                    relatedProduct.originalPrice) *
+                                    100
+                                )}
+                                %
+                              </Badge>
+                            )}
                         </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        <CardContent className='p-4'>
+                          <h3 className='font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors'>
                             {relatedProduct.name}
                           </h3>
-                          
+
                           {relatedProduct.rating && (
-                            <div className="flex items-center gap-1 mb-2">
+                            <div className='flex items-center gap-1 mb-2'>
                               {renderStars(relatedProduct.rating, 'sm')}
-                              <span className="text-xs text-gray-500">({relatedProduct.reviewCount})</span>
+                              <span className='text-xs text-gray-500'>
+                                ({relatedProduct.reviewCount})
+                              </span>
                             </div>
                           )}
-                          
-                          <div className="flex items-center justify-between">
+
+                          <div className='flex items-center justify-between'>
                             <div>
-                              <span className="font-bold text-red-600">
+                              <span className='font-bold text-red-600'>
                                 {formatCurrency(relatedProduct.price)}
                               </span>
-                              {relatedProduct.originalPrice && relatedProduct.originalPrice > relatedProduct.price && (
-                                <span className="text-sm text-gray-500 line-through ml-2">
-                                  {formatCurrency(relatedProduct.originalPrice)}
-                                </span>
-                              )}
+                              {relatedProduct.originalPrice &&
+                                relatedProduct.originalPrice > relatedProduct.price && (
+                                  <span className='text-sm text-gray-500 line-through ml-2'>
+                                    {formatCurrency(relatedProduct.originalPrice)}
+                                  </span>
+                                )}
                             </div>
-                            <span className={`text-xs ${relatedProduct.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                            <span
+                              className={`text-xs ${relatedProduct.inStock ? 'text-green-600' : 'text-red-600'}`}
+                            >
                               {relatedProduct.inStock ? '有库存' : '缺货'}
                             </span>
                           </div>
@@ -743,5 +1007,6 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
+    </DefaultLayout>
   );
 }

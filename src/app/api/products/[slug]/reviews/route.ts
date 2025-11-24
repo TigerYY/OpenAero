@@ -1,10 +1,10 @@
 /**
  * 产品评价 API
- * GET /api/products/[id]/reviews - 获取产品评价列表
- * POST /api/products/[id]/reviews - 创建产品评价
+ * GET /api/products/[slug]/reviews - 获取产品评价列表
+ * POST /api/products/[slug]/reviews - 创建产品评价
  */
 
-import { ReviewStatus } from '@prisma/client';
+import { ProductStatus, ReviewStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -16,20 +16,51 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { getServerUser } from '@/lib/auth/auth-service';
-import {
-  createProductReview,
-  getProductReviews,
-  getProductReviewStats,
-} from '@/lib/product-review';
-
+import { prisma } from '@/lib/prisma';
+import { createProductReview, getProductReviews } from '@/lib/product-review';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * 判断字符串是否为 UUID 格式
+ */
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
+ * 根据 slug 或 id 获取产品 ID
+ */
+async function getProductIdByIdentifier(identifier: string): Promise<string | null> {
+  const isId = isUUID(identifier);
+
+  const product = await prisma.product.findFirst({
+    where: {
+      ...(isId ? { id: identifier } : { slug: identifier }),
+      status: ProductStatus.PUBLISHED,
+      is_active: true,
+    },
+    select: { id: true },
+  });
+
+  return product?.id || null;
+}
+
 const reviewQuerySchema = z.object({
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 10)),
+  page: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val, 10) : 10)),
   status: z.nativeEnum(ReviewStatus).optional(),
-  rating: z.string().optional().transform((val) => (val ? parseInt(val, 10) : undefined)),
+  rating: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val, 10) : undefined)),
 });
 
 const createReviewSchema = z.object({
@@ -42,17 +73,14 @@ const createReviewSchema = z.object({
 });
 
 /**
- * GET /api/products/[id]/reviews - 获取产品评价列表
+ * GET /api/products/[slug]/reviews - 获取产品评价列表
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const { id } = await params;
-    const productId = id;
+    const { slug } = await params;
+    const productId = await getProductIdByIdentifier(slug);
     if (!productId) {
-      return createErrorResponse('产品ID不能为空', 400);
+      return createErrorResponse('商品不存在', 404);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -86,7 +114,8 @@ export async function GET(
     );
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('获取评价列表失败:', error);}
+      console.error('获取评价列表失败:', error);
+    }
     return createErrorResponse(
       '获取评价列表失败',
       500,
@@ -96,11 +125,11 @@ export async function GET(
 }
 
 /**
- * POST /api/products/[id]/reviews - 创建产品评价
+ * POST /api/products/[slug]/reviews - 创建产品评价
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const user = await getServerUser();
@@ -108,10 +137,10 @@ export async function POST(
       return createErrorResponse('未授权访问', 401);
     }
 
-    const { id } = await params;
-    const productId = id;
+    const { slug } = await params;
+    const productId = await getProductIdByIdentifier(slug);
     if (!productId) {
-      return createErrorResponse('产品ID不能为空', 400);
+      return createErrorResponse('商品不存在', 404);
     }
 
     const body = await request.json();
@@ -145,7 +174,8 @@ export async function POST(
     return createSuccessResponse(review, '评价提交成功，等待审核');
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('创建评价失败:', error);}
+      console.error('创建评价失败:', error);
+    }
     return createErrorResponse(
       error instanceof Error ? error.message : '创建评价失败',
       error instanceof Error && error.message.includes('已评价') ? 400 : 500,
@@ -153,4 +183,3 @@ export async function POST(
     );
   }
 }
-

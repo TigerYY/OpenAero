@@ -1,8 +1,9 @@
 /**
  * 评价回复 API
- * POST /api/products/[id]/reviews/[reviewId]/replies - 添加评价回复
+ * POST /api/products/[slug]/reviews/[reviewId]/replies - 添加评价回复
  */
 
+import { ProductStatus } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -13,8 +14,8 @@ import {
   logAuditAction,
 } from '@/lib/api-helpers';
 import { getServerUser } from '@/lib/auth/auth-service';
+import { prisma } from '@/lib/prisma';
 import { addReviewReply } from '@/lib/product-review';
-
 
 export const dynamic = 'force-dynamic';
 
@@ -23,11 +24,19 @@ const createReplySchema = z.object({
 });
 
 /**
- * POST /api/products/[id]/reviews/[reviewId]/replies - 添加评价回复
+ * 判断字符串是否为 UUID 格式
+ */
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
+ * POST /api/products/[slug]/reviews/[reviewId]/replies - 添加评价回复
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; reviewId: string }> }
+  { params }: { params: Promise<{ slug: string; reviewId: string }> }
 ) {
   try {
     const user = await getServerUser();
@@ -35,10 +44,27 @@ export async function POST(
       return createErrorResponse('未授权访问', 401);
     }
 
-    const { id: productId, reviewId } = await params;
-    if (!productId || !reviewId) {
-      return createErrorResponse('产品ID或评价ID不能为空', 400);
+    const { slug, reviewId } = await params;
+    if (!reviewId) {
+      return createErrorResponse('评价ID不能为空', 400);
     }
+
+    // 验证产品是否存在
+    const isId = isUUID(slug);
+    const product = await prisma.product.findFirst({
+      where: {
+        ...(isId ? { id: slug } : { slug }),
+        status: ProductStatus.PUBLISHED,
+        is_active: true,
+      },
+      select: { id: true },
+    });
+
+    if (!product) {
+      return createErrorResponse('商品不存在', 404);
+    }
+
+    const productId = product.id;
 
     const body = await request.json();
     const validationResult = createReplySchema.safeParse(body);
@@ -64,7 +90,8 @@ export async function POST(
     return createSuccessResponse(reply, '回复添加成功');
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('添加回复失败:', error);}
+      console.error('添加回复失败:', error);
+    }
     return createErrorResponse(
       error instanceof Error ? error.message : '添加回复失败',
       error instanceof Error && error.message.includes('不存在') ? 404 : 500,
@@ -72,4 +99,3 @@ export async function POST(
     );
   }
 }
-

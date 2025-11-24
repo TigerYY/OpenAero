@@ -1,0 +1,104 @@
+version: "3.8"
+
+services:
+  # Blue 环境 - 当前生产环境
+  app-blue:
+    image: openaero-web:latest
+    container_name: openaero-app-blue
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    restart: unless-stopped
+    networks:
+      - openaero-network
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+        reservations:
+          memory: 512M
+          cpus: "0.25"
+    labels:
+      - "traefik.enable=false"
+      - "deployment.environment=blue"
+
+  # Green 环境 - 新版本环境
+  app-green:
+    image: openaero-web:latest
+    container_name: openaero-app-green
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    restart: unless-stopped
+    networks:
+      - openaero-network
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+        reservations:
+          memory: 512M
+          cpus: "0.25"
+    labels:
+      - "traefik.enable=false"
+      - "deployment.environment=green"
+    profiles:
+      - green # 默认不启动，只在部署时启动
+
+  # Nginx 负载均衡器
+  nginx:
+    image: nginx:alpine
+    container_name: openaero-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/blue-green.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app-blue
+    restart: unless-stopped
+    networks:
+      - openaero-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  nginx_logs:
+    driver: local
+
+networks:
+  openaero-network:
+    driver: bridge

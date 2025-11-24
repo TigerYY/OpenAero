@@ -1,38 +1,19 @@
-'use client';
+/* eslint-disable no-unused-expressions */
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+
+import { ProductCard } from '@/components/business/ProductCard';
+import { ProductSearchFilters } from '@/components/business/ProductSearchFilters';
+import { DefaultLayout } from '@/components/layout/DefaultLayout';
+import { Pagination } from '@/components/ui/Pagination';
+import logger from '@/lib/logger';
+
+('use client');
+/* eslint-enable no-unused-expressions */
 
 // 强制动态渲染，避免构建时预渲染
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-
-import {
-  Eye,
-  Grid,
-  Heart,
-  List,
-  Package,
-  RefreshCw,
-  Search,
-  ShoppingCart,
-  SlidersHorizontal,
-  Star,
-  TrendingUp,
-  X,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-
-import { DefaultLayout } from '@/components/layout/DefaultLayout';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import logger from '@/lib/logger';
-import { useRouting } from '@/lib/routing';
-import { formatCurrency } from '@/lib/utils';
 
 interface Product {
   id: string;
@@ -47,14 +28,13 @@ interface Product {
   salesCount: number;
   viewCount: number;
   isFeatured: boolean;
+  brand?: string;
   category: {
     id: string;
     name: string;
     slug: string;
   };
-  inventory?: {
-    available: number;
-  };
+  inStock: boolean;
 }
 
 interface ProductCategory {
@@ -65,598 +45,270 @@ interface ProductCategory {
   productCount: number;
 }
 
-interface FilterState {
-  search: string;
-  category: string;
-  minPrice: string;
-  maxPrice: string;
-  inStock: boolean;
-  featured: boolean;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
+interface ProductFilters {
+  search?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  featured?: boolean;
+  sortBy?: 'createdAt' | 'price' | 'rating' | 'salesCount' | 'name' | 'reviewCount';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export default function ProductsPage() {
   const t = useTranslations('shop.products');
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { route, routes } = useRouting();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-
-  const [filters, setFilters] = useState<FilterState>({
-    search: searchParams?.get('search') || '',
-    category: searchParams?.get('category') || '',
-    minPrice: searchParams?.get('minPrice') || '',
-    maxPrice: searchParams?.get('maxPrice') || '',
-    inStock: searchParams?.get('inStock') === 'true',
-    featured: searchParams?.get('featured') === 'true',
-    sortBy: searchParams?.get('sortBy') || 'createdAt',
-    sortOrder: (searchParams?.get('sortOrder') as 'asc' | 'desc') || 'desc',
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filters, setFilters] = useState<ProductFilters>({
+    search: '',
+    category: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
   });
 
-  // 获取商品列表
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '12',
-        ...(filters.search && { search: filters.search }),
-        ...(filters.category && { category: filters.category }),
-        ...(filters.minPrice && { minPrice: filters.minPrice }),
-        ...(filters.maxPrice && { maxPrice: filters.maxPrice }),
-        ...(filters.inStock && { inStock: 'true' }),
-        ...(filters.featured && { featured: 'true' }),
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
+      const params = new URLSearchParams();
+
+      if (filters.search) params.append('search', filters.search);
+      if (filters.category) params.append('categorySlug', filters.category);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+      if (filters.inStock) params.append('inStock', 'true');
+      if (filters.featured) params.append('isFeatured', 'true');
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+      params.append('page', pagination.page.toString());
+      params.append('limit', pagination.limit.toString());
+
+      const response = await fetch(`/api/products?${params.toString()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       });
+      const result = await response.json();
 
-      const response = await fetch(`/api/products?${params}`);
-      if (!response.ok) throw new Error(t('errors.fetchFailed'));
-
-      const data = await response.json();
-      setProducts(data.products);
-      setTotalPages(data.pagination.pages);
-      setTotalProducts(data.pagination.total);
+      if (result.success && result.data) {
+        setProducts(result.data.products || []);
+        setPagination({
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 20,
+          total: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 0,
+        });
+      } else {
+        setProducts([]);
+      }
     } catch (error) {
-      logger.error(t('errors.fetchFailed'), error);
-      toast.error(t('errors.fetchFailed'));
+      logger.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filters, t]);
+  };
 
-  // 获取商品分类
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = async () => {
     try {
       const response = await fetch('/api/admin/categories');
-      if (!response.ok) throw new Error(t('errors.categoriesFailed'));
+      if (!response.ok) throw new Error('Failed to fetch categories');
 
       const data = await response.json();
-      setCategories(data.categories);
-    } catch (error) {
-      logger.error(t('errors.categoriesFailed'), error);
-      toast.error(t('errors.categoriesFailed'));
-    }
-  }, [t]);
-
-  // 更新URL参数
-  const updateURL = useCallback(() => {
-    const params = new URLSearchParams();
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== '' && value !== false) {
-        params.set(key, value.toString());
+      if (data.success && data.data) {
+        setCategories(data.data.categories || []);
       }
-    });
-
-    if (currentPage > 1) {
-      params.set('page', currentPage.toString());
+    } catch (error) {
+      logger.error('Error fetching categories:', error);
     }
-
-    const basePath = route(routes.BUSINESS.SHOP);
-    const newURL = `${basePath}${params.toString() ? `?${params.toString()}` : ''}`;
-    router.replace(newURL, { scroll: false });
-  }, [filters, currentPage, router, route, routes]);
-
-  // 处理筛选器变化
-  const handleFilterChange = (key: keyof FilterState, value: string | number | boolean) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
-  };
-
-  // 清除筛选器
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      category: '',
-      minPrice: '',
-      maxPrice: '',
-      inStock: false,
-      featured: false,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    });
-    setCurrentPage(1);
-  };
-
-  // 处理搜索
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
-
-  // 获取商品评分星星
-  const renderStars = (rating?: number) => {
-    if (!rating) return null;
-
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} className='h-4 w-4 fill-yellow-400 text-yellow-400' />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(<Star key='half' className='h-4 w-4 fill-yellow-400/50 text-yellow-400' />);
-    }
-
-    const emptyStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className='h-4 w-4 text-gray-300' />);
-    }
-
-    return <div className='flex items-center gap-1'>{stars}</div>;
-  };
-
-  // 获取库存状态
-  const getStockStatus = (inventory?: Product['inventory']) => {
-    if (!inventory || inventory.available === 0) {
-      return { status: 'out-of-stock', label: t('stock.outOfStock'), color: 'text-red-600' };
-    } else if (inventory.available <= 10) {
-      return { status: 'low-stock', label: t('stock.lowStock'), color: 'text-orange-600' };
-    } else {
-      return { status: 'in-stock', label: t('stock.inStock'), color: 'text-green-600' };
-    }
-  };
-
-  // 渲染商品卡片
-  const renderProductCard = (product: Product) => {
-    const stockStatus = getStockStatus(product.inventory);
-    const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-    const discountPercent = hasDiscount
-      ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
-      : 0;
-
-    if (viewMode === 'list') {
-      return (
-        <Card key={product.id} className='hover:shadow-lg transition-shadow duration-300'>
-          <CardContent className='p-4'>
-            <div className='flex gap-4'>
-              <Link href={route(`/shop/products/${product.slug}`)} className='flex-shrink-0'>
-                {product.images.length > 0 && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className='w-24 h-24 object-cover rounded-lg'
-                  />
-                )}
-              </Link>
-              <div className='flex-1'>
-                <div className='flex items-start justify-between mb-2'>
-                  <div>
-                    <Badge variant='outline' className='text-xs mb-2'>
-                      {product.category.name}
-                    </Badge>
-                    <Link href={route(`/shop/products/${product.slug}`)}>
-                      <h3 className='font-semibold text-gray-900 hover:text-blue-600 transition-colors'>
-                        {product.name}
-                      </h3>
-                    </Link>
-                    {product.shortDesc && (
-                      <p className='text-sm text-gray-600 mt-1 line-clamp-2'>{product.shortDesc}</p>
-                    )}
-                  </div>
-                  <div className='text-right'>
-                    <div className='text-lg font-bold text-red-600'>
-                      {formatCurrency(product.price)}
-                    </div>
-                    {hasDiscount && (
-                      <div className='text-sm text-gray-500 line-through'>
-                        {formatCurrency(product.originalPrice!)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-4 text-sm text-gray-500'>
-                    {product.rating && (
-                      <div className='flex items-center gap-1'>
-                        {renderStars(product.rating)}
-                        <span>({product.reviewCount})</span>
-                      </div>
-                    )}
-                    <div className='flex items-center gap-1'>
-                      <TrendingUp className='h-3 w-3' />
-                      {product.salesCount}
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      <Eye className='h-3 w-3' />
-                      {product.viewCount}
-                    </div>
-                    <span className={stockStatus.color}>{stockStatus.label}</span>
-                  </div>
-
-                  <div className='flex gap-2'>
-                    <Button size='sm' disabled={stockStatus.status === 'out-of-stock'}>
-                      <ShoppingCart className='h-4 w-4 mr-1' />
-                      {stockStatus.status === 'out-of-stock'
-                        ? t('actions.outOfStock')
-                        : t('actions.addToCart')}
-                    </Button>
-                    <Button variant='outline' size='sm'>
-                      <Heart className='h-4 w-4' />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Link key={product.id} href={route(`/shop/products/${product.slug}`)} className='group'>
-        <Card className='h-full hover:shadow-xl transition-all duration-300 border hover:border-blue-200'>
-          <div className='relative'>
-            {product.images.length > 0 && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className='w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300'
-              />
-            )}
-            {hasDiscount && (
-              <Badge className='absolute top-2 left-2 bg-red-500 text-white'>
-                -{discountPercent}%
-              </Badge>
-            )}
-            {product.isFeatured && (
-              <Badge className='absolute top-2 right-2 bg-yellow-500 text-white'>
-                <Star className='h-3 w-3 mr-1' />
-                {t('featured')}
-              </Badge>
-            )}
-          </div>
-          <CardContent className='p-4'>
-            <div className='mb-2'>
-              <Badge variant='outline' className='text-xs'>
-                {product.category.name}
-              </Badge>
-            </div>
-            <h3 className='font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors'>
-              {product.name}
-            </h3>
-            {product.shortDesc && (
-              <p className='text-sm text-gray-600 mb-3 line-clamp-2'>{product.shortDesc}</p>
-            )}
-
-            {/* 评分和统计 */}
-            <div className='flex items-center gap-4 mb-3 text-sm text-gray-500'>
-              {product.rating && (
-                <div className='flex items-center gap-1'>
-                  {renderStars(product.rating)}
-                  <span>({product.reviewCount})</span>
-                </div>
-              )}
-              <div className='flex items-center gap-1'>
-                <TrendingUp className='h-3 w-3' />
-                {product.salesCount}
-              </div>
-              <div className='flex items-center gap-1'>
-                <Eye className='h-3 w-3' />
-                {product.viewCount}
-              </div>
-            </div>
-
-            {/* 价格 */}
-            <div className='flex items-center justify-between mb-3'>
-              <div>
-                <span className='text-lg font-bold text-red-600'>
-                  {formatCurrency(product.price)}
-                </span>
-                {hasDiscount && (
-                  <span className='text-sm text-gray-500 line-through ml-2'>
-                    {formatCurrency(product.originalPrice!)}
-                  </span>
-                )}
-              </div>
-              <span className={`text-xs ${stockStatus.color}`}>{stockStatus.label}</span>
-            </div>
-
-            {/* 操作按钮 */}
-            <div className='flex gap-2'>
-              <Button
-                className='flex-1'
-                disabled={stockStatus.status === 'out-of-stock'}
-                onClick={e => e.preventDefault()}
-              >
-                <ShoppingCart className='h-4 w-4 mr-1' />
-                {stockStatus.status === 'out-of-stock' ? '缺货' : '加入购物车'}
-              </Button>
-              <Button variant='outline' size='sm' onClick={e => e.preventDefault()}>
-                <Heart className='h-4 w-4' />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-    );
   };
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, [pagination.page, filters]);
 
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+  }, []);
 
-  useEffect(() => {
-    updateURL();
-  }, [updateURL]);
+  const handleFiltersChange = (newFilters: Partial<ProductFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, page }));
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      category: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    });
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
 
   return (
     <DefaultLayout>
-      <div className='min-h-screen bg-gray-50'>
-        <div className='container mx-auto px-4 py-8'>
-          {/* 页面标题和搜索 */}
-          <div className='mb-8'>
-            <h1 className='text-3xl font-bold text-gray-900 mb-4'>{t('title')}</h1>
-
-            {/* 搜索栏 */}
-            <form onSubmit={handleSearch} className='max-w-2xl'>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
-                <Input
-                  type='text'
-                  placeholder={t('searchPlaceholder')}
-                  value={filters.search}
-                  onChange={e => handleFilterChange('search', e.target.value)}
-                  className='pl-10 pr-4'
-                />
-                <Button
-                  type='submit'
-                  className='absolute right-2 top-1/2 transform -translate-y-1/2'
-                  size='sm'
-                >
-                  {t('search')}
-                </Button>
+      <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white'>
+        {/* 页面头部 - 紧凑设计 */}
+        <div className='bg-gradient-to-br from-white via-gray-50/50 to-white border-b border-gray-200/60 sticky top-0 z-10 shadow-sm backdrop-blur-sm'>
+          <div className='container mx-auto px-4 py-5'>
+            {/* 第一行：标题和搜索 - 更紧凑 */}
+            <div className='flex flex-col lg:flex-row lg:items-center gap-3 mb-4'>
+              {/* 左侧：标题和描述 */}
+              <div className='flex items-center gap-4 flex-shrink-0'>
+                <div>
+                  <h1 className='text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent'>
+                    {t('title')}
+                  </h1>
+                  <p className='text-xs lg:text-sm text-gray-500 mt-0.5 hidden sm:block'>
+                    {t('subtitle') || '发现和购买优质商品'}
+                  </p>
+                </div>
               </div>
-            </form>
-          </div>
 
-          <div className='flex gap-8'>
-            {/* 侧边栏筛选器 */}
-            <div className={`w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-              <Card className='sticky top-4'>
-                <CardContent className='p-4'>
-                  <div className='flex items-center justify-between mb-4'>
-                    <h3 className='font-semibold text-gray-900'>{t('filters.title')}</h3>
-                    <Button variant='ghost' size='sm' onClick={clearFilters}>
-                      <X className='h-4 w-4' />
-                      {t('filters.clear')}
-                    </Button>
-                  </div>
-
-                  {/* 分类筛选 */}
-                  <div className='mb-6'>
-                    <h4 className='font-medium text-gray-900 mb-3'>
-                      {t('filters.category.title')}
-                    </h4>
-                    <div className='space-y-2'>
-                      <label className='flex items-center'>
-                        <input
-                          type='radio'
-                          name='category'
-                          value=''
-                          checked={filters.category === ''}
-                          onChange={e => handleFilterChange('category', e.target.value)}
-                          className='mr-2'
-                        />
-                        <span className='text-sm'>{t('filters.category.all')}</span>
-                      </label>
-                      {categories.map(category => (
-                        <label key={category.id} className='flex items-center'>
-                          <input
-                            type='radio'
-                            name='category'
-                            value={category.slug}
-                            checked={filters.category === category.slug}
-                            onChange={e => handleFilterChange('category', e.target.value)}
-                            className='mr-2'
-                          />
-                          <span className='text-sm'>{category.name}</span>
-                          <span className='text-xs text-gray-500 ml-auto'>
-                            ({category.productCount})
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 价格筛选 */}
-                  <div className='mb-6'>
-                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.price.title')}</h4>
-                    <div className='flex gap-2'>
-                      <Input
-                        type='number'
-                        placeholder={t('filters.price.min')}
-                        value={filters.minPrice}
-                        onChange={e => handleFilterChange('minPrice', e.target.value)}
-                        className='text-sm'
-                      />
-                      <span className='text-gray-500 self-center'>-</span>
-                      <Input
-                        type='number'
-                        placeholder={t('filters.price.max')}
-                        value={filters.maxPrice}
-                        onChange={e => handleFilterChange('maxPrice', e.target.value)}
-                        className='text-sm'
-                      />
-                    </div>
-                  </div>
-
-                  {/* 其他筛选 */}
-                  <div className='mb-6'>
-                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.other.title')}</h4>
-                    <div className='space-y-2'>
-                      <label className='flex items-center'>
-                        <input
-                          type='checkbox'
-                          checked={filters.inStock}
-                          onChange={e => handleFilterChange('inStock', e.target.checked)}
-                          className='mr-2'
-                        />
-                        <span className='text-sm'>{t('filters.other.inStock')}</span>
-                      </label>
-                      <label className='flex items-center'>
-                        <input
-                          type='checkbox'
-                          checked={filters.featured}
-                          onChange={e => handleFilterChange('featured', e.target.checked)}
-                          className='mr-2'
-                        />
-                        <span className='text-sm'>{t('filters.other.featured')}</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 排序 */}
-                  <div>
-                    <h4 className='font-medium text-gray-900 mb-3'>{t('filters.sort.title')}</h4>
-                    <select
-                      value={`${filters.sortBy}-${filters.sortOrder}`}
-                      onChange={e => {
-                        const [sortBy, sortOrder] = e.target.value.split('-');
-                        if (sortBy) handleFilterChange('sortBy', sortBy);
-                        if (sortOrder) handleFilterChange('sortOrder', sortOrder);
-                      }}
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+              {/* 右侧：搜索框 - 与标题更近 */}
+              <div className='flex-1 lg:max-w-md'>
+                <div className='relative'>
+                  <input
+                    type='text'
+                    placeholder={t('searchPlaceholder') || '搜索商品...'}
+                    value={filters.search || ''}
+                    onChange={e => handleFiltersChange({ search: e.target.value })}
+                    className='w-full pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all placeholder:text-gray-400 text-sm'
+                  />
+                  <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                    <svg
+                      className='h-4 w-4 text-gray-400'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
                     >
-                      <option value='createdAt-desc'>{t('filters.sort.newest')}</option>
-                      <option value='price-asc'>{t('filters.sort.priceAsc')}</option>
-                      <option value='price-desc'>{t('filters.sort.priceDesc')}</option>
-                      <option value='salesCount-desc'>{t('filters.sort.sales')}</option>
-                      <option value='viewCount-desc'>{t('filters.sort.views')}</option>
-                      <option value='rating-desc'>{t('filters.sort.rating')}</option>
-                    </select>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                      />
+                    </svg>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 主内容区域 */}
-            <div className='flex-1'>
-              {/* 工具栏 */}
-              <div className='flex items-center justify-between mb-6'>
-                <div className='flex items-center gap-4'>
-                  <Button
-                    variant='outline'
-                    onClick={() => setShowFilters(!showFilters)}
-                    className='lg:hidden'
-                  >
-                    <SlidersHorizontal className='h-4 w-4 mr-2' />
-                    {t('toolbar.filter')}
-                  </Button>
-                  <span className='text-sm text-gray-600'>
-                    {t('toolbar.found', { count: totalProducts })}
-                  </span>
-                </div>
-
-                <div className='flex items-center gap-2'>
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className='h-4 w-4' />
-                  </Button>
                 </div>
               </div>
 
-              {/* 商品列表 */}
-              {loading ? (
-                <div className='flex justify-center items-center py-12'>
-                  <RefreshCw className='h-8 w-8 animate-spin text-blue-600' />
-                  <span className='ml-3 text-gray-600'>{t('toolbar.loading')}</span>
-                </div>
-              ) : products.length === 0 ? (
-                <div className='text-center py-12'>
-                  <Package className='h-16 w-16 text-gray-400 mx-auto mb-4' />
-                  <h3 className='text-lg font-medium text-gray-900 mb-2'>
-                    {t('toolbar.noResults.title')}
-                  </h3>
-                  <p className='text-gray-600 mb-4'>{t('toolbar.noResults.description')}</p>
-                  <Button onClick={clearFilters}>{t('toolbar.noResults.clearFilters')}</Button>
-                </div>
-              ) : (
-                <>
-                  <div
-                    className={
-                      viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                        : 'space-y-4'
-                    }
-                  >
-                    {products.map(renderProductCard)}
-                  </div>
-
-                  {/* 分页 */}
-                  {totalPages > 1 && (
-                    <div className='flex justify-center items-center gap-2 mt-8'>
-                      <Button
-                        variant='outline'
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        {t('pagination.previous')}
-                      </Button>
-                      <span className='text-sm text-gray-600'>
-                        {t('pagination.page', { current: currentPage, total: totalPages })}
+              {/* 结果统计 - 移到右侧 */}
+              {!loading && (
+                <div className='flex items-center gap-2 text-xs lg:text-sm text-gray-600 lg:flex-shrink-0'>
+                  <span className='font-semibold text-gray-900 whitespace-nowrap'>
+                    {pagination.total}
+                  </span>
+                  <span className='text-gray-400'>个商品</span>
+                  {pagination.totalPages > 1 && (
+                    <>
+                      <span className='text-gray-300 mx-1'>•</span>
+                      <span className='whitespace-nowrap text-gray-500'>
+                        {pagination.page}/{pagination.totalPages}
                       </span>
-                      <Button
-                        variant='outline'
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        {t('pagination.next')}
-                      </Button>
-                    </div>
+                    </>
                   )}
-                </>
+                </div>
               )}
             </div>
+
+            {/* 第二行：筛选条件 */}
+            <div className='flex items-center gap-2'>
+              <ProductSearchFilters
+                filters={filters}
+                categories={categories}
+                onFilterChange={handleFiltersChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className='container mx-auto px-4 py-8'>
+          {/* 商品列表区域 */}
+          <div>
+            {loading ? (
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'>
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className='animate-pulse'>
+                    <div className='bg-white rounded-xl shadow-sm overflow-hidden'>
+                      <div className='aspect-video bg-gray-200'></div>
+                      <div className='p-4 space-y-3'>
+                        <div className='h-3 bg-gray-200 rounded w-3/4'></div>
+                        <div className='h-3 bg-gray-200 rounded w-full'></div>
+                        <div className='h-3 bg-gray-200 rounded w-5/6'></div>
+                        <div className='flex justify-between items-center pt-3'>
+                          <div className='h-5 bg-gray-200 rounded w-16'></div>
+                          <div className='h-8 bg-gray-200 rounded w-20'></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : products && products.length > 0 ? (
+              <>
+                {/* 商品网格 - 14寸屏幕每行5个 */}
+                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8'>
+                  {products.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+
+                {/* 分页 */}
+                {pagination.totalPages > 1 && (
+                  <div className='flex justify-center mt-8'>
+                    <Pagination
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className='text-center py-16 bg-white rounded-xl shadow-sm'>
+                <div className='inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6'>
+                  <svg
+                    className='w-10 h-10 text-gray-400'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                    />
+                  </svg>
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>未找到商品</h3>
+                <p className='text-gray-600 mb-6 max-w-md mx-auto'>
+                  请尝试调整筛选条件或搜索关键词
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className='px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors'
+                >
+                  清除筛选
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

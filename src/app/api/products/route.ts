@@ -1,27 +1,47 @@
-import { ProductStatus } from '@prisma/client';
-import { NextRequest } from 'next/server';
+import { Prisma, ProductStatus } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import {
-  createSuccessResponse,
-  createErrorResponse,
-  createPaginatedResponse,
-} from '@/lib/api-helpers';
+import { createErrorResponse } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 
 const productQuerySchema = z.object({
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 20)),
+  page: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val, 10) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val, 10) : 20)),
   search: z.string().optional(),
   categoryId: z.string().optional(),
   categorySlug: z.string().optional(),
-  minPrice: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
-  maxPrice: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
-  isFeatured: z.string().optional().transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined)),
-  inStock: z.string().optional().transform((val) => (val === 'true')),
+  minPrice: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseFloat(val) : undefined)),
+  maxPrice: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseFloat(val) : undefined)),
+  isFeatured: z
+    .string()
+    .optional()
+    .transform(val => (val === 'true' ? true : val === 'false' ? false : undefined)),
+  inStock: z
+    .string()
+    .optional()
+    .transform(val => val === 'true'),
   brand: z.string().optional(),
-  rating: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
-  sortBy: z.enum(['createdAt', 'price', 'rating', 'salesCount', 'name', 'reviewCount']).optional().default('createdAt'),
+  rating: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseFloat(val) : undefined)),
+  sortBy: z
+    .enum(['createdAt', 'price', 'rating', 'salesCount', 'name', 'reviewCount'])
+    .optional()
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
@@ -29,24 +49,33 @@ const productQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    // 将 null 转换为 undefined，因为 Zod optional() 期望 undefined 而不是 null
+    const getParam = (key: string) => searchParams.get(key) || undefined;
+
     const queryResult = productQuerySchema.safeParse({
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      search: searchParams.get('search'),
-      categoryId: searchParams.get('categoryId'),
-      categorySlug: searchParams.get('categorySlug'),
-      minPrice: searchParams.get('minPrice'),
-      maxPrice: searchParams.get('maxPrice'),
-      isFeatured: searchParams.get('isFeatured'),
-      inStock: searchParams.get('inStock'),
-      brand: searchParams.get('brand'),
-      rating: searchParams.get('rating'),
-      sortBy: searchParams.get('sortBy'),
-      sortOrder: searchParams.get('sortOrder'),
+      page: getParam('page'),
+      limit: getParam('limit'),
+      search: getParam('search'),
+      categoryId: getParam('categoryId'),
+      categorySlug: getParam('categorySlug'),
+      minPrice: getParam('minPrice'),
+      maxPrice: getParam('maxPrice'),
+      isFeatured: getParam('isFeatured'),
+      inStock: getParam('inStock'),
+      brand: getParam('brand'),
+      rating: getParam('rating'),
+      sortBy: getParam('sortBy'),
+      sortOrder: getParam('sortOrder'),
     });
 
     if (!queryResult.success) {
-      return createErrorResponse('查询参数无效', 400);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('查询参数验证失败:', queryResult.error.errors);
+      }
+      return createErrorResponse(
+        `查询参数无效: ${queryResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
+        400
+      );
     }
 
     const {
@@ -68,9 +97,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // 构建查询条件
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       status: ProductStatus.PUBLISHED,
-      isActive: true,
+      is_active: true,
     };
 
     // 搜索条件（支持多字段搜索）
@@ -78,7 +107,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-        { shortDesc: { contains: search, mode: 'insensitive' } },
+        { short_desc: { contains: search, mode: 'insensitive' } },
         { brand: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
         { model: { contains: search, mode: 'insensitive' } },
@@ -87,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     // 分类筛选
     if (categoryId) {
-      where.categoryId = categoryId;
+      where.category_id = categoryId;
     }
 
     if (categorySlug) {
@@ -109,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     // 特色商品筛选
     if (isFeatured !== undefined) {
-      where.isFeatured = isFeatured;
+      where.is_featured = isFeatured;
     }
 
     // 品牌筛选
@@ -131,19 +160,21 @@ export async function GET(request: NextRequest) {
     }
 
     // 构建排序条件
-    const orderBy: any = {};
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {};
     if (sortBy === 'price') {
       orderBy.price = sortOrder;
     } else if (sortBy === 'rating') {
       orderBy.rating = sortOrder;
     } else if (sortBy === 'salesCount') {
-      orderBy.salesCount = sortOrder;
+      orderBy.sales_count = sortOrder;
     } else if (sortBy === 'reviewCount') {
-      orderBy.reviewCount = sortOrder;
+      orderBy.review_count = sortOrder;
     } else if (sortBy === 'name') {
       orderBy.name = sortOrder;
+    } else if (sortBy === 'createdAt') {
+      orderBy.created_at = sortOrder;
     } else {
-      orderBy.createdAt = sortOrder;
+      orderBy.created_at = sortOrder;
     }
 
     // 获取商品列表
@@ -154,14 +185,14 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           slug: true,
-          shortDesc: true,
+          short_desc: true,
           price: true,
-          originalPrice: true,
+          original_price: true,
           images: true,
           rating: true,
-          reviewCount: true,
-          salesCount: true,
-          isFeatured: true,
+          review_count: true,
+          sales_count: true,
+          is_featured: true,
           brand: true,
           category: {
             select: {
@@ -176,6 +207,7 @@ export async function GET(request: NextRequest) {
               status: true,
             },
           },
+          created_at: true,
         },
         orderBy,
         skip,
@@ -184,25 +216,47 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where }),
     ]);
 
-    // 格式化返回数据
-    const formattedProducts = products.map((product) => ({
-      ...product,
+    // 格式化返回数据（转换为 camelCase）
+    const formattedProducts = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      shortDesc: product.short_desc,
       price: Number(product.price),
-      originalPrice: product.originalPrice ? Number(product.originalPrice) : null,
+      originalPrice: product.original_price ? Number(product.original_price) : null,
+      images: product.images,
       rating: product.rating ? Number(product.rating) : null,
+      reviewCount: product.review_count,
+      salesCount: product.sales_count,
+      isFeatured: product.is_featured,
+      brand: product.brand,
+      category: product.category,
       inStock: product.inventory?.available ? product.inventory.available > 0 : false,
+      createdAt: product.created_at.toISOString(),
     }));
 
-    return createPaginatedResponse(
-      formattedProducts,
-      page,
-      limit,
-      total,
-      '获取商品列表成功'
-    );
+    // 使用 createPaginatedResponse，但需要返回正确的格式
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        products: formattedProducts, // 前端期望 products 字段
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+      message: '获取商品列表成功',
+    });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('获取商品列表失败:', error);}
+      console.error('获取商品列表失败:', error);
+    }
     return createErrorResponse(
       '获取商品列表失败',
       500,

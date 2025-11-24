@@ -503,6 +503,8 @@ model Product {
   cartItems      CartItem[]
   orderItems     OrderItem[]
   productReviews ProductReview[]
+  components     ProductComponent[]
+  quotationInfo  ProductQuotationInfo?
 
   @@map("products")
 }
@@ -631,6 +633,52 @@ model Notification {
   user UserProfile @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+// ============================================
+// 产品部件清单
+// ============================================
+
+model ProductComponent {
+  id            String   @id @default(cuid())
+  product_id    String   @map("product_id")
+  category      String   // 部件分类，如：结构套件、喷洒套件、飞控套件等
+  name          String   // 部件名称
+  specification String   // 规格说明
+  unit_price    Decimal  @default(0) @db.Decimal(10, 2) @map("unit_price")
+  sort_order    Int      @default(0) @map("sort_order")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@index([category])
+  @@map("product_components")
+}
+
+// ============================================
+// 产品报价说明与服务条款
+// ============================================
+
+model ProductQuotationInfo {
+  id                String    @id @default(cuid())
+  product_id        String    @unique @map("product_id")
+  price_notes       String[]  @map("price_notes") // 价格说明（数组）
+  features          String[]  // 产品特点（数组）
+  support           String[]  // 技术支持（数组）
+  service           String[]  // 售后服务（数组）
+  delivery          String[]  // 交付周期（数组）
+  payment           String[]  // 付款方式（数组）
+  validity_days     Int       @default(30) @map("validity_days") // 报价有效期（天）
+  validity_start_date DateTime? @map("validity_start_date") // 报价开始日期
+  created_at        DateTime  @default(now()) @map("created_at")
+  updated_at        DateTime  @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@map("product_quotation_info")
 }
 
 // ============================================
