@@ -6,7 +6,8 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl 是可选的，如果使用 Supabase Pooler 可以省略
+  // directUrl = env("DIRECT_URL")
 }
 
 // ============================================
