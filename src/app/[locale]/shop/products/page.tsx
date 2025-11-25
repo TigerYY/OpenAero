@@ -1,19 +1,13 @@
-/* eslint-disable no-unused-expressions */
+'use client';
+
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ProductCard } from '@/components/business/ProductCard';
 import { ProductSearchFilters } from '@/components/business/ProductSearchFilters';
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
 import { Pagination } from '@/components/ui/Pagination';
 import logger from '@/lib/logger';
-
-('use client');
-/* eslint-enable no-unused-expressions */
-
-// 强制动态渲染，避免构建时预渲染
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface Product {
   id: string;
@@ -75,7 +69,7 @@ export default function ProductsPage() {
     sortOrder: 'desc',
   });
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -115,7 +109,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, pagination.page, pagination.limit]);
 
   const fetchCategories = async () => {
     try {
@@ -133,7 +127,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [pagination.page, filters]);
+  }, [fetchProducts]);
 
   useEffect(() => {
     fetchCategories();

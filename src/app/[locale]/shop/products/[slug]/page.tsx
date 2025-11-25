@@ -1,4 +1,5 @@
-/* eslint-disable no-unused-expressions */
+'use client';
+
 import {
   ShoppingCart,
   Star,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { DefaultLayout } from '@/components/layout/DefaultLayout';
@@ -32,13 +33,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useRouting } from '@/lib/routing';
 import { formatCurrency, formatDate } from '@/lib/utils';
-
-('use client');
-/* eslint-enable no-unused-expressions */
-
-// 强制动态渲染，避免构建时预渲染
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface ProductComponent {
   id: string;
@@ -140,7 +134,7 @@ export default function ProductDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   // 获取商品详情
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/products/${slug}`);
@@ -168,7 +162,7 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
 
   // 添加到购物车
   const handleAddToCart = () => {
@@ -253,7 +247,7 @@ export default function ProductDetailPage() {
     if (slug) {
       fetchProduct();
     }
-  }, [slug]);
+  }, [slug, fetchProduct]);
 
   if (loading) {
     return (
