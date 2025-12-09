@@ -633,6 +633,7 @@
     "search": "Search",
     "products": {
       "title": "Product List",
+      "subtitle": "Discover and purchase quality products",
       "searchPlaceholder": "Search products, brands, models...",
       "search": "Search",
       "filters": {
@@ -645,7 +646,8 @@
         "price": {
           "title": "Price Range",
           "min": "Min Price",
-          "max": "Max Price"
+          "max": "Max Price",
+          "unit": ""
         },
         "other": {
           "title": "Other Conditions",
@@ -659,7 +661,9 @@
           "priceDesc": "Price: High to Low",
           "sales": "Best Selling",
           "views": "Most Viewed",
-          "rating": "Highest Rated"
+          "rating": "Highest Rated",
+          "nameAsc": "Name A-Z",
+          "nameDesc": "Name Z-A"
         }
       },
       "toolbar": {
@@ -687,6 +691,72 @@
         "page": "Page {current} of {total}"
       },
       "featured": "Featured",
+      "sold": "Sold {count}",
+      "detail": {
+        "reviews": "reviews",
+        "sales": "Sales",
+        "views": "Views",
+        "stock": "Stock",
+        "units": "units",
+        "quantity": "Quantity",
+        "brand": "Brand",
+        "model": "Model",
+        "color": "Color",
+        "material": "Material",
+        "weight": "Weight",
+        "dimensions": "Dimensions",
+        "wishlist": "Wishlist",
+        "share": "Share",
+        "freeShipping": "Free Shipping",
+        "qualityGuarantee": "Quality Guarantee",
+        "returnPolicy": "7-Day Return",
+        "tabs": {
+          "components": "Components",
+          "description": "Description",
+          "specifications": "Specifications",
+          "reviews": "Reviews",
+          "quotation": "Quotation"
+        },
+        "components": {
+          "title": "Product Components",
+          "totalPrice": "Total Price",
+          "category": "Category",
+          "name": "Name",
+          "specification": "Specification",
+          "unitPrice": "Unit Price",
+          "empty": "No component information available"
+        },
+        "description": {
+          "empty": "No detailed description available"
+        },
+        "specifications": {
+          "title": "Basic Parameters"
+        },
+        "quotation": {
+          "title": "Quotation Information",
+          "priceNotes": "Price Notes",
+          "features": "Features",
+          "support": "Technical Support",
+          "service": "After-Sales Service",
+          "delivery": "Delivery Period",
+          "payment": "Payment Methods",
+          "validity": "Quotation Validity",
+          "days": " days",
+          "from": "from",
+          "start": "",
+          "empty": "No quotation information available"
+        },
+        "review": {
+          "helpful": "Helpful",
+          "notHelpful": "Not Helpful",
+          "empty": "No reviews yet"
+        }
+      },
+      "actions": {
+        "addToCart": "Add to Cart",
+        "outOfStock": "Out of Stock",
+        "buyNow": "Buy Now"
+      },
       "errors": {
         "fetchFailed": "Failed to fetch products",
         "categoriesFailed": "Failed to fetch categories"

@@ -1,131 +1,111 @@
-import { PrismaClient, UserRole, CreatorStatus, SolutionStatus } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import { PrismaClient, ProductStatus, InventoryStatus, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('开始创建种子数据...');
 
-  // 创建测试用户
-  const hashedPassword = await bcrypt.hash('password123', 10);
-
-  // 管理员用户
-  await prisma.user.upsert({
-    where: { email: 'admin@openaero.com' },
+  // 产品分类：重载无人机
+  const heavyLoadCategory = await prisma.productCategory.upsert({
+    where: { slug: 'heavy-load-drone' },
     update: {},
     create: {
-      email: 'admin@openaero.com',
-      password: hashedPassword,
-      firstName: '系统',
-      lastName: '管理员',
-      role: UserRole.ADMIN,
-      emailVerified: true,
+      name: '重载无人机',
+      slug: 'heavy-load-drone',
+      description: '面向高载重场景的工业级无人机品类',
+      is_active: true,
+      is_visible: true,
     },
   });
 
-  console.log('创建了管理员用户: admin@openaero.com');
-
-  // 创作者用户
-  const creatorUser = await prisma.user.upsert({
-    where: { email: 'creator@openaero.com' },
-    update: {},
-    create: {
-      email: 'creator@openaero.com',
-      password: hashedPassword,
-      firstName: '测试',
-      lastName: '创作者',
-      role: UserRole.CREATOR,
-      emailVerified: true,
-      creatorProfile: {
-        create: {
-          bio: '专业无人机解决方案设计师，拥有5年行业经验',
-          website: 'https://creator.example.com',
-          experience: '5年无人机设计经验，专注于农业和监控应用',
-          specialties: ['农业无人机', '监控系统', '航拍设备'],
-          status: CreatorStatus.APPROVED,
-          revenue: 0,
-        },
-      },
+  // 将重载无人机系列产品加入商城
+  const heavyLoadProducts = [
+    {
+      name: '开元空御 LE-45 重载无人机',
+      slug: 'kaiyuan-le-45',
+      model: 'LE-45',
+      sku: 'KY-LE45-001',
+      price: new Prisma.Decimal(50000),
+      short_desc: '八旋翼 · 16 桨 · 最大载重 350kg · 开元空御重载旗舰',
+      description:
+        '开元空御 LE-45 面向超高载重与应急救援场景，八旋翼16桨直驱设计，最大载重350kg，支持快速部署、模块化维护与多接口扩展。',
+      is_featured: true,
+      images: ['/products/heavy-load/LE-45.jpg'],
+      inventory: 8,
     },
-    include: {
-      creatorProfile: true,
+    {
+      name: '开元空御 LE-28 重载无人机',
+      slug: 'kaiyuan-le-28',
+      model: 'LE-28',
+      sku: 'KY-LE28-001',
+      price: new Prisma.Decimal(40000),
+      short_desc: '六旋翼 · 最大载重 300kg · 载重与续航平衡之选',
+      description:
+        '开元空御 LE-28 兼顾载重与续航，六旋翼重载平台，适用于物流运输与工程作业，支持碳纤折叠桨与模块化维护。',
+      is_featured: false,
+      images: ['/products/heavy-load/LE-28.jpg'],
+      inventory: 10,
     },
-  });
-
-  // 普通用户
-  await prisma.user.upsert({
-    where: { email: 'customer@openaero.com' },
-    update: {},
-    create: {
-      email: 'customer@openaero.com',
-      password: hashedPassword,
-      firstName: '测试',
-      lastName: '用户',
-      role: UserRole.USER,
-      emailVerified: true,
+    {
+      name: '开元空御 LE-18 重载无人机',
+      slug: 'kaiyuan-le-18',
+      model: 'LE-18',
+      sku: 'KY-LE18-001',
+      price: new Prisma.Decimal(30000),
+      short_desc: '四旋翼 · 8 桨 · 最大载重 200kg · 灵活高效中载平台',
+      description:
+        '开元空御 LE-18 面向灵活中载需求，四旋翼八桨设计，折叠便携，适合中距离运输、巡检与特种作业场景。',
+      is_featured: false,
+      images: ['/products/heavy-load/LE-18.jpg'],
+      inventory: 12,
     },
-  });
+  ];
 
-  console.log('创建了普通用户: customer@openaero.com');
-
-  // 创建测试方案
-  if (creatorUser.creatorProfile) {
-    const solution = await prisma.solution.upsert({
-      where: { id: 'test-solution-1' },
+  for (const product of heavyLoadProducts) {
+    const createdProduct = await prisma.product.upsert({
+      where: { slug: product.slug },
       update: {},
       create: {
-        id: 'test-solution-1',
-        title: '农业植保无人机解决方案',
-        description: '专为农业植保设计的高效无人机系统，包含完整的硬件设计图纸、软件代码和使用说明。',
-        category: '农业',
-        price: 299.99,
-        status: SolutionStatus.PUBLISHED,
-        images: [
-          '/images/solutions/agriculture-drone-1.jpg',
-          '/images/solutions/agriculture-drone-2.jpg',
-        ],
-        features: [
-          '10L大容量药箱',
-          '精准GPS导航',
-          '自动避障系统',
-          '实时监控功能',
-          '一键返航',
-        ],
-        specs: {
-          wingspan: '1.5m',
-          weight: '8kg',
-          payload: '10L',
-          flightTime: '25min',
-          range: '2km',
-        },
-        bom: {
-          frame: '碳纤维机架',
-          motor: '无刷电机 x4',
-          propeller: '碳纤维螺旋桨 x4',
-          battery: '22000mAh锂电池',
-          controller: '飞控系统',
-          gps: 'RTK-GPS模块',
-          camera: '4K摄像头',
-          tank: '10L药箱',
-        },
-        creatorId: creatorUser.creatorProfile!.id,
-        userId: creatorUser.id,
+        name: product.name,
+        slug: product.slug,
+        model: product.model,
+        sku: product.sku,
+        brand: '开元空御',
+        price: product.price,
+        short_desc: product.short_desc,
+        description: product.description,
+        category_id: heavyLoadCategory.id,
+        images: product.images,
+        videos: [],
+        documents: [],
+        status: ProductStatus.PUBLISHED,
+        is_active: true,
+        is_featured: product.is_featured,
       },
+      select: { id: true },
     });
 
-    console.log('创建了测试方案:', solution.title);
+    await prisma.productInventory.upsert({
+      where: { product_id: createdProduct.id },
+      update: {
+        quantity: product.inventory,
+        available: product.inventory,
+        status: InventoryStatus.IN_STOCK,
+      },
+      create: {
+        product_id: createdProduct.id,
+        quantity: product.inventory,
+        available: product.inventory,
+        status: InventoryStatus.IN_STOCK,
+      },
+    });
   }
 
-  console.log('种子数据创建完成!');
-  console.log('测试账户:');
-  console.log('- 管理员: admin@openaero.com');
-  console.log('- 创作者: creator@openaero.com');
-  console.log('- 用户: customer@openaero.com');
-  console.log('- 密码: password123');
+  console.log('种子数据创建完成! (仅包含重载无人机产品与分类)');
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e);
     process.exit(1);
   })

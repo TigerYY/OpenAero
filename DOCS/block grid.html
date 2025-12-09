@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电力行业中的区块链应用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 
+    配色方案: "未来电力 (Electric Future)"
+    基于 "Brilliant Blues/Energetic" 概念。
+    - 主色: #4F46E5 (靛蓝 Indigo 600)
+    - 辅色: #06B6D4 (青色 Cyan 500)
+    - 强调色: #D946EF (紫红 Fuchsia 500)
+    - 背景: #F8FAFC (板岩色 Slate 50)
+    - 卡片背景: #FFFFFF (白 White)
+    - 文本: #1E293B (深板岩 Slate 800)
+    -->
+
+    <!--
+    规划摘要:
+    1. 简介: 介绍从中心化电网向去中心化电网的转变。
+    2. P2P 交易: 甜甜圈图展示能源来源构成。
+    3. 虚拟电厂 (VPP): 堆叠柱状图展示分布式资源的聚合。
+    4. 自动化 (电动汽车): 纯 HTML/CSS 流程图展示智能合约流程。
+    5. 架构 (联盟链 vs 公有链): 雷达图对比性能指标。
+    6. 挑战 (延迟): 条形图对比电网需求与区块链速度。
+    7. 供应链: 风格化的功能列表。
+    
+    技术确认:
+    - 未使用 SVG。
+    - 未使用 Mermaid JS。
+    - 所有图表使用 Chart.js (Canvas)。
+    - 所有图标使用 Unicode 或 CSS 形状。
+    -->
+
+    <style>
+        /* 响应式图表容器样式 */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* 大屏限制宽度 */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* 基础高度 */
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* 流程箭头样式 (CSS 形状/文本) */
+        .process-arrow {
+            font-size: 2rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 768px) {
+            .process-arrow {
+                transform: rotate(0deg);
+            }
+        }
+        @media (max-width: 767px) {
+            .process-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- 页头部分 -->
+    <header class="bg-gradient-to-r from-indigo-700 to-cyan-600 text-white py-12 px-4 shadow-lg mb-8">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight">区块链：赋能智能电网</h1>
+            <p class="text-lg md:text-xl font-light text-cyan-100 max-w-3xl mx-auto">
+                将能源行业从中心化垄断向去中心化、自动化和免信任的生态系统转型。
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pb-12 space-y-12">
+
+        <!-- 简介部分 -->
+        <section class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-white rounded-xl shadow-md p-8 border-l-8 border-indigo-600">
+            <div class="md:col-span-12">
+                <h2 class="text-2xl font-bold text-indigo-700 mb-4">向去中心化转变</h2>
+                <p class="text-slate-600 leading-relaxed text-lg">
+                    传统的电网是一条单行道：大型发电厂向被动的消费者输送电力。区块链技术正在催生<strong>智能电网 (Smart Grid)</strong> 的变革，使每个用户都能成为生产者（“产消者”）。利用分布式账本、智能合约和加密安全技术，该行业正在解决<strong>P2P交易、安全性和自动化</strong>方面的核心挑战，不再依赖缓慢且昂贵的中心化中介。
+                </p>
+            </div>
+        </section>
+
+        <!-- 第1部分: P2P 交易 (甜甜圈图) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center mb-4">
+                    <span class="text-3xl mr-3">🤝</span>
+                    <h3 class="text-xl font-bold text-slate-800">P2P 能源交易</h3>
+                </div>
+                <p class="text-sm text-slate-600 mb-6">
+                    区块链允许邻居之间直接交易多余的太阳能或风能。产消者不再低价回售给电网，而是通过智能合约进行自动结算。下图展示了一个假设的本地能源市场的构成。
+                </p>
+                <!-- 图表容器 -->
+                <div class="chart-container">
+                    <canvas id="p2pChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- P2P 上下文卡片 -->
+            <div class="bg-white rounded-xl shadow-md p-6 flex flex-col justify-center">
+                <h4 class="text-lg font-bold text-cyan-600 mb-3">为什么选择区块链？</h4>
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <span class="text-indigo-500 font-bold mr-2">1.</span>
+                        <p class="text-sm text-slate-600"><strong>去中介化：</strong> 传统公用事业公司充当中间人。区块链实现了直接的点对点交易，降低了买方成本，提高了卖方收益。</p>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-indigo-500 font-bold mr-2">2.</span>
+                        <p class="text-sm text-slate-600"><strong>免信任结算：</strong> 自动对账意味着无需人工核实发送或接收了多少电力；账本就是证明。</p>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-indigo-500 font-bold mr-2">3.</span>
+                        <p class="text-sm text-slate-600"><strong>微支付：</strong> 对于销售 1 千瓦时的电力来说，传统银行转账成本过高。区块链可以高效支持微额支付。</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 第2部分: 虚拟电厂 (堆叠柱状图) -->
+        <section class="bg-white rounded-xl shadow-md p-8">
+            <div class="mb-6 border-b border-slate-100 pb-4">
+                <div class="flex items-center mb-2">
+                    <span class="text-3xl mr-3">🔋</span>
+                    <h3 class="text-2xl font-bold text-slate-800">虚拟电厂 (VPP)</h3>
+                </div>
+                <p class="text-slate-600">
+                    虚拟电厂聚合了成千上万个小型分布式能源 (DER)，使其像一个大型发电厂一样运作。区块链确保了价值分配的公平性以及对每个小型贡献者数据的精确追踪。
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <div class="chart-container" style="max-width: 100%;"> <!-- 此布局覆盖最大宽度限制 -->
+                        <canvas id="vppChart"></canvas>
+                    </div>
+                </div>
+                <div class="md:col-span-1 bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h4 class="font-bold text-indigo-700 mb-2">核心优势：公平性</h4>
+                    <p class="text-sm text-slate-600 mb-4">
+                        在 VPP 中，管理数千个微小输入（例如家用电池释放 2kWh 电力）非常复杂。区块链提供了不可篡改的审计跟踪，确保每个参与者都能根据其实际贡献获得报酬。
+                    </p>
+                    <div class="mt-4">
+                        <div class="text-4xl font-bold text-cyan-500 mb-1">99.9%</div>
+                        <div class="text-xs uppercase tracking-wide text-slate-500 font-bold">数据准确性</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第3部分: 电动汽车充电自动化 (流程图 - 无 SVG) -->
+        <section class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-xl p-8 text-white">
+            <div class="text-center mb-10">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-2">利用智能合约实现充电自动化</h3>
+                <p class="text-slate-300 max-w-2xl mx-auto">
+                    智能合约消除了充电站对 APP、刷卡或人工支付的需求。汽车本身成为了一个自主的经济主体。
+                </p>
+            </div>
+
+            <!-- 自定义流程图 -->
+            <div class="flex flex-col md:flex-row justify-between items-stretch gap-4">
+                
+                <!-- 步骤 1 -->
+                <div class="flex-1 bg-slate-700/50 p-6 rounded-lg border border-slate-600 hover:border-cyan-400 transition-colors">
+                    <div class="text-4xl mb-4">🔌</div>
+                    <h4 class="font-bold text-cyan-300 mb-2">1. 插入与识别</h4>
+                    <p class="text-sm text-slate-300">车辆连接充电桩。通过区块链身份 (DID) 进行即时验证，无需用户操作。</p>
+                </div>
+
+                <!-- 箭头 -->
+                <div class="process-arrow">➔</div>
+
+                <!-- 步骤 2 -->
+                <div class="flex-1 bg-slate-700/50 p-6 rounded-lg border border-slate-600 hover:border-cyan-400 transition-colors">
+                    <div class="text-4xl mb-4">📜</div>
+                    <h4 class="font-bold text-cyan-300 mb-2">2. 智能合约</h4>
+                    <p class="text-sm text-slate-300">自动协商条款（价格、充电速度、绿色证书）并锁定在智能合约中。</p>
+                </div>
+
+                <!-- 箭头 -->
+                <div class="process-arrow">➔</div>
+
+                <!-- 步骤 3 -->
+                <div class="flex-1 bg-slate-700/50 p-6 rounded-lg border border-slate-600 hover:border-cyan-400 transition-colors">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h4 class="font-bold text-cyan-300 mb-2">3. 能量流动</h4>
+                    <p class="text-sm text-slate-300">开始充电。区块链实时记录精确的计量数据。</p>
+                </div>
+
+                <!-- 箭头 -->
+                <div class="process-arrow">➔</div>
+
+                <!-- 步骤 4 -->
+                <div class="flex-1 bg-slate-700/50 p-6 rounded-lg border border-slate-600 hover:border-cyan-400 transition-colors">
+                    <div class="text-4xl mb-4">💰</div>
+                    <h4 class="font-bold text-cyan-300 mb-2">4. 自动结算</h4>
+                    <p class="text-sm text-slate-300">完成后，钱包即时支付。绿色证书（绿证）自动转移给驾驶员。</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 第4部分: 架构 (雷达图) -->
+        <section class="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div class="md:col-span-5 flex flex-col justify-center">
+                <h3 class="text-2xl font-bold text-slate-800 mb-4">联盟链 vs. 公有链</h3>
+                <p class="text-slate-600 mb-4">
+                    为什么电网不直接使用比特币网络？因为能源行业对隐私和速度有着独特的要求。
+                </p>
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-4">
+                    <h5 class="font-bold text-indigo-700 text-sm">赢家：联盟链</h5>
+                    <p class="text-xs text-slate-600 mt-1">
+                        相比公有链，联盟链（如 Hyperledger）更受青睐，因为它们提供更高的吞吐量、严格控制的数据访问权限（隐私）以及已知的验证节点（合规性）。
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center text-sm text-slate-500">
+                        <span class="w-3 h-3 bg-cyan-400 rounded-full mr-2"></span> 公有链 (如：以太坊主网)
+                    </div>
+                    <div class="flex items-center text-sm text-slate-500">
+                        <span class="w-3 h-3 bg-indigo-600 rounded-full mr-2"></span> 联盟链 (如：Energy Web)
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-7 bg-white rounded-xl shadow-md p-6">
+                <div class="chart-container">
+                    <canvas id="architectureRadar"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第5部分: 延迟挑战 (水平条形图) -->
+        <section class="bg-white rounded-xl shadow-md p-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                <div class="max-w-2xl">
+                    <h3 class="text-2xl font-bold text-red-600 mb-2">挑战：实时控制</h3>
+                    <p class="text-slate-600">
+                        虽然区块链非常适合结算和数据记录，但对于需要毫秒级响应的电网物理控制（如继电保护）来说，它目前仍然太慢。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </section>
+
+        <!-- 第6部分: 供应链安全 (网格卡片) -->
+        <section>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">供应链与数据完整性</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- 卡片 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-3xl mb-3">🛡️</div>
+                    <h4 class="font-bold text-slate-800 mb-2">防篡改</h4>
+                    <p class="text-sm text-slate-600">
+                        一旦电表数据或 SCADA 日志被写入区块，就无法更改。这可以防止黑客在入侵后掩盖踪迹。
+                    </p>
+                </div>
+
+                <!-- 卡片 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-3xl mb-3">🏭</div>
+                    <h4 class="font-bold text-slate-800 mb-2">设备溯源</h4>
+                    <p class="text-sm text-slate-600">
+                        追踪变压器从工厂到安装的全过程。防止假冒伪劣部件进入关键基础设施。
+                    </p>
+                </div>
+
+                <!-- 卡片 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-3xl mb-3">🏝️</div>
+                    <h4 class="font-bold text-slate-800 mb-2">微电网孤岛运行</h4>
+                    <p class="text-sm text-slate-600">
+                        如果主网发生故障，区块链允许微电网保持本地共识，并自主继续内部能源交易。
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-8 text-center">
+        <p class="text-sm">仅供教育用途生成 | 电力行业区块链应用分析</p>
+    </footer>
+
+    <!-- CHART.JS 逻辑 -->
+    <script>
+        // --- 工具：标签换行函数 (强制要求) ---
+        // 注意：中文通常不需要像英文那样按空格分词，但为了防止超长字符串溢出，这里保留逻辑并稍作调整。
+        function splitLabel(label) {
+            const limit = 10; // 中文字符宽度较大，将限制调整为约10个字符
+            if (label.length <= limit) return label;
+            
+            // 简单地按长度分割中文，因为中文没有空格分词
+            const lines = [];
+            for (let i = 0; i < label.length; i += limit) {
+                lines.push(label.substring(i, i + limit));
+            }
+            return lines;
+        }
+
+        // --- 通用配置：Tooltip 回调 (强制要求) ---
+        const commonTooltipOptions = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(''); // 中文连接通常不需要空格
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        // --- 配色变量 ---
+        const colorIndigo = '#4F46E5';
+        const colorCyan = '#06B6D4';
+        const colorPurple = '#D946EF';
+        const colorRed = '#EF4444';
+        const colorSlate = '#94A3B8';
+
+        // 1. P2P 图表 (甜甜圈图)
+        const p2pCtx = document.getElementById('p2pChart').getContext('2d');
+        const p2pLabels = ['户用光伏 (居民)', '社区风电', '电网储能', '主网备用'];
+        new Chart(p2pCtx, {
+            type: 'doughnut',
+            data: {
+                labels: p2pLabels.map(splitLabel),
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [colorIndigo, colorCyan, colorPurple, colorSlate],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: commonTooltipOptions,
+                    title: {
+                        display: true,
+                        text: 'P2P 交易中的电力来源'
+                    }
+                }
+            }
+        });
+
+        // 2. VPP 图表 (堆叠柱状图)
+        const vppCtx = document.getElementById('vppChart').getContext('2d');
+        const vppLabels = ['08:00', '12:00', '16:00', '20:00'];
+        new Chart(vppCtx, {
+            type: 'bar',
+            data: {
+                labels: vppLabels.map(splitLabel),
+                datasets: [
+                    {
+                        label: '户用光伏',
+                        data: [20, 85, 60, 5],
+                        backgroundColor: colorCyan,
+                    },
+                    {
+                        label: '电动汽车电池 (V2G)',
+                        data: [50, 10, 20, 70],
+                        backgroundColor: colorPurple,
+                    },
+                    {
+                        label: '工业备用电源',
+                        data: [30, 30, 30, 30],
+                        backgroundColor: colorIndigo,
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        title: { display: true, text: '能源输出 (MW)' }
+                    }
+                },
+                plugins: {
+                    tooltip: commonTooltipOptions,
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: '虚拟电厂聚合能源来源'
+                    }
+                }
+            }
+        });
+
+        // 3. 架构雷达图
+        const radarCtx = document.getElementById('architectureRadar').getContext('2d');
+        const radarLabels = ['交易速度 (TPS)', '数据隐私', '去中心化程度', '监管合规性', '能源效率'];
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: radarLabels.map(splitLabel),
+                datasets: [
+                    {
+                        label: '联盟链',
+                        data: [90, 95, 40, 95, 90], // 高速, 高隐私, 低去中心化, 高合规, 高效率
+                        borderColor: colorIndigo,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        pointBackgroundColor: colorIndigo
+                    },
+                    {
+                        label: '公有链',
+                        data: [20, 10, 100, 20, 30], // 低速, 低隐私(透明), 高去中心化, 低合规, 低效率
+                        borderColor: colorCyan,
+                        backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                        pointBackgroundColor: colorCyan
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                elements: {
+                    line: { borderWidth: 3 }
+                },
+                scales: {
+                    r: {
+                        angleLines: { color: '#e2e8f0' },
+                        grid: { color: '#e2e8f0' },
+                        pointLabels: {
+                            font: { size: 12 } // 适当调整字体大小
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: {
+                    tooltip: commonTooltipOptions,
+                    legend: { position: 'top' }
+                }
+            }
+        });
+
+        // 4. 延迟图表 (水平条形图)
+        const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+        const latencyLabels = ['电网继电保护', '联盟链', '公有链 (PoW)'];
+        new Chart(latencyCtx, {
+            type: 'bar',
+            data: {
+                labels: latencyLabels.map(splitLabel),
+                datasets: [{
+                    label: '响应时间 (对数刻度示意)',
+                    data: [1, 50, 150], // 概念值: 1=最快, 150=最慢
+                    backgroundColor: [colorRed, colorIndigo, colorCyan]
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        display: false // 隐藏轴数值，因为这是概念对比
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: commonTooltipOptions.callbacks.title,
+                            label: function(context) {
+                                // 自定义上下文标签
+                                const raw = context.raw;
+                                if(raw === 1) return '需求：< 10毫秒 (Milliseconds)';
+                                if(raw === 50) return '速度：约 1-2 秒';
+                                if(raw === 150) return '速度：10分钟以上';
+                            }
+                        }
+                    },
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: '响应时间：电网需求 vs 区块链现状'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

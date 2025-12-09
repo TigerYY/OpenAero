@@ -633,6 +633,7 @@
     "search": "搜索",
     "products": {
       "title": "商品列表",
+      "subtitle": "发现和购买优质商品",
       "searchPlaceholder": "搜索商品、品牌、型号...",
       "search": "搜索",
       "filters": {
@@ -645,7 +646,8 @@
         "price": {
           "title": "价格范围",
           "min": "最低价",
-          "max": "最高价"
+          "max": "最高价",
+          "unit": "元"
         },
         "other": {
           "title": "其他条件",
@@ -687,6 +689,72 @@
         "page": "第 {current} 页，共 {total} 页"
       },
       "featured": "推荐",
+      "sold": "已售 {count}",
+      "detail": {
+        "reviews": "评价",
+        "sales": "销量",
+        "views": "浏览",
+        "stock": "库存",
+        "units": "件",
+        "quantity": "数量",
+        "brand": "品牌",
+        "model": "型号",
+        "color": "颜色",
+        "material": "材质",
+        "weight": "重量",
+        "dimensions": "尺寸",
+        "wishlist": "收藏",
+        "share": "分享",
+        "freeShipping": "免费配送",
+        "qualityGuarantee": "品质保证",
+        "returnPolicy": "7天退换",
+        "tabs": {
+          "components": "配置清单",
+          "description": "商品详情",
+          "specifications": "规格参数",
+          "reviews": "用户评价",
+          "quotation": "报价说明"
+        },
+        "components": {
+          "title": "产品配置清单",
+          "totalPrice": "配置总价",
+          "category": "部件分类",
+          "name": "部件名称",
+          "specification": "规格说明",
+          "unitPrice": "单价（元）",
+          "empty": "暂无配置清单信息"
+        },
+        "description": {
+          "empty": "暂无详细描述"
+        },
+        "specifications": {
+          "title": "基本参数"
+        },
+        "quotation": {
+          "title": "报价说明与服务条款",
+          "priceNotes": "价格说明",
+          "features": "产品特点",
+          "support": "技术支持",
+          "service": "售后服务",
+          "delivery": "交付周期",
+          "payment": "付款方式",
+          "validity": "报价有效期",
+          "days": "天",
+          "from": "自",
+          "start": "起",
+          "empty": "暂无报价说明信息"
+        },
+        "review": {
+          "helpful": "有用",
+          "notHelpful": "无用",
+          "empty": "暂无用户评价"
+        }
+      },
+      "actions": {
+        "addToCart": "加入购物车",
+        "outOfStock": "缺货",
+        "buyNow": "立即购买"
+      },
       "errors": {
         "fetchFailed": "获取商品列表失败",
         "categoriesFailed": "获取分类失败"

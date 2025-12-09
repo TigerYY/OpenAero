@@ -2,6 +2,7 @@
 'use client';
 
 import { Star, ShoppingCart } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/Button';
@@ -34,6 +35,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const t = useTranslations('shop.products');
   const [isFavorite, setIsFavorite] = useState(false);
   const { route } = useRouting();
 
@@ -74,12 +76,12 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.isFeatured && (
             <span className='px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-400/90 text-yellow-900 backdrop-blur-sm flex items-center gap-0.5 shadow-sm'>
               <Star className='w-2.5 h-2.5 fill-current' />
-              推荐
+              {t('featured')}
             </span>
           )}
           {!product.inStock && (
             <span className='px-2 py-1 rounded-full text-[10px] font-semibold bg-red-500/90 text-white backdrop-blur-sm shadow-sm'>
-              缺货
+              {t('stock.outOfStock')}
             </span>
           )}
         </div>
@@ -88,7 +90,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleFavorite}
           className='absolute top-2 left-2 p-1.5 bg-white/90 hover:bg-white rounded-full transition-all duration-200 shadow-sm z-10 backdrop-blur-sm'
-          aria-label='收藏'
+          aria-label={t('actions.addToCart')}
         >
           <svg
             className={`w-4 h-4 transition-all duration-200 ${isFavorite ? 'text-red-500 fill-current scale-110' : 'text-gray-400 hover:text-red-400'}`}
@@ -176,7 +178,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
               </div>
               {product.salesCount > 0 && (
-                <div className='text-[10px] text-gray-500 mt-0.5'>已售 {product.salesCount}</div>
+                <div className='text-[10px] text-gray-500 mt-0.5'>
+                  {t('sold', { count: product.salesCount })}
+                </div>
               )}
             </div>
             <Button
@@ -191,7 +195,7 @@ export function ProductCard({ product }: ProductCardProps) {
               }}
             >
               <ShoppingCart className='w-3 h-3 mr-1' />
-              {product.inStock ? '购买' : '缺货'}
+              {product.inStock ? t('actions.addToCart') : t('stock.outOfStock')}
             </Button>
           </div>
         </div>

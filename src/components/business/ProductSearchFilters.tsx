@@ -1,6 +1,8 @@
 /* eslint-disable-next-line no-unused-expressions */
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface ProductFilters {
   search?: string;
   category?: string;
@@ -23,6 +25,7 @@ export function ProductSearchFilters({
   categories = [],
   onFilterChange,
 }: ProductSearchFiltersProps) {
+  const t = useTranslations('shop.products.filters');
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value) {
@@ -72,7 +75,7 @@ export function ProductSearchFilters({
               onChange={handleCategoryChange}
               className='px-3 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm min-w-[120px] text-gray-700 hover:border-gray-400'
             >
-              <option value=''>全部分类</option>
+              <option value=''>{t('category.all')}</option>
               {categories.map(category => (
                 <option key={category.id} value={category.slug}>
                   {category.name}
@@ -87,7 +90,7 @@ export function ProductSearchFilters({
           <div className='flex gap-1.5 items-center'>
             <input
               type='number'
-              placeholder='最低'
+              placeholder={t('price.min')}
               value={filters.minPrice || ''}
               onChange={e => handlePriceChange('min', e.target.value)}
               className='w-20 px-2.5 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm placeholder:text-gray-400'
@@ -96,7 +99,7 @@ export function ProductSearchFilters({
             <span className='text-gray-400 text-xs'>-</span>
             <input
               type='number'
-              placeholder='最高'
+              placeholder={t('price.max')}
               value={filters.maxPrice || ''}
               onChange={e => handlePriceChange('max', e.target.value)}
               className='w-20 px-2.5 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm placeholder:text-gray-400'
@@ -112,13 +115,13 @@ export function ProductSearchFilters({
             onChange={handleSortChange}
             className='px-3 py-2 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all text-sm min-w-[120px] text-gray-700 hover:border-gray-400'
           >
-            <option value='createdAt-desc'>最新发布</option>
-            <option value='price-asc'>价格从低到高</option>
-            <option value='price-desc'>价格从高到低</option>
-            <option value='rating-desc'>评分最高</option>
-            <option value='salesCount-desc'>销量最高</option>
-            <option value='name-asc'>名称A-Z</option>
-            <option value='name-desc'>名称Z-A</option>
+            <option value='createdAt-desc'>{t('sort.newest')}</option>
+            <option value='price-asc'>{t('sort.priceAsc')}</option>
+            <option value='price-desc'>{t('sort.priceDesc')}</option>
+            <option value='rating-desc'>{t('sort.rating')}</option>
+            <option value='salesCount-desc'>{t('sort.sales')}</option>
+            <option value='name-asc'>{t('sort.nameAsc')}</option>
+            <option value='name-desc'>{t('sort.nameDesc')}</option>
           </select>
         </div>
 
@@ -133,7 +136,7 @@ export function ProductSearchFilters({
                   : 'bg-white/80 backdrop-blur-sm border-gray-300/80 text-gray-700 hover:bg-white hover:border-gray-400 shadow-sm'
               }`}
             >
-              1000元以下
+              {t('price.min')} 1000
             </button>
             <button
               onClick={() => onFilterChange({ ...filters, minPrice: 1000, maxPrice: 5000 })}
@@ -165,7 +168,7 @@ export function ProductSearchFilters({
           onClick={clearFilters}
           className='px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors whitespace-nowrap hover:bg-gray-100/50 rounded-lg'
         >
-          清除筛选
+          {t('clear')}
         </button>
       </div>
     </div>

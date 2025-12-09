@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重载无人机系列 - OpenAero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 35px;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.6), transparent);
+        }
+
+        .company-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo-item:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-item img {
+            height: 80px;
+            width: auto;
+        }
+
+        .logo-label {
+            font-size: 0.85em;
+            color: #1e3c72;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Company Introduction */
+        .company-intro {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 35px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .intro-title {
+            font-size: 1.9em;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+            padding-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .intro-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
+            border-radius: 2px;
+        }
+
+        .intro-content {
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .intro-content p {
+            line-height: 1.7;
+            color: #555;
+            font-size: 1em;
+            text-align: justify;
+            margin-bottom: 12px;
+        }
+
+        .intro-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .intro-content a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .intro-content a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .company-address {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 18px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-address::before {
+            content: '📍';
+            font-size: 2em;
+        }
+
+        .company-address .label {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+
+        .company-address .text {
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        /* Product Series Overview */
+        .series-overview {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 35px 40px;
+            margin-bottom: 35px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .series-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 28px;
+        }
+
+        .series-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 28px 25px;
+            text-align: center;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .series-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .series-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .series-card:hover::before {
+            opacity: 1;
+        }
+
+        .series-card h3 {
+            font-size: 2.2em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .series-card .capacity {
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .series-card .description {
+            font-size: 1em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        /* Product Details Card - Compact Layout */
+        .product-section {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-section:hover {
+            box-shadow: 0 10px 35px rgba(102, 126, 234, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Product Header - Horizontal Layout */
+        .product-header {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 25px;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .product-title-section {
+            text-align: left;
+        }
+
+        .product-header h2 {
+            font-size: 2.4em;
+            color: #667eea;
+            margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .product-header .model-name {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .product-header .tagline {
+            font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        /* Quick Specs */
+        .quick-specs {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .quick-spec-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 110px;
+            box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .quick-spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-spec-item .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .quick-spec-item .value {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        /* Product Image - Unified Size */
+        .product-image-section {
+            margin: 20px 0;
+            text-align: center;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            padding: 30px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 380px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .product-image-section img {
+            width: 580px;
+            height: 380px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-image-section img:hover {
+            transform: scale(1.03);
+            filter: drop-shadow(0 12px 30px rgba(102, 126, 234, 0.3));
+        }
+
+        /* Specs Table - Compact Layout */
+        .specs-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .spec-category {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .spec-category:hover {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+            transform: translateX(2px);
+            border-left-width: 4px;
+        }
+
+        .spec-category h3 {
+            font-size: 1.25em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .spec-category h3::before {
+            content: '●';
+            font-size: 0.7em;
+        }
+
+        /* Full Width Category */
+        .spec-category.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+        }
+
+        .spec-item {
+            background: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(102, 126, 234, 0.05);
+        }
+
+        .spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.12);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .spec-item dt {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .spec-item dd {
+            color: #555;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* Highlight Section - Compact Design */
+        .highlight-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 18px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .highlight-section h3 {
+            font-size: 1.3em;
+            margin-bottom: 18px;
+            text-align: center;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .highlight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+        }
+
+        .highlight-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .highlight-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .highlight-item h4 {
+            font-size: 1em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .highlight-item p {
+            font-size: 0.85em;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2d1b4e 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            margin-top: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .footer h3 {
+            font-size: 1.6em;
+            margin-bottom: 22px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .contact-item {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .contact-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #a8d0ff;
+            font-size: 1.1em;
+        }
+
+        .contact-item a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 25px 15px;
+                margin-bottom: 25px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header .subtitle {
+                font-size: 1em;
+            }
+
+            .company-logos {
+                gap: 15px;
+            }
+
+            .logo-item img {
+                height: 55px;
+            }
+
+            .logo-item {
+                padding: 10px 16px;
+            }
+
+            .company-intro {
+                padding: 25px 18px;
+            }
+
+            .intro-title {
+                font-size: 1.6em;
+            }
+
+            .intro-content {
+                padding: 20px 18px;
+            }
+
+            .company-address {
+                padding: 15px 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .series-overview {
+                padding: 25px 18px;
+            }
+
+            .product-section {
+                padding: 22px 18px;
+            }
+
+            .product-header h2 {
+                font-size: 1.8em;
+            }
+
+            .product-header {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .product-title-section {
+                text-align: center;
+            }
+
+            .quick-specs {
+                justify-content: center;
+            }
+
+            .product-image-section {
+                padding: 25px 15px;
+                min-height: 280px;
+            }
+
+            .product-image-section img {
+                width: 100%;
+                max-width: 320px;
+                height: auto;
+            }
+
+            .specs-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .spec-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .series-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .highlight-section {
+                padding: 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .product-header {
+                grid-template-columns: 220px 1fr;
+                gap: 20px;
+            }
+
+            .product-image-section img {
+                width: 520px;
+                height: 360px;
+            }
+
+            .specs-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .product-section,
+            .footer {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="company-logos">
+                <div class="logo-item">
+                    <img src="trirm logo.png" alt="TRIRM 品牌标识">
+                    <div class="logo-label">广州特瑞电气设备有限公司</div>
+                </div>
+                <div class="logo-item">
+                    <img src="logo_white_bg.png" alt="OpenAero 品牌标识">
+                    <div class="logo-label">OpenAero</div>
+                </div>
+            </div>
+            <h1>OpenAero | 重载无人机系列</h1>
+            <p class="subtitle">LE-45 · LE-28 · LE-18</p>
+        </header>
+
+        <!-- Company Introduction -->
+        <section class="company-intro">
+            <h2 class="intro-title">🏢 关于我们</h2>
+            <div class="intro-content">
+                <p>广州特瑞电气设备有限公司专注于新一代工业互联网与智能装备技术的研发，提供涵盖数据采集、边缘计算到智能控制的完整解决方案。产品矩阵涵盖工业级物联关口机（4G/5G）、智能配电关口机、智能传感器以及通用协议互联平台，并在无人机研发、测试、生产及定制化智能装备方面积累了完备能力，形成了“软硬件一体化+行业应用”的综合竞争力。</p>
+                <p><strong style="color: #667eea;">OpenAero</strong>（官网：<a href="https://openaero.cn" target="_blank">openaero.cn</a>）是特瑞电气旗下专注无人机领域的专业品牌，秉持“开放创新、技术引领”的理念，聚焦工业级无人机系统的研发与应用，提供农业植保、重载运输、巡检等多场景解决方案。依托开源飞控与自主研发能力，OpenAero 为客户提供高可靠、可定制、具备极高性价比的无人机产品，助力智慧农业、物流、基础设施巡检等行业的数字化升级。</p>
+            </div>
+            <div class="company-address">
+                <span class="label">地址：</span>
+                <span class="text">广东省广州市黄埔区神舟路9号4栋321室</span>
+            </div>
+        </section>
+
+        <!-- Product Series Overview -->
+        <section class="series-overview">
+            <h2 style="text-align: center; font-size: 2.2em; color: #667eea; margin-bottom: 15px; font-weight: 600;">产品系列概览</h2>
+            <p style="text-align: center; font-size: 1.1em; color: #666; margin-bottom: 28px;">
+                面向高载重场景，覆盖多种载荷需求
+            </p>
+            <div class="series-grid">
+                <div class="series-card">
+                    <h3>LE-45</h3>
+                    <p class="capacity">最大载重 350kg</p>
+                    <p class="description">八旋翼 · 16 直驱螺旋桨<br>超高载重平台，适用于大型货运与应急救援</p>
+                </div>
+                <div class="series-card">
+                    <h3>LE-28</h3>
+                    <p class="capacity">最大载重 300kg</p>
+                    <p class="description">六旋翼重载平台<br>在载重与续航之间取得最佳平衡</p>
+                </div>
+                <div class="series-card">
+                    <h3>LE-18</h3>
+                    <p class="capacity">最大载重 200kg</p>
+                    <p class="description">四旋翼 · 8 螺旋桨<br>灵活高效的中载平台</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-45 Product Details -->
+        <section class="product-section" id="le-45">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-45</h2>
+                    <p class="model-name">LE-350 重载运输平台</p>
+                    <p class="tagline">八旋翼 · 16 桨 · 超高载重冠军</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">最大载重</div>
+                        <div class="value">350kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">续航</div>
+                        <div class="value">42min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">抗风等级</div>
+                        <div class="value">6 级</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-45.jpg" alt="LE-45 八旋翼重载无人机">
+            </div>
+
+            <div class="specs-container">
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>基础性能</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>最大载重</dt>
+                            <dd>350 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>额定载重</dt>
+                            <dd>≤230 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>空载续航</dt>
+                            <dd>42 min</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>抗风等级</dt>
+                            <dd>6 级（≈12.8 m/s）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大平飞速度</dt>
+                            <dd>25 m/s（GPS 模式，可随载荷调整）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大垂直速度</dt>
+                            <dd>升 5 m/s / 降 3 m/s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大倾角</dt>
+                            <dd>30°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大偏航速度</dt>
+                            <dd>1.135°/s</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Structural Design -->
+                <div class="spec-category">
+                    <h3>结构设计</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>机架材料</dt>
+                            <dd>92% 碳纤维 + 5% 航空铝（轻量且高刚性）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>构型</dt>
+                            <dd>八旋翼 16 直驱螺旋桨</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>折叠尺寸</dt>
+                            <dd>2.35m × 2.35m（运输模式）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>展开尺寸</dt>
+                            <dd>4.45m × 4.45m（飞行模式）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>桨叶尺寸</dt>
+                            <dd>56 英寸（1.42 m）</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Power System -->
+                <div class="spec-category">
+                    <h3>动力系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>电机</dt>
+                            <dd>外转子无刷<br>定子：138 × 25 mm<br>KV：45 rpm/V<br>最大拉力：57 kg/轴（70V）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>X-Rotor 200 A<br>持续：80 A<br>峰值：200 A<br>电压：14-80 V</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>桨叶</dt>
+                            <dd>3.56 × 20" 碳纤维<br>重量：292 g/片<br>整套：805 g/套</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery System -->
+                <div class="spec-category">
+                    <h3>电池系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>类型</dt>
+                            <dd>半固态高能量密度</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>容量</dt>
+                            <dd>45,000 mAh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>电压</dt>
+                            <dd>18 S1P（75.6 V）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>能量</dt>
+                            <dd>≈3.4 kWh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>循环寿命</dt>
+                            <dd>≥800 次（80% 容量保持）</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Control Link -->
+                <div class="spec-category">
+                    <h3>图传与遥控</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>遥控器</dt>
+                            <dd>H16 一体遥控</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>显示屏</dt>
+                            <dd>7" 1800 尼特高亮触屏</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>图传距离</dt>
+                            <dd>≥1 km（视距）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>频率</dt>
+                            <dd>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>续航</dt>
+                            <dd>5.8-15 h（单次充电）</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>飞控系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>型号</dt>
+                            <dd>V9 PRO 工业版</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>悬停精度</dt>
+                            <dd>水平 ±30 cm / 垂直 ±20 cm</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>偏航修正</dt>
+                            <dd>≤50 cm</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大航点数</dt>
+                            <dd>2000+</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>导航</dt>
+                            <dd>内置 GPS，支持 RTK</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>飞行模式</dt>
+                            <dd>姿态 / GPS / 全自主</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety & Expansion -->
+            <div class="highlight-section">
+                <h3>安全与扩展</h3>
+                <div class="highlight-grid">
+                    <div class="highlight-item">
+                        <h4>快拆结构</h4>
+                        <p>2 人 10 分钟完成展开/收纳</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>易维护设计</h4>
+                        <p>电机、ESC、桨叶均支持模块化快拆</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>扩展接口</h4>
+                        <p>HDMI / 以太网 / 串口 / SBUS，支持二次开发</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-28 Product Details -->
+        <section class="product-section" id="le-28">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-28</h2>
+                    <p class="model-name">LE-400 六旋翼重载平台</p>
+                    <p class="tagline">六旋翼 · 载重与续航的平衡之选</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">最大载重</div>
+                        <div class="value">300kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">续航</div>
+                        <div class="value">30min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">抗风等级</div>
+                        <div class="value">6 级</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-28.jpg" alt="LE-28 六旋翼重载无人机">
+            </div>
+
+            <div class="specs-container">
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>基础性能</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>最大载重</dt>
+                            <dd>300 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>额定载重</dt>
+                            <dd>≤260 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>空载续航</dt>
+                            <dd>30 min（标准大气）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>抗风等级</dt>
+                            <dd>6 级（12.8 m/s，EN-27001）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大平飞速度</dt>
+                            <dd>25 m/s（108 km/h）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大爬升率</dt>
+                            <dd>6 m/s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>最大倾角</dt>
+                            <dd>30°</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Structural Design / Power Layout -->
+                <div class="spec-category">
+                    <h3>结构与动力布局</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>桨叶</dt>
+                            <dd>62" 碳纤折叠桨</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>运输尺寸</dt>
+                            <dd>2 m × 2 m（折叠）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>展开尺寸</dt>
+                            <dd>3.75m × 3.75m（展开）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>电机</dt>
+                            <dd>外转子无刷<br>最大拉力：72 kg/轴<br>KV：45 rpm/V<br>重量：2850 g（含线）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>CM-X15-18S-300A-FOC<br>持续：100 A<br>峰值：300 A / 3 s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>桨叶重量</dt>
+                            <dd>HW6324 63×24" 400 g/片</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery -->
+                <div class="spec-category">
+                    <h3>电池系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>类型</dt>
+                            <dd>半固态高能量密度</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>容量</dt>
+                            <dd>45,000 mAh（≈3.4 kWh）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>电压</dt>
+                            <dd>18 S1P（75.6 V）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>循环寿命</dt>
+                            <dd>≥800 次（80% 保持）</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Controller -->
+                <div class="spec-category">
+                    <h3>图传与遥控</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>遥控器</dt>
+                            <dd>H16 一体遥控</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>显示屏</dt>
+                            <dd>7" 1800 尼特高亮触屏<br>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>图传距离</dt>
+                            <dd>≥1 km 视距，低延时</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>续航</dt>
+                            <dd>8-15 h 持续工作</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>飞控系统（V10 PRO 工业版）</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>水平定位</dt>
+                            <dd>RTK ±0.1 m / 单点 ±2 m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>高度定位</dt>
+                            <dd>RTK ±0.1 m / 单点 ±3 m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>姿态精度</dt>
+                            <dd>姿态 0.2° | 航向 0.5°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>编队规模</dt>
+                            <dd>最多 100 架</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>备降点</dt>
+                            <dd>10 个安全冗余</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety & Expansion -->
+            <div class="highlight-section">
+                <h3>安全与扩展</h3>
+                <div class="highlight-grid">
+                    <div class="highlight-item">
+                        <h4>工作温度</h4>
+                        <p>-40 ℃ ~ +60 ℃（军工级）</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>防护等级</h4>
+                        <p>IPX6 防水防尘</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>通信与扩展</h4>
+                        <p>SBUS + CAN，总线多 GNSS 支持（北斗/GPS/GLONASS），HDMI / 以太网 / 串口 / OTG</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-18 Product Details -->
+        <section class="product-section" id="le-18">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-18</h2>
+                    <p class="model-name">四旋翼 · 8 桨重载平台</p>
+                    <p class="tagline">Quad-8 · 灵活高效的中载方案</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">最大载重</div>
+                        <div class="value">200kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">续航</div>
+                        <div class="value">16min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">机架材料</div>
+                        <div class="value">碳纤维</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-18.jpg" alt="LE-18 四旋翼重载无人机">
+            </div>
+
+            <div class="specs-container">
+                <!-- Structural Design -->
+                <div class="spec-category">
+                    <h3>结构设计</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>机架材料</dt>
+                            <dd>94% 碳纤维 + 4% 航空铝</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>构型</dt>
+                            <dd>四旋翼 · 8 螺旋桨</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>折叠尺寸</dt>
+                            <dd>1.29m × 1.29m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>展开尺寸</dt>
+                            <dd>2.63m × 2.63m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>桨叶尺寸</dt>
+                            <dd>62" 碳纤折叠桨</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>基础性能</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>最大载重</dt>
+                            <dd>200 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>标准载重</dt>
+                            <dd>≤160 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>满载续航</dt>
+                            <dd>16 min</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Power System -->
+                <div class="spec-category">
+                    <h3>动力系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>电机</dt>
+                            <dd>外转子无刷<br>最大拉力：72 kg/轴<br>KV：45 rpm/V<br>重量：2850 g（含线）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>CM-X15-18S-300A-FOC<br>持续：100 A<br>峰值：300 A / 3 s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>桨叶</dt>
+                            <dd>HW6324 62×24" 400 g/片</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery System -->
+                <div class="spec-category">
+                    <h3>电池系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>类型</dt>
+                            <dd>半固态高能量密度</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>容量</dt>
+                            <dd>45,000 mAh（≈3.4 kWh）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>电压</dt>
+                            <dd>18 S1P（75.6 V）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>能量</dt>
+                            <dd>≈3.4 kWh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>循环寿命</dt>
+                            <dd>≥800 次（80% 容量保持）</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Control Link -->
+                <div class="spec-category">
+                    <h3>图传与遥控</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>图传距离</dt>
+                            <dd>≥1 km 视距，低延时</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>频率</dt>
+                            <dd>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>续航</dt>
+                            <dd>8-15 h 持续工作</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>遥控器</dt>
+                            <dd>H16 一体遥控</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>显示屏</dt>
+                            <dd>7" 1800 尼特高亮触屏</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>飞控系统</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>飞控型号</dt>
+                            <dd>V10 PRO 工业版</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>悬停精度</dt>
+                            <dd>RTK ±0.1 m / 单点 ±2 m（水平）<br>RTK ±0.1 m / 单点 ±3 m（垂直）</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>姿态精度</dt>
+                            <dd>姿态 0.2° / 航向 0.5°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>编队规模</dt>
+                            <dd>最多 100 架</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>备降点</dt>
+                            <dd>10 个安全冗余</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Contact Information -->
+        <footer class="footer">
+            <h3>📞 联系我们</h3>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <strong>公司名称</strong>
+                    广州特瑞电气设备有限公司
+                </div>
+                <div class="contact-item">
+                    <strong>公司地址</strong>
+                    广东省广州市黄埔区神舟路9号4栋321室
+                </div>
+                <div class="contact-item">
+                    <strong>联系电话</strong>
+                    <a href="tel:+864006911891">+86 400-691-1891</a>
+                </div>
+                <div class="contact-item">
+                    <strong>邮箱</strong>
+                    <a href="mailto:support@trirm.com">support@trirm.com</a>
+                </div>
+                <div class="contact-item">
+                    <strong>官网</strong>
+                    <a href="https://openaero.cn" target="_blank">openaero.cn</a>
+                </div>
+            </div>
+            <div class="footer-note">
+                © 2024 广州特瑞电气设备有限公司 | OpenAero<br>
+                专注无人机技术，为客户提供专业的重载无人机解决方案
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
+

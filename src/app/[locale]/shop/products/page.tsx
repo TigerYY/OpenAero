@@ -169,7 +169,7 @@ export default function ProductsPage() {
                     {t('title')}
                   </h1>
                   <p className='text-xs lg:text-sm text-gray-500 mt-0.5 hidden sm:block'>
-                    {t('subtitle') || '发现和购买优质商品'}
+                    {t('subtitle')}
                   </p>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function ProductsPage() {
                 <div className='relative'>
                   <input
                     type='text'
-                    placeholder={t('searchPlaceholder') || '搜索商品...'}
+                    placeholder={t('searchPlaceholder')}
                     value={filters.search || ''}
                     onChange={e => handleFiltersChange({ search: e.target.value })}
                     className='w-full pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-300/80 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white transition-all placeholder:text-gray-400 text-sm'

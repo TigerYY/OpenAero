@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -123,6 +124,7 @@ interface RelatedProduct {
 }
 
 export default function ProductDetailPage() {
+  const t = useTranslations('shop.products');
   const params = useParams();
   const slug = params?.slug as string;
   const { route, routes } = useRouting();
@@ -240,7 +242,7 @@ export default function ProductDetailPage() {
   // 获取库存状态
   const getStockStatus = () => {
     // TODO: 从实际库存数据获取
-    return { status: 'in-stock', label: '有库存', available: 50 };
+    return { status: 'in-stock', label: t('stock.inStock'), available: 50 };
   };
 
   useEffect(() => {
@@ -406,17 +408,23 @@ export default function ProductDetailPage() {
                   <div className='flex items-center gap-2'>
                     {renderStars(product.rating, 'lg')}
                     <span className='text-lg font-medium'>{product.rating}</span>
-                    <span className='text-gray-500'>({product.reviewCount} 评价)</span>
+                    <span className='text-gray-500'>
+                      ({product.reviewCount} {t('detail.reviews')})
+                    </span>
                   </div>
                 )}
                 <div className='flex items-center gap-4 text-sm text-gray-500'>
                   <div className='flex items-center gap-1'>
                     <TrendingUp className='h-4 w-4' />
-                    <span>销量 {product.salesCount}</span>
+                    <span>
+                      {t('detail.sales')} {product.salesCount}
+                    </span>
                   </div>
                   <div className='flex items-center gap-1'>
                     <Eye className='h-4 w-4' />
-                    <span>浏览 {product.viewCount}</span>
+                    <span>
+                      {t('detail.views')} {product.viewCount}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -442,7 +450,9 @@ export default function ProductDetailPage() {
                     {stockStatus.label}
                   </span>
                   {stockStatus.status === 'in-stock' && (
-                    <span className='text-gray-500'>库存 {stockStatus.available} 件</span>
+                    <span className='text-gray-500'>
+                      {t('detail.stock')} {stockStatus.available} {t('detail.units')}
+                    </span>
                   )}
                 </div>
               </div>
@@ -451,13 +461,13 @@ export default function ProductDetailPage() {
               <div className='space-y-3'>
                 {product.brand && (
                   <div className='flex items-center gap-3'>
-                    <span className='text-gray-600 w-16'>品牌:</span>
+                    <span className='text-gray-600 w-16'>{t('detail.brand')}:</span>
                     <span className='font-medium'>{product.brand}</span>
                   </div>
                 )}
                 {product.model && (
                   <div className='flex items-center gap-3'>
-                    <span className='text-gray-600 w-16'>型号:</span>
+                    <span className='text-gray-600 w-16'>{t('detail.model')}:</span>
                     <span className='font-medium'>{product.model}</span>
                   </div>
                 )}
@@ -469,13 +479,13 @@ export default function ProductDetailPage() {
                 )}
                 {product.color && (
                   <div className='flex items-center gap-3'>
-                    <span className='text-gray-600 w-16'>颜色:</span>
+                    <span className='text-gray-600 w-16'>{t('detail.color')}:</span>
                     <span className='font-medium'>{product.color}</span>
                   </div>
                 )}
                 {product.material && (
                   <div className='flex items-center gap-3'>
-                    <span className='text-gray-600 w-16'>材质:</span>
+                    <span className='text-gray-600 w-16'>{t('detail.material')}:</span>
                     <span className='font-medium'>{product.material}</span>
                   </div>
                 )}
@@ -483,7 +493,7 @@ export default function ProductDetailPage() {
 
               {/* 数量选择 */}
               <div className='flex items-center gap-4'>
-                <span className='text-gray-600'>数量:</span>
+                <span className='text-gray-600'>{t('detail.quantity')}:</span>
                 <div className='flex items-center border border-gray-300 rounded'>
                   <Button
                     variant='ghost'
@@ -514,16 +524,17 @@ export default function ProductDetailPage() {
                     disabled={stockStatus.status !== 'in-stock'}
                   >
                     <ShoppingCart className='h-4 w-4 mr-2' />
-                    加入购物车
+                    {t('actions.addToCart')}
                   </Button>
                   <Button
                     variant='outline'
                     onClick={handleToggleWishlist}
                     className={isWishlisted ? 'text-red-600 border-red-600' : ''}
+                    aria-label={t('detail.wishlist')}
                   >
                     <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button variant='outline' onClick={handleShare}>
+                  <Button variant='outline' onClick={handleShare} aria-label={t('detail.share')}>
                     <Share2 className='h-4 w-4' />
                   </Button>
                 </div>
@@ -533,7 +544,7 @@ export default function ProductDetailPage() {
                   onClick={handleBuyNow}
                   disabled={stockStatus.status !== 'in-stock'}
                 >
-                  立即购买
+                  {t('actions.buyNow')}
                 </Button>
               </div>
 
@@ -541,15 +552,15 @@ export default function ProductDetailPage() {
               <div className='grid grid-cols-3 gap-4 pt-4 border-t'>
                 <div className='text-center'>
                   <Truck className='h-6 w-6 text-blue-600 mx-auto mb-1' />
-                  <div className='text-xs text-gray-600'>免费配送</div>
+                  <div className='text-xs text-gray-600'>{t('detail.freeShipping')}</div>
                 </div>
                 <div className='text-center'>
                   <Shield className='h-6 w-6 text-green-600 mx-auto mb-1' />
-                  <div className='text-xs text-gray-600'>品质保证</div>
+                  <div className='text-xs text-gray-600'>{t('detail.qualityGuarantee')}</div>
                 </div>
                 <div className='text-center'>
                   <RotateCcw className='h-6 w-6 text-purple-600 mx-auto mb-1' />
-                  <div className='text-xs text-gray-600'>7天退换</div>
+                  <div className='text-xs text-gray-600'>{t('detail.returnPolicy')}</div>
                 </div>
               </div>
             </div>
@@ -559,20 +570,24 @@ export default function ProductDetailPage() {
           <Card className='mb-12'>
             <Tabs defaultValue='components' className='w-full'>
               <TabsList className='grid w-full grid-cols-5'>
-                <TabsTrigger value='components'>配置清单</TabsTrigger>
-                <TabsTrigger value='description'>商品详情</TabsTrigger>
-                <TabsTrigger value='specifications'>规格参数</TabsTrigger>
-                <TabsTrigger value='reviews'>用户评价 ({product.reviewCount})</TabsTrigger>
-                <TabsTrigger value='quotation'>报价说明</TabsTrigger>
+                <TabsTrigger value='components'>{t('detail.tabs.components')}</TabsTrigger>
+                <TabsTrigger value='description'>{t('detail.tabs.description')}</TabsTrigger>
+                <TabsTrigger value='specifications'>{t('detail.tabs.specifications')}</TabsTrigger>
+                <TabsTrigger value='reviews'>
+                  {t('detail.tabs.reviews')} ({product.reviewCount})
+                </TabsTrigger>
+                <TabsTrigger value='quotation'>{t('detail.tabs.quotation')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value='components' className='p-6'>
                 {product.components && product.components.length > 0 ? (
                   <div className='space-y-6'>
                     <div className='flex items-center justify-between mb-4'>
-                      <h3 className='text-xl font-bold text-gray-900'>产品配置清单</h3>
+                      <h3 className='text-xl font-bold text-gray-900'>
+                        {t('detail.components.title')}
+                      </h3>
                       <div className='text-lg font-semibold text-primary-600'>
-                        配置总价: {formatCurrency(product.price)}
+                        {t('detail.components.totalPrice')}: {formatCurrency(product.price)}
                       </div>
                     </div>
                     <div className='overflow-x-auto'>
@@ -583,25 +598,25 @@ export default function ProductDetailPage() {
                               className='px-4 py-3 text-left text-sm font-semibold'
                               style={{ width: '18%' }}
                             >
-                              部件分类
+                              {t('detail.components.category')}
                             </th>
                             <th
                               className='px-4 py-3 text-left text-sm font-semibold'
                               style={{ width: '15%' }}
                             >
-                              部件名称
+                              {t('detail.components.name')}
                             </th>
                             <th
                               className='px-4 py-3 text-left text-sm font-semibold'
                               style={{ width: '52%' }}
                             >
-                              规格说明
+                              {t('detail.components.specification')}
                             </th>
                             <th
                               className='px-4 py-3 text-right text-sm font-semibold'
                               style={{ width: '15%' }}
                             >
-                              单价（元）
+                              {t('detail.components.unitPrice')}
                             </th>
                           </tr>
                         </thead>
@@ -636,7 +651,7 @@ export default function ProductDetailPage() {
                         <tfoot>
                           <tr className='bg-gray-100 font-bold'>
                             <td colSpan={3} className='px-4 py-3 text-right text-gray-900'>
-                              配置总价：
+                              {t('detail.components.totalPrice')}：
                             </td>
                             <td className='px-4 py-3 text-right text-lg text-red-600'>
                               {formatCurrency(product.price)}
@@ -647,7 +662,9 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className='text-center py-8 text-gray-500'>暂无配置清单信息</div>
+                  <div className='text-center py-8 text-gray-500'>
+                    {t('detail.components.empty')}
+                  </div>
                 )}
               </TabsContent>
 
@@ -656,36 +673,36 @@ export default function ProductDetailPage() {
                   {product.description ? (
                     <div dangerouslySetInnerHTML={{ __html: product.description }} />
                   ) : (
-                    <p className='text-gray-600'>暂无详细描述</p>
+                    <p className='text-gray-600'>{t('detail.description.empty')}</p>
                   )}
                 </div>
               </TabsContent>
 
               <TabsContent value='specifications' className='p-6'>
                 <div className='space-y-4'>
-                  <h3 className='text-lg font-semibold'>基本参数</h3>
+                  <h3 className='text-lg font-semibold'>{t('detail.specifications.title')}</h3>
                   <div className='grid grid-cols-2 gap-4'>
                     {product.brand && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>品牌</span>
+                        <span className='text-gray-600'>{t('detail.brand')}</span>
                         <span>{product.brand}</span>
                       </div>
                     )}
                     {product.model && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>型号</span>
+                        <span className='text-gray-600'>{t('detail.model')}</span>
                         <span>{product.model}</span>
                       </div>
                     )}
                     {product.weight && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>重量</span>
+                        <span className='text-gray-600'>{t('detail.weight')}</span>
                         <span>{product.weight}kg</span>
                       </div>
                     )}
                     {product.dimensions && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>尺寸</span>
+                        <span className='text-gray-600'>{t('detail.dimensions')}</span>
                         <span>
                           {product.dimensions.length} × {product.dimensions.width} ×{' '}
                           {product.dimensions.height} cm
@@ -694,13 +711,13 @@ export default function ProductDetailPage() {
                     )}
                     {product.color && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>颜色</span>
+                        <span className='text-gray-600'>{t('detail.color')}</span>
                         <span>{product.color}</span>
                       </div>
                     )}
                     {product.material && (
                       <div className='flex justify-between py-2 border-b'>
-                        <span className='text-gray-600'>材质</span>
+                        <span className='text-gray-600'>{t('detail.material')}</span>
                         <span>{product.material}</span>
                       </div>
                     )}
@@ -757,7 +774,7 @@ export default function ProductDetailPage() {
                   ) : (
                     <div className='text-center py-8'>
                       <MessageCircle className='h-12 w-12 text-gray-400 mx-auto mb-4' />
-                      <p className='text-gray-600'>暂无用户评价</p>
+                      <p className='text-gray-600'>{t('detail.review.empty')}</p>
                     </div>
                   )}
                 </div>
@@ -773,7 +790,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>💰</span>
-                              价格说明
+                              {t('detail.quotation.priceNotes')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.priceNotes.map((note, index) => (
@@ -795,7 +812,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>⭐</span>
-                              产品特点
+                              {t('detail.quotation.features')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.features.map((feature, index) => (
@@ -817,7 +834,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>🛠️</span>
-                              技术支持
+                              {t('detail.quotation.support')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.support.map((item, index) => (
@@ -839,7 +856,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>🔧</span>
-                              售后服务
+                              {t('detail.quotation.service')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.service.map((item, index) => (
@@ -861,7 +878,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>🚚</span>
-                              交付周期
+                              {t('detail.quotation.delivery')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.delivery.map((item, index) => (
@@ -883,7 +900,7 @@ export default function ProductDetailPage() {
                           <div className='bg-white border border-gray-200 rounded-lg p-6 shadow-sm'>
                             <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
                               <span className='text-2xl'>💳</span>
-                              付款方式
+                              {t('detail.quotation.payment')}
                             </h3>
                             <ul className='space-y-2'>
                               {product.quotationInfo.payment.map((item, index) => (
@@ -904,12 +921,13 @@ export default function ProductDetailPage() {
                     {product.quotationInfo.validityStartDate && (
                       <div className='mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
                         <p className='text-sm text-gray-700'>
-                          <span className='font-semibold'>报价有效期：</span>
-                          {product.quotationInfo.validityDays}天（自{' '}
+                          <span className='font-semibold'>{t('detail.quotation.validity')}: </span>
+                          {product.quotationInfo.validityDays}
+                          {t('detail.quotation.days')}（{t('detail.quotation.from')}{' '}
                           {new Date(product.quotationInfo.validityStartDate).toLocaleDateString(
                             'zh-CN'
                           )}{' '}
-                          起）
+                          {t('detail.quotation.start')}）
                         </p>
                       </div>
                     )}

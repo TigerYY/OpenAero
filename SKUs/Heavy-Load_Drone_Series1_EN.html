@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heavy-Load Drone Series - OpenAero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 35px;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.6), transparent);
+        }
+
+        .company-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo-item:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-item img {
+            height: 80px;
+            width: auto;
+        }
+
+        .logo-label {
+            font-size: 0.85em;
+            color: #1e3c72;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Company Introduction */
+        .company-intro {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 35px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .intro-title {
+            font-size: 1.9em;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+            padding-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .intro-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
+            border-radius: 2px;
+        }
+
+        .intro-content {
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .intro-content p {
+            line-height: 1.7;
+            color: #555;
+            font-size: 1em;
+            text-align: justify;
+            margin-bottom: 12px;
+        }
+
+        .intro-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .intro-content a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .intro-content a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .company-address {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 18px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-address::before {
+            content: '📍';
+            font-size: 2em;
+        }
+
+        .company-address .label {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+
+        .company-address .text {
+            color: #555;
+            font-size: 1.05em;
+        }
+
+        /* Product Series Overview */
+        .series-overview {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 35px 40px;
+            margin-bottom: 35px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .series-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 28px;
+        }
+
+        .series-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 28px 25px;
+            text-align: center;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .series-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .series-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .series-card:hover::before {
+            opacity: 1;
+        }
+
+        .series-card h3 {
+            font-size: 2.2em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .series-card .capacity {
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .series-card .description {
+            font-size: 1em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        /* Product Details Card - Compact Layout */
+        .product-section {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 28px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-section:hover {
+            box-shadow: 0 10px 35px rgba(102, 126, 234, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Product Header - Horizontal Layout */
+        .product-header {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 25px;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .product-title-section {
+            text-align: left;
+        }
+
+        .product-header h2 {
+            font-size: 2.4em;
+            color: #667eea;
+            margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .product-header .model-name {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .product-header .tagline {
+            font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        /* Quick Specs */
+        .quick-specs {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .quick-spec-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 110px;
+            box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .quick-spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-spec-item .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .quick-spec-item .value {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        /* Product Image - Unified Size */
+        .product-image-section {
+            margin: 20px 0;
+            text-align: center;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            padding: 30px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 380px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .product-image-section img {
+            width: 580px;
+            height: 380px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-image-section img:hover {
+            transform: scale(1.03);
+            filter: drop-shadow(0 12px 30px rgba(102, 126, 234, 0.3));
+        }
+
+        /* Specs Table - Compact Layout */
+        .specs-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .spec-category {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .spec-category:hover {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+            transform: translateX(2px);
+            border-left-width: 4px;
+        }
+
+        .spec-category h3 {
+            font-size: 1.25em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .spec-category h3::before {
+            content: '●';
+            font-size: 0.7em;
+        }
+
+        /* Full Width Category */
+        .spec-category.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+        }
+
+        .spec-item {
+            background: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(102, 126, 234, 0.05);
+        }
+
+        .spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.12);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .spec-item dt {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .spec-item dd {
+            color: #555;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* Highlight Section - Compact Design */
+        .highlight-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 18px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .highlight-section h3 {
+            font-size: 1.3em;
+            margin-bottom: 18px;
+            text-align: center;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .highlight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+        }
+
+        .highlight-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .highlight-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .highlight-item h4 {
+            font-size: 1em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .highlight-item p {
+            font-size: 0.85em;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2d1b4e 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            margin-top: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .footer h3 {
+            font-size: 1.6em;
+            margin-bottom: 22px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .contact-item {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .contact-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #a8d0ff;
+            font-size: 1.1em;
+        }
+
+        .contact-item a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 25px 15px;
+                margin-bottom: 25px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header .subtitle {
+                font-size: 1em;
+            }
+
+            .company-logos {
+                gap: 15px;
+            }
+
+            .logo-item img {
+                height: 55px;
+            }
+
+            .logo-item {
+                padding: 10px 16px;
+            }
+
+            .company-intro {
+                padding: 25px 18px;
+            }
+
+            .intro-title {
+                font-size: 1.6em;
+            }
+
+            .intro-content {
+                padding: 20px 18px;
+            }
+
+            .company-address {
+                padding: 15px 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .series-overview {
+                padding: 25px 18px;
+            }
+
+            .product-section {
+                padding: 22px 18px;
+            }
+
+            .product-header h2 {
+                font-size: 1.8em;
+            }
+
+            .product-header {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .product-title-section {
+                text-align: center;
+            }
+
+            .quick-specs {
+                justify-content: center;
+            }
+
+            .product-image-section {
+                padding: 25px 15px;
+                min-height: 280px;
+            }
+
+            .product-image-section img {
+                width: 100%;
+                max-width: 320px;
+                height: auto;
+            }
+
+            .specs-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .spec-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .series-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .highlight-section {
+                padding: 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .product-header {
+                grid-template-columns: 220px 1fr;
+                gap: 20px;
+            }
+
+            .product-image-section img {
+                width: 520px;
+                height: 360px;
+            }
+
+            .specs-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .product-section,
+            .footer {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="company-logos">
+                <div class="logo-item">
+                    <img src="trirm logo.png" alt="TRIRM Logo">
+                    <div class="logo-label">Guangzhou TRIRM Electric Equipment Co., Ltd.</div>
+                </div>
+                <div class="logo-item">
+                    <img src="logo_white_bg.png" alt="OpenAero Logo">
+                    <div class="logo-label">OpenAero</div>
+                </div>
+            </div>
+            <h1>OpenAero | Heavy-Load Drone Series</h1>
+            <p class="subtitle">LE-45 · LE-28 · LE-18</p>
+        </header>
+
+        <!-- Company Introduction -->
+        <section class="company-intro">
+            <h2 class="intro-title">🏢 About Us</h2>
+            <div class="intro-content">
+                <p>Guangzhou TRIRM Electric Equipment Co., Ltd. is dedicated to the research and development of next-generation industrial Internet and intelligent equipment technologies. We provide complete solutions for industrial scenarios, ranging from data acquisition and edge computing to intelligent control. Our product portfolio includes industrial-grade IoT gateways (4G/5G), smart distribution gateways, intelligent sensors, and universal protocol interconnection platforms. We also specialize in drone R&D, testing, production, and custom intelligent equipment development, forming a comprehensive capability system of "integrated software and hardware + industry applications".</p>
+                <p><strong style="color: #667eea;">OpenAero</strong> (Website: <a href="https://openaero.cn" target="_blank">openaero.cn</a>) is a professional brand under TRIRM, focusing on the drone sector. OpenAero adheres to the philosophy of "Open Innovation, Technology Leadership" and specializes in the research, development, and application of industrial-grade drone systems. We provide multi-scenario solutions including agricultural drones, heavy-load transport drones, and inspection drones. Leveraging open-source flight control technology and independent R&D capabilities, OpenAero delivers cost-effective and highly reliable drone products with customization support, empowering digital transformation in smart agriculture, logistics, infrastructure inspection, and other industries.</p>
+            </div>
+            <div class="company-address">
+                <span class="label">Address:</span>
+                <span class="text">Room 321, Building 4, No.9 Shenzhou Road, Huangpu District, Guangzhou, Guangdong Province, China</span>
+            </div>
+        </section>
+
+        <!-- Product Series Overview -->
+        <section class="series-overview">
+            <h2 style="text-align: center; font-size: 2.2em; color: #667eea; margin-bottom: 15px; font-weight: 600;">Product Series Overview</h2>
+            <p style="text-align: center; font-size: 1.1em; color: #666; margin-bottom: 28px;">
+                Designed for heavy-load operations, covering multiple payload requirement scenarios
+            </p>
+            <div class="series-grid">
+                <div class="series-card">
+                    <h3>LE-45</h3>
+                    <p class="capacity">Max Payload 350kg</p>
+                    <p class="description">Octocopter with 16 direct propellers<br>Ultra heavy-load platform for large cargo and emergency rescue</p>
+                </div>
+                <div class="series-card">
+                    <h3>LE-28</h3>
+                    <p class="capacity">Max Payload 300kg</p>
+                    <p class="description">Hexacopter heavy-load platform<br>Perfect balance between payload and endurance</p>
+                </div>
+                <div class="series-card">
+                    <h3>LE-18</h3>
+                    <p class="capacity">Max Payload 200kg</p>
+                    <p class="description">Quadcopter with 8 propellers<br>Flexible and efficient for medium-load operations</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-45 Product Details -->
+        <section class="product-section" id="le-45">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-45</h2>
+                    <p class="model-name">LE-350 Heavy-Load Carrier</p>
+                    <p class="tagline">Octocopter with 16 Propellers · Ultra Heavy-Load Champion</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">Max Payload</div>
+                        <div class="value">350kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Endurance</div>
+                        <div class="value">42min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Wind Resistance</div>
+                        <div class="value">Level 6</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-45.jpg" alt="LE-45 Octocopter Heavy-Load Drone">
+            </div>
+
+            <div class="specs-container">
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>Basic Performance</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Max Payload</dt>
+                            <dd>350 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Rated Payload</dt>
+                            <dd>≤230 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Endurance (No Load)</dt>
+                            <dd>42 min</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Wind Resistance</dt>
+                            <dd>Level 6 (≈12.8 m/s)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Horizontal Speed</dt>
+                            <dd>25 m/s (GPS mode max speed, adjustable with load)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Vertical Speed</dt>
+                            <dd>↑5 m/s / ↓3 m/s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Tilt Angle</dt>
+                            <dd>30°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Yaw Rate</dt>
+                            <dd>1.135°/s</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Structural Design -->
+                <div class="spec-category">
+                    <h3>Structural Design</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Frame Material</dt>
+                            <dd>92% Carbon Fiber + 5% Aviation Aluminum (lightweight yet rigid)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Configuration</dt>
+                            <dd>Octocopter with 16 Direct Propellers</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Folded Size</dt>
+                            <dd>2.35m × 2.35m (transport mode)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Unfolded Size</dt>
+                            <dd>4.45m × 4.45m (flight mode)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Propeller Size</dt>
+                            <dd>56 inches (1.42 m)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Power System -->
+                <div class="spec-category">
+                    <h3>Power System</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Motor</dt>
+                            <dd>Outrunner Brushless<br>Stator: 138 × 25 mm<br>KV: 45 rpm/V<br>Max Thrust: 57 kg/axis (70V)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>X-Rotor 200 A<br>Continuous: 80 A<br>Peak: 200 A<br>Voltage: 14-80 V</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Propeller</dt>
+                            <dd>3.56 × 20" Carbon Fiber<br>Weight: 292 g/blade<br>Assembly: 805 g/set</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery System -->
+                <div class="spec-category">
+                    <h3>Battery System</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Type</dt>
+                            <dd>Semi-Solid High Energy Density</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Capacity</dt>
+                            <dd>45,000 mAh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Voltage</dt>
+                            <dd>18 S1P (75.6 V)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Energy</dt>
+                            <dd>≈3.4 kWh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Cycle Life</dt>
+                            <dd>≥800 cycles (80% capacity retention)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Control Link -->
+                <div class="spec-category">
+                    <h3>Remote Control Link</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Remote Controller</dt>
+                            <dd>H16 All-in-One</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Display</dt>
+                            <dd>7" 1,800 nits High-Brightness Touchscreen</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Video Link Range</dt>
+                            <dd>≥1 km (Line of Sight)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Frequency</dt>
+                            <dd>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Battery Life</dt>
+                            <dd>5.8-15 h (Single Charge)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>Flight Controller</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Model</dt>
+                            <dd>V9 PRO Industrial Edition</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Hover Accuracy</dt>
+                            <dd>Horizontal ±30 cm / Vertical ±20 cm</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Yaw Correction</dt>
+                            <dd>≤50 cm</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Waypoints</dt>
+                            <dd>2,000+</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Navigation</dt>
+                            <dd>Built-in GPS, RTK Support</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Flight Modes</dt>
+                            <dd>Attitude / GPS / Full Autonomous</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety & Expansion -->
+            <div class="highlight-section">
+                <h3>Safety & Expansion</h3>
+                <div class="highlight-grid">
+                    <div class="highlight-item">
+                        <h4>Quick-Release Structure</h4>
+                        <p>2 persons, 10 minutes to deploy/fold</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>Maintenance</h4>
+                        <p>Modular quick-release for motors, ESCs, and propellers</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>Expansion Ports</h4>
+                        <p>HDMI / Ethernet / Serial / SBUS, supports secondary development</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-28 Product Details -->
+        <section class="product-section" id="le-28">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-28</h2>
+                    <p class="model-name">LE-400 Hexacopter Heavy-Load Platform</p>
+                    <p class="tagline">Hexacopter · Perfect Balance of Payload & Endurance</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">Max Payload</div>
+                        <div class="value">300kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Endurance</div>
+                        <div class="value">30min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Wind Resistance</div>
+                        <div class="value">Level 6</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-28.jpg" alt="LE-28 Hexacopter Heavy-Load Drone">
+            </div>
+
+            <div class="specs-container">
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>Basic Performance</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Max Payload</dt>
+                            <dd>300 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Rated Payload</dt>
+                            <dd>≤260 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Endurance (No Load)</dt>
+                            <dd>30 min (Standard Atmosphere)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Wind Resistance</dt>
+                            <dd>Level 6 (12.8 m/s, EN-27001)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Horizontal Speed</dt>
+                            <dd>25 m/s (108 km/h)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Climb Rate</dt>
+                            <dd>6 m/s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Tilt Angle</dt>
+                            <dd>30°</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Structural Design / Power Layout -->
+                <div class="spec-category">
+                    <h3>Structural Design / Power Layout</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Propeller</dt>
+                            <dd>62" Carbon Fiber Folding Props</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Transport Size</dt>
+                            <dd>2 m × 2 m (Folded)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Operating Size</dt>
+                            <dd>3.75m × 3.75m (Unfolded)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Motor</dt>
+                            <dd>Outrunner Brushless<br>Max Thrust: 72 kg/axis<br>KV: 45 rpm/V<br>Weight: 2,850 g (with wires)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>CM-X15-18S-300A-FOC<br>Continuous: 100 A<br>Peak: 300 A / 3 s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Propeller Blade</dt>
+                            <dd>HW6324 63×24" 400 g/blade</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery -->
+                <div class="spec-category">
+                    <h3>Battery System</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Type</dt>
+                            <dd>Semi-Solid High Energy Density</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Capacity</dt>
+                            <dd>45,000 mAh (≈3.4 kWh)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Voltage</dt>
+                            <dd>18 S1P (75.6 V)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Cycle Life</dt>
+                            <dd>≥800 cycles (80% retention)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Controller -->
+                <div class="spec-category">
+                    <h3>Remote Control Link</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Remote Controller</dt>
+                            <dd>H16 All-in-One</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Screen</dt>
+                            <dd>7" 1,800 nit High-Brightness Touchscreen<br>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Video Link Range</dt>
+                            <dd>≥1 km Line-of-Sight, Low Latency</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Battery Life</dt>
+                            <dd>8-15 h Continuous Operation</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>Flight Controller (V10 PRO Industrial Edition)</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Horizontal Positioning</dt>
+                            <dd>RTK ±0.1 m / Single-point ±2 m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Altitude Positioning</dt>
+                            <dd>RTK ±0.1 m / Single-point ±3 m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Attitude Accuracy</dt>
+                            <dd>0.2° | Heading: 0.5°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Swarm</dt>
+                            <dd>100 Drones</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Alternate Landing Points</dt>
+                            <dd>10 Safety Redundancy</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety & Expansion -->
+            <div class="highlight-section">
+                <h3>Safety & Expansion</h3>
+                <div class="highlight-grid">
+                    <div class="highlight-item">
+                        <h4>Operating Temperature</h4>
+                        <p>-40 ℃ ~ +60 ℃ (Military Grade)</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>Protection Rating</h4>
+                        <p>IPX6 Waterproof & Dustproof</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>Communication</h4>
+                        <p>SBUS + CAN Bus, Multi-GNSS Support (BeiDou/GPS/GLONASS)</p>
+                    </div>
+                    <div class="highlight-item">
+                        <h4>Expansion Ports</h4>
+                        <p>HDMI / Ethernet / Serial / OTG for secondary development</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LE-18 Product Details -->
+        <section class="product-section" id="le-18">
+            <div class="product-header">
+                <div class="product-title-section">
+                    <h2>LE-18</h2>
+                    <p class="model-name">Quadcopter with 8 Propellers Platform</p>
+                    <p class="tagline">Quad-8 · Flexible & Efficient Medium-Load Solution</p>
+                </div>
+                <div class="quick-specs">
+                    <div class="quick-spec-item">
+                        <div class="label">Max Payload</div>
+                        <div class="value">200kg</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Endurance</div>
+                        <div class="value">16min</div>
+                    </div>
+                    <div class="quick-spec-item">
+                        <div class="label">Frame Material</div>
+                        <div class="value">Carbon Fiber</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image-section">
+                <img src="LE-18.jpg" alt="LE-18 Quadcopter Heavy-Load Drone">
+            </div>
+
+            <div class="specs-container">
+                <!-- Structural Design -->
+                <div class="spec-category">
+                    <h3>Structural Design</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Frame Material</dt>
+                            <dd>94% Carbon Fiber + 4% Aviation Aluminum</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Configuration</dt>
+                            <dd>Quadcopter with 8 Propellers</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Folded Size</dt>
+                            <dd>1.29m × 1.29m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Unfolded Size</dt>
+                            <dd>2.63m × 2.63m</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Propeller Size</dt>
+                            <dd>62" Carbon Fiber Folding Props</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Basic Performance -->
+                <div class="spec-category">
+                    <h3>Basic Performance</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Max Payload</dt>
+                            <dd>200 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Standard Payload</dt>
+                            <dd>≤160 kg</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Endurance</dt>
+                            <dd>16 min (Full Load)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Power System -->
+                <div class="spec-category">
+                    <h3>Power System</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Motor</dt>
+                            <dd>Outrunner Brushless<br>Max Thrust: 72 kg/axis<br>KV: 45 rpm/V<br>Weight: 2,850 g (with wires)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>ESC</dt>
+                            <dd>CM-X15-18S-300A-FOC<br>Continuous: 100 A<br>Peak: 300 A / 3 s</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Propeller</dt>
+                            <dd>HW6324 62×24" 400 g/blade</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Battery System -->
+                <div class="spec-category">
+                    <h3>Battery System</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Battery Type</dt>
+                            <dd>Semi-Solid High Energy Density</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Capacity</dt>
+                            <dd>45,000 mAh (≈3.4 kWh)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Voltage</dt>
+                            <dd>18 S1P (75.6 V)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Energy</dt>
+                            <dd>≈3.4 kWh</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Cycle Life</dt>
+                            <dd>≥800 cycles (80% capacity retention)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Remote Control Link -->
+                <div class="spec-category">
+                    <h3>Remote Control Link</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Video Link Range</dt>
+                            <dd>≥1 km Line-of-Sight, Low Latency</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Frequency</dt>
+                            <dd>2.4 GHz FHSS</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Battery Life</dt>
+                            <dd>8-15 h Continuous Operation</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Remote Controller</dt>
+                            <dd>H16 All-in-One</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Display</dt>
+                            <dd>7" 1800 nit High-Brightness Touchscreen</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Flight Controller -->
+                <div class="spec-category">
+                    <h3>Flight Controller</h3>
+                    <div class="spec-grid">
+                        <dl class="spec-item">
+                            <dt>Flight Controller Model</dt>
+                            <dd>V10 PRO Industrial Edition</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Hover Accuracy</dt>
+                            <dd>RTK ±0.1 m / Single-point ±2 m (Horizontal)<br>RTK ±0.1 m / Single-point ±3 m (Altitude)</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Flight Mode / Attitude Accuracy</dt>
+                            <dd>Attitude: 0.2°<br>Heading: 0.5°</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Max Swarm</dt>
+                            <dd>100 Drones</dd>
+                        </dl>
+                        <dl class="spec-item">
+                            <dt>Alternate Landing Points</dt>
+                            <dd>10 Safety Redundancy</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Contact Information -->
+        <footer class="footer">
+            <h3>📞 Contact Us</h3>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <strong>Company Name</strong>
+                    Guangzhou TRIRM Electric Equipment Co., Ltd.
+                </div>
+                <div class="contact-item">
+                    <strong>Address</strong>
+                    Room 321, Building 4, No.9 Shenzhou Road, Huangpu District, Guangzhou, Guangdong Province, China
+                </div>
+                <div class="contact-item">
+                    <strong>Telephone</strong>
+                    <a href="tel:+864006911891">+86 400-691-1891</a>
+                </div>
+                <div class="contact-item">
+                    <strong>Email</strong>
+                    <a href="mailto:support@trirm.com">support@trirm.com</a>
+                </div>
+                <div class="contact-item">
+                    <strong>Website</strong>
+                    <a href="https://openaero.cn" target="_blank">openaero.cn</a>
+                </div>
+            </div>
+            <div class="footer-note">
+                © 2024 Guangzhou TRIRM Electric Equipment Co., Ltd. | OpenAero<br>
+                Focus on drone technology, providing professional heavy-load drone solutions for customers
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
