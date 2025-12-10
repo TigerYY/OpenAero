@@ -6,12 +6,16 @@ import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
+// 强制动态，避免静态导出时因 cookies 访问报错
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/dashboard/alerts - 获取预警列表
 export async function GET(request: NextRequest) {
   try {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[API /admin/dashboard/alerts] 开始处理请求');}
-    
+      console.log('[API /admin/dashboard/alerts] 开始处理请求');
+    }
+
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
     console.log('[API /admin/dashboard/alerts] 认证结果:', {
@@ -20,31 +24,36 @@ export async function GET(request: NextRequest) {
       userId: authResult.user?.id,
       userRoles: authResult.user?.roles,
     });
-    
+
     if (!authResult.success || !authResult.user) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[API /admin/dashboard/alerts] 认证失败');}
-      return authResult.error || NextResponse.json(
-        {
-          success: false,
-          error: '未授权访问',
-          data: null
-        } as ApiResponse<null>,
-        { status: 401 }
+        console.error('[API /admin/dashboard/alerts] 认证失败');
+      }
+      return (
+        authResult.error ||
+        NextResponse.json(
+          {
+            success: false,
+            error: '未授权访问',
+            data: null,
+          } as ApiResponse<null>,
+          { status: 401 }
+        )
       );
     }
 
     // 检查管理员权限
     const userRoles = authResult.user.roles || [];
     console.log('[API /admin/dashboard/alerts] 用户角色:', userRoles);
-    
+
     if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('[API /admin/dashboard/alerts] 权限不足，当前角色:', userRoles);}
+        console.warn('[API /admin/dashboard/alerts] 权限不足，当前角色:', userRoles);
+      }
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看预警',
-        data: null
+        data: null,
       };
       return NextResponse.json(response, { status: 403 });
     }
@@ -58,7 +67,7 @@ export async function GET(request: NextRequest) {
     // 检查缓存
     const cachedData = await dashboardCache.getAlerts(days);
     if (cachedData) {
-      return NextResponse.json(cachedData, { 
+      return NextResponse.json(cachedData, {
         status: 200,
         headers: {
           'X-Cache': 'HIT',
@@ -67,27 +76,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取关键指标
-    const [
-      pendingSolutions,
-      totalSolutions,
-      previousSolutions,
-      totalUsers,
-      previousUsers,
-      completedReviews,
-    ] = await Promise.all([
+    const [pendingSolutions, totalUsers, previousUsers, completedReviews] = await Promise.all([
       // 待审核方案数
       prisma.solution.count({ where: { status: 'PENDING_REVIEW' } }),
-      // 当前时间段方案数
-      prisma.solution.count({ where: { created_at: { gte: startDate } } }),
-      // 上一时间段方案数（用于计算增长率）
-      prisma.solution.count({
-        where: {
-          created_at: {
-            gte: new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000),
-            lt: startDate,
-          },
-        },
-      }),
       // 当前时间段用户数
       prisma.userProfile.count({ where: { created_at: { gte: startDate } } }),
       // 上一时间段用户数
@@ -120,9 +111,12 @@ export async function GET(request: NextRequest) {
     ]);
 
     // 计算用户增长率
-    const userGrowth = previousUsers > 0
-      ? ((totalUsers - previousUsers) / previousUsers * 100)
-      : totalUsers > 0 ? 100 : 0;
+    const userGrowth =
+      previousUsers > 0
+        ? ((totalUsers - previousUsers) / previousUsers) * 100
+        : totalUsers > 0
+          ? 100
+          : 0;
 
     // 计算平均审核时间
     let avgReviewTime = 0;
@@ -172,30 +166,29 @@ export async function GET(request: NextRequest) {
           info: alerts.filter(a => a.level === 'info').length,
         },
       },
-      message: '预警数据获取成功'
+      message: '预警数据获取成功',
     };
 
     // 缓存响应数据
     dashboardCache.setAlerts(days, response);
 
-    return NextResponse.json(response, { 
+    return NextResponse.json(response, {
       status: 200,
       headers: {
         'X-Cache': 'MISS',
       },
     });
-
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('获取预警失败:', error);}
+      console.error('获取预警失败:', error);
+    }
 
     const response: ApiResponse<null> = {
       success: false,
       error: error instanceof Error ? error.message : '获取预警失败',
-      data: null
+      data: null,
     };
 
     return NextResponse.json(response, { status: 500 });
   }
 }
-

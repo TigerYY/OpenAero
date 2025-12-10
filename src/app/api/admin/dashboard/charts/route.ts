@@ -5,7 +5,7 @@ import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
-// 强制动态渲染（避免静态生成）
+// 强制动态，避免静态导出时因 cookies 访问报错
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (process.env.NODE_ENV === 'development') {
       console.log('[API /admin/dashboard/charts] 开始处理请求');
     }
-    
+
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
     if (process.env.NODE_ENV === 'development') {
@@ -24,20 +24,23 @@ export async function GET(request: NextRequest) {
         hasUser: !!authResult.user,
         userId: authResult.user?.id,
         userRoles: authResult.user?.roles,
-      });;
+      });
     }
-    
+
     if (!authResult.success || !authResult.user) {
       if (process.env.NODE_ENV === 'development') {
         console.error('[API /admin/dashboard/charts] 认证失败');
       }
-      return authResult.error || NextResponse.json(
-        {
-          success: false,
-          error: '未授权访问',
-          data: null
-        } as ApiResponse<null>,
-        { status: 401 }
+      return (
+        authResult.error ||
+        NextResponse.json(
+          {
+            success: false,
+            error: '未授权访问',
+            data: null,
+          } as ApiResponse<null>,
+          { status: 401 }
+        )
       );
     }
 
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (process.env.NODE_ENV === 'development') {
       console.log('[API /admin/dashboard/charts] 用户角色:', userRoles);
     }
-    
+
     if (!userRoles.includes('ADMIN') && !userRoles.includes('SUPER_ADMIN')) {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[API /admin/dashboard/charts] 权限不足，当前角色:', userRoles);
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看图表数据',
-        data: null
+        data: null,
       };
       return NextResponse.json(response, { status: 403 });
     }
@@ -69,7 +72,7 @@ export async function GET(request: NextRequest) {
     // 检查缓存
     const cachedData = await dashboardCache.getCharts(days);
     if (cachedData) {
-      return NextResponse.json(cachedData, { 
+      return NextResponse.json(cachedData, {
         status: 200,
         headers: {
           'X-Cache': 'HIT',
@@ -78,12 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 并行获取各种图表数据
-    const [
-      trendData,
-      categoryDistribution,
-      statusDistribution,
-      revenueTrend
-    ] = await Promise.all([
+    const [trendData, categoryDistribution, statusDistribution, revenueTrend] = await Promise.all([
       // 1. 趋势数据（按天聚合）
       getTrendData(startDate, days),
       // 2. 分类分布数据
@@ -107,19 +105,18 @@ export async function GET(request: NextRequest) {
         statusDistribution,
         revenueTrend,
       },
-      message: '图表数据获取成功'
+      message: '图表数据获取成功',
     };
 
     // 缓存响应数据
     dashboardCache.setCharts(days, response);
 
-    return NextResponse.json(response, { 
+    return NextResponse.json(response, {
       status: 200,
       headers: {
         'X-Cache': 'MISS',
       },
     });
-
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('获取图表数据失败:', error);
@@ -128,7 +125,7 @@ export async function GET(request: NextRequest) {
     const response: ApiResponse<null> = {
       success: false,
       error: error instanceof Error ? error.message : '获取图表数据失败',
-      data: null
+      data: null,
     };
 
     return NextResponse.json(response, { status: 500 });
@@ -140,23 +137,23 @@ async function getTrendData(startDate: Date, days: number) {
   // 获取方案创建趋势
   const solutions = await prisma.solution.findMany({
     where: {
-      created_at: { gte: startDate }
+      created_at: { gte: startDate },
     },
     select: {
       created_at: true,
     },
-    orderBy: { created_at: 'asc' }
+    orderBy: { created_at: 'asc' },
   });
 
   // 获取用户注册趋势
   const users = await prisma.userProfile.findMany({
     where: {
-      created_at: { gte: startDate }
+      created_at: { gte: startDate },
     },
     select: {
       created_at: true,
     },
-    orderBy: { created_at: 'asc' }
+    orderBy: { created_at: 'asc' },
   });
 
   // 按天聚合数据
@@ -214,12 +211,12 @@ async function getStatusDistribution() {
   });
 
   const statusNames: Record<string, string> = {
-    'DRAFT': '草稿',
-    'PENDING_REVIEW': '待审核',
-    'APPROVED': '已批准',
-    'REJECTED': '已拒绝',
-    'PUBLISHED': '已发布',
-    'ARCHIVED': '已归档',
+    DRAFT: '草稿',
+    PENDING_REVIEW: '待审核',
+    APPROVED: '已批准',
+    REJECTED: '已拒绝',
+    PUBLISHED: '已发布',
+    ARCHIVED: '已归档',
   };
 
   return statusStats.map(stat => ({
@@ -267,4 +264,3 @@ async function getRevenueTrend(startDate: Date, days: number) {
     revenue: revenueByDay[date] || 0,
   }));
 }
-

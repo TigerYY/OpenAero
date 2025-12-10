@@ -57,7 +57,7 @@ export async function createCreatorApplication(
     if (existingCreator.verification_status === VerificationStatus.APPROVED) {
       throw new Error('您已经是创作者了');
     }
-    
+
     // 如果状态是 PENDING，返回现有申请（不允许重复提交）
     if (existingCreator.verification_status === VerificationStatus.PENDING) {
       const userProfile = await prisma.userProfile.findUnique({
@@ -76,7 +76,8 @@ export async function createCreatorApplication(
         userEmail = authUser?.user?.email || '';
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('获取用户邮箱失败:', error);}
+          console.warn('获取用户邮箱失败:', error);
+        }
       }
 
       return {
@@ -85,7 +86,8 @@ export async function createCreatorApplication(
         bio: existingCreator.bio || data.bio,
         website: existingCreator.website || data.website || null,
         experience: existingCreator.experience || data.experience,
-        specialties: existingCreator.specialties.length > 0 ? existingCreator.specialties : data.specialties,
+        specialties:
+          existingCreator.specialties.length > 0 ? existingCreator.specialties : data.specialties,
         portfolio: data.portfolio || [],
         documents: data.documents || [],
         status: existingCreator.verification_status,
@@ -101,10 +103,12 @@ export async function createCreatorApplication(
         },
       };
     }
-    
+
     // 如果状态是 REJECTED 或 EXPIRED，允许重新申请（更新现有记录）
-    if (existingCreator.verification_status === VerificationStatus.REJECTED || 
-        existingCreator.verification_status === VerificationStatus.EXPIRED) {
+    if (
+      existingCreator.verification_status === VerificationStatus.REJECTED ||
+      existingCreator.verification_status === VerificationStatus.EXPIRED
+    ) {
       // 更新现有记录，重置为 PENDING 状态
       const updatedCreator = await prisma.creatorProfile.update({
         where: { user_id: data.userId },
@@ -135,7 +139,8 @@ export async function createCreatorApplication(
         userEmail = authUser?.user?.email || '';
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('获取用户邮箱失败:', error);}
+          console.warn('获取用户邮箱失败:', error);
+        }
       }
 
       return {
@@ -199,7 +204,8 @@ export async function createCreatorApplication(
     userEmail = authUser?.user?.email || '';
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('获取用户邮箱失败:', error);}
+      console.warn('获取用户邮箱失败:', error);
+    }
   }
 
   return {
@@ -258,7 +264,8 @@ export async function getUserApplicationStatus(
     userEmail = authUser?.user?.email || '';
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('获取用户邮箱失败:', error);}
+      console.warn('获取用户邮箱失败:', error);
+    }
   }
 
   // 返回所有状态的申请信息（不只是 PENDING）
@@ -296,15 +303,17 @@ export async function getApplications(
   const skip = (page - 1) * limit;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('getApplications 调用参数:', { page, limit, status });};
+    console.log('getApplications 调用参数:', { page, limit, status });
+  }
 
-  const where: any = {};
+  const where: { verification_status?: ApplicationStatus } = {};
   if (status) {
     where.verification_status = status;
   }
-  
+
   if (process.env.NODE_ENV === 'development') {
-    console.log('Prisma 查询条件:', where);}
+    console.log('Prisma 查询条件:', where);
+  }
 
   // 使用 CreatorProfile 查询申请列表
   const [profiles, total] = await Promise.all([
@@ -329,14 +338,14 @@ export async function getApplications(
   // 获取所有用户的邮箱
   const userIds = profiles.map(p => p.user_id);
   const emailMap = new Map<string, string>();
-  
+
   try {
-    const { createSupabaseServerClient } = await import('./auth/supabase-client');
-    const supabase = createSupabaseServerClient();
-    
+    const { createSupabaseAdmin } = await import('./auth/supabase-client');
+    const supabase = createSupabaseAdmin();
+
     // 批量获取用户邮箱
     await Promise.all(
-      userIds.map(async (userId) => {
+      userIds.map(async userId => {
         try {
           const { data: authUser } = await supabase.auth.admin.getUserById(userId);
           if (authUser?.user?.email) {
@@ -344,17 +353,19 @@ export async function getApplications(
           }
         } catch (error) {
           if (process.env.NODE_ENV === 'development') {
-            console.warn(`获取用户 ${userId} 邮箱失败:`, error);};
+            console.warn(`获取用户 ${userId} 邮箱失败:`, error);
+          }
         }
       })
     );
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('批量获取用户邮箱失败:', error);}
+      console.warn('批量获取用户邮箱失败:', error);
+    }
   }
 
   // 转换为 ApplicationWithDetails 格式
-  const applications: ApplicationWithDetails[] = profiles.map((profile) => ({
+  const applications: ApplicationWithDetails[] = profiles.map(profile => ({
     id: profile.id,
     userId: profile.user_id,
     bio: profile.bio || '',
@@ -380,13 +391,16 @@ export async function getApplications(
     console.log('getApplications 返回结果:', {
       applicationsCount: applications.length,
       total,
-      firstApplication: applications[0] ? {
-        id: applications[0].id,
-        userId: applications[0].userId,
-        status: applications[0].status,
-        userEmail: applications[0].user.email,
-      } : null,
-    });};
+      firstApplication: applications[0]
+        ? {
+            id: applications[0].id,
+            userId: applications[0].userId,
+            status: applications[0].status,
+            userEmail: applications[0].user.email,
+          }
+        : null,
+    });
+  }
 
   return {
     applications,
@@ -431,7 +445,7 @@ export async function reviewApplication(
     data: {
       verification_status: approved ? VerificationStatus.APPROVED : VerificationStatus.REJECTED,
       verified_at: new Date(),
-      rejection_reason: approved ? null : (notes || '申请未通过审核'),
+      rejection_reason: approved ? null : notes || '申请未通过审核',
     },
     include: {
       user: {
@@ -451,13 +465,13 @@ export async function reviewApplication(
       where: { user_id: creatorProfile.user_id },
       select: { roles: true },
     });
-    
+
     // 添加 CREATOR 角色（如果还没有）
     const currentRoles = currentUser?.roles || [];
     if (!currentRoles.includes('CREATOR')) {
       await prisma.userProfile.update({
         where: { user_id: creatorProfile.user_id },
-        data: { 
+        data: {
           roles: [...currentRoles, 'CREATOR'],
         },
       });
@@ -467,13 +481,14 @@ export async function reviewApplication(
   // 获取用户邮箱（从 Supabase Auth）
   let userEmail = '';
   try {
-    const { createSupabaseServerClient } = await import('./auth/supabase-client');
-    const supabase = createSupabaseServerClient();
+    const { createSupabaseAdmin } = await import('./auth/supabase-client');
+    const supabase = createSupabaseAdmin();
     const { data: authUser } = await supabase.auth.admin.getUserById(creatorProfile.user_id);
     userEmail = authUser?.user?.email || '';
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('获取用户邮箱失败:', error);}
+      console.warn('获取用户邮箱失败:', error);
+    }
   }
 
   return {
@@ -498,4 +513,3 @@ export async function reviewApplication(
     },
   };
 }
-

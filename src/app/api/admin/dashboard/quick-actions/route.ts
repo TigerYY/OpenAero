@@ -2,26 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { dashboardCache } from '@/lib/admin/dashboard-cache';
-import { 
-  exportLargeDataset, 
-  generateExportFilename, 
-  ExportFormat 
-} from '@/lib/admin/export-utils';
+import { exportLargeDataset, generateExportFilename, ExportFormat } from '@/lib/admin/export-utils';
 import { requireAdminAuth } from '@/lib/api-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
+
+// 强制动态，避免静态导出时因 cookies 访问报错
+export const dynamic = 'force-dynamic';
 
 // 快速操作验证模式
 const quickActionSchema = z.object({
   action: z.enum([
     'approve_all_pending',
-    'reject_all_pending', 
+    'reject_all_pending',
     'export_solutions',
     'export_users',
     'clear_old_reviews',
-    'send_bulk_notification'
+    'send_bulk_notification',
   ]),
-  params: z.record(z.any()).optional()
+  params: z.record(z.any()).optional(),
 });
 
 // POST /api/admin/dashboard/quick-actions - 执行管理员快速操作
@@ -36,7 +35,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = quickActionSchema.parse(body);
 
-    let result: any = null;
+    let result: { approved?: number; rejected?: number; count?: number; data?: unknown[] } | null =
+      null;
     let message = '';
 
     switch (validatedData.action) {
@@ -64,20 +64,18 @@ export async function POST(request: NextRequest) {
         // 如果指定了格式，返回文件数据
         if (validatedData.params?.format && validatedData.params.format !== 'json') {
           const format = validatedData.params.format as ExportFormat;
-          const exportResult = await exportLargeDataset(
-            result.data,
-            {
-              format,
-              filename: generateExportFilename('solutions', format),
-              sheetName: '方案数据',
-            }
-          );
-          
+          const exportResult = await exportLargeDataset(result.data, {
+            format,
+            filename: generateExportFilename('solutions', format),
+            sheetName: '方案数据',
+          });
+
           // 返回文件响应
-          const contentType = format === 'excel' 
-            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            : 'text/csv';
-          
+          const contentType =
+            format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'text/csv';
+
           return new NextResponse(exportResult.data, {
             status: 200,
             headers: {
@@ -94,20 +92,18 @@ export async function POST(request: NextRequest) {
         // 如果指定了格式，返回文件数据
         if (validatedData.params?.format && validatedData.params.format !== 'json') {
           const format = validatedData.params.format as ExportFormat;
-          const exportResult = await exportLargeDataset(
-            result.data,
-            {
-              format,
-              filename: generateExportFilename('users', format),
-              sheetName: '用户数据',
-            }
-          );
-          
+          const exportResult = await exportLargeDataset(result.data, {
+            format,
+            filename: generateExportFilename('users', format),
+            sheetName: '用户数据',
+          });
+
           // 返回文件响应
-          const contentType = format === 'excel' 
-            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            : 'text/csv';
-          
+          const contentType =
+            format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'text/csv';
+
           return new NextResponse(exportResult.data, {
             status: 200,
             headers: {
@@ -139,20 +135,20 @@ export async function POST(request: NextRequest) {
     const response: ApiResponse<typeof result> = {
       success: true,
       data: result,
-      message
+      message,
     };
 
     return NextResponse.json(response, { status: 200 });
-
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('执行快速操作失败:', error);}
-    
+      console.error('执行快速操作失败:', error);
+    }
+
     if (error instanceof z.ZodError) {
       const response: ApiResponse<null> = {
         success: false,
         error: JSON.stringify(error.errors),
-        data: null
+        data: null,
       };
       return NextResponse.json(response, { status: 400 });
     }
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
     const response: ApiResponse<null> = {
       success: false,
       error: error instanceof Error ? error.message : '执行快速操作失败',
-      data: null
+      data: null,
     };
 
     return NextResponse.json(response, { status: 500 });
@@ -174,7 +170,7 @@ async function approveAllPendingSolutions(adminId: string) {
     select: {
       id: true,
       title: true,
-    }
+    },
   });
 
   let approved = 0;
@@ -187,8 +183,8 @@ async function approveAllPendingSolutions(adminId: string) {
         data: {
           status: 'APPROVED',
           reviewedAt: new Date(), // Solution 使用 camelCase
-          reviewNotes: '批量批准操作' // Solution 使用 camelCase
-        }
+          reviewNotes: '批量批准操作', // Solution 使用 camelCase
+        },
       });
 
       // 创建审核记录（SolutionReview 使用 camelCase）
@@ -199,16 +195,22 @@ async function approveAllPendingSolutions(adminId: string) {
           status: 'COMPLETED',
           decision: 'APPROVED',
           comments: '批量批准操作',
-          reviewedAt: new Date() // SolutionReview 使用 camelCase
-        }
+          reviewedAt: new Date(), // SolutionReview 使用 camelCase
+        },
       });
 
       approved++;
       results.push({ id: solution.id, title: solution.title, status: 'approved' });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`批准方案 ${solution.id} 失败:`, error);};
-      results.push({ id: solution.id, title: solution.title, status: 'failed', error: error instanceof Error ? error.message : '未知错误' });
+        console.error(`批准方案 ${solution.id} 失败:`, error);
+      }
+      results.push({
+        id: solution.id,
+        title: solution.title,
+        status: 'failed',
+        error: error instanceof Error ? error.message : '未知错误',
+      });
     }
   }
 
@@ -222,7 +224,7 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
     select: {
       id: true,
       title: true,
-    }
+    },
   });
 
   let rejected = 0;
@@ -235,8 +237,8 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
         data: {
           status: 'REJECTED',
           reviewedAt: new Date(), // Solution 使用 camelCase
-          reviewNotes: reason // Solution 使用 camelCase
-        }
+          reviewNotes: reason, // Solution 使用 camelCase
+        },
       });
 
       // 创建审核记录（SolutionReview 使用 camelCase）
@@ -247,16 +249,22 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
           status: 'COMPLETED',
           decision: 'REJECTED',
           comments: reason,
-          reviewedAt: new Date() // SolutionReview 使用 camelCase
-        }
+          reviewedAt: new Date(), // SolutionReview 使用 camelCase
+        },
       });
 
       rejected++;
       results.push({ id: solution.id, title: solution.title, status: 'rejected' });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`拒绝方案 ${solution.id} 失败:`, error);};
-      results.push({ id: solution.id, title: solution.title, status: 'failed', error: error instanceof Error ? error.message : '未知错误' });
+        console.error(`拒绝方案 ${solution.id} 失败:`, error);
+      }
+      results.push({
+        id: solution.id,
+        title: solution.title,
+        status: 'failed',
+        error: error instanceof Error ? error.message : '未知错误',
+      });
     }
   }
 
@@ -264,9 +272,9 @@ async function rejectAllPendingSolutions(adminId: string, reason: string) {
 }
 
 // 导出方案数据
-async function exportSolutions(params: any = {}) {
-  const where: any = {};
-  
+async function exportSolutions(params: Record<string, unknown> = {}) {
+  const where: Record<string, unknown> = {};
+
   // 状态筛选
   if (params.status) {
     if (Array.isArray(params.status)) {
@@ -275,7 +283,7 @@ async function exportSolutions(params: any = {}) {
       where.status = params.status;
     }
   }
-  
+
   // 分类筛选
   if (params.category) {
     if (Array.isArray(params.category)) {
@@ -284,12 +292,12 @@ async function exportSolutions(params: any = {}) {
       where.category = params.category;
     }
   }
-  
+
   // 日期范围筛选
   if (params.dateFrom) {
     where.createdAt = { gte: new Date(params.dateFrom) }; // Solution 使用 camelCase
   }
-  
+
   if (params.dateTo) {
     if (where.createdAt) {
       where.createdAt.lte = new Date(params.dateTo);
@@ -297,12 +305,12 @@ async function exportSolutions(params: any = {}) {
       where.createdAt = { lte: new Date(params.dateTo) };
     }
   }
-  
+
   // 价格范围筛选
   if (params.priceMin !== undefined) {
     where.price = { gte: parseFloat(params.priceMin) };
   }
-  
+
   if (params.priceMax !== undefined) {
     if (where.price) {
       where.price.lte = parseFloat(params.priceMax);
@@ -310,7 +318,7 @@ async function exportSolutions(params: any = {}) {
       where.price = { lte: parseFloat(params.priceMax) };
     }
   }
-  
+
   // 限制导出数量（防止内存溢出）
   const limit = params.limit ? Math.min(parseInt(params.limit), 50000) : 50000;
 
@@ -335,7 +343,7 @@ async function exportSolutions(params: any = {}) {
         },
       },
     },
-    orderBy: { createdAt: 'desc' } // Solution 使用 camelCase
+    orderBy: { createdAt: 'desc' }, // Solution 使用 camelCase
   });
 
   // 格式化导出数据（Solution 字段已经是 camelCase，直接使用）
@@ -357,25 +365,19 @@ async function exportSolutions(params: any = {}) {
 }
 
 // 导出用户数据
-async function exportUsers(params: any = {}) {
-  const where: any = {};
-  
+async function exportUsers(params: Record<string, unknown> = {}) {
+  const where: Record<string, unknown> = {};
+
   // 角色筛选
   if (params.role) {
     // 支持多角色查询
     if (Array.isArray(params.role)) {
-      where.OR = params.role.flatMap((r: string) => [
-        { role: r },
-        { roles: { has: r } }
-      ]);
+      where.OR = params.role.flatMap((r: string) => [{ role: r }, { roles: { has: r } }]);
     } else {
-      where.OR = [
-        { role: params.role },
-        { roles: { has: params.role } }
-      ];
+      where.OR = [{ role: params.role }, { roles: { has: params.role } }];
     }
   }
-  
+
   // 状态筛选
   if (params.status) {
     if (Array.isArray(params.status)) {
@@ -384,12 +386,12 @@ async function exportUsers(params: any = {}) {
       where.status = params.status;
     }
   }
-  
+
   // 日期范围筛选
   if (params.dateFrom) {
     where.created_at = { gte: new Date(params.dateFrom) };
   }
-  
+
   if (params.dateTo) {
     if (where.created_at) {
       where.created_at.lte = new Date(params.dateTo);
@@ -397,7 +399,7 @@ async function exportUsers(params: any = {}) {
       where.created_at = { lte: new Date(params.dateTo) };
     }
   }
-  
+
   // 限制导出数量
   const limit = params.limit ? Math.min(parseInt(params.limit), 50000) : 50000;
 
@@ -416,9 +418,9 @@ async function exportUsers(params: any = {}) {
       roles: true,
       status: true,
       created_at: true,
-      updated_at: true
+      updated_at: true,
     },
-    orderBy: { created_at: 'desc' }
+    orderBy: { created_at: 'desc' },
   });
 
   // 格式化导出数据
@@ -431,7 +433,7 @@ async function exportUsers(params: any = {}) {
     email: user.email || '',
     phone: user.phone || '',
     role: user.role || '',
-    roles: Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || ''),
+    roles: Array.isArray(user.roles) ? user.roles.join(', ') : user.roles || '',
     status: user.status || '',
     createdAt: user.created_at?.toISOString() || '',
     updatedAt: user.updated_at?.toISOString() || '',
@@ -447,17 +449,18 @@ async function clearOldReviews(days: number) {
 
   const result = await prisma.solutionReview.deleteMany({
     where: {
-      reviewedAt: { // SolutionReview 使用 camelCase
-        lt: cutoffDate
-      }
-    }
+      reviewedAt: {
+        // SolutionReview 使用 camelCase
+        lt: cutoffDate,
+      },
+    },
   });
 
   return { deleted: result.count, cutoffDate };
 }
 
 // 发送批量通知
-async function sendBulkNotification(params: any) {
+async function sendBulkNotification(params: { message?: string; targetRole?: string }) {
   // 这里可以实现批量通知逻辑
   // 例如：向所有创作者发送系统通知
   const message = params.message || '系统通知';
@@ -465,18 +468,15 @@ async function sendBulkNotification(params: any) {
 
   const users = await prisma.userProfile.findMany({
     where: {
-      OR: [
-        { role: targetRole },
-        { roles: { has: targetRole } }
-      ]
+      OR: [{ role: targetRole }, { roles: { has: targetRole } }],
     },
-    select: { 
+    select: {
       id: true,
       user_id: true,
       display_name: true,
       role: true,
       roles: true,
-    }
+    },
   });
 
   // 模拟发送通知
@@ -488,7 +488,8 @@ async function sendBulkNotification(params: any) {
       sent++;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`发送通知给用户 ${user.user_id} 失败:`, error);};
+        console.error(`发送通知给用户 ${user.user_id} 失败:`, error);
+      }
     }
   }
 

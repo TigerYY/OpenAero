@@ -5,19 +5,25 @@ import { authenticateRequest } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { ApiResponse } from '@/types';
 
+// 强制动态，避免静态导出时因 cookies 访问报错
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/dashboard/stats - 获取管理员仪表板统计数据
 export async function GET(request: NextRequest) {
   try {
     // 验证用户身份和权限
     const authResult = await authenticateRequest(request);
     if (!authResult.success || !authResult.user) {
-      return authResult.error || NextResponse.json(
-        {
-          success: false,
-          error: '未授权访问',
-          data: null
-        } as ApiResponse<null>,
-        { status: 401 }
+      return (
+        authResult.error ||
+        NextResponse.json(
+          {
+            success: false,
+            error: '未授权访问',
+            data: null,
+          } as ApiResponse<null>,
+          { status: 401 }
+        )
       );
     }
 
@@ -27,7 +33,7 @@ export async function GET(request: NextRequest) {
       const response: ApiResponse<null> = {
         success: false,
         error: '权限不足，仅管理员可以查看仪表板统计',
-        data: null
+        data: null,
       };
       return NextResponse.json(response, { status: 403 });
     }
@@ -40,10 +46,9 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // 检查缓存
-    const cacheKey = `stats:${days}`;
     const cachedData = await dashboardCache.getStats(days);
     if (cachedData) {
-      return NextResponse.json(cachedData, { 
+      return NextResponse.json(cachedData, {
         status: 200,
         headers: {
           'X-Cache': 'HIT',
@@ -59,26 +64,21 @@ export async function GET(request: NextRequest) {
       approvedSolutions,
       rejectedSolutions,
       recentSolutions,
-      
+
       // 用户统计
       totalUsers,
-      totalCreators,
       totalAdmins,
       recentUsers,
-      
+
       // 审核统计
       totalReviews,
       recentReviews,
-      
-      // 收入统计
-      totalRevenue,
-      recentRevenue,
-      
+
       // 分类统计
       categoryStats,
-      
+
       // 状态趋势
-      statusTrends
+      statusTrends,
     ] = await Promise.all([
       // 方案统计
       prisma.solution.count(),
@@ -86,51 +86,33 @@ export async function GET(request: NextRequest) {
       prisma.solution.count({ where: { status: 'APPROVED' } }),
       prisma.solution.count({ where: { status: 'REJECTED' } }),
       prisma.solution.count({ where: { created_at: { gte: startDate } } }),
-      
+
       // 用户统计（使用 userProfile）- 支持多角色
       prisma.userProfile.count(),
-      prisma.userProfile.count({ 
-        where: { 
-          roles: { has: 'CREATOR' }
-        } 
-      }),
-      prisma.userProfile.count({ 
-        where: { 
-          roles: { hasSome: ['ADMIN', 'SUPER_ADMIN'] }
-        } 
+      prisma.userProfile.count({
+        where: {
+          roles: { hasSome: ['ADMIN', 'SUPER_ADMIN'] },
+        },
       }),
       prisma.userProfile.count({ where: { created_at: { gte: startDate } } }),
-      
+
       // 审核统计
       prisma.solutionReview.count(),
       prisma.solutionReview.count({ where: { reviewed_at: { gte: startDate } } }),
-      
-      // 收入统计（Solution 使用 camelCase）
-      prisma.solution.aggregate({
-        _sum: { price: true },
-        where: { status: 'APPROVED' }
-      }),
-      prisma.solution.aggregate({
-        _sum: { price: true },
-        where: { 
-          status: 'APPROVED',
-          reviewed_at: { gte: startDate }
-        }
-      }),
-      
+
       // 分类统计
       prisma.solution.groupBy({
         by: ['category'],
         _count: { category: true },
-        orderBy: { _count: { category: 'desc' } }
+        orderBy: { _count: { category: 'desc' } },
       }),
-      
+
       // 状态趋势（最近7天）
       prisma.solution.groupBy({
         by: ['status'],
         _count: { status: true },
-        where: { updated_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }
-      })
+        where: { updated_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      }),
     ]);
 
     // 计算增长率
@@ -143,40 +125,50 @@ export async function GET(request: NextRequest) {
         where: {
           created_at: {
             gte: previousPeriodStart,
-            lt: startDate
-          }
-        }
+            lt: startDate,
+          },
+        },
       }),
       prisma.userProfile.count({
         where: {
-          created_at: { // UserProfile 使用 snake_case
+          created_at: {
+            // UserProfile 使用 snake_case
             gte: previousPeriodStart,
-            lt: startDate
-          }
-        }
+            lt: startDate,
+          },
+        },
       }),
       prisma.solutionReview.count({
         where: {
           reviewed_at: {
             gte: previousPeriodStart,
-            lt: startDate
-          }
-        }
-      })
+            lt: startDate,
+          },
+        },
+      }),
     ]);
 
     // 计算增长率
-    const solutionGrowthRate = previousSolutions > 0 
-      ? ((recentSolutions - previousSolutions) / previousSolutions * 100)
-      : recentSolutions > 0 ? 100 : 0;
+    const solutionGrowthRate =
+      previousSolutions > 0
+        ? ((recentSolutions - previousSolutions) / previousSolutions) * 100
+        : recentSolutions > 0
+          ? 100
+          : 0;
 
-    const userGrowthRate = previousUsers > 0
-      ? ((recentUsers - previousUsers) / previousUsers * 100)
-      : recentUsers > 0 ? 100 : 0;
+    const userGrowthRate =
+      previousUsers > 0
+        ? ((recentUsers - previousUsers) / previousUsers) * 100
+        : recentUsers > 0
+          ? 100
+          : 0;
 
-    const reviewGrowthRate = previousReviews > 0
-      ? ((recentReviews - previousReviews) / previousReviews * 100)
-      : recentReviews > 0 ? 100 : 0;
+    const reviewGrowthRate =
+      previousReviews > 0
+        ? ((recentReviews - previousReviews) / previousReviews) * 100
+        : recentReviews > 0
+          ? 100
+          : 0;
 
     // 计算平均审核时间
     // 查询已完成审核的方案，使用 SolutionReview 表来获取准确的审核时间
@@ -203,17 +195,18 @@ export async function GET(request: NextRequest) {
     // 计算平均审核时间（小时）
     let avgReviewTime = 0;
     const reviewTimes: number[] = [];
-    
+
     for (const record of completedReviewRecords) {
       const reviewedAt = record.reviewed_at;
       // 优先使用 submitted_at，如果没有则使用 created_at
       const submittedAt = record.solution.submitted_at || record.solution.created_at;
-      
+
       if (reviewedAt && submittedAt) {
         const submitted = submittedAt.getTime();
         const reviewed = reviewedAt.getTime();
         const hours = (reviewed - submitted) / (1000 * 60 * 60);
-        if (hours > 0) { // 只计算有效的时间差
+        if (hours > 0) {
+          // 只计算有效的时间差
           reviewTimes.push(hours);
         }
       }
@@ -224,29 +217,29 @@ export async function GET(request: NextRequest) {
       avgReviewTime = Math.round((totalTime / reviewTimes.length) * 10) / 10; // 保留一位小数
     }
 
-    // 获取最近活动
-    const recentActivities = await prisma.solutionReview.findMany({
-      take: 10,
-      orderBy: { reviewed_at: 'desc' },
-      select: {
-        id: true,
-        solution_id: true,
-        reviewer_id: true,
-        decision: true,
-        reviewed_at: true,
-      }
-    });
+    // 获取最近活动（如果需要可以在响应中使用）
+    // const recentActivities = await prisma.solutionReview.findMany({
+    //   take: 10,
+    //   orderBy: { reviewed_at: 'desc' },
+    //   select: {
+    //     id: true,
+    //     solution_id: true,
+    //     reviewer_id: true,
+    //     decision: true,
+    //     reviewed_at: true,
+    //   }
+    // });
 
-    // 格式化活动数据
-    const formattedActivities = recentActivities.map(activity => ({
-      id: activity.id,
-      type: 'review',
-      action: activity.decision,
-      description: `审核了方案`,
-      timestamp: activity.reviewed_at,
-      solutionId: activity.solution_id,
-      reviewerId: activity.reviewer_id,
-    }));
+    // 格式化活动数据（如果需要可以在响应中使用）
+    // const formattedActivities = recentActivities.map(activity => ({
+    //   id: activity.id,
+    //   type: 'review',
+    //   action: activity.decision,
+    //   description: `审核了方案`,
+    //   timestamp: activity.reviewed_at,
+    //   solutionId: activity.solution_id,
+    //   reviewerId: activity.reviewer_id,
+    // }));
 
     // 格式化响应数据以匹配前端期望的格式
     const stats = {
@@ -277,7 +270,7 @@ export async function GET(request: NextRequest) {
       categories: categoryStats.map(cat => ({
         name: cat.category || '未分类',
         count: cat._count.category,
-        percentage: totalSolutions > 0 ? (cat._count.category / totalSolutions * 100) : 0,
+        percentage: totalSolutions > 0 ? (cat._count.category / totalSolutions) * 100 : 0,
       })),
       statusTrend: statusTrends.map(trend => ({
         date: new Date().toISOString().split('T')[0],
@@ -290,50 +283,57 @@ export async function GET(request: NextRequest) {
     const response: ApiResponse<typeof stats> = {
       success: true,
       data: stats,
-      message: '统计数据获取成功'
+      message: '统计数据获取成功',
     };
 
     // 缓存响应数据
     dashboardCache.setStats(days, response);
 
-    return NextResponse.json(response, { 
+    return NextResponse.json(response, {
       status: 200,
       headers: {
         'X-Cache': 'MISS',
       },
     });
-
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[Admin Dashboard Stats] 获取仪表板统计失败:', error);}
-    
+      console.error('[Admin Dashboard Stats] 获取仪表板统计失败:', error);
+    }
+
     // 提供更详细的错误信息
     let errorMessage = '获取统计数据失败';
     if (error instanceof Error) {
       errorMessage = error.message;
-      
+
       // 如果是数据库连接错误，提供更详细的诊断信息
-      if (error.message.includes('Can\'t reach database server') || 
-          error.message.includes('Connection') ||
-          error.message.includes('timeout')) {
+      if (
+        error.message.includes("Can't reach database server") ||
+        error.message.includes('Connection') ||
+        error.message.includes('timeout')
+      ) {
         errorMessage = '数据库连接失败，请检查数据库服务器配置';
         if (process.env.NODE_ENV === 'development') {
-          console.error('[Admin Dashboard Stats] 数据库连接诊断:');}
+          console.error('[Admin Dashboard Stats] 数据库连接诊断:');
+        }
         if (process.env.NODE_ENV === 'development') {
-          console.error('1. 检查 DATABASE_URL 环境变量是否正确配置');}
+          console.error('1. 检查 DATABASE_URL 环境变量是否正确配置');
+        }
         if (process.env.NODE_ENV === 'development') {
-          console.error('2. 确认数据库服务器是否运行');}
+          console.error('2. 确认数据库服务器是否运行');
+        }
         if (process.env.NODE_ENV === 'development') {
-          console.error('3. 检查网络连接是否正常');}
+          console.error('3. 检查网络连接是否正常');
+        }
         if (process.env.NODE_ENV === 'development') {
-          console.error('4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串');}
+          console.error('4. 如果使用 Supabase Pooler，请确认使用端口 6543 和正确的连接字符串');
+        }
       }
     }
 
     const response: ApiResponse<null> = {
       success: false,
       error: errorMessage,
-      data: null
+      data: null,
     };
 
     return NextResponse.json(response, { status: 500 });
