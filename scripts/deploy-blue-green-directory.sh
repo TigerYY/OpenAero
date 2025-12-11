@@ -64,6 +64,7 @@ ssh $SERVER "mkdir -p $INACTIVE_DIR"
 rsync -av --progress --delete \
     --exclude='node_modules' \
     --exclude='.next/cache' \
+    --exclude='.env.production' \
     "$TEMP_DIR/" "$SERVER:$INACTIVE_DIR/"
 
 echo -e "${GREEN}✅ 文件上传完成${NC}"
@@ -74,14 +75,68 @@ ssh $SERVER << EOF
     set -e
     cd $INACTIVE_DIR
     
+    # 检查必需的环境变量
+    echo "检查环境变量..."
+    MISSING_VARS=""
+    if ! grep -q "^NEXT_PUBLIC_SUPABASE_URL=" .env.production 2>/dev/null; then
+        MISSING_VARS="\${MISSING_VARS}NEXT_PUBLIC_SUPABASE_URL "
+    fi
+    if ! grep -q "^NEXT_PUBLIC_SUPABASE_ANON_KEY=" .env.production 2>/dev/null; then
+        MISSING_VARS="\${MISSING_VARS}NEXT_PUBLIC_SUPABASE_ANON_KEY "
+    fi
+    if ! grep -q "^SUPABASE_SERVICE_ROLE_KEY=" .env.production 2>/dev/null; then
+        MISSING_VARS="\${MISSING_VARS}SUPABASE_SERVICE_ROLE_KEY "
+    fi
+    
+    if [ -n "\$MISSING_VARS" ]; then
+        echo "❌ 错误: .env.production 文件缺少以下必需的环境变量:"
+        echo "   \$MISSING_VARS"
+        echo ""
+        echo "请确保 .env.production 文件包含所有必需的环境变量后再重新部署。"
+        exit 1
+    fi
+    echo "✅ 环境变量检查通过"
+    
     # 安装依赖
     echo "安装 npm 依赖..."
     npm ci --production=false
     
-    # 构建项目（如果需要）
-    if [ ! -d ".next" ] || [ ".next" -ot "package.json" ]; then
-        echo "构建 Next.js 应用..."
-        npm run build
+    # 强制构建项目（确保 .next 目录完整）
+    echo "构建 Next.js 应用..."
+    rm -rf .next
+    npm run build
+    
+    # 验证构建结果
+    if [ ! -f ".next/BUILD_ID" ]; then
+        echo "❌ 构建失败：缺少 BUILD_ID 文件"
+        exit 1
+    fi
+    echo "✅ 构建验证通过"
+    
+    # 确保 standalone 模式下的静态文件正确复制
+    if [ -d ".next/standalone" ] && [ -d ".next/static" ]; then
+        echo "复制静态文件到 standalone 目录..."
+        mkdir -p .next/standalone/.next
+        cp -r .next/static .next/standalone/.next/static
+        echo "✅ 静态文件已复制到 standalone 目录"
+    fi
+    
+    # 确保 public 目录正确复制到 standalone 目录
+    if [ -d ".next/standalone" ] && [ -d "public" ]; then
+        echo "复制 public 目录到 standalone 目录..."
+        mkdir -p .next/standalone/public
+        cp -r public/* .next/standalone/public/ 2>/dev/null || cp -r public/. .next/standalone/public/ 2>/dev/null
+        echo "✅ public 目录已复制到 standalone 目录"
+    fi
+    
+    # 构建后资源校验（静态 chunk 与 logo）
+    LOGO_URL="http://localhost:3000/images/openaero-logo-trimmed.png"
+    CHUNK_URL="http://localhost:3000/_next/static/chunks/main.js"
+    echo "验证关键静态资源..."
+    if curl -fI "$LOGO_URL" >/dev/null 2>&1 && curl -fI "$CHUNK_URL" >/dev/null 2>&1; then
+        echo "✅ 构建产物静态资源可访问"
+    else
+        echo "⚠️  构建后静态资源预检失败（logo 或 main.js），继续部署前请检查"
     fi
     
     echo "✅ 依赖安装和构建完成"
@@ -112,13 +167,22 @@ ssh $SERVER << EOF
     # 健康检查
     if curl -f http://localhost:$TEST_PORT/api/health > /dev/null 2>&1; then
         echo "✅ 健康检查通过"
-        kill \$TEST_PID 2>/dev/null || true
-        wait \$TEST_PID 2>/dev/null || true
     else
         echo "⚠️  健康检查端点不存在，跳过"
-        kill \$TEST_PID 2>/dev/null || true
-        wait \$TEST_PID 2>/dev/null || true
     fi
+    
+    # 额外静态资源校验（测试端口）
+    LOGO_URL="http://localhost:$TEST_PORT/images/openaero-logo-trimmed.png"
+    CHUNK_URL="http://localhost:$TEST_PORT/_next/static/chunks/main.js"
+    echo "验证关键静态资源 (测试端口 $TEST_PORT)..."
+    if curl -fI "$LOGO_URL" >/dev/null 2>&1 && curl -fI "$CHUNK_URL" >/dev/null 2>&1; then
+        echo "✅ 静态资源校验通过 (测试端口)"
+    else
+        echo "⚠️  静态资源校验失败 (测试端口)，请检查 public/.next/standalone 复制情况"
+    fi
+    
+    kill \$TEST_PID 2>/dev/null || true
+    wait \$TEST_PID 2>/dev/null || true
 EOF
 
 # 6. 切换符号链接
@@ -176,6 +240,16 @@ if ssh $SERVER "curl -f http://localhost:$PM2_PORT > /dev/null 2>&1"; then
 else
     echo -e "${RED}⚠️  警告: 应用可能未完全启动，请检查日志${NC}"
     ssh $SERVER "pm2 logs $PM2_APP_NAME --lines 20"
+fi
+
+# 额外静态资源校验（正式端口）
+LOGO_URL="http://localhost:$PM2_PORT/images/openaero-logo-trimmed.png"
+CHUNK_URL="http://localhost:$PM2_PORT/_next/static/chunks/main.js"
+echo "验证关键静态资源 (正式端口 $PM2_PORT)..."
+if ssh $SERVER "curl -fI \"$LOGO_URL\" >/dev/null 2>&1 && curl -fI \"$CHUNK_URL\" >/dev/null 2>&1"; then
+    echo -e "${GREEN}✅ 静态资源校验通过 (正式端口)${NC}"
+else
+    echo -e "${RED}⚠️  静态资源校验失败 (正式端口)，请检查 public/.next/standalone 复制情况${NC}"
 fi
 
 # 9. 清理
